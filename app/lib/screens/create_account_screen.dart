@@ -1,12 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CreateAccountScreen extends StatelessWidget {
   const CreateAccountScreen({super.key});
 
-  static const _referenceAsset =
-      'design/02-create-account-and-sign-in.png';
+  static const _referenceAsset = 'design/02-create-account-and-sign-in.png';
+  static const _heroAsset = 'assets/images/create_account_hero.png';
   static const _sage = Color(0xFF496B4F);
   static const _ink = Color(0xFF172019);
   static const _cream = Color(0xFFFFFAF1);
@@ -106,56 +105,78 @@ class _BotanicalMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 31,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Transform.rotate(
-            angle: -.55,
-            child: const Icon(Icons.eco_rounded,
-                size: 27, color: CreateAccountScreen._sage),
-          ),
-          Transform.rotate(
-            angle: .55,
-            child: const Icon(Icons.eco_rounded,
-                size: 27, color: CreateAccountScreen._sage),
-          ),
-        ],
+      width: 70,
+      height: 28,
+      child: Image.asset(
+        'assets/images/welcome_branch.png',
+        fit: BoxFit.contain,
       ),
     );
   }
 }
 
-/// Displays the women directly from the approved composite reference. The
-/// viewport coordinates isolate only its Create Account hero artwork.
 class _ApprovedCommunityImage extends StatelessWidget {
   const _ApprovedCommunityImage();
 
   @override
   Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(18),
+        topRight: Radius.circular(18),
+        bottomLeft: Radius.circular(12),
+        bottomRight: Radius.circular(12),
+      ),
+      child: AspectRatio(
+        aspectRatio: 549 / 350,
+        child: Image.asset(
+          CreateAccountScreen._heroAsset,
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          filterQuality: FilterQuality.high,
+        ),
+      ),
+    );
+  }
+}
+
+class _ReferenceCrop extends StatelessWidget {
+  const _ReferenceCrop({
+    required this.sourceLeft,
+    required this.sourceTop,
+    required this.sourceWidth,
+    required this.sourceHeight,
+  });
+
+  final double sourceLeft;
+  final double sourceTop;
+  final double sourceWidth;
+  final double sourceHeight;
+
+  @override
+  Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final scale = constraints.maxWidth / 550;
-        return SizedBox(
-          width: constraints.maxWidth,
-          height: 318 * scale,
-          child: ClipRect(
-            child: Stack(
-              clipBehavior: Clip.hardEdge,
-              children: [
-                Positioned(
-                  left: -20 * scale,
-                  top: -260 * scale,
-                  width: 1210 * scale,
-                  height: 1300 * scale,
-                  child: Image.asset(
-                    CreateAccountScreen._referenceAsset,
-                    fit: BoxFit.fill,
-                    filterQuality: FilterQuality.high,
-                  ),
+        final scale = constraints.maxWidth / sourceWidth <
+                constraints.maxHeight / sourceHeight
+            ? constraints.maxWidth / sourceWidth
+            : constraints.maxHeight / sourceHeight;
+        return ClipRect(
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              Positioned(
+                left: -sourceLeft * scale,
+                top: -sourceTop * scale,
+                width: 1210 * scale,
+                height: 1300 * scale,
+                child: Image.asset(
+                  CreateAccountScreen._referenceAsset,
+                  fit: BoxFit.fill,
+                  filterQuality: FilterQuality.high,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -239,8 +260,7 @@ class _AccountCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 17),
-          const _PrivacyCard(),
+          const SizedBox(height: 34),
         ],
       ),
     );
@@ -268,10 +288,18 @@ class _AuthButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
         ),
         child: Stack(
+          fit: StackFit.expand,
           alignment: Alignment.center,
           children: [
-            Align(alignment: Alignment.centerLeft, child: icon),
-            Text(label, style: GoogleFonts.inter(fontSize: 16)),
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Center(child: icon),
+            ),
+            Center(
+              child: Text(label, style: GoogleFonts.inter(fontSize: 16)),
+            ),
           ],
         ),
       ),
@@ -284,12 +312,14 @@ class _GoogleMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      'G',
-      style: GoogleFonts.inter(
-        fontSize: 25,
-        fontWeight: FontWeight.w800,
-        color: const Color(0xFF4285F4),
+    return const SizedBox(
+      width: 27,
+      height: 27,
+      child: _ReferenceCrop(
+        sourceLeft: 99,
+        sourceTop: 832,
+        sourceWidth: 42,
+        sourceHeight: 42,
       ),
     );
   }
@@ -313,53 +343,4 @@ class _Divider extends StatelessWidget {
   }
 }
 
-class _PrivacyCard extends StatelessWidget {
-  const _PrivacyCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(17, 16, 16, 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF2F0E7),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 49,
-            height: 49,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFCCD0BD), width: 1.5),
-            ),
-            child: const Icon(Icons.lock_outline_rounded,
-                size: 25, color: CreateAccountScreen._sage),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Your privacy matters.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: CreateAccountScreen._sage,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'We never sell your data. Your journey,\nyour story, stays with you.',
-                  style: GoogleFonts.inter(fontSize: 12.5, height: 1.35),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// Privacy card intentionally removed to match approved Create Account design.
