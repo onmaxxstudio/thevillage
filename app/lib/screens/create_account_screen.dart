@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'sign_in_screen.dart';
+import 'village_promise_screen.dart';
+
 class CreateAccountScreen extends StatelessWidget {
   const CreateAccountScreen({super.key});
 
@@ -220,17 +223,23 @@ class _AccountCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 19),
-          const _AuthButton(
-            icon: Icon(Icons.apple, size: 26),
+          _AuthButton(
+            icon: const Icon(Icons.apple, size: 26),
             label: 'Continue with Apple',
+            onPressed: () => _continueToPromise(context),
           ),
           const SizedBox(height: 11),
-          const _AuthButton(icon: _GoogleMark(), label: 'Continue with Google'),
+          _AuthButton(
+            icon: const _GoogleMark(),
+            label: 'Continue with Google',
+            onPressed: () => _continueToPromise(context),
+          ),
           const SizedBox(height: 11),
-          const _AuthButton(
-            icon: Icon(Icons.mail_outline_rounded,
+          _AuthButton(
+            icon: const Icon(Icons.mail_outline_rounded,
                 size: 27, color: CreateAccountScreen._sage),
             label: 'Continue with Email',
+            onPressed: () => _continueToPromise(context),
           ),
           const SizedBox(height: 17),
           const _Divider(),
@@ -242,7 +251,13 @@ class _AccountCard extends StatelessWidget {
               Text('Already have an account? ',
                   style: GoogleFonts.inter(fontSize: 14)),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const SignInScreen(),
+                    ),
+                  );
+                },
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,
                   minimumSize: const Size(42, 30),
@@ -260,18 +275,31 @@ class _AccountCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 34),
+          const SizedBox(height: 22),
+          const _PrivacyCard(),
+          const SizedBox(height: 12),
         ],
       ),
+    );
+  }
+
+  void _continueToPromise(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const VillagePromiseScreen()),
     );
   }
 }
 
 class _AuthButton extends StatelessWidget {
-  const _AuthButton({required this.icon, required this.label});
+  const _AuthButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
 
   final Widget icon;
   final String label;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +307,7 @@ class _AuthButton extends StatelessWidget {
       width: double.infinity,
       height: 52,
       child: OutlinedButton(
-        onPressed: () {},
+        onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: CreateAccountScreen._ink,
           backgroundColor: const Color(0xFFFFFCF7),
@@ -302,6 +330,64 @@ class _AuthButton extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PrivacyCard extends StatelessWidget {
+  const _PrivacyCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 15),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F1E8),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFC9CDB9)),
+            ),
+            child: const Icon(
+              Icons.lock_outline_rounded,
+              color: CreateAccountScreen._sage,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Your privacy matters.',
+                  style: GoogleFonts.inter(
+                    color: CreateAccountScreen._sage,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'We never sell your data. Your journey, your story, stays with you.',
+                  style: GoogleFonts.inter(
+                    color: CreateAccountScreen._ink,
+                    fontSize: 12.5,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
