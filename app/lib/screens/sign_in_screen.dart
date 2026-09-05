@@ -197,7 +197,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   Wrap(
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      const Text('New to The Village? '),
+                      const Text('New to Ask the Village? '),
                       TextButton(
                         onPressed: () => Navigator.of(context).pushReplacement(
                           MaterialPageRoute<void>(
@@ -264,7 +264,7 @@ class _BrandHeader extends StatelessWidget {
               height: 28,
             ),
             Text(
-              'The Village',
+              'Ask the Village',
               style: GoogleFonts.playfairDisplay(
                 fontSize: 46,
                 fontWeight: FontWeight.w600,

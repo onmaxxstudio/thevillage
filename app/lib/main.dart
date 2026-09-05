@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
     const deepSlate = Color(0xFF2F3A2E);
 
     return MaterialApp(
-      title: 'The Village',
+      title: 'Ask the Village',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

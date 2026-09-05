@@ -1,8 +1,12 @@
-# The Village --- Master Blueprint
+# Ask the Village --- Master Blueprint
 
 **Codex-readable product and visual specification**\
-**App:** The Village\
-**Brand:** Real People. Real Support. Real Connection.
+**App:** Ask the Village\
+**Brand:** Real People. Real Support. Real Answers.
+
+> **Rebrand note:** Approved reference images may still display the former name,
+> “The Village.” Preserve their layout and visual system, but use “Ask the
+> Village” for all current user-facing branding.
 
 > ## CODEX --- READ THIS FIRST
 >
@@ -24,13 +28,13 @@
 
 **This is the signup/sign-in reference.**
 
-For Create Account, match: - The Village branding and botanical mark -
+For Create Account, match: - Ask the Village branding and botanical mark -
 warm cream background - diverse women hero image - large rounded Create
 Your Account card - Continue with Apple - Continue with Google -
 Continue with Email - `or` divider - Already have an account? Sign In -
 privacy reassurance panel
 
-For Sign In, match: - The Village branding - Welcome back subtitle -
+For Sign In, match: - Ask the Village branding - Welcome back subtitle -
 rounded sign-in panel - email/username field - password field - Forgot
 password? - sage Sign In button - Apple and Google social buttons -
 Recover My Account - privacy/safety panel - Create Account link
@@ -38,7 +42,7 @@ Recover My Account - privacy/safety panel - Create Account link
 **Preserve existing authentication/navigation if it exists. If it does
 not exist, report that clearly rather than pretending it exists.**
 
-### Screen 4 --- The Village Promise
+### Screen 4 --- Village Promise
 
 ![Village Promise](design/03-village-promise.png)
 

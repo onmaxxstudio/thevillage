@@ -65,7 +65,7 @@ class _Header extends StatelessWidget {
             children: [
               const _BotanicalMark(),
               Text(
-                'The Village',
+                'Ask the Village',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 46,
@@ -76,7 +76,7 @@ class _Header extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'Real People. Real Support. Real Connection.',
+                'Real People. Real Support. Real Answers.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 14,

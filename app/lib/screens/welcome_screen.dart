@@ -33,7 +33,7 @@ class WelcomeScreen extends StatelessWidget {
                       child: Column(
                         children: [
                           Text(
-                            'The Village',
+                            'Ask the Village',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.playfairDisplay(
                               color: _green,
@@ -46,7 +46,7 @@ class WelcomeScreen extends StatelessWidget {
                           const _BotanicalDivider(),
                           const SizedBox(height: 14),
                           Text(
-                            'Real People. Real Support. Real Connection.',
+                            'Real People. Real Support. Real Answers.',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: _ink,
@@ -329,7 +329,7 @@ class _PrimaryButton extends StatelessWidget {
           ),
         ),
         child: Text(
-          'Join The Village',
+          'Join the Village',
           style: GoogleFonts.inter(fontSize: 19, fontWeight: FontWeight.w600),
         ),
       ),

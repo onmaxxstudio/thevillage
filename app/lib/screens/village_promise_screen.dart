@@ -20,7 +20,7 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
     (Icons.favorite_border_rounded, 'I will treat people with kindness.'),
     (Icons.lock_outline_rounded, 'I will respect privacy.'),
     (Icons.volunteer_activism_outlined, 'I will offer support without judgment.'),
-    (Icons.groups_2_outlined, 'I will help make The Village feel safe and welcoming.'),
+    (Icons.groups_2_outlined, 'I will help make our village feel safe and welcoming.'),
   ];
 
   @override
@@ -45,7 +45,7 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
                           height: 28,
                         ),
                         Text(
-                          'The Village',
+                          'Ask the Village',
                           style: GoogleFonts.playfairDisplay(
                             color: sage,
                             fontSize: 48,
@@ -112,7 +112,7 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
                                   ),
                                   const Expanded(
                                     child: Text(
-                                      'I agree to The Village Promise.',
+                                      'I agree to the Village Promise.',
                                       style: TextStyle(fontSize: 16),
                                     ),
                                   ),

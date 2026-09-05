@@ -6,7 +6,7 @@ The correct signup/sign-in reference is:
 
 `design/02-create-account-and-sign-in.png`
 
-Upload the contents of this folder to the root of The Village GitHub
+Upload the contents of this folder to the root of the Ask the Village GitHub
 repository.
 
 Do not upload the ZIP itself. Extract it first, then upload: -

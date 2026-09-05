@@ -1,15 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ineedmyvillage/main.dart';
+import 'package:ask_the_village/main.dart';
 
 void main() {
   testWidgets('welcome screen opens the create account screen', (tester) async {
     await tester.pumpWidget(const MyApp());
 
-    expect(find.text('The Village'), findsAtLeastNWidgets(1));
-    expect(find.text('Join The Village'), findsOneWidget);
+    expect(find.text('Ask the Village'), findsAtLeastNWidgets(1));
+    expect(find.text('Join the Village'), findsOneWidget);
 
-    await tester.tap(find.text('Join The Village'));
+    await tester.tap(find.text('Join the Village'));
     await tester.pumpAndSettle();
 
     expect(find.text('Create Your Account'), findsOneWidget);
@@ -17,7 +17,7 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    expect(find.text('Join The Village'), findsOneWidget);
+    expect(find.text('Join the Village'), findsOneWidget);
   });
 
   testWidgets('welcome screen opens the sign in screen', (tester) async {
@@ -34,13 +34,13 @@ void main() {
   testWidgets('account provider opens the Village Promise', (tester) async {
     await tester.pumpWidget(const MyApp());
 
-    await tester.tap(find.text('Join The Village'));
+    await tester.tap(find.text('Join the Village'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Continue with Email'));
     await tester.pumpAndSettle();
 
     expect(find.text('Before you enter,'), findsOneWidget);
-    expect(find.text('I agree to The Village Promise.'), findsOneWidget);
+    expect(find.text('I agree to the Village Promise.'), findsOneWidget);
 
     final promiseButton = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'I Promise'),

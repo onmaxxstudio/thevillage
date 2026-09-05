@@ -1,4 +1,4 @@
-package com.example.ineedmyvillage
+package com.onmaxxstudio.askthevillage
 
 import io.flutter.embedding.android.FlutterActivity
 
