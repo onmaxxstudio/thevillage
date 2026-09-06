@@ -32,6 +32,20 @@ class _HomeScreenState extends State<HomeScreen> {
     (Icons.sentiment_very_dissatisfied_outlined, 'Not good'),
   ];
 
+  static const breathingLessons = [
+    'Breathe in for 4. Hold for 4. Exhale for 6.',
+    'Inhale calm. Exhale what you cannot control.',
+    'Take three slow breaths, making each exhale longer.',
+    'Breathe in for 4. Hold for 4. Breathe out for 4.',
+    'Drop your shoulders and breathe into the pause.',
+    'Place a hand on your heart and breathe slowly for one minute.',
+    'Inhale possibility. Exhale pressure.',
+  ];
+
+  String get breathingLesson {
+    return breathingLessons[DateTime.now().weekday - 1];
+  }
+
   MoodCheckIn? get today {
     final now = DateTime.now();
     for (final entry in history) {
@@ -241,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
           fit: StackFit.expand,
           children: [
             Image.asset(
-              'assets/images/create_account_hero.png',
+              'assets/images/home_breathing_hero.png',
               fit: BoxFit.cover,
               alignment: Alignment.center,
             ),
@@ -284,11 +298,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'TODAY’S BREATH',
+                        style: TextStyle(
+                          color: gold,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
                       Text(
-                        'Your village is here.',
+                        breathingLesson,
                         style: GoogleFonts.inter(
-                          fontSize: 16,
+                          fontSize: 13,
+                          height: 1.3,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
