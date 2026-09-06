@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "696766963629",
+    "project_id": "the-village-d7af4",
+    "storage_bucket": "the-village-d7af4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:696766963629:android:af61a639ccfcd654c08b24",
+        "android_client_info": {
+          "package_name": "com.example.ineedmyvillage"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "696766963629-1es5dt4hc36hfis3mhfhmd2qr1vnvh26.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjXDKTYTMssHLilY8lPIYEniRtVixtXJ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "696766963629-1es5dt4hc36hfis3mhfhmd2qr1vnvh26.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "696766963629-5irjl1jfg0lg6f7bb6itc6k6v8u6ic3f.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ineedmyvillage"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:696766963629:android:4d98a7c11ca5901cc08b24",
+        "android_client_info": {
+          "package_name": "com.onmaxxstudio.askthevillage"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "696766963629-1es5dt4hc36hfis3mhfhmd2qr1vnvh26.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjXDKTYTMssHLilY8lPIYEniRtVixtXJ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "696766963629-1es5dt4hc36hfis3mhfhmd2qr1vnvh26.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "696766963629-5irjl1jfg0lg6f7bb6itc6k6v8u6ic3f.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ineedmyvillage"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
