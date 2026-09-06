@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'home_screen.dart';
+
 class VillagePromiseScreen extends StatefulWidget {
   const VillagePromiseScreen({super.key});
 
@@ -126,12 +128,11 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
                             height: 55,
                             child: FilledButton.icon(
                               onPressed: agreed
-                                  ? () => ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Promise accepted. The Home screen is next.',
-                                          ),
+                                  ? () => Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => const HomeScreen(),
                                         ),
+                                        (route) => false,
                                       )
                                   : null,
                               style: FilledButton.styleFrom(
