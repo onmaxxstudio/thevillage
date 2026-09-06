@@ -1,6 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+import '../firebase_options.dart';
 
 class AuthService {
   FirebaseAuth get _auth {
@@ -37,11 +40,27 @@ class AuthService {
     return _auth.sendPasswordResetEmail(email: email.trim());
   }
 
-  Future<UserCredential> signInWithGoogle() {
+  bool _googleInitialized = false;
+
+  Future<UserCredential> signInWithGoogle() async {
     final provider = GoogleAuthProvider();
-    return kIsWeb
-        ? _auth.signInWithPopup(provider)
-        : _auth.signInWithProvider(provider);
+    if (kIsWeb) return _auth.signInWithPopup(provider);
+
+    if (!_googleInitialized) {
+      await GoogleSignIn.instance.initialize(
+        clientId: defaultTargetPlatform == TargetPlatform.iOS
+            ? DefaultFirebaseOptions.googleIosClientId
+            : null,
+        serverClientId: DefaultFirebaseOptions.googleServerClientId,
+      );
+      _googleInitialized = true;
+    }
+    final googleUser = await GoogleSignIn.instance.authenticate();
+    final googleAuth = googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      idToken: googleAuth.idToken,
+    );
+    return _auth.signInWithCredential(credential);
   }
 
   Future<UserCredential> signInWithApple() {
