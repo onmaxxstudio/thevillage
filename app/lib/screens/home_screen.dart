@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'ask_village_screen.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -25,6 +27,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ..showSnackBar(
         SnackBar(content: Text('$feature is the next part of your village.')),
       );
+  }
+
+  void openAsk() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const AskVillageScreen()),
+    );
   }
 
   @override
@@ -364,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(width: 10),
           FilledButton.icon(
-            onPressed: () => comingSoon('Ask the Village'),
+            onPressed: openAsk,
             style: FilledButton.styleFrom(backgroundColor: cream, foregroundColor: sage),
             iconAlignment: IconAlignment.end,
             icon: const Icon(Icons.arrow_forward_rounded),
@@ -463,7 +471,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: InkWell(
                 onTap: () {
                   setState(() => selectedTab = index);
-                  if (index != 0) comingSoon(items[index].$2);
+                  if (index == 2) {
+                    openAsk();
+                  } else if (index != 0) {
+                    comingSoon(items[index].$2);
+                  }
                 },
                 borderRadius: BorderRadius.circular(20),
                 child: Padding(
