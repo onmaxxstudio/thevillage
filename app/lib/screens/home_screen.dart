@@ -95,6 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final saved = await checkInService.saveToday(
       mood: result.mood,
       details: result.details,
+      periodStatus: result.periodStatus,
+      healthNotes: result.healthNotes,
     );
     if (!mounted) return;
     setState(() => history = saved);
@@ -837,10 +839,17 @@ class _RoundIcon extends StatelessWidget {
 }
 
 class _CheckInResult {
-  const _CheckInResult(this.mood, this.details);
+  const _CheckInResult({
+    required this.mood,
+    required this.details,
+    required this.periodStatus,
+    required this.healthNotes,
+  });
 
   final String mood;
   final String details;
+  final String periodStatus;
+  final String healthNotes;
 }
 
 class _CheckInSheet extends StatefulWidget {
@@ -854,21 +863,37 @@ class _CheckInSheet extends StatefulWidget {
 }
 
 class _CheckInSheetState extends State<_CheckInSheet> {
+  static const periodOptions = [
+    'No period today',
+    'Started today',
+    'On my period',
+    'Ending today',
+    'Not tracking',
+  ];
+
   String? selectedMood;
+  String? selectedPeriodStatus;
   late final TextEditingController detailsController;
+  late final TextEditingController healthNotesController;
 
   @override
   void initState() {
     super.initState();
     selectedMood = widget.initialMood ?? widget.existing?.mood;
+    final savedPeriod = widget.existing?.periodStatus ?? '';
+    selectedPeriodStatus = savedPeriod.isEmpty ? null : savedPeriod;
     detailsController = TextEditingController(
       text: widget.existing?.details ?? '',
+    );
+    healthNotesController = TextEditingController(
+      text: widget.existing?.healthNotes ?? '',
     );
   }
 
   @override
   void dispose() {
     detailsController.dispose();
+    healthNotesController.dispose();
     super.dispose();
   }
 
@@ -882,8 +907,10 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     Navigator.pop(
       context,
       _CheckInResult(
-        selectedMood!,
-        includeDetails ? detailsController.text : '',
+        mood: selectedMood!,
+        details: includeDetails ? detailsController.text : '',
+        periodStatus: includeDetails ? selectedPeriodStatus ?? '' : '',
+        healthNotes: includeDetails ? healthNotesController.text : '',
       ),
     );
   }
@@ -959,7 +986,63 @@ class _CheckInSheetState extends State<_CheckInSheet> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Want to add more details?',
+              'Period (optional)',
+              style: GoogleFonts.inter(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Skip this if it doesn’t apply to you.',
+              style: TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: [
+                for (final option in periodOptions)
+                  ChoiceChip(
+                    label: Text(option),
+                    selected: selectedPeriodStatus == option,
+                    onSelected: (selected) {
+                      setState(() {
+                        selectedPeriodStatus = selected ? option : null;
+                      });
+                    },
+                    selectedColor: _HomeScreenState.paleSage,
+                    side: const BorderSide(color: _HomeScreenState.line),
+                    showCheckmark: false,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Health notes (optional)',
+              style: GoogleFonts.inter(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: healthNotesController,
+              minLines: 2,
+              maxLines: 4,
+              maxLength: 500,
+              decoration: InputDecoration(
+                hintText: 'Symptoms, sleep, pain, medication, or anything else…',
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: .55),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Personal notes (optional)',
               style: GoogleFonts.inter(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -968,11 +1051,11 @@ class _CheckInSheetState extends State<_CheckInSheet> {
             const SizedBox(height: 6),
             TextField(
               controller: detailsController,
-              minLines: 3,
-              maxLines: 5,
+              minLines: 2,
+              maxLines: 4,
               maxLength: 500,
               decoration: InputDecoration(
-                hintText: 'Write what’s on your mind (optional)…',
+                hintText: 'Write what’s on your mind…',
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: .55),
                 border: OutlineInputBorder(
@@ -990,7 +1073,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Your check-in and details are private.',
+                    'Your mood, period, and health notes stay private on this device.',
                     style: TextStyle(fontSize: 12),
                   ),
                 ),
@@ -1012,7 +1095,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
               width: double.infinity,
               child: TextButton(
                 onPressed: () => save(includeDetails: false),
-                child: const Text('Skip Details & Save'),
+                child: const Text('Save Mood Only'),
               ),
             ),
           ],
@@ -1034,7 +1117,7 @@ class MoodHistoryScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: _HomeScreenState.cream,
         title: Text(
-          'Mood History',
+          'My Check-In History',
           style: GoogleFonts.playfairDisplay(
             color: _HomeScreenState.sage,
             fontWeight: FontWeight.w600,
@@ -1097,9 +1180,22 @@ class MoodHistoryScreen extends StatelessWidget {
                               '${entry.createdAt.month}/${entry.createdAt.day}/${entry.createdAt.year}',
                               style: const TextStyle(fontSize: 12),
                             ),
+                            if (entry.periodStatus.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Period: ${entry.periodStatus}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                            if (entry.healthNotes.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text('Health notes: ${entry.healthNotes}'),
+                            ],
                             if (entry.details.isNotEmpty) ...[
-                              const SizedBox(height: 7),
-                              Text(entry.details),
+                              const SizedBox(height: 6),
+                              Text('Personal note: ${entry.details}'),
                             ],
                           ],
                         ),
