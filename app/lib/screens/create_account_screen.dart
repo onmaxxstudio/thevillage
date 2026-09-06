@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/auth_service.dart';
+import 'email_sign_up_screen.dart';
 import 'sign_in_screen.dart';
 import 'village_promise_screen.dart';
 
@@ -187,8 +189,35 @@ class _ReferenceCrop extends StatelessWidget {
   }
 }
 
-class _AccountCard extends StatelessWidget {
+class _AccountCard extends StatefulWidget {
   const _AccountCard();
+
+  @override
+  State<_AccountCard> createState() => _AccountCardState();
+}
+
+class _AccountCardState extends State<_AccountCard> {
+  final auth = AuthService();
+  bool loading = false;
+
+  Future<void> authenticate(Future<Object?> Function() action) async {
+    if (loading) return;
+    setState(() => loading = true);
+    try {
+      await action();
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const VillagePromiseScreen()),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AuthService.messageFor(error))),
+      );
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -226,20 +255,30 @@ class _AccountCard extends StatelessWidget {
           _AuthButton(
             icon: const Icon(Icons.apple, size: 26),
             label: 'Continue with Apple',
-            onPressed: () => _continueToPromise(context),
+            onPressed: loading
+                ? null
+                : () => authenticate(auth.signInWithApple),
           ),
           const SizedBox(height: 11),
           _AuthButton(
             icon: const _GoogleMark(),
             label: 'Continue with Google',
-            onPressed: () => _continueToPromise(context),
+            onPressed: loading
+                ? null
+                : () => authenticate(auth.signInWithGoogle),
           ),
           const SizedBox(height: 11),
           _AuthButton(
             icon: const Icon(Icons.mail_outline_rounded,
                 size: 27, color: CreateAccountScreen._sage),
             label: 'Continue with Email',
-            onPressed: () => _continueToPromise(context),
+            onPressed: loading
+                ? null
+                : () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const EmailSignUpScreen(),
+                      ),
+                    ),
           ),
           const SizedBox(height: 17),
           const _Divider(),
@@ -283,11 +322,6 @@ class _AccountCard extends StatelessWidget {
     );
   }
 
-  void _continueToPromise(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const VillagePromiseScreen()),
-    );
-  }
 }
 
 class _AuthButton extends StatelessWidget {
@@ -299,7 +333,7 @@ class _AuthButton extends StatelessWidget {
 
   final Widget icon;
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {

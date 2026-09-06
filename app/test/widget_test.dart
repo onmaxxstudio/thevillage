@@ -27,11 +27,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Welcome back. We’re glad you’re here.'), findsOneWidget);
-    expect(find.text('Email or Username'), findsOneWidget);
+    expect(find.text('Email'), findsOneWidget);
     expect(find.text('Recover My Account'), findsOneWidget);
   });
 
-  testWidgets('account provider opens the Village Promise', (tester) async {
+  testWidgets('email account option opens the real sign-up form', (tester) async {
     await tester.pumpWidget(const MyApp());
 
     await tester.tap(find.text('Join the Village'));
@@ -39,20 +39,9 @@ void main() {
     await tester.tap(find.text('Continue with Email'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Before you enter,'), findsOneWidget);
-    expect(find.text('I agree to the Village Promise.'), findsOneWidget);
-
-    final promiseButton = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'I Promise'),
-    );
-    expect(promiseButton.onPressed, isNull);
-
-    await tester.tap(find.byType(Checkbox));
-    await tester.pump();
-
-    final enabledPromiseButton = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'I Promise'),
-    );
-    expect(enabledPromiseButton.onPressed, isNotNull);
+    expect(find.text('Join Ask the Village'), findsOneWidget);
+    expect(find.text('Your name'), findsOneWidget);
+    expect(find.text('Confirm password'), findsOneWidget);
+    expect(find.text('Create My Account'), findsOneWidget);
   });
 }

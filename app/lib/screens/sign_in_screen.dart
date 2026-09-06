@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/auth_service.dart';
 import 'create_account_screen.dart';
 import 'village_promise_screen.dart';
 
@@ -21,6 +22,9 @@ class _SignInScreenState extends State<SignInScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool hidePassword = true;
+  bool loading = false;
+
+  final auth = AuthService();
 
   @override
   void dispose() {
@@ -29,11 +33,55 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  void submit() {
+  Future<void> submit() async {
     if (!(formKey.currentState?.validate() ?? false)) return;
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const VillagePromiseScreen()),
+    await authenticate(
+      () => auth.signInWithEmail(
+        emailController.text,
+        passwordController.text,
+      ),
     );
+  }
+
+  Future<void> authenticate(Future<Object?> Function() action) async {
+    if (loading) return;
+    setState(() => loading = true);
+    try {
+      await action();
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const VillagePromiseScreen()),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AuthService.messageFor(error))),
+      );
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> resetPassword() async {
+    final email = emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter your email address first.')),
+      );
+      return;
+    }
+    try {
+      await auth.sendPasswordReset(email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password reset email sent.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AuthService.messageFor(error))),
+      );
+    }
   }
 
   @override
@@ -72,16 +120,16 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          const _FieldLabel('Email or Username'),
+                          const _FieldLabel('Email'),
                           const SizedBox(height: 7),
                           TextFormField(
                             controller: emailController,
                             decoration: fieldDecoration(
-                              'Enter your email or username',
+                              'Enter your email',
                               Icons.mail_outline_rounded,
                             ),
                             validator: (value) => value == null || value.trim().isEmpty
-                                ? 'Enter your email or username'
+                                ? 'Enter your email'
                                 : null,
                           ),
                           const SizedBox(height: 17),
@@ -111,24 +159,33 @@ class _SignInScreenState extends State<SignInScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {},
+                              onPressed: loading ? null : resetPassword,
                               child: const Text('Forgot password?'),
                             ),
                           ),
                           SizedBox(
                             height: 54,
                             child: FilledButton(
-                              onPressed: submit,
+                              onPressed: loading ? null : submit,
                               style: FilledButton.styleFrom(
                                 backgroundColor: sage,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(11),
                                 ),
                               ),
-                              child: const Text(
-                                'Sign In',
-                                style: TextStyle(fontSize: 18),
-                              ),
+                              child: loading
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Sign In',
+                                      style: TextStyle(fontSize: 18),
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 18),
@@ -149,7 +206,9 @@ class _SignInScreenState extends State<SignInScreen> {
                                 child: _SocialButton(
                                   icon: Icons.apple,
                                   label: 'Apple',
-                                  onPressed: continueToPromise,
+                                  onPressed: loading
+                                      ? null
+                                      : () => authenticate(auth.signInWithApple),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -157,7 +216,9 @@ class _SignInScreenState extends State<SignInScreen> {
                                 child: _SocialButton(
                                   icon: Icons.g_mobiledata_rounded,
                                   label: 'Google',
-                                  onPressed: continueToPromise,
+                                  onPressed: loading
+                                      ? null
+                                      : () => authenticate(auth.signInWithGoogle),
                                 ),
                               ),
                             ],
@@ -182,7 +243,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     width: double.infinity,
                     height: 51,
                     child: OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: loading ? null : resetPassword,
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: sage),
                         shape: RoundedRectangleBorder(
@@ -214,12 +275,6 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  void continueToPromise() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const VillagePromiseScreen()),
     );
   }
 
@@ -301,7 +356,7 @@ class _SocialButton extends StatelessWidget {
 
   final IconData icon;
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
