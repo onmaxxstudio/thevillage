@@ -7,21 +7,21 @@ class MoodCheckIn {
     required this.mood,
     required this.createdAt,
     this.details = '',
-    this.periodStatus = '',
+    this.periodStarted = false,
     this.healthNotes = '',
   });
 
   final String mood;
   final DateTime createdAt;
   final String details;
-  final String periodStatus;
+  final bool periodStarted;
   final String healthNotes;
 
   Map<String, Object> toJson() => {
         'mood': mood,
         'createdAt': createdAt.toIso8601String(),
         'details': details,
-        'periodStatus': periodStatus,
+        'periodStarted': periodStarted,
         'healthNotes': healthNotes,
       };
 
@@ -31,7 +31,8 @@ class MoodCheckIn {
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),
       details: json['details'] as String? ?? '',
-      periodStatus: json['periodStatus'] as String? ?? '',
+      periodStarted: json['periodStarted'] as bool? ??
+          json['periodStatus'] == 'Started today',
       healthNotes: json['healthNotes'] as String? ?? '',
     );
   }
@@ -60,7 +61,7 @@ class CheckInService {
   Future<List<MoodCheckIn>> saveToday({
     required String mood,
     required String details,
-    required String periodStatus,
+    required bool periodStarted,
     required String healthNotes,
   }) async {
     final history = await load();
@@ -72,7 +73,7 @@ class CheckInService {
         mood: mood,
         createdAt: now,
         details: details.trim(),
-        periodStatus: periodStatus,
+        periodStarted: periodStarted,
         healthNotes: healthNotes.trim(),
       ),
     );

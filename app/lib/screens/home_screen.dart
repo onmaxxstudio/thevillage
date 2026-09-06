@@ -95,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final saved = await checkInService.saveToday(
       mood: result.mood,
       details: result.details,
-      periodStatus: result.periodStatus,
+      periodStarted: result.periodStarted,
       healthNotes: result.healthNotes,
     );
     if (!mounted) return;
@@ -842,13 +842,13 @@ class _CheckInResult {
   const _CheckInResult({
     required this.mood,
     required this.details,
-    required this.periodStatus,
+    required this.periodStarted,
     required this.healthNotes,
   });
 
   final String mood;
   final String details;
-  final String periodStatus;
+  final bool periodStarted;
   final String healthNotes;
 }
 
@@ -863,16 +863,8 @@ class _CheckInSheet extends StatefulWidget {
 }
 
 class _CheckInSheetState extends State<_CheckInSheet> {
-  static const periodOptions = [
-    'No period today',
-    'Started today',
-    'On my period',
-    'Ending today',
-    'Not tracking',
-  ];
-
   String? selectedMood;
-  String? selectedPeriodStatus;
+  bool periodStarted = false;
   late final TextEditingController detailsController;
   late final TextEditingController healthNotesController;
 
@@ -880,8 +872,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
   void initState() {
     super.initState();
     selectedMood = widget.initialMood ?? widget.existing?.mood;
-    final savedPeriod = widget.existing?.periodStatus ?? '';
-    selectedPeriodStatus = savedPeriod.isEmpty ? null : savedPeriod;
+    periodStarted = widget.existing?.periodStarted ?? false;
     detailsController = TextEditingController(
       text: widget.existing?.details ?? '',
     );
@@ -909,7 +900,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
       _CheckInResult(
         mood: selectedMood!,
         details: includeDetails ? detailsController.text : '',
-        periodStatus: includeDetails ? selectedPeriodStatus ?? '' : '',
+        periodStarted: periodStarted,
         healthNotes: includeDetails ? healthNotesController.text : '',
       ),
     );
@@ -985,37 +976,24 @@ class _CheckInSheetState extends State<_CheckInSheet> {
               ],
             ),
             const SizedBox(height: 20),
-            Text(
-              'Period (optional)',
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
+            CheckboxListTile(
+              value: periodStarted,
+              onChanged: (value) {
+                setState(() => periodStarted = value ?? false);
+              },
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              activeColor: _HomeScreenState.sage,
+              title: Text(
+                'My period started today',
+                style: GoogleFonts.inter(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Skip this if it doesn’t apply to you.',
-              style: TextStyle(fontSize: 12),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 7,
-              runSpacing: 7,
-              children: [
-                for (final option in periodOptions)
-                  ChoiceChip(
-                    label: Text(option),
-                    selected: selectedPeriodStatus == option,
-                    onSelected: (selected) {
-                      setState(() {
-                        selectedPeriodStatus = selected ? option : null;
-                      });
-                    },
-                    selectedColor: _HomeScreenState.paleSage,
-                    side: const BorderSide(color: _HomeScreenState.line),
-                    showCheckmark: false,
-                  ),
-              ],
+              subtitle: const Text(
+                'Saving the start date helps estimate your next period.',
+              ),
             ),
             const SizedBox(height: 20),
             Text(
@@ -1073,7 +1051,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Your mood, period, and health notes stay private on this device.',
+                    'Your mood, period start date, and health notes stay private on this device.',
                     style: TextStyle(fontSize: 12),
                   ),
                 ),
@@ -1095,7 +1073,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
               width: double.infinity,
               child: TextButton(
                 onPressed: () => save(includeDetails: false),
-                child: const Text('Save Mood Only'),
+                child: const Text('Save Without Notes'),
               ),
             ),
           ],
@@ -1127,6 +1105,8 @@ class MoodHistoryScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
+          _PeriodPredictionCard(history: history),
+          const SizedBox(height: 14),
           _MoodTrendChart(history: history),
           const SizedBox(height: 22),
           Text(
@@ -1180,11 +1160,11 @@ class MoodHistoryScreen extends StatelessWidget {
                               '${entry.createdAt.month}/${entry.createdAt.day}/${entry.createdAt.year}',
                               style: const TextStyle(fontSize: 12),
                             ),
-                            if (entry.periodStatus.isNotEmpty) ...[
+                            if (entry.periodStarted) ...[
                               const SizedBox(height: 8),
-                              Text(
-                                'Period: ${entry.periodStatus}',
-                                style: const TextStyle(
+                              const Text(
+                                'Period started',
+                                style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -1205,6 +1185,139 @@ class MoodHistoryScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
             ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PeriodPredictionCard extends StatelessWidget {
+  const _PeriodPredictionCard({required this.history});
+
+  final List<MoodCheckIn> history;
+
+  static const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final starts = history
+        .where((entry) => entry.periodStarted)
+        .map(
+          (entry) => DateTime(
+            entry.createdAt.year,
+            entry.createdAt.month,
+            entry.createdAt.day,
+          ),
+        )
+        .toList()
+      ..sort();
+
+    if (starts.isEmpty) {
+      return _predictionShell(
+        title: 'Next Period Estimate',
+        message:
+            'Mark “My period started today” in a Daily Check-In to begin tracking.',
+      );
+    }
+
+    var cycleDays = 28;
+    if (starts.length > 1) {
+      final intervals = <int>[];
+      for (var index = 1; index < starts.length; index++) {
+        final days = starts[index].difference(starts[index - 1]).inDays;
+        if (days > 0) intervals.add(days);
+      }
+      if (intervals.isNotEmpty) {
+        cycleDays =
+            (intervals.reduce((a, b) => a + b) / intervals.length).round();
+      }
+    }
+
+    var estimate = starts.last.add(Duration(days: cycleDays));
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    while (estimate.isBefore(todayOnly)) {
+      estimate = estimate.add(Duration(days: cycleDays));
+    }
+
+    final date =
+        '${monthNames[estimate.month - 1]} ${estimate.day}, ${estimate.year}';
+    final detail = starts.length == 1
+        ? 'Early estimate using a 28-day cycle. It becomes more personal after more start dates.'
+        : 'Based on ${starts.length} saved period start dates and an average ${cycleDays}-day cycle.';
+
+    return _predictionShell(
+      title: 'Next Period Estimate',
+      message: 'Around $date',
+      detail: detail,
+    );
+  }
+
+  Widget _predictionShell({
+    required String title,
+    required String message,
+    String? detail,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7E8E7),
+        border: Border.all(color: _HomeScreenState.line),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const CircleAvatar(
+            backgroundColor: Color(0xFFFFF4F1),
+            child: Icon(
+              Icons.calendar_month_outlined,
+              color: _HomeScreenState.sage,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.playfairDisplay(
+                    color: _HomeScreenState.ink,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  message,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                if (detail != null) ...[
+                  const SizedBox(height: 5),
+                  Text(detail, style: const TextStyle(fontSize: 12)),
+                ],
+                const SizedBox(height: 5),
+                const Text(
+                  'Estimate only—cycles can vary.',
+                  style: TextStyle(fontSize: 11),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
