@@ -255,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
           fit: StackFit.expand,
           children: [
             Image.asset(
-              'assets/images/home_breathing_hero.png',
+              'assets/images/home_breathing_hero_v2.jpg',
               fit: BoxFit.cover,
               alignment: Alignment.center,
             ),
