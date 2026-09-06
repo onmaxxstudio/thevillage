@@ -379,19 +379,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               if (entry != null)
-                IconButton(
-                  tooltip: 'Mood History',
+                TextButton.icon(
                   onPressed: openHistory,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints.tightFor(
-                    width: 28,
-                    height: 28,
+                  style: TextButton.styleFrom(
+                    foregroundColor: sage,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 5,
+                    ),
+                    minimumSize: const Size(0, 30),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    textStyle: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  icon: const Icon(
-                    Icons.show_chart_rounded,
-                    color: sage,
-                    size: 21,
-                  ),
+                  icon: const Icon(Icons.history_rounded, size: 16),
+                  label: const Text('My History'),
                 ),
             ],
           ),
