@@ -1,8 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/auth_service.dart';
 import 'create_account_screen.dart';
+import 'home_screen.dart';
 import 'village_promise_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -227,6 +229,59 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                   ),
+                  if (Firebase.apps.isEmpty) ...[
+                    const SizedBox(height: 18),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8EBDD),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: sage),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.phone_iphone_rounded,
+                            color: sage,
+                            size: 30,
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            'Web Preview Mode',
+                            style: GoogleFonts.inter(
+                              color: sage,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Sign-in is not connected in this browser yet. '
+                            'You can still preview the app screens.',
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const HomeScreen(),
+                                ),
+                              ),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: sage,
+                                padding: const EdgeInsets.all(14),
+                              ),
+                              icon: const Icon(Icons.visibility_outlined),
+                              label: const Text('Preview Home Screen'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 22),
                   Text(
                     'Trouble signing in?',
