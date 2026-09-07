@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/check_in_service.dart';
+import '../services/notification_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
 import 'circle_screen.dart';
 import 'village_feed_screen.dart';
 import 'profile_screen.dart';
+import 'notifications_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -65,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     loadHistory();
+    NotificationService().load();
   }
 
   Future<void> loadHistory() async {
@@ -79,6 +83,22 @@ class _HomeScreenState extends State<HomeScreen> {
   void openVillage() => VillageNavigationScope.of(context).onSelect(3);
 
   void openProfile() => VillageNavigationScope.of(context).onSelect(4);
+
+  void openNotifications() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const NotificationsScreen(),
+      ),
+    );
+  }
+
+  void openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const SettingsScreen(),
+      ),
+    );
+  }
 
   void comingSoon(String feature) {
     ScaffoldMessenger.of(context)
@@ -185,8 +205,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     openCircle();
                   } else if (item.$2 == 'Village') {
                     openVillage();
-                  } else if (item.$2 != 'Home') {
-                    comingSoon(item.$2);
+                  } else if (item.$2 == 'Settings') {
+                    openSettings();
                   }
                 },
               ),
@@ -227,30 +247,40 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                IconButton(
-                  tooltip: 'Notifications',
-                  onPressed: () => comingSoon('Notifications'),
-                  icon: const Icon(Icons.notifications_none_rounded, size: 29),
-                ),
-                Positioned(
-                  right: 3,
-                  top: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: sage,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Text(
-                      '3',
-                      style: TextStyle(color: Colors.white, fontSize: 10),
-                    ),
+            ValueListenableBuilder<int>(
+              valueListenable: NotificationService.unreadCount,
+              builder: (context, unreadCount, _) => Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    tooltip: 'Notifications',
+                    onPressed: openNotifications,
+                    icon:
+                        const Icon(Icons.notifications_none_rounded, size: 29),
                   ),
-                ),
-              ],
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 3,
+                      top: 0,
+                      child: Container(
+                        constraints: const BoxConstraints(minWidth: 18),
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: sage,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          unreadCount > 9 ? '9+' : '$unreadCount',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ],
         ),
