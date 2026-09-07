@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/village_post_service.dart';
+import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
 
 class VillageFeedScreen extends StatefulWidget {
@@ -429,13 +430,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   }
 
   Future<void> _createVillagePost() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const AskVillageScreen(),
-      ),
-    );
-    if (!mounted) return;
-    await _load();
+    VillageNavigationScope.of(context).onSelect(2);
   }
 
   @override
@@ -447,7 +442,8 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
         backgroundColor: cream,
         leading: IconButton(
           tooltip: 'Back',
-          onPressed: () => Navigator.pop(context),
+          onPressed: () =>
+              VillageNavigationScope.of(context).onSelect(0),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(
