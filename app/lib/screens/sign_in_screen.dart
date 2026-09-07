@@ -50,9 +50,14 @@ class _SignInScreenState extends State<SignInScreen> {
     setState(() => loading = true);
     try {
       await action();
+      final acceptedPromise = await auth.hasAcceptedVillagePromise();
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const VillagePromiseScreen()),
+        MaterialPageRoute<void>(
+          builder: (_) => acceptedPromise
+              ? const HomeScreen()
+              : const VillagePromiseScreen(),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
