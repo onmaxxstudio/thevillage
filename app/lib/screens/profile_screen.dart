@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -174,9 +173,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String messageFor(Object error) {
-    if (error is UsernameTakenException) {
-      return 'That username is already taken. Try another one.';
-    }
     if (error is ProfileValidationException) return error.message;
     if (error is FirebaseAuthException &&
         error.code == 'requires-recent-login') {
@@ -444,17 +440,31 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
-class BlockedAccountsScreen extends StatelessWidget {
+class BlockedAccountsScreen extends StatefulWidget {
   const BlockedAccountsScreen({super.key});
 
   @override
+  State<BlockedAccountsScreen> createState() => _BlockedAccountsScreenState();
+}
+
+class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
+  final service = ProfileService();
+  late Future<List<BlockedAccount>> accounts = service.blockedAccounts();
+
+  Future<void> unblock(BlockedAccount account) async {
+    await service.unblock(account.uid);
+    if (mounted) {
+      setState(() => accounts = service.blockedAccounts());
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final service = ProfileService();
     return Scaffold(
       backgroundColor: _ProfileScreenState.cream,
       appBar: AppBar(title: const Text('Blocked accounts')),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: service.blockedAccounts(),
+      body: FutureBuilder<List<BlockedAccount>>(
+        future: accounts,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
@@ -464,8 +474,8 @@ class BlockedAccountsScreen extends StatelessWidget {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final accounts = snapshot.data!.docs;
-          if (accounts.isEmpty) {
+          final blocked = snapshot.data!;
+          if (blocked.isEmpty) {
             return const Center(
               child: Padding(
                 padding: EdgeInsets.all(28),
@@ -478,20 +488,18 @@ class BlockedAccountsScreen extends StatelessWidget {
           }
           return ListView.separated(
             padding: const EdgeInsets.all(18),
-            itemCount: accounts.length,
+            itemCount: blocked.length,
             separatorBuilder: (_, __) => const Divider(),
             itemBuilder: (context, index) {
-              final account = accounts[index];
-              final username =
-                  account.data()['username'] as String? ?? 'Village member';
+              final account = blocked[index];
               return ListTile(
                 leading: const CircleAvatar(
                   backgroundColor: _ProfileScreenState.paleSage,
                   child: Icon(Icons.person_outline),
                 ),
-                title: Text(username),
+                title: Text(account.username),
                 trailing: TextButton(
-                  onPressed: () => service.unblock(account.id),
+                  onPressed: () => unblock(account),
                   child: const Text('Unblock'),
                 ),
               );
