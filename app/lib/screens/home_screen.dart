@@ -1123,6 +1123,21 @@ class MoodHistoryScreen extends StatelessWidget {
           _MoodTrendChart(history: history),
           const SizedBox(height: 22),
           Text(
+            'Monthly Health Summary',
+            style: GoogleFonts.playfairDisplay(
+              color: _HomeScreenState.ink,
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Text(
+            'A private overview based only on your saved check-ins.',
+            style: TextStyle(fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          _MonthlyHealthSummary(history: history),
+          const SizedBox(height: 22),
+          Text(
             'Recent Check-Ins',
             style: GoogleFonts.playfairDisplay(
               color: _HomeScreenState.ink,
@@ -1331,6 +1346,172 @@ class _PeriodPredictionCard extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MonthlyHealthSummary extends StatelessWidget {
+  const _MonthlyHealthSummary({required this.history});
+
+  final List<MoodCheckIn> history;
+
+  static const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    if (history.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .55),
+          border: Border.all(color: _HomeScreenState.line),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: const Text(
+          'Your monthly summaries will appear after you save check-ins.',
+        ),
+      );
+    }
+
+    final grouped = <int, List<MoodCheckIn>>{};
+    for (final entry in history) {
+      final key = entry.createdAt.year * 100 + entry.createdAt.month;
+      grouped.putIfAbsent(key, () => <MoodCheckIn>[]).add(entry);
+    }
+    final months = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+
+    return Column(
+      children: [
+        for (var index = 0; index < months.length; index++) ...[
+          _monthCard(months[index], entries: grouped[months[index]]!),
+          if (index != months.length - 1) const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+
+  Widget _monthCard(
+    int key, {
+    required List<MoodCheckIn> entries,
+  }) {
+    final year = key ~/ 100;
+    final month = key % 100;
+    final moodCounts = <String, int>{};
+    for (final entry in entries) {
+      moodCounts.update(entry.mood, (value) => value + 1, ifAbsent: () => 1);
+    }
+    final mostCommonMood = moodCounts.entries
+        .reduce((a, b) => a.value >= b.value ? a : b)
+        .key;
+    final periodStarts = entries.where((entry) => entry.periodStarted).length;
+    final healthEntries =
+        entries.where((entry) => entry.healthNotes.isNotEmpty).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .58),
+        border: Border.all(color: _HomeScreenState.line),
+        borderRadius: BorderRadius.circular(19),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${monthNames[month - 1]} $year',
+            style: GoogleFonts.playfairDisplay(
+              color: _HomeScreenState.sage,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 9),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              _summaryPill(
+                Icons.fact_check_outlined,
+                '${entries.length} check-in${entries.length == 1 ? '' : 's'}',
+              ),
+              _summaryPill(
+                Icons.favorite_outline_rounded,
+                'Mood: $mostCommonMood',
+              ),
+              _summaryPill(
+                Icons.calendar_today_outlined,
+                '$periodStarts period start${periodStarts == 1 ? '' : 's'}',
+              ),
+              _summaryPill(
+                Icons.health_and_safety_outlined,
+                '${healthEntries.length} health-note day${healthEntries.length == 1 ? '' : 's'}',
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Health notes',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 5),
+          if (healthEntries.isEmpty)
+            const Text(
+              'No health notes recorded this month.',
+              style: TextStyle(fontSize: 12),
+            )
+          else
+            for (final entry in healthEntries.take(3)) ...[
+              Text(
+                '${entry.createdAt.month}/${entry.createdAt.day}  •  ${entry.healthNotes}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 4),
+            ],
+          const SizedBox(height: 6),
+          const Text(
+            'This is a personal record, not medical advice.',
+            style: TextStyle(fontSize: 10.5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryPill(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: _HomeScreenState.paleSage,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: _HomeScreenState.sage),
+          const SizedBox(width: 5),
+          Text(label, style: const TextStyle(fontSize: 11)),
         ],
       ),
     );
