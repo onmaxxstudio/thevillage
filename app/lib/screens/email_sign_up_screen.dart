@@ -19,7 +19,7 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
   static const line = Color(0xFFD9D1C3);
 
   final formKey = GlobalKey<FormState>();
-  final nameController = TextEditingController();
+  final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmController = TextEditingController();
@@ -30,7 +30,7 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
 
   @override
   void dispose() {
-    nameController.dispose();
+    usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmController.dispose();
@@ -42,7 +42,7 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
     setState(() => loading = true);
     try {
       await auth.createAccount(
-        name: nameController.text,
+        name: usernameController.text,
         email: emailController.text,
         password: passwordController.text,
       );
@@ -102,11 +102,11 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
                     ),
                     const SizedBox(height: 24),
                     TextFormField(
-                      controller: nameController,
+                      controller: usernameController,
                       textInputAction: TextInputAction.next,
-                      decoration: decoration('Your name', Icons.person_outline),
+                      decoration: decoration('Username', Icons.alternate_email),
                       validator: (value) => value == null || value.trim().isEmpty
-                          ? 'Enter your name'
+                          ? 'Enter a username'
                           : null,
                     ),
                     const SizedBox(height: 14),
