@@ -33,6 +33,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   final Set<String> expandedReplyPosts = {};
   bool loading = true;
   String currentUsername = 'KindHeart';
+  final Map<String, String> usernamesByUid = {};
   late String filter;
 
   static const filters = [
@@ -64,20 +65,42 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   }
 
   String _postAuthor(VillagePost post) {
-    if (post.isMine && post.author != 'Anonymous Neighbor') {
-      return currentHandle;
-    }
-    return post.author;
+    if (post.author == 'Anonymous Neighbor') return post.author;
+    if (post.isMine) return currentHandle;
+    final latestUsername = usernamesByUid[post.authorUid];
+    return latestUsername == null ? post.author : '@$latestUsername';
   }
 
   String _replyAuthor(VillageReply reply) {
+    if (reply.author == 'Anonymous Neighbor') return reply.author;
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     final isMyReply = reply.authorUid == currentUid ||
         (reply.authorUid == null && reply.author == '@KindHeart');
-    if (isMyReply && reply.author != 'Anonymous Neighbor') {
-      return currentHandle;
+    if (isMyReply) return currentHandle;
+    final latestUsername = usernamesByUid[reply.authorUid];
+    return latestUsername == null ? reply.author : '@$latestUsername';
+  }
+
+  Future<void> _loadPublicUsernames(Iterable<VillagePost> values) async {
+    final ids = <String>{};
+    for (final post in values) {
+      if (post.authorUid != null) ids.add(post.authorUid!);
+      for (final reply in post.replies) {
+        if (reply.authorUid != null) ids.add(reply.authorUid!);
+      }
     }
-    return reply.author;
+
+    final resolved = await Future.wait(
+      ids.map((uid) async =>
+          MapEntry(uid, await ProfileService.publicUsername(uid))),
+    );
+    usernamesByUid
+      ..clear()
+      ..addEntries(
+        resolved.where((entry) => entry.value != null).map(
+              (entry) => MapEntry(entry.key, entry.value!),
+            ),
+      );
   }
 
   void _refresh() => setState(() {});
@@ -102,6 +125,8 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                   .toList(),
             ))
         .toList();
+    await _loadPublicUsernames(visibleSaved);
+    if (!mounted) return;
     final savedIds = visibleSaved.map((post) => post.id).toSet();
     final newSamples = service.lastLoadUsedCloud
         ? const <VillagePost>[]
