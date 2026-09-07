@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../services/auth_service.dart';
 import '../services/check_in_service.dart';
 import 'ask_village_screen.dart';
 import 'circle_screen.dart';
 import 'village_feed_screen.dart';
-import 'welcome_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -91,79 +90,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> openProfile() async {
-    final auth = AuthService();
-    final user = auth.currentUser;
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: cream,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircleAvatar(
-                radius: 34,
-                backgroundColor: paleSage,
-                child: Icon(
-                  Icons.person_outline_rounded,
-                  size: 36,
-                  color: sage,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                user?.displayName?.trim().isNotEmpty == true
-                    ? user!.displayName!
-                    : 'Village Member',
-                style: GoogleFonts.playfairDisplay(
-                  color: sage,
-                  fontSize: 27,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              if (user?.email != null) ...[
-                const SizedBox(height: 4),
-                Text(user!.email!, style: const TextStyle(fontSize: 14)),
-              ],
-              const SizedBox(height: 22),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    Navigator.of(sheetContext).pop();
-                    await auth.signOut();
-                    if (!mounted) return;
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const WelcomeScreen(),
-                      ),
-                      (route) => false,
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: sage,
-                    side: const BorderSide(color: sage),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  icon: const Icon(Icons.logout_rounded),
-                  label: const Text(
-                    'Sign Out',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  void openProfile() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
     );
-    if (mounted) setState(() => selectedTab = 0);
   }
 
   void comingSoon(String feature) {
