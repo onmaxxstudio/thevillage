@@ -67,6 +67,9 @@ class _CircleScreenState extends State<CircleScreen> {
   static const _statusKey = 'ask_the_village_circle_status';
   static const _statusNoteKey = 'ask_the_village_circle_status_note';
   static const _reachOutsKey = 'ask_the_village_circle_reach_outs';
+  static const _dismissedRemindersKey =
+      'ask_the_village_dismissed_reminders';
+  static const _dismissedActivityKey = 'ask_the_village_dismissed_activity';
 
   final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
   final TextEditingController statusNoteController = TextEditingController();
@@ -74,6 +77,8 @@ class _CircleScreenState extends State<CircleScreen> {
   String sharedStatusNote = '';
   String? selectedNeed;
   final Set<int> completedReminders = {};
+  final Set<int> dismissedReminders = {};
+  final Set<int> dismissedActivity = {};
   final Set<String> sentRequests = {};
   List<_ReachOut> myReachOuts = [];
   final List<_CircleCandidate> incomingRequests = [
@@ -104,6 +109,10 @@ class _CircleScreenState extends State<CircleScreen> {
     final savedNote = await _preferences.getString(_statusNoteKey);
     final savedReachOuts =
         await _preferences.getStringList(_reachOutsKey) ?? const [];
+    final savedDismissedReminders =
+        await _preferences.getStringList(_dismissedRemindersKey) ?? const [];
+    final savedDismissedActivity =
+        await _preferences.getStringList(_dismissedActivityKey) ?? const [];
     final loadedReachOuts = <_ReachOut>[];
     for (final item in savedReachOuts) {
       try {
@@ -123,6 +132,20 @@ class _CircleScreenState extends State<CircleScreen> {
       sharedStatusNote = savedNote ?? '';
       statusNoteController.text = sharedStatusNote;
       myReachOuts = loadedReachOuts;
+      dismissedReminders
+        ..clear()
+        ..addAll(
+          savedDismissedReminders
+              .map(int.tryParse)
+              .whereType<int>(),
+        );
+      dismissedActivity
+        ..clear()
+        ..addAll(
+          savedDismissedActivity
+              .map(int.tryParse)
+              .whereType<int>(),
+        );
     });
   }
 
@@ -158,6 +181,53 @@ class _CircleScreenState extends State<CircleScreen> {
   void dispose() {
     statusNoteController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveDismissedItems() async {
+    await _preferences.setStringList(
+      _dismissedRemindersKey,
+      dismissedReminders.map((index) => index.toString()).toList(),
+    );
+    await _preferences.setStringList(
+      _dismissedActivityKey,
+      dismissedActivity.map((index) => index.toString()).toList(),
+    );
+  }
+
+  Future<void> _dismissReminder(int index) async {
+    setState(() => dismissedReminders.add(index));
+    await _saveDismissedItems();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Care reminder removed.'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            setState(() => dismissedReminders.remove(index));
+            _saveDismissedItems();
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _dismissActivity(int index) async {
+    setState(() => dismissedActivity.add(index));
+    await _saveDismissedItems();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Circle activity removed.'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            setState(() => dismissedActivity.remove(index));
+            _saveDismissedItems();
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _saveReachOuts() {
@@ -724,38 +794,56 @@ class _CircleScreenState extends State<CircleScreen> {
                   'Small follow-ups can mean everything.',
                 ),
                 const SizedBox(height: 10),
-                _reminderTile(
-                  0,
-                  'Check on Maya tonight',
-                  'She asked for someone to listen.',
-                ),
-                const SizedBox(height: 9),
-                _reminderTile(
-                  1,
-                  'Celebrate Jordan',
-                  'They shared good news about a new job.',
-                ),
+                if (dismissedReminders.length == 2)
+                  const Text('No care reminders right now.')
+                else ...[
+                  if (!dismissedReminders.contains(0))
+                    _reminderTile(
+                      0,
+                      'Check on Maya tonight',
+                      'She asked for someone to listen.',
+                    ),
+                  if (!dismissedReminders.contains(0) &&
+                      !dismissedReminders.contains(1))
+                    const SizedBox(height: 9),
+                  if (!dismissedReminders.contains(1))
+                    _reminderTile(
+                      1,
+                      'Celebrate Jordan',
+                      'They shared good news about a new job.',
+                    ),
+                ],
                 const SizedBox(height: 26),
                 _sectionTitle(
                   'Circle activity',
                   'Only updates people chose to share.',
                 ),
                 const SizedBox(height: 10),
-                _activityTile(
-                  initials: 'NB',
-                  color: const Color(0xFFD8C58F),
-                  name: 'Nia',
-                  update: 'Available to talk for the next hour.',
-                  time: '12 min ago',
-                ),
-                const SizedBox(height: 9),
-                _activityTile(
-                  initials: 'JR',
-                  color: const Color(0xFFAFC3A5),
-                  name: 'Jordan',
-                  update: 'Celebrating a small win today.',
-                  time: '1 hr ago',
-                ),
+                if (dismissedActivity.length == 2)
+                  const Text('No new Circle activity.')
+                else ...[
+                  if (!dismissedActivity.contains(0))
+                    _activityTile(
+                      index: 0,
+                      initials: 'NB',
+                      color: const Color(0xFFD8C58F),
+                      name: 'Nia',
+                      update: 'Available to talk for the next hour.',
+                      time: '12 min ago',
+                    ),
+                  if (!dismissedActivity.contains(0) &&
+                      !dismissedActivity.contains(1))
+                    const SizedBox(height: 9),
+                  if (!dismissedActivity.contains(1))
+                    _activityTile(
+                      index: 1,
+                      initials: 'JR',
+                      color: const Color(0xFFAFC3A5),
+                      name: 'Jordan',
+                      update: 'Celebrating a small win today.',
+                      time: '1 hr ago',
+                    ),
+                ],
                 const SizedBox(height: 18),
                 _privacyCard(),
               ],
@@ -1113,6 +1201,14 @@ class _CircleScreenState extends State<CircleScreen> {
                 ],
               ),
             ),
+            IconButton(
+              tooltip: 'Delete reminder',
+              onPressed: () => _dismissReminder(index),
+              icon: Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.red.shade700,
+              ),
+            ),
           ],
         ),
       ),
@@ -1120,6 +1216,7 @@ class _CircleScreenState extends State<CircleScreen> {
   }
 
   Widget _activityTile({
+    required int index,
     required String initials,
     required Color color,
     required String name,
@@ -1163,6 +1260,14 @@ class _CircleScreenState extends State<CircleScreen> {
               );
             },
             icon: const Icon(Icons.favorite_border_rounded, color: sage),
+          ),
+          IconButton(
+            tooltip: 'Delete activity',
+            onPressed: () => _dismissActivity(index),
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.red.shade700,
+            ),
           ),
         ],
       ),
