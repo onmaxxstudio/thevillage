@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CircleScreen extends StatefulWidget {
   const CircleScreen({super.key});
@@ -55,9 +56,68 @@ class _CircleScreenState extends State<CircleScreen> {
     'I need support',
   ];
 
+  static const _statusKey = 'ask_the_village_circle_status';
+  static const _statusNoteKey = 'ask_the_village_circle_status_note';
+
+  final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
+  final TextEditingController statusNoteController = TextEditingController();
   String status = 'Available to listen';
+  String sharedStatusNote = '';
   String? selectedNeed;
   final Set<int> completedReminders = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStatus();
+  }
+
+  Future<void> _loadStatus() async {
+    final savedStatus = await _preferences.getString(_statusKey);
+    final savedNote = await _preferences.getString(_statusNoteKey);
+    if (!mounted) return;
+    setState(() {
+      if (savedStatus != null && statuses.contains(savedStatus)) {
+        status = savedStatus;
+      }
+      sharedStatusNote = savedNote ?? '';
+      statusNoteController.text = sharedStatusNote;
+    });
+  }
+
+  Future<void> _chooseStatus(String option) async {
+    setState(() {
+      status = option;
+      sharedStatusNote = '';
+      statusNoteController.clear();
+    });
+    await _preferences.setString(_statusKey, option);
+    await _preferences.setString(_statusNoteKey, '');
+  }
+
+  Future<void> _shareStatus() async {
+    final note = statusNoteController.text.trim();
+    if (note.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Write a short status first.')),
+      );
+      return;
+    }
+    setState(() => sharedStatusNote = note);
+    await _preferences.setString(_statusKey, status);
+    await _preferences.setString(_statusNoteKey, note);
+    if (!mounted) return;
+    FocusScope.of(context).unfocus();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Your status was shared with your circle.')),
+    );
+  }
+
+  @override
+  void dispose() {
+    statusNoteController.dispose();
+    super.dispose();
+  }
 
   Future<void> _openReachOut() async {
     final need = selectedNeed;
@@ -293,26 +353,62 @@ class _CircleScreenState extends State<CircleScreen> {
                       ChoiceChip(
                         label: Text(option),
                         selected: status == option,
-                        onSelected: (_) => setState(() => status = option),
+                        onSelected: (_) => _chooseStatus(option),
                         selectedColor: paleSage,
                         side: const BorderSide(color: line),
                         showCheckmark: false,
                       ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: statusNoteController,
+                  maxLength: 70,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _shareStatus(),
+                  decoration: InputDecoration(
+                    labelText: 'Write your status',
+                    hintText: 'Example: Can text after 6 PM',
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: .58),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    suffixIcon: IconButton(
+                      tooltip: 'Share status',
+                      onPressed: _shareStatus,
+                      icon: const Icon(Icons.send_rounded, color: sage),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
                 _sectionTitle(
                   'Your people today',
-                  '3 trusted people are available.',
+                  'Your status appears first, followed by your trusted people.',
                 ),
                 const SizedBox(height: 10),
                 SizedBox(
                   height: 112,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: members.length,
+                    itemCount: members.length + 1,
                     separatorBuilder: (_, __) => const SizedBox(width: 10),
-                    itemBuilder: (_, index) => _memberCard(members[index]),
+                    itemBuilder: (_, index) {
+                      if (index == 0) {
+                        return _memberCard(
+                          _CircleMember(
+                            'You',
+                            'KH',
+                            paleSage,
+                            sharedStatusNote.isEmpty
+                                ? status
+                                : sharedStatusNote,
+                            status != 'Quiet today',
+                          ),
+                        );
+                      }
+                      return _memberCard(members[index - 1]);
+                    },
                   ),
                 ),
                 const SizedBox(height: 24),
