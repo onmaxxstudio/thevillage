@@ -47,10 +47,13 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   void _refresh() => setState(() {});
 
   Future<void> _load() async {
-    final mine = await service.load();
+    final saved = await service.load();
     if (!mounted) return;
+    final savedIds = saved.map((post) => post.id).toSet();
+    final newSamples = _samplePosts()
+        .where((post) => !savedIds.contains(post.id));
     setState(() {
-      posts = [...mine, ..._samplePosts()];
+      posts = [...saved, ...newSamples];
       posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       loading = false;
     });
@@ -69,9 +72,23 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
         createdAt: now.subtract(const Duration(minutes: 24)),
         needsSupport: true,
         supportCount: 18,
-        replies: const [
-          'I put my phone in another room and breathe for five minutes.',
-          'A warm shower and writing down tomorrow’s worries helps me.',
+        replies: [
+          VillageReply(
+            id: 'sample-rest-reply-1',
+            text:
+                'I put my phone in another room and breathe for five minutes.',
+            author: '@CalmCorner',
+            createdAt: now.subtract(const Duration(minutes: 18)),
+            supportCount: 7,
+          ),
+          VillageReply(
+            id: 'sample-rest-reply-2',
+            text:
+                'A warm shower and writing down tomorrow’s worries helps me.',
+            author: 'Anonymous Neighbor',
+            createdAt: now.subtract(const Duration(minutes: 12)),
+            supportCount: 4,
+          ),
         ],
         isMine: false,
       ),
@@ -85,8 +102,15 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
         createdAt: now.subtract(const Duration(hours: 3)),
         needsSupport: false,
         supportCount: 31,
-        replies: const [
-          'A boundary can protect the relationship instead of ending it.',
+        replies: [
+          VillageReply(
+            id: 'sample-boundaries-reply-1',
+            text:
+                'A boundary can protect the relationship instead of ending it.',
+            author: '@GentleTruth',
+            createdAt: now.subtract(const Duration(hours: 2)),
+            supportCount: 11,
+          ),
         ],
         isMine: false,
       ),
@@ -100,7 +124,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
         createdAt: now.subtract(const Duration(days: 1)),
         needsSupport: false,
         supportCount: 12,
-        replies: const [],
+        replies: const <VillageReply>[],
         isMine: false,
       ),
     ];
@@ -125,7 +149,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   }
 
   Future<void> _persistMine() {
-    return service.save(posts.where((post) => post.isMine).toList());
+    return service.save(posts);
   }
 
   Future<void> _toggleSupport(VillagePost post) async {
@@ -158,83 +182,157 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
 
   Future<void> _openReplies(VillagePost post) async {
     final controller = TextEditingController();
-    final reply = await showModalBottomSheet<String>(
+    var anonymous = false;
+    final reply = await showModalBottomSheet<VillageReply>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cream,
       showDragHandle: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          2,
-          20,
-          MediaQuery.viewInsetsOf(sheetContext).bottom + 22,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Village Replies',
-                style: GoogleFonts.playfairDisplay(
-                  color: sage,
-                  fontSize: 29,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (post.replies.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 18),
-                  child: Text('Be the first person to respond with care.'),
-                )
-              else
-                for (final existing in post.replies) ...[
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .58),
-                      border: Border.all(color: line),
-                      borderRadius: BorderRadius.circular(15),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final activePost = posts.firstWhere(
+            (item) => item.id == post.id,
+            orElse: () => post,
+          );
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              2,
+              20,
+              MediaQuery.viewInsetsOf(sheetContext).bottom + 22,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Replies to this post',
+                    style: GoogleFonts.playfairDisplay(
+                      color: sage,
+                      fontSize: 29,
+                      fontWeight: FontWeight.w600,
                     ),
-                    child: Text(existing),
+                  ),
+                  const SizedBox(height: 12),
+                  if (activePost.replies.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      child: Text('Be the first person to respond with care.'),
+                    )
+                  else
+                    for (final existing in activePost.replies) ...[
+                      _replyTile(
+                        activePost.id,
+                        existing,
+                        onChanged: () => setSheetState(() {}),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: controller,
+                    minLines: 2,
+                    maxLines: 5,
+                    maxLength: 500,
+                    decoration: InputDecoration(
+                      hintText: 'Reply with kindness…',
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: .62),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    'Post this reply as:',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 7),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ChoiceChip(
+                        avatar: const Icon(Icons.person_outline_rounded, size: 17),
+                        label: const Text('@KindHeart'),
+                        selected: !anonymous,
+                        onSelected: (_) => setSheetState(() => anonymous = false),
+                        selectedColor: paleSage,
+                        side: const BorderSide(color: line),
+                        showCheckmark: false,
+                      ),
+                      ChoiceChip(
+                        avatar: const Icon(
+                          Icons.visibility_off_outlined,
+                          size: 17,
+                        ),
+                        label: const Text('Anonymous'),
+                        selected: anonymous,
+                        onSelected: (_) => setSheetState(() => anonymous = true),
+                        selectedColor: blush,
+                        side: const BorderSide(color: line),
+                        showCheckmark: false,
+                      ),
+                    ],
+                  ),
+                  if (anonymous) ...[
+                    const SizedBox(height: 7),
+                    const Row(
+                      children: [
+                        Icon(Icons.lock_outline_rounded, color: sage, size: 16),
+                        SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Your username will not appear with this reply.',
+                            style: TextStyle(fontSize: 11.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 15),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        final text = controller.text.trim();
+                        if (text.isEmpty) {
+                          ScaffoldMessenger.of(sheetContext).showSnackBar(
+                            const SnackBar(
+                              content: Text('Write a reply first.'),
+                            ),
+                          );
+                          return;
+                        }
+                        final now = DateTime.now();
+                        Navigator.pop(
+                          sheetContext,
+                          VillageReply(
+                            id: now.microsecondsSinceEpoch.toString(),
+                            text: text,
+                            author:
+                                anonymous ? 'Anonymous Neighbor' : '@KindHeart',
+                            createdAt: now,
+                          ),
+                        );
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: sage,
+                        padding: const EdgeInsets.all(15),
+                      ),
+                      icon: const Icon(Icons.chat_bubble_outline_rounded),
+                      label: Text(
+                        anonymous
+                            ? 'Post Anonymous Reply'
+                            : 'Post as @KindHeart',
+                      ),
+                    ),
                   ),
                 ],
-              const SizedBox(height: 8),
-              TextField(
-                controller: controller,
-                minLines: 2,
-                maxLines: 5,
-                maxLength: 500,
-                decoration: InputDecoration(
-                  hintText: 'Reply with kindness…',
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: .62),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
               ),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    final text = controller.text.trim();
-                    if (text.isNotEmpty) Navigator.pop(sheetContext, text);
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: sage,
-                    padding: const EdgeInsets.all(15),
-                  ),
-                  icon: const Icon(Icons.chat_bubble_outline_rounded),
-                  label: const Text('Post Reply'),
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
     controller.dispose();
@@ -243,10 +341,33 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     final index = posts.indexWhere((item) => item.id == post.id);
     if (index < 0) return;
     setState(() {
-      posts[index] = post.copyWith(replies: [...post.replies, reply]);
+      final current = posts[index];
+      posts[index] = current.copyWith(replies: [...current.replies, reply]);
+      expandedReplyPosts.add(post.id);
     });
     await _persistMine();
   }
+
+  Future<void> _toggleReplySupport(String postId, String replyId) async {
+    final postIndex = posts.indexWhere((item) => item.id == postId);
+    if (postIndex < 0) return;
+    final currentPost = posts[postIndex];
+    final replyIndex =
+        currentPost.replies.indexWhere((item) => item.id == replyId);
+    if (replyIndex < 0) return;
+    final currentReply = currentPost.replies[replyIndex];
+    final supported = !currentReply.supportedByMe;
+    final updatedReplies = List<VillageReply>.of(currentPost.replies);
+    updatedReplies[replyIndex] = currentReply.copyWith(
+      supportedByMe: supported,
+      supportCount: currentReply.supportCount + (supported ? 1 : -1),
+    );
+    setState(() {
+      posts[postIndex] = currentPost.copyWith(replies: updatedReplies);
+    });
+    await _persistMine();
+  }
+
 
   Future<void> _deletePost(VillagePost post) async {
     final confirmed = await showDialog<bool>(
@@ -443,6 +564,92 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     );
   }
 
+  Widget _replyTile(
+    String postId,
+    VillageReply reply, {
+    VoidCallback? onChanged,
+  }) {
+    final anonymous = reply.author == 'Anonymous Neighbor';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: paleSage.withValues(alpha: .58),
+        border: Border.all(color: line.withValues(alpha: .7)),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: anonymous ? blush : Colors.white,
+            child: Icon(
+              anonymous
+                  ? Icons.visibility_off_outlined
+                  : Icons.person_outline_rounded,
+              color: sage,
+              size: 17,
+            ),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  reply.author,
+                  style: const TextStyle(
+                    color: sage,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(reply.text),
+                const SizedBox(height: 3),
+                Text(
+                  _timeLabel(reply.createdAt),
+                  style: const TextStyle(fontSize: 10, color: Color(0xFF687067)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 5),
+          Column(
+            children: [
+              IconButton(
+                tooltip: reply.supportedByMe
+                    ? 'Remove support from reply'
+                    : 'Support this reply',
+                onPressed: () async {
+                  await _toggleReplySupport(postId, reply.id);
+                  onChanged?.call();
+                },
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  reply.supportedByMe
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: reply.supportedByMe ? const Color(0xFFB8656E) : sage,
+                  size: 19,
+                ),
+              ),
+              Text(
+                '${reply.supportCount}',
+                style: const TextStyle(
+                  color: sage,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _postCard(VillagePost post) {
     return Container(
       padding: const EdgeInsets.all(15),
@@ -613,50 +820,10 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
             ),
             if (expandedReplyPosts.contains(post.id)) ...[
               const SizedBox(height: 4),
-              for (var index = 0;
-                  index < post.replies.length;
-                  index++)
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(11),
-                  decoration: BoxDecoration(
-                    color: paleSage.withValues(alpha: .58),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const CircleAvatar(
-                        radius: 15,
-                        backgroundColor: Colors.white,
-                        child: Icon(
-                          Icons.person_outline_rounded,
-                          color: sage,
-                          size: 17,
-                        ),
-                      ),
-                      const SizedBox(width: 9),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Village neighbor',
-                              style: TextStyle(
-                                color: sage,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(post.replies[index]),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              for (final reply in post.replies) ...[
+                _replyTile(post.id, reply),
+                const SizedBox(height: 8),
+              ],
               Align(
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton.icon(
