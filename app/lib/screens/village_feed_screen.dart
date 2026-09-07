@@ -198,6 +198,16 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
       );
     });
     await _persistMine();
+    if (supported) {
+      try {
+        await service.notifyPostOwner(
+          post: posts[index],
+          type: 'post_support',
+        );
+      } on Object {
+        // Supporting the post still succeeds if a notification cannot send.
+      }
+    }
   }
 
   Future<void> _toggleSaved(VillagePost post) async {
@@ -384,6 +394,14 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
       expandedReplyPosts.add(post.id);
     });
     await _persistMine();
+    try {
+      await service.notifyPostOwner(
+        post: posts[index],
+        type: 'post_reply',
+      );
+    } on Object {
+      // The reply remains posted if a notification cannot send.
+    }
   }
 
   Future<void> _toggleReplySupport(String postId, String replyId) async {
