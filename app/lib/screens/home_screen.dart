@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/check_in_service.dart';
+import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
 import 'circle_screen.dart';
 import 'village_feed_screen.dart';
@@ -25,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final CheckInService checkInService = CheckInService();
   List<MoodCheckIn> history = [];
-  int selectedTab = 0;
 
   static const moods = <(IconData, String)>[
     (Icons.sentiment_very_satisfied_outlined, 'Great'),
@@ -72,29 +72,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() => history = saved);
   }
 
-  void openAsk() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const AskVillageScreen()),
-    );
-  }
+  void openAsk() => VillageNavigationScope.of(context).onSelect(2);
 
-  void openCircle() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const CircleScreen()),
-    );
-  }
+  void openCircle() => VillageNavigationScope.of(context).onSelect(1);
 
-  void openVillage() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const VillageFeedScreen()),
-    );
-  }
+  void openVillage() => VillageNavigationScope.of(context).onSelect(3);
 
-  void openProfile() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
-    );
-  }
+  void openProfile() => VillageNavigationScope.of(context).onSelect(4);
 
   void comingSoon(String feature) {
     ScaffoldMessenger.of(context)
@@ -167,7 +151,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildNavigation(),
     );
   }
 
@@ -725,91 +708,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNavigation() {
-    const items = [
-      (Icons.home_rounded, 'Home'),
-      (Icons.groups_2_outlined, 'Circle'),
-      (Icons.add_rounded, 'Ask'),
-      (Icons.chat_bubble_outline_rounded, 'Village'),
-      (Icons.person_outline_rounded, 'Profile'),
-    ];
-    return SafeArea(
-      top: false,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(18, 4, 18, 8),
-        decoration: BoxDecoration(
-          color: cream,
-          border: Border.all(color: line),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x1A172019),
-              blurRadius: 16,
-              offset: Offset(0, 6),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
-        child: Row(
-          children: List.generate(items.length, (index) {
-            final ask = index == 2;
-            final selected = selectedTab == index;
-            return Expanded(
-              child: InkWell(
-                onTap: () {
-                  setState(() => selectedTab = index);
-                  if (ask) {
-                    openAsk();
-                  } else if (index == 1) {
-                    openCircle();
-                  } else if (index == 3) {
-                    openVillage();
-                  } else if (index == 4) {
-                    openProfile();
-                  }
-                },
-                borderRadius: BorderRadius.circular(20),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: ask ? 48 : 38,
-                        height: ask ? 48 : 32,
-                        decoration: BoxDecoration(
-                          color: ask
-                              ? sage
-                              : selected
-                                  ? paleSage
-                                  : Colors.transparent,
-                          shape: ask ? BoxShape.circle : BoxShape.rectangle,
-                          borderRadius:
-                              ask ? null : BorderRadius.circular(15),
-                        ),
-                        child: Icon(
-                          items[index].$1,
-                          color: ask
-                              ? Colors.white
-                              : selected
-                                  ? sage
-                                  : ink,
-                        ),
-                      ),
-                      Text(
-                        items[index].$2,
-                        style: const TextStyle(fontSize: 10.5),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-        ),
-      ),
-    );
-  }
+
 }
 
 class _DashboardCard extends StatelessWidget {
