@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,6 +66,7 @@ class _CircleScreenState extends State<CircleScreen> {
 
   static const _statusKey = 'ask_the_village_circle_status';
   static const _statusNoteKey = 'ask_the_village_circle_status_note';
+  static const _reachOutsKey = 'ask_the_village_circle_reach_outs';
 
   final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
   final TextEditingController statusNoteController = TextEditingController();
@@ -72,6 +75,7 @@ class _CircleScreenState extends State<CircleScreen> {
   String? selectedNeed;
   final Set<int> completedReminders = {};
   final Set<String> sentRequests = {};
+  List<_ReachOut> myReachOuts = [];
   final List<_CircleCandidate> incomingRequests = [
     const _CircleCandidate(
       'Monique',
@@ -98,6 +102,19 @@ class _CircleScreenState extends State<CircleScreen> {
   Future<void> _loadStatus() async {
     final savedStatus = await _preferences.getString(_statusKey);
     final savedNote = await _preferences.getString(_statusNoteKey);
+    final savedReachOuts =
+        await _preferences.getStringList(_reachOutsKey) ?? const [];
+    final loadedReachOuts = <_ReachOut>[];
+    for (final item in savedReachOuts) {
+      try {
+        loadedReachOuts.add(
+          _ReachOut.fromJson(jsonDecode(item) as Map<String, dynamic>),
+        );
+      } on Object {
+        // Keep the rest if one locally saved request is damaged.
+      }
+    }
+    loadedReachOuts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     if (!mounted) return;
     setState(() {
       if (savedStatus != null && statuses.contains(savedStatus)) {
@@ -105,6 +122,7 @@ class _CircleScreenState extends State<CircleScreen> {
       }
       sharedStatusNote = savedNote ?? '';
       statusNoteController.text = sharedStatusNote;
+      myReachOuts = loadedReachOuts;
     });
   }
 
@@ -142,6 +160,22 @@ class _CircleScreenState extends State<CircleScreen> {
     super.dispose();
   }
 
+  Future<void> _saveReachOuts() {
+    return _preferences.setStringList(
+      _reachOutsKey,
+      myReachOuts.map((item) => jsonEncode(item.toJson())).toList(),
+    );
+  }
+
+  Future<void> _toggleReachOut(int index) async {
+    setState(() {
+      myReachOuts[index] = myReachOuts[index].copyWith(
+        completed: !myReachOuts[index].completed,
+      );
+    });
+    await _saveReachOuts();
+  }
+
   Future<void> _openReachOut() async {
     final need = selectedNeed;
     if (need == null) {
@@ -153,7 +187,7 @@ class _CircleScreenState extends State<CircleScreen> {
 
     final controller = TextEditingController();
     var audience = 'My whole circle';
-    final sent = await showModalBottomSheet<bool>(
+    final sent = await showModalBottomSheet<_ReachOut>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cream,
@@ -244,7 +278,17 @@ class _CircleScreenState extends State<CircleScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: () => Navigator.pop(sheetContext, true),
+                    onPressed: () {
+                      Navigator.pop(
+                        sheetContext,
+                        _ReachOut(
+                          type: need,
+                          message: controller.text.trim(),
+                          audience: audience,
+                          createdAt: DateTime.now(),
+                        ),
+                      );
+                    },
                     style: FilledButton.styleFrom(
                       backgroundColor: sage,
                       padding: const EdgeInsets.all(16),
@@ -261,10 +305,15 @@ class _CircleScreenState extends State<CircleScreen> {
     );
     controller.dispose();
 
-    if (sent == true && mounted) {
-      setState(() => selectedNeed = null);
+    if (sent != null && mounted) {
+      setState(() {
+        selectedNeed = null;
+        myReachOuts.insert(0, sent);
+      });
+      await _saveReachOuts();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Your reach-out was shared with $audience.')),
+        SnackBar(content: Text('Your reach-out was shared with ${sent.audience}.')),
       );
     }
   }
@@ -615,6 +664,31 @@ class _CircleScreenState extends State<CircleScreen> {
                 ),
                 const SizedBox(height: 26),
                 _sectionTitle(
+                  'My Reach-Outs',
+                  'Every request you share with your Circle stays here.',
+                ),
+                const SizedBox(height: 10),
+                if (myReachOuts.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .58),
+                      border: Border.all(color: line),
+                      borderRadius: BorderRadius.circular(17),
+                    ),
+                    child: const Text(
+                      'Your shared support requests will appear here.',
+                    ),
+                  )
+                else
+                  for (var index = 0;
+                      index < myReachOuts.length;
+                      index++) ...[
+                    _reachOutCard(index, myReachOuts[index]),
+                    const SizedBox(height: 9),
+                  ],
+                const SizedBox(height: 26),
+                _sectionTitle(
                   'Care reminders',
                   'Small follow-ups can mean everything.',
                 ),
@@ -657,6 +731,94 @@ class _CircleScreenState extends State<CircleScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _reachOutCard(int index, _ReachOut reachOut) {
+    final date =
+        '${reachOut.createdAt.month}/${reachOut.createdAt.day}/${reachOut.createdAt.year}';
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: reachOut.completed
+            ? paleSage.withValues(alpha: .72)
+            : const Color(0xFFFFF6E8),
+        border: Border.all(color: line),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 19,
+                backgroundColor: reachOut.completed ? paleSage : blush,
+                child: Icon(
+                  reachOut.completed
+                      ? Icons.check_rounded
+                      : Icons.volunteer_activism_outlined,
+                  color: sage,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  reachOut.type,
+                  style: const TextStyle(
+                    color: ink,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 9,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: reachOut.completed ? Colors.white : paleSage,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  reachOut.completed ? 'Complete' : 'Waiting for replies',
+                  style: const TextStyle(
+                    color: sage,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 9),
+          if (reachOut.message.isNotEmpty) ...[
+            Text(reachOut.message),
+            const SizedBox(height: 7),
+          ],
+          Text(
+            '${reachOut.audience}  •  $date',
+            style: const TextStyle(fontSize: 11.5),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => _toggleReachOut(index),
+              icon: Icon(
+                reachOut.completed
+                    ? Icons.refresh_rounded
+                    : Icons.check_circle_outline_rounded,
+                size: 17,
+              ),
+              label: Text(
+                reachOut.completed ? 'Reopen' : 'Mark Complete',
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -986,6 +1148,51 @@ class _CircleScreenState extends State<CircleScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ReachOut {
+  const _ReachOut({
+    required this.type,
+    required this.message,
+    required this.audience,
+    required this.createdAt,
+    this.completed = false,
+  });
+
+  final String type;
+  final String message;
+  final String audience;
+  final DateTime createdAt;
+  final bool completed;
+
+  Map<String, Object> toJson() => {
+        'type': type,
+        'message': message,
+        'audience': audience,
+        'createdAt': createdAt.toIso8601String(),
+        'completed': completed,
+      };
+
+  factory _ReachOut.fromJson(Map<String, dynamic> json) {
+    return _ReachOut(
+      type: json['type'] as String? ?? 'Support request',
+      message: json['message'] as String? ?? '',
+      audience: json['audience'] as String? ?? 'My whole circle',
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
+      completed: json['completed'] as bool? ?? false,
+    );
+  }
+
+  _ReachOut copyWith({bool? completed}) {
+    return _ReachOut(
+      type: type,
+      message: message,
+      audience: audience,
+      createdAt: createdAt,
+      completed: completed ?? this.completed,
     );
   }
 }
