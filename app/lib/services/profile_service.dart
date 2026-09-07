@@ -63,6 +63,9 @@ class ProfileService {
   DocumentReference<Map<String, dynamic>> _userDocument(String uid) =>
       _firestore.collection('users').doc(uid);
 
+  DocumentReference<Map<String, dynamic>> _publicProfileDocument(String uid) =>
+      _firestore.collection('public_profiles').doc(uid);
+
   DocumentReference<Map<String, dynamic>> _usernameDocument(String username) =>
       _firestore.collection('usernames').doc(username.toLowerCase());
 
@@ -168,6 +171,18 @@ class ProfileService {
         },
         SetOptions(merge: true),
       );
+
+      transaction.set(
+        _publicProfileDocument(user.uid),
+        {
+          'uid': user.uid,
+          'username': username,
+          'usernameLower': lower,
+          'photoUrl': user.photoURL ?? '',
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
     });
 
     if (user.displayName != username) await user.updateDisplayName(username);
@@ -213,7 +228,7 @@ class ProfileService {
       if (uid == null || uid.isEmpty) return null;
 
       final profile = await FirebaseFirestore.instance
-          .collection('users')
+          .collection('public_profiles')
           .doc(uid)
           .get();
       final data = profile.data();
@@ -320,6 +335,7 @@ class ProfileService {
       final lower = profile.data()?['usernameLower'] as String?;
       final batch = _firestore.batch();
       batch.delete(_userDocument(user.uid));
+      batch.delete(_publicProfileDocument(user.uid));
       if (lower != null) batch.delete(_usernameDocument(lower));
       await batch.commit();
     } on FirebaseException {
