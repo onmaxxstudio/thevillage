@@ -51,8 +51,9 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     final saved = await service.load();
     if (!mounted) return;
     final savedIds = saved.map((post) => post.id).toSet();
-    final newSamples = _samplePosts()
-        .where((post) => !savedIds.contains(post.id));
+    final newSamples = service.lastLoadUsedCloud
+        ? const <VillagePost>[]
+        : _samplePosts().where((post) => !savedIds.contains(post.id));
     setState(() {
       posts = [...saved, ...newSamples];
       posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -393,9 +394,19 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    setState(() => posts.removeWhere((item) => item.id == post.id));
-    await _persistMine();
+    try {
+      await service.delete(post);
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This post could not be deleted. Please try again.'),
+        ),
+      );
+      return;
+    }
     if (!mounted) return;
+    setState(() => posts.removeWhere((item) => item.id == post.id));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Post deleted.')),
     );
