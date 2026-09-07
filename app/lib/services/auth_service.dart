@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase_options.dart';
 
@@ -69,6 +70,30 @@ class AuthService {
         ? _auth.signInWithPopup(provider)
         : _auth.signInWithProvider(provider);
   }
+
+  User? get currentUser => _auth.currentUser;
+
+  Stream<User?> authStateChanges() => _auth.authStateChanges();
+
+  String _promiseKey(String uid) => 'village_promise_accepted_$uid';
+
+  Future<bool> hasAcceptedVillagePromise() async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getBool(_promiseKey(user.uid)) ?? false;
+  }
+
+  Future<void> acceptVillagePromise() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const AuthSetupException('Please sign in before accepting the promise.');
+    }
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_promiseKey(user.uid), true);
+  }
+
+  Future<void> signOut() => _auth.signOut();
 
   static String messageFor(Object error) {
     if (error is AuthSetupException) return error.message;
