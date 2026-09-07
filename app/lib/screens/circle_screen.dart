@@ -1037,6 +1037,59 @@ class _CircleScreenState extends State<CircleScreen> {
     );
   }
 
+  Future<void> _startAskMyCircle() async {
+    final need = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 2, 18, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'What do you need?',
+                style: GoogleFonts.playfairDisplay(
+                  color: sage,
+                  fontSize: 29,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Text('Choose the support that would feel helpful.'),
+              const SizedBox(height: 12),
+              for (final choice in supportChoices)
+                Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  elevation: 0,
+                  color: Colors.white.withValues(alpha: .62),
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(color: line),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ListTile(
+                    leading: Icon(choice.$1, color: gold),
+                    title: Text(
+                      choice.$2,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    subtitle: Text(choice.$3),
+                    trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
+                    onTap: () => Navigator.pop(sheetContext, choice.$2),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (need == null || !mounted) return;
+    setState(() => selectedNeed = need);
+    await _openReachOut();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1070,22 +1123,8 @@ class _CircleScreenState extends State<CircleScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 620),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 32),
               children: [
-                _welcomeCard(),
-                if (incomingRequests.isNotEmpty) ...[
-                  const SizedBox(height: 22),
-                  _sectionTitle(
-                    'Circle requests',
-                    '${incomingRequests.length} people want to join your Circle.',
-                  ),
-                  const SizedBox(height: 10),
-                  for (final person in incomingRequests) ...[
-                    _requestTile(person),
-                    const SizedBox(height: 9),
-                  ],
-                ],
-                const SizedBox(height: 18),
                 _sectionTitle(
                   'How are you showing up?',
                   'Let your circle know what you have space for today.',
@@ -1129,8 +1168,8 @@ class _CircleScreenState extends State<CircleScreen> {
                 ),
                 const SizedBox(height: 18),
                 _sectionTitle(
-                  'Your people today',
-                  'Your status appears first, followed by your trusted people.',
+                  'Your trusted people',
+                  'Tap a person for messages, check-ins and shared posts.',
                 ),
                 const SizedBox(height: 10),
                 SizedBox(
@@ -1158,134 +1197,258 @@ class _CircleScreenState extends State<CircleScreen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 24),
-                _sectionTitle(
-                  'What do you need?',
-                  'Choose the kind of support that would feel helpful.',
-                ),
-                const SizedBox(height: 12),
-                GridView.builder(
-                  itemCount: supportChoices.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    mainAxisExtent: 112,
-                  ),
-                  itemBuilder: (_, index) {
-                    final choice = supportChoices[index];
-                    return _supportCard(
-                      icon: choice.$1,
-                      title: choice.$2,
-                      subtitle: choice.$3,
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 18),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: _openReachOut,
+                    onPressed: _startAskMyCircle,
                     style: FilledButton.styleFrom(
                       backgroundColor: sage,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(vertical: 17),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
                     ),
                     icon: const Icon(Icons.favorite_outline_rounded),
-                    label: Text(
-                      selectedNeed == null
-                          ? 'Choose Support'
-                          : 'Reach Out: $selectedNeed',
+                    label: const Text(
+                      'Ask My Circle',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 26),
-                _sectionTitle(
-                  'My Reach-Outs',
-                  'Every request you share with your Circle stays here.',
-                ),
-                const SizedBox(height: 10),
-                if (myReachOuts.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .58),
-                      border: Border.all(color: line),
-                      borderRadius: BorderRadius.circular(17),
+                const SizedBox(height: 7),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.lock_outline_rounded, color: sage, size: 15),
+                    SizedBox(width: 5),
+                    Text(
+                      'Only accepted Circle members can see it.',
+                      style: TextStyle(fontSize: 11.5),
                     ),
-                    child: const Text(
-                      'Your shared support requests will appear here.',
-                    ),
-                  )
-                else
-                  for (var index = 0;
-                      index < myReachOuts.length;
-                      index++) ...[
-                    _reachOutCard(index, myReachOuts[index]),
-                    const SizedBox(height: 9),
                   ],
-                const SizedBox(height: 26),
-                _sectionTitle(
-                  'Care reminders',
-                  'Small follow-ups can mean everything.',
                 ),
-                const SizedBox(height: 10),
-                if (dismissedReminders.length == 2)
-                  const Text('No care reminders right now.')
-                else ...[
-                  if (!dismissedReminders.contains(0))
-                    _reminderTile(
-                      0,
-                      'Check on Maya tonight',
-                      'She asked for someone to listen.',
-                    ),
-                  if (!dismissedReminders.contains(0) &&
-                      !dismissedReminders.contains(1))
-                    const SizedBox(height: 9),
-                  if (!dismissedReminders.contains(1))
-                    _reminderTile(
-                      1,
-                      'Celebrate Jordan',
-                      'They shared good news about a new job.',
-                    ),
-                ],
-                const SizedBox(height: 26),
-                _sectionTitle(
-                  'Circle activity',
-                  'Only updates people chose to share.',
-                ),
-                const SizedBox(height: 10),
-                if (dismissedActivity.length == 2)
-                  const Text('No new Circle activity.')
-                else ...[
-                  if (!dismissedActivity.contains(0))
-                    _activityTile(
-                      index: 0,
-                      initials: 'NB',
-                      color: const Color(0xFFD8C58F),
-                      name: 'Nia',
-                      update: 'Available to talk for the next hour.',
-                      time: '12 min ago',
-                    ),
-                  if (!dismissedActivity.contains(0) &&
-                      !dismissedActivity.contains(1))
-                    const SizedBox(height: 9),
-                  if (!dismissedActivity.contains(1))
-                    _activityTile(
-                      index: 1,
-                      initials: 'JR',
-                      color: const Color(0xFFAFC3A5),
-                      name: 'Jordan',
-                      update: 'Celebrating a small win today.',
-                      time: '1 hr ago',
-                    ),
-                ],
+                const SizedBox(height: 24),
+                _recentConnections(),
                 const SizedBox(height: 18),
-                _privacyCard(),
+                _moreCircleTools(),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _recentConnections() {
+    final recent = circleMessages.take(3).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle(
+          'Recent connection',
+          'Your newest private messages and check-ins.',
+        ),
+        const SizedBox(height: 10),
+        if (recent.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .58),
+              border: Border.all(color: line),
+              borderRadius: BorderRadius.circular(17),
+            ),
+            child: const Text(
+              'No private history yet. Tap someone above to connect.',
+            ),
+          )
+        else
+          for (final message in recent)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(13),
+              decoration: BoxDecoration(
+                color: message.isQuickCheckIn
+                    ? const Color(0xFFFFF3E4)
+                    : Colors.white.withValues(alpha: .62),
+                border: Border.all(color: line),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: message.isQuickCheckIn ? blush : paleSage,
+                    child: Icon(
+                      message.isQuickCheckIn
+                          ? Icons.favorite_outline_rounded
+                          : Icons.chat_bubble_outline_rounded,
+                      color: message.isQuickCheckIn ? gold : sage,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message.memberName,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        Text(
+                          message.text,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    _shortMessageDate(message.createdAt),
+                    style: const TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+      ],
+    );
+  }
+
+  Widget _moreCircleTools() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .46),
+        border: Border.all(color: line),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: false,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
+          leading: const CircleAvatar(
+            backgroundColor: paleSage,
+            child: Icon(Icons.grid_view_rounded, color: sage),
+          ),
+          title: const Text(
+            'More Circle tools',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          subtitle: Text(
+            incomingRequests.isEmpty
+                ? 'Reach-outs, reminders and activity'
+                : '${incomingRequests.length} request${incomingRequests.length == 1 ? '' : 's'} waiting',
+          ),
+          children: [
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _findPeople,
+                icon: const Icon(Icons.person_search_rounded),
+                label: const Text('Find People by Username'),
+              ),
+            ),
+            if (incomingRequests.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              _sectionTitle(
+                'Circle requests',
+                'Accept only people you trust.',
+              ),
+              const SizedBox(height: 9),
+              for (final person in incomingRequests) ...[
+                _requestTile(person),
+                const SizedBox(height: 8),
+              ],
+            ],
+            const SizedBox(height: 18),
+            _sectionTitle(
+              'My Reach-Outs',
+              'Requests you shared with your Circle.',
+            ),
+            const SizedBox(height: 9),
+            if (myReachOuts.isEmpty)
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('No active reach-outs.'),
+              )
+            else
+              for (var index = 0;
+                  index < myReachOuts.length;
+                  index++) ...[
+                _reachOutCard(index, myReachOuts[index]),
+                const SizedBox(height: 8),
+              ],
+            const SizedBox(height: 18),
+            _sectionTitle(
+              'Care reminders',
+              'Small follow-ups can mean everything.',
+            ),
+            const SizedBox(height: 9),
+            if (dismissedReminders.length == 2)
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('No care reminders right now.'),
+              )
+            else ...[
+              if (!dismissedReminders.contains(0))
+                _reminderTile(
+                  0,
+                  'Check on Maya tonight',
+                  'She asked for someone to listen.',
+                ),
+              if (!dismissedReminders.contains(0) &&
+                  !dismissedReminders.contains(1))
+                const SizedBox(height: 8),
+              if (!dismissedReminders.contains(1))
+                _reminderTile(
+                  1,
+                  'Celebrate Jordan',
+                  'They shared good news about a new job.',
+                ),
+            ],
+            const SizedBox(height: 18),
+            _sectionTitle(
+              'Circle activity',
+              'Only updates people chose to share.',
+            ),
+            const SizedBox(height: 9),
+            if (dismissedActivity.length == 2)
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('No new Circle activity.'),
+              )
+            else ...[
+              if (!dismissedActivity.contains(0))
+                _activityTile(
+                  index: 0,
+                  initials: 'NB',
+                  color: const Color(0xFFD8C58F),
+                  name: 'Nia',
+                  update: 'Available to talk for the next hour.',
+                  time: '12 min ago',
+                ),
+              if (!dismissedActivity.contains(0) &&
+                  !dismissedActivity.contains(1))
+                const SizedBox(height: 8),
+              if (!dismissedActivity.contains(1))
+                _activityTile(
+                  index: 1,
+                  initials: 'JR',
+                  color: const Color(0xFFAFC3A5),
+                  name: 'Jordan',
+                  update: 'Celebrating a small win today.',
+                  time: '1 hr ago',
+                ),
+            ],
+            const SizedBox(height: 16),
+            _privacyCard(),
+          ],
         ),
       ),
     );
