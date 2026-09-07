@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/profile_service.dart';
+import '../services/circle_service.dart';
 import '../navigation/village_navigation_scope.dart';
 
 class CircleScreen extends StatefulWidget {
@@ -96,7 +98,11 @@ class _CircleScreenState extends State<CircleScreen> {
   static const _dismissedActivityKey = 'ask_the_village_dismissed_activity';
 
   final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
+  final CircleService circleService = CircleService();
   final TextEditingController statusNoteController = TextEditingController();
+  StreamSubscription<List<CircleRequest>>? requestSubscription;
+  StreamSubscription<List<CirclePerson>>? memberSubscription;
+  final Map<String, CircleRequest> requestByUid = {};
   String status = 'Available to listen';
   String sharedStatusNote = '';
   String? selectedNeed;
@@ -106,28 +112,63 @@ class _CircleScreenState extends State<CircleScreen> {
   final Set<String> sentRequests = {};
   List<_ReachOut> myReachOuts = [];
   List<_CircleMessage> circleMessages = [];
-  final List<_CircleCandidate> incomingRequests = [
-    const _CircleCandidate(
-      'Monique',
-      '@MoeSupport',
-      'MS',
-      Color(0xFFD9B8A8),
-    ),
-    const _CircleCandidate(
-      'Sam',
-      '@SamChecksIn',
-      'SC',
-      Color(0xFFB7C8CE),
-    ),
-  ];
+  List<_CircleCandidate> incomingRequests = [];
   late final List<_CircleMember> circleMembers;
 
   @override
   void initState() {
     super.initState();
-    circleMembers = List<_CircleMember>.of(members);
+    circleMembers = <_CircleMember>[];
     _loadStatus();
+    _connectCircleData();
     ProfileService.currentUsername();
+  }
+
+  void _connectCircleData() {
+    requestSubscription = circleService.incomingRequests().listen(
+      (requests) {
+        if (!mounted) return;
+        requestByUid
+          ..clear()
+          ..addEntries(
+            requests.map((request) =>
+                MapEntry(request.sender.uid, request)),
+          );
+        setState(() {
+          incomingRequests = requests.map((request) {
+            final username = request.sender.username;
+            return _CircleCandidate(
+              username,
+              '@$username',
+              username.isEmpty ? '?' : username[0].toUpperCase(),
+              paleSage,
+              request.sender.uid,
+            );
+          }).toList();
+        });
+      },
+      onError: (_) {},
+    );
+
+    memberSubscription = circleService.members().listen(
+      (people) {
+        if (!mounted) return;
+        setState(() {
+          circleMembers = people.map((person) {
+            final username = person.username;
+            return _CircleMember(
+              '@$username',
+              username.isEmpty ? '?' : username[0].toUpperCase(),
+              paleSage,
+              person.status.isEmpty ? 'Connected' : person.status,
+              true,
+              person.uid,
+            );
+          }).toList();
+        });
+      },
+      onError: (_) {},
+    );
   }
 
   Future<void> _loadStatus() async {
@@ -197,6 +238,11 @@ class _CircleScreenState extends State<CircleScreen> {
     });
     await _preferences.setString(_statusKey, option);
     await _preferences.setString(_statusNoteKey, '');
+    try {
+      await circleService.updateStatus(option);
+    } on Object {
+      // The status remains saved locally while offline.
+    }
   }
 
   Future<void> _shareStatus() async {
@@ -210,6 +256,11 @@ class _CircleScreenState extends State<CircleScreen> {
     setState(() => sharedStatusNote = note);
     await _preferences.setString(_statusKey, status);
     await _preferences.setString(_statusNoteKey, note);
+    try {
+      await circleService.updateStatus(note);
+    } on Object {
+      // The status remains saved locally while offline.
+    }
     if (!mounted) return;
     FocusScope.of(context).unfocus();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -219,6 +270,8 @@ class _CircleScreenState extends State<CircleScreen> {
 
   @override
   void dispose() {
+    requestSubscription?.cancel();
+    memberSubscription?.cancel();
     statusNoteController.dispose();
     super.dispose();
   }
@@ -563,6 +616,25 @@ class _CircleScreenState extends State<CircleScreen> {
         );
       });
       await _saveCircleMessages();
+      if (member.uid != null) {
+        try {
+          await circleService.sendMessage(
+            recipient: CirclePerson(
+              uid: member.uid!,
+              username: member.name.replaceFirst('@', ''),
+            ),
+            text: sentMessage,
+          );
+        } on Object {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Message saved, but it could not send. Try again.'),
+            ),
+          );
+          return;
+        }
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Private message sent to ${member.name}.')),
@@ -641,6 +713,25 @@ class _CircleScreenState extends State<CircleScreen> {
         );
       });
       await _saveCircleMessages();
+      if (member.uid != null) {
+        try {
+          await circleService.sendMessage(
+            recipient: CirclePerson(
+              uid: member.uid!,
+              username: member.name.replaceFirst('@', ''),
+            ),
+            text: checkIn,
+          );
+        } on Object {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Check-in saved, but it could not send. Try again.'),
+            ),
+          );
+          return;
+        }
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -861,7 +952,10 @@ class _CircleScreenState extends State<CircleScreen> {
 
   Future<void> _findPeople() async {
     final searchController = TextEditingController();
-    var query = '';
+    CirclePerson? result;
+    String? message;
+    var searching = false;
+    var sending = false;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -869,172 +963,214 @@ class _CircleScreenState extends State<CircleScreen> {
       backgroundColor: cream,
       showDragHandle: true,
       builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          final normalized = query.trim().toLowerCase();
-          final results = normalized.isEmpty
-              ? <_CircleCandidate>[]
-              : searchablePeople.where((person) {
-                  return person.username.toLowerCase().contains(normalized) ||
-                      person.name.toLowerCase().contains(normalized);
-                }).toList();
-
-          return Padding(
-            padding: EdgeInsets.fromLTRB(
-              22,
-              4,
-              22,
-              MediaQuery.viewInsetsOf(context).bottom + 24,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Find Your People',
-                    style: GoogleFonts.playfairDisplay(
-                      color: sage,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w600,
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            22,
+            4,
+            22,
+            MediaQuery.viewInsetsOf(context).bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Find Your People',
+                  style: GoogleFonts.playfairDisplay(
+                    color: sage,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Text(
+                  'Enter their exact username, then send a Circle request.',
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: searchController,
+                  autofocus: true,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: 'Search @username',
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: .62),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  const Text(
-                    'Search by exact username, then send a Circle request.',
+                  onSubmitted: (_) async {
+                    setSheetState(() {
+                      searching = true;
+                      result = null;
+                      message = null;
+                    });
+                    final found =
+                        await circleService.findPerson(searchController.text);
+                    if (!sheetContext.mounted) return;
+                    setSheetState(() {
+                      searching = false;
+                      result = found;
+                      message = found == null
+                          ? 'No username found. Check the spelling.'
+                          : null;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: searching
+                        ? null
+                        : () async {
+                            setSheetState(() {
+                              searching = true;
+                              result = null;
+                              message = null;
+                            });
+                            final found = await circleService
+                                .findPerson(searchController.text);
+                            if (!sheetContext.mounted) return;
+                            setSheetState(() {
+                              searching = false;
+                              result = found;
+                              message = found == null
+                                  ? 'No username found. Check the spelling.'
+                                  : null;
+                            });
+                          },
+                    style: FilledButton.styleFrom(backgroundColor: sage),
+                    icon: searching
+                        ? const SizedBox(
+                            width: 17,
+                            height: 17,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.search_rounded),
+                    label: Text(searching ? 'Searching…' : 'Search'),
                   ),
+                ),
+                if (message != null) ...[
                   const SizedBox(height: 16),
-                  TextField(
-                    controller: searchController,
-                    autofocus: true,
-                    onChanged: (value) {
-                      setSheetState(() => query = value);
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Search @username',
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      filled: true,
-                      fillColor: Colors.white.withValues(alpha: .62),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                  Center(child: Text(message!)),
+                ],
+                if (result != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(13),
+                    decoration: BoxDecoration(
+                      color: paleSage,
+                      border: Border.all(color: line),
+                      borderRadius: BorderRadius.circular(17),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  if (normalized.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24),
-                      child: Center(
-                        child: Text('Enter a username to find someone.'),
-                      ),
-                    )
-                  else if (results.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24),
-                      child: Center(
-                        child: Text('No username found. Check the spelling.'),
-                      ),
-                    )
-                  else
-                    for (final person in results) ...[
-                      Builder(
-                        builder: (_) {
-                          final requested =
-                              sentRequests.contains(person.username);
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 9),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: .62),
-                              border: Border.all(color: line),
-                              borderRadius: BorderRadius.circular(17),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: const Color(0xFFFFE8BE),
+                          child: Text(
+                            result!.username.isEmpty
+                                ? '?'
+                                : result!.username[0].toUpperCase(),
+                            style: const TextStyle(
+                              color: ink,
+                              fontWeight: FontWeight.w800,
                             ),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: person.color,
-                                  child: Text(
-                                    person.initials,
-                                    style: const TextStyle(
-                                      color: ink,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 11),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        person.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      Text(person.username),
-                                    ],
-                                  ),
-                                ),
-                                FilledButton(
-                                  onPressed: requested
-                                      ? null
-                                      : () {
-                                          setState(() {
-                                            sentRequests.add(person.username);
-                                          });
-                                          setSheetState(() {});
-                                        },
-                                  child: Text(
-                                    requested ? 'Requested' : 'Add',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  const SizedBox(height: 8),
-                  const Row(
-                    children: [
-                      Icon(Icons.shield_outlined, color: sage, size: 17),
-                      SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'They join your Circle only after accepting.',
-                          style: TextStyle(fontSize: 12),
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 11),
+                        Expanded(
+                          child: Text(
+                            '@${result!.username}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        FilledButton(
+                          onPressed: sending
+                              ? null
+                              : () async {
+                                  setSheetState(() => sending = true);
+                                  try {
+                                    await circleService.sendRequest(result!);
+                                    if (!sheetContext.mounted) return;
+                                    setState(() {
+                                      sentRequests.add('@${result!.username}');
+                                    });
+                                    setSheetState(() {
+                                      sending = false;
+                                      message = 'Circle request sent.';
+                                    });
+                                  } on CircleException catch (error) {
+                                    if (!sheetContext.mounted) return;
+                                    setSheetState(() {
+                                      sending = false;
+                                      message = error.message;
+                                    });
+                                  } on Object {
+                                    if (!sheetContext.mounted) return;
+                                    setSheetState(() {
+                                      sending = false;
+                                      message =
+                                          'Could not send the request. Try again.';
+                                    });
+                                  }
+                                },
+                          child: Text(sending ? 'Sending…' : 'Add'),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
-              ),
+                const SizedBox(height: 12),
+                const Row(
+                  children: [
+                    Icon(Icons.shield_outlined, color: sage, size: 17),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'They join your Circle only after accepting.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
     searchController.dispose();
   }
 
-  void _acceptRequest(_CircleCandidate person) {
-    setState(() {
-      incomingRequests.remove(person);
-      circleMembers.add(
-        _CircleMember(
-          person.name,
-          person.initials,
-          person.color,
-          'New to your circle',
-          true,
-        ),
+  Future<void> _acceptRequest(_CircleCandidate person) async {
+    final request = requestByUid[person.uid];
+    if (request == null) return;
+    try {
+      await circleService.acceptRequest(request);
+      if (!mounted) return;
+      setState(() => incomingRequests.remove(person));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${person.username} joined your Circle.')),
       );
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${person.username} joined your Circle.')),
-    );
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not accept the request. Try again.')),
+      );
+    }
   }
 
-  void _declineRequest(_CircleCandidate person) {
+  Future<void> _declineRequest(_CircleCandidate person) async {
+    final request = requestByUid[person.uid];
+    if (request == null) return;
+    await circleService.declineRequest(request);
+    if (!mounted) return;
     setState(() => incomingRequests.remove(person));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${person.username} request declined.')),
@@ -2020,13 +2156,15 @@ class _CircleCandidate {
     this.name,
     this.username,
     this.initials,
-    this.color,
-  );
+    this.color, [
+    this.uid,
+  ]);
 
   final String name;
   final String username;
   final String initials;
   final Color color;
+  final String? uid;
 }
 
 
@@ -2068,12 +2206,14 @@ class _CircleMember {
     this.initials,
     this.color,
     this.status,
-    this.available,
-  );
+    this.available, [
+    this.uid,
+  ]);
 
   final String name;
   final String initials;
   final Color color;
   final String status;
   final bool available;
+  final String? uid;
 }
