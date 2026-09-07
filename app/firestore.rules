@@ -1,0 +1,65 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsPost(postId) {
+      return signedIn() &&
+        get(/databases/$(database)/documents/village_post_owners/$(postId))
+          .data.uid == request.auth.uid;
+    }
+
+    match /village_posts/{postId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly([
+          'question',
+          'category',
+          'audience',
+          'author',
+          'createdAt',
+          'needsSupport',
+          'supportCount',
+          'replies'
+        ]) &&
+        request.resource.data.question is string &&
+        request.resource.data.question.size() >= 10 &&
+        request.resource.data.question.size() <= 1000 &&
+        request.resource.data.category is string &&
+        request.resource.data.audience == 'The Village' &&
+        request.resource.data.author in ['@KindHeart', 'Anonymous Neighbor'] &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.needsSupport is bool &&
+        request.resource.data.supportCount == 0 &&
+        request.resource.data.replies.size() == 0;
+
+      allow update: if signedIn() &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['supportCount', 'replies']) &&
+        request.resource.data.supportCount is int &&
+        request.resource.data.supportCount >= 0 &&
+        request.resource.data.replies is list &&
+        request.resource.data.replies.size() <= 500;
+
+      allow delete: if ownsPost(postId);
+    }
+
+    match /village_post_owners/{postId} {
+      allow create: if signedIn() &&
+        request.resource.data.uid == request.auth.uid;
+      allow get, list: if signedIn() &&
+        resource.data.uid == request.auth.uid;
+      allow update: if false;
+      allow delete: if signedIn() &&
+        resource.data.uid == request.auth.uid;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
