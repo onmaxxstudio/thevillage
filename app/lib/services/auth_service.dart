@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase_options.dart';
+import 'profile_service.dart';
 
 class AuthService {
   FirebaseAuth get _auth {
@@ -17,11 +18,16 @@ class AuthService {
     return FirebaseAuth.instance;
   }
 
-  Future<UserCredential> signInWithEmail(String email, String password) {
-    return _auth.signInWithEmailAndPassword(
+  Future<UserCredential> signInWithEmail(
+    String email,
+    String password,
+  ) async {
+    final credential = await _auth.signInWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
+    await ProfileService().ensureCurrentUserProfile();
+    return credential;
   }
 
   Future<UserCredential> createAccount({
@@ -34,6 +40,9 @@ class AuthService {
       password: password,
     );
     await credential.user?.updateDisplayName(name.trim());
+    await ProfileService().ensureCurrentUserProfile(
+      preferredUsername: name,
+    );
     return credential;
   }
 
@@ -45,7 +54,11 @@ class AuthService {
 
   Future<UserCredential> signInWithGoogle() async {
     final provider = GoogleAuthProvider();
-    if (kIsWeb) return _auth.signInWithPopup(provider);
+    if (kIsWeb) {
+      final credential = await _auth.signInWithPopup(provider);
+      await ProfileService().ensureCurrentUserProfile();
+      return credential;
+    }
 
     if (!_googleInitialized) {
       await GoogleSignIn.instance.initialize(
@@ -61,14 +74,20 @@ class AuthService {
     final credential = GoogleAuthProvider.credential(
       idToken: googleAuth.idToken,
     );
-    return _auth.signInWithCredential(credential);
+    final userCredential = await _auth.signInWithCredential(credential);
+    await ProfileService().ensureCurrentUserProfile();
+    return userCredential;
   }
 
-  Future<UserCredential> signInWithApple() {
-    final provider = AppleAuthProvider();
-    return kIsWeb
-        ? _auth.signInWithPopup(provider)
-        : _auth.signInWithProvider(provider);
+  Future<UserCredential> signInWithApple() async {
+    final provider = AppleAuthProvider()
+      ..addScope('email')
+      ..addScope('name');
+    final credential = kIsWeb
+        ? await _auth.signInWithPopup(provider)
+        : await _auth.signInWithProvider(provider);
+    await ProfileService().ensureCurrentUserProfile();
+    return credential;
   }
 
   User? get currentUser => _auth.currentUser;
