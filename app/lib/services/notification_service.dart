@@ -89,7 +89,7 @@ class NotificationService {
     }
 
     final notifications = <VillageNotification>[];
-    for (final item in stored) {
+    for (final item in stored ?? const <String>[]) {
       try {
         notifications.add(
           VillageNotification.fromJson(
