@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/check_in_service.dart';
 import 'ask_village_screen.dart';
+import 'circle_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -72,6 +73,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void openAsk() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const AskVillageScreen()),
+    );
+  }
+
+  void openCircle() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const CircleScreen()),
     );
   }
 
@@ -177,7 +184,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: Text(item.$2),
                 onTap: () {
                   Navigator.pop(context);
-                  if (item.$2 != 'Home') comingSoon(item.$2);
+                  if (item.$2 == 'My Circle') {
+                    openCircle();
+                  } else if (item.$2 != 'Home') {
+                    comingSoon(item.$2);
+                  }
                 },
               ),
           ],
@@ -443,7 +454,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCircleCard() {
     return _DashboardCard(
       color: const Color(0xFFFFF7ED),
-      onTap: () => comingSoon('My Circle'),
+      onTap: openCircle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -467,7 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const Text(
-                      '12 neighbors online',
+                      '3 people available',
                       style: TextStyle(fontSize: 11.5),
                     ),
                   ],
@@ -733,6 +744,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   setState(() => selectedTab = index);
                   if (ask) {
                     openAsk();
+                  } else if (index == 1) {
+                    openCircle();
                   } else if (index != 0) {
                     comingSoon(items[index].$2);
                   }
