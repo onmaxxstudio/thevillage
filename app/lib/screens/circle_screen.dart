@@ -329,7 +329,7 @@ class _CircleScreenState extends State<CircleScreen> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
-                    childAspectRatio: 1.32,
+                    mainAxisExtent: 112,
                   ),
                   itemBuilder: (_, index) {
                     final choice = supportChoices[index];
