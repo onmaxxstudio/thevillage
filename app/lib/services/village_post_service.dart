@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'profile_service.dart';
+
 class VillageReply {
   const VillageReply({
     required this.id,
@@ -13,11 +15,13 @@ class VillageReply {
     required this.createdAt,
     this.supportCount = 0,
     this.supportedByMe = false,
+    this.authorUid,
   });
 
   final String id;
   final String text;
   final String author;
+  final String? authorUid;
   final DateTime createdAt;
   final int supportCount;
   final bool supportedByMe;
@@ -26,6 +30,7 @@ class VillageReply {
         'id': id,
         'text': text,
         'author': author,
+        if (authorUid != null) 'authorUid': authorUid!,
         'createdAt': createdAt.toIso8601String(),
         'supportCount': supportCount,
         'supportedByMe': supportedByMe,
@@ -35,6 +40,7 @@ class VillageReply {
         'id': id,
         'text': text,
         'author': author,
+        if (authorUid != null) 'authorUid': authorUid!,
         'createdAt': Timestamp.fromDate(createdAt),
         'supportCount': supportCount,
       };
@@ -50,6 +56,7 @@ class VillageReply {
       id: json['id'] as String? ?? '',
       text: json['text'] as String? ?? '',
       author: json['author'] as String? ?? 'Village neighbor',
+      authorUid: json['authorUid'] as String?,
       createdAt: createdAt,
       supportCount: json['supportCount'] as int? ?? 0,
       supportedByMe: json['supportedByMe'] as bool? ?? false,
@@ -64,6 +71,7 @@ class VillageReply {
       id: id,
       text: text,
       author: author,
+      authorUid: authorUid,
       createdAt: createdAt,
       supportCount: supportCount ?? this.supportCount,
       supportedByMe: supportedByMe ?? this.supportedByMe,
@@ -274,6 +282,10 @@ class VillagePostService {
     required bool needsSupport,
   }) async {
     final now = DateTime.now();
+    final username =
+        await ProfileService.currentUsername() ?? 'KindHeart';
+    final resolvedAuthor =
+        anonymous ? 'Anonymous Neighbor' : '@$username';
     if (_cloudReady && audience != 'My Circle') {
       try {
         final user = FirebaseAuth.instance.currentUser!;
@@ -283,7 +295,7 @@ class VillagePostService {
           question: question.trim(),
           category: category,
           audience: audience,
-          author: anonymous ? 'Anonymous Neighbor' : '@KindHeart',
+          author: resolvedAuthor,
           createdAt: now,
           needsSupport: needsSupport,
         );
@@ -308,7 +320,7 @@ class VillagePostService {
       question: question.trim(),
       category: category,
       audience: audience,
-      author: anonymous ? 'Anonymous Neighbor' : '@KindHeart',
+      author: resolvedAuthor,
       createdAt: now,
       needsSupport: needsSupport,
     );
