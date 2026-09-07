@@ -305,25 +305,49 @@ class ProfileService {
   String get _blockedKey => 'blocked_accounts_${_user.uid}';
 
   Future<List<BlockedAccount>> blockedAccounts() async {
-    final preferences = await SharedPreferences.getInstance();
-    final saved = preferences.getStringList(_blockedKey) ?? const <String>[];
-    return saved.map((entry) {
-      final separator = entry.indexOf('|');
-      if (separator == -1) {
-        return BlockedAccount(uid: entry, username: 'Village member');
-      }
-      return BlockedAccount(
-        uid: entry.substring(0, separator),
-        username: entry.substring(separator + 1),
-      );
-    }).toList();
+    try {
+      final snapshot = await _userDocument(_user.uid)
+          .collection('blocked')
+          .orderBy('createdAt', descending: true)
+          .get();
+      return snapshot.docs.map((document) {
+        final data = document.data();
+        return BlockedAccount(
+          uid: document.id,
+          username: data['username'] as String? ?? 'Village member',
+        );
+      }).toList();
+    } on FirebaseException {
+      final preferences = await SharedPreferences.getInstance();
+      final saved =
+          preferences.getStringList(_blockedKey) ?? const <String>[];
+      return saved.map((entry) {
+        final separator = entry.indexOf('|');
+        if (separator == -1) {
+          return BlockedAccount(uid: entry, username: 'Village member');
+        }
+        return BlockedAccount(
+          uid: entry.substring(0, separator),
+          username: entry.substring(separator + 1),
+        );
+      }).toList();
+    }
   }
 
   Future<void> unblock(String blockedUserId) async {
+    try {
+      await _userDocument(_user.uid)
+          .collection('blocked')
+          .doc(blockedUserId)
+          .delete();
+    } on FirebaseException {
+      // Also remove the cached copy below.
+    }
     final preferences = await SharedPreferences.getInstance();
     final saved = preferences.getStringList(_blockedKey) ?? <String>[];
     saved.removeWhere(
-      (entry) => entry == blockedUserId || entry.startsWith('$blockedUserId|'),
+      (entry) =>
+          entry == blockedUserId || entry.startsWith('$blockedUserId|'),
     );
     await preferences.setStringList(_blockedKey, saved);
   }
