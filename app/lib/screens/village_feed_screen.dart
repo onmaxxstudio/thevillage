@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/village_post_service.dart';
+import '../services/profile_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
 
@@ -28,6 +30,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   List<VillagePost> posts = [];
   final Set<String> expandedReplyPosts = {};
   bool loading = true;
+  String currentUsername = 'KindHeart';
   late String filter;
 
   static const filters = [
@@ -43,7 +46,36 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     super.initState();
     filter = filters.contains(widget.initialFilter) ? widget.initialFilter : 'All';
     searchController.addListener(_refresh);
+    currentUsername =
+        ProfileService.usernameNotifier.value ?? 'KindHeart';
+    ProfileService.usernameNotifier.addListener(_usernameChanged);
+    ProfileService.currentUsername();
     _load();
+  }
+
+  String get currentHandle => '@$currentUsername';
+
+  void _usernameChanged() {
+    final username = ProfileService.usernameNotifier.value?.trim();
+    if (!mounted || username == null || username.isEmpty) return;
+    setState(() => currentUsername = username);
+  }
+
+  String _postAuthor(VillagePost post) {
+    if (post.isMine && post.author != 'Anonymous Neighbor') {
+      return currentHandle;
+    }
+    return post.author;
+  }
+
+  String _replyAuthor(VillageReply reply) {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    final isMyReply = reply.authorUid == currentUid ||
+        (reply.authorUid == null && reply.author == '@KindHeart');
+    if (isMyReply && reply.author != 'Anonymous Neighbor') {
+      return currentHandle;
+    }
+    return reply.author;
   }
 
   void _refresh() => setState(() {});
@@ -146,7 +178,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
       final matchesSearch = query.isEmpty ||
           post.question.toLowerCase().contains(query) ||
           post.category.toLowerCase().contains(query) ||
-          post.author.toLowerCase().contains(query);
+          _postAuthor(post).toLowerCase().contains(query);
       return matchesFilter && matchesSearch;
     }).toList();
   }
@@ -314,7 +346,10 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                             id: now.microsecondsSinceEpoch.toString(),
                             text: text,
                             author:
-                                anonymous ? 'Anonymous Neighbor' : '@KindHeart',
+                                anonymous ? 'Anonymous Neighbor' : currentHandle,
+                            authorUid: anonymous
+                                ? null
+                                : FirebaseAuth.instance.currentUser?.uid,
                             createdAt: now,
                           ),
                         );
@@ -327,7 +362,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                       label: Text(
                         anonymous
                             ? 'Post Anonymous Reply'
-                            : 'Post as @KindHeart',
+                            : 'Post as $currentHandle',
                       ),
                     ),
                   ),
@@ -423,6 +458,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
 
   @override
   void dispose() {
+    ProfileService.usernameNotifier.removeListener(_usernameChanged);
     searchController
       ..removeListener(_refresh)
       ..dispose();
@@ -645,7 +681,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  reply.author,
+                  _replyAuthor(reply),
                   style: const TextStyle(
                     color: sage,
                     fontSize: 11,
@@ -729,7 +765,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      post.author,
+                      _postAuthor(post),
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     Text(
