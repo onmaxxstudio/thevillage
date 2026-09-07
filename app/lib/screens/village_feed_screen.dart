@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/village_post_service.dart';
 import '../services/profile_service.dart';
+import '../services/safety_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
 
@@ -26,6 +27,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   static const line = Color(0xFFE3D8C9);
 
   final VillagePostService service = VillagePostService();
+  final SafetyService safetyService = SafetyService();
   final TextEditingController searchController = TextEditingController();
   List<VillagePost> posts = [];
   final Set<String> expandedReplyPosts = {};
@@ -82,13 +84,30 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
 
   Future<void> _load() async {
     final saved = await service.load();
+    Set<String> blockedIds = {};
+    try {
+      blockedIds = await safetyService.blockedUserIds();
+    } on Object {
+      // Continue with cached Village content while offline.
+    }
     if (!mounted) return;
-    final savedIds = saved.map((post) => post.id).toSet();
+    final visibleSaved = saved
+        .where((post) =>
+            post.authorUid == null || !blockedIds.contains(post.authorUid))
+        .map((post) => post.copyWith(
+              replies: post.replies
+                  .where((reply) =>
+                      reply.authorUid == null ||
+                      !blockedIds.contains(reply.authorUid))
+                  .toList(),
+            ))
+        .toList();
+    final savedIds = visibleSaved.map((post) => post.id).toSet();
     final newSamples = service.lastLoadUsedCloud
         ? const <VillagePost>[]
         : _samplePosts().where((post) => !savedIds.contains(post.id));
     setState(() {
-      posts = [...saved, ...newSamples];
+      posts = [...visibleSaved, ...newSamples];
       posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       loading = false;
     });
@@ -466,11 +485,101 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     );
   }
 
-  void _report(VillagePost post) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Thank you. This post was sent for safety review.'),
+  Future<void> _report(VillagePost post) async {
+    var reason = 'Harassment';
+    final detailsController = TextEditingController();
+    final submitted = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: cream,
+          title: const Text('Report this post'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: reason,
+                decoration: const InputDecoration(labelText: 'Reason'),
+                items: const [
+                  'Harassment',
+                  'Hate or discrimination',
+                  'Dangerous advice',
+                  'Spam or scam',
+                  'Privacy concern',
+                  'Other',
+                ]
+                    .map((value) => DropdownMenuItem(
+                          value: value,
+                          child: Text(value),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setDialogState(() => reason = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: detailsController,
+                maxLength: 500,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Additional details (optional)',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: FilledButton.styleFrom(backgroundColor: sage),
+              child: const Text('Submit Report'),
+            ),
+          ],
+        ),
       ),
+    );
+    if (submitted != true) {
+      detailsController.dispose();
+      return;
+    }
+    try {
+      await safetyService.report(
+        targetType: 'post',
+        targetId: post.id,
+        reason: reason,
+        reportedUid: post.authorUid,
+        details: detailsController.text,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Thank you. This post was sent for safety review.'),
+        ),
+      );
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not send the report. Try again.')),
+      );
+    } finally {
+      detailsController.dispose();
+    }
+  }
+
+  Future<void> _blockAuthor(VillagePost post) async {
+    final uid = post.authorUid;
+    if (uid == null) return;
+    await safetyService.blockUser(uid: uid, username: post.author);
+    if (!mounted) return;
+    setState(() => posts.removeWhere((item) => item.authorUid == uid));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${post.author} was blocked.')),
     );
   }
 
@@ -803,6 +912,8 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                 onSelected: (value) {
                   if (value == 'delete') {
                     _deletePost(post);
+                  } else if (value == 'block') {
+                    _blockAuthor(post);
                   } else {
                     _report(post);
                   }
@@ -819,11 +930,17 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                         ],
                       ),
                     )
-                  else
+                  else ...[
                     const PopupMenuItem(
                       value: 'report',
                       child: Text('Report for safety review'),
                     ),
+                    if (post.authorUid != null)
+                      PopupMenuItem(
+                        value: 'block',
+                        child: Text('Block ${post.author}'),
+                      ),
+                  ],
                 ],
               ),
             ],
