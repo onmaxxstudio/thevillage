@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/profile_service.dart';
+import '../navigation/village_navigation_scope.dart';
 
 class CircleScreen extends StatefulWidget {
   const CircleScreen({super.key});
@@ -1101,7 +1102,8 @@ class _CircleScreenState extends State<CircleScreen> {
         backgroundColor: cream,
         leading: IconButton(
           tooltip: 'Back',
-          onPressed: () => Navigator.pop(context),
+          onPressed: () =>
+              VillageNavigationScope.of(context).onSelect(0),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(
