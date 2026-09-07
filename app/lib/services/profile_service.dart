@@ -215,6 +215,25 @@ class ProfileService {
     return resolved;
   }
 
+  static Future<String?> publicUsername(String? uid) async {
+    if (uid == null || uid.isEmpty || Firebase.apps.isEmpty) return null;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (uid == currentUser?.uid) return currentUsername();
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('public_profiles')
+          .doc(uid)
+          .get();
+      final username = snapshot.data()?['username'] as String?;
+      return username == null || username.trim().isEmpty
+          ? null
+          : username.trim();
+    } on FirebaseException {
+      return null;
+    }
+  }
+
   static Future<UsernameLookup?> findUsername(String value) async {
     final query = _cleanUsername(value).toLowerCase();
     if (query.isEmpty || Firebase.apps.isEmpty) return null;
