@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/auth_service.dart';
 import 'email_sign_up_screen.dart';
+import 'home_screen.dart';
 import 'sign_in_screen.dart';
 import 'village_promise_screen.dart';
 
@@ -205,9 +206,14 @@ class _AccountCardState extends State<_AccountCard> {
     setState(() => loading = true);
     try {
       await action();
+      final acceptedPromise = await auth.hasAcceptedVillagePromise();
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const VillagePromiseScreen()),
+        MaterialPageRoute<void>(
+          builder: (_) => acceptedPromise
+              ? const HomeScreen()
+              : const VillagePromiseScreen(),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
