@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,6 +24,13 @@ class _CircleScreenState extends State<CircleScreen> {
     _CircleMember('Nia', 'NB', Color(0xFFD8C58F), 'Can text now', true),
     _CircleMember('Cam', 'CW', Color(0xFFC7B5CF), 'Quiet day', false),
     _CircleMember('Avery', 'AL', Color(0xFFB7C8CE), 'At work', false),
+  ];
+
+  static const searchablePeople = [
+    _CircleCandidate('Aisha', '@AishaTalks', 'AT', Color(0xFFD6B8A7)),
+    _CircleCandidate('Lena', '@LenaCares', 'LC', Color(0xFFB8C9A8)),
+    _CircleCandidate('Rae', '@RaeListens', 'RL', Color(0xFFD5C18C)),
+    _CircleCandidate('Tasha', '@TashaM', 'TM', Color(0xFFC9B8D4)),
   ];
 
   static const supportChoices = [
@@ -65,10 +71,27 @@ class _CircleScreenState extends State<CircleScreen> {
   String sharedStatusNote = '';
   String? selectedNeed;
   final Set<int> completedReminders = {};
+  final Set<String> sentRequests = {};
+  final List<_CircleCandidate> incomingRequests = [
+    const _CircleCandidate(
+      'Monique',
+      '@MoeSupport',
+      'MS',
+      Color(0xFFD9B8A8),
+    ),
+    const _CircleCandidate(
+      'Sam',
+      '@SamChecksIn',
+      'SC',
+      Color(0xFFB7C8CE),
+    ),
+  ];
+  late final List<_CircleMember> circleMembers;
 
   @override
   void initState() {
     super.initState();
+    circleMembers = List<_CircleMember>.of(members);
     _loadStatus();
   }
 
@@ -246,60 +269,185 @@ class _CircleScreenState extends State<CircleScreen> {
     }
   }
 
-  Future<void> _showInvite() async {
-    const code = 'KIND-4821';
-    await showDialog<void>(
+  Future<void> _findPeople() async {
+    final searchController = TextEditingController();
+    var query = '';
+
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: cream,
-        title: Text(
-          'Invite Someone You Trust',
-          style: GoogleFonts.playfairDisplay(
-            color: sage,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Share this private invitation code. You approve every person before they join.',
+      isScrollControlled: true,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final normalized = query.trim().toLowerCase();
+          final results = normalized.isEmpty
+              ? <_CircleCandidate>[]
+              : searchablePeople.where((person) {
+                  return person.username.toLowerCase().contains(normalized) ||
+                      person.name.toLowerCase().contains(normalized);
+                }).toList();
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              22,
+              4,
+              22,
+              MediaQuery.viewInsetsOf(context).bottom + 24,
             ),
-            SizedBox(height: 16),
-            Center(
-              child: Text(
-                code,
-                style: TextStyle(
-                  color: sage,
-                  fontSize: 27,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 2,
-                ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Find Your People',
+                    style: GoogleFonts.playfairDisplay(
+                      color: sage,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Text(
+                    'Search by exact username, then send a Circle request.',
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: searchController,
+                    autofocus: true,
+                    onChanged: (value) {
+                      setSheetState(() => query = value);
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Search @username',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: .62),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  if (normalized.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: Text('Enter a username to find someone.'),
+                      ),
+                    )
+                  else if (results.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: Text('No username found. Check the spelling.'),
+                      ),
+                    )
+                  else
+                    for (final person in results) ...[
+                      Builder(
+                        builder: (_) {
+                          final requested =
+                              sentRequests.contains(person.username);
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 9),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: .62),
+                              border: Border.all(color: line),
+                              borderRadius: BorderRadius.circular(17),
+                            ),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: person.color,
+                                  child: Text(
+                                    person.initials,
+                                    style: const TextStyle(
+                                      color: ink,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 11),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        person.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      Text(person.username),
+                                    ],
+                                  ),
+                                ),
+                                FilledButton(
+                                  onPressed: requested
+                                      ? null
+                                      : () {
+                                          setState(() {
+                                            sentRequests.add(person.username);
+                                          });
+                                          setSheetState(() {});
+                                        },
+                                  child: Text(
+                                    requested ? 'Requested' : 'Add',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  const SizedBox(height: 8),
+                  const Row(
+                    children: [
+                      Icon(Icons.shield_outlined, color: sage, size: 17),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'They join your Circle only after accepting.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Close'),
-          ),
-          FilledButton.icon(
-            onPressed: () async {
-              await Clipboard.setData(const ClipboardData(text: code));
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Invitation code copied.')),
-                );
-              }
-            },
-            icon: const Icon(Icons.copy_rounded),
-            label: const Text('Copy Code'),
-          ),
-        ],
+          );
+        },
       ),
+    );
+    searchController.dispose();
+  }
+
+  void _acceptRequest(_CircleCandidate person) {
+    setState(() {
+      incomingRequests.remove(person);
+      circleMembers.add(
+        _CircleMember(
+          person.name,
+          person.initials,
+          person.color,
+          'New to your circle',
+          true,
+        ),
+      );
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${person.username} joined your Circle.')),
+    );
+  }
+
+  void _declineRequest(_CircleCandidate person) {
+    setState(() => incomingRequests.remove(person));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${person.username} request declined.')),
     );
   }
 
@@ -325,9 +473,9 @@ class _CircleScreenState extends State<CircleScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            tooltip: 'Invite someone',
-            onPressed: _showInvite,
-            icon: const Icon(Icons.person_add_alt_1_rounded, color: sage),
+            tooltip: 'Search usernames',
+            onPressed: _findPeople,
+            icon: const Icon(Icons.person_search_rounded, color: sage),
           ),
         ],
       ),
@@ -339,6 +487,18 @@ class _CircleScreenState extends State<CircleScreen> {
               padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
               children: [
                 _welcomeCard(),
+                if (incomingRequests.isNotEmpty) ...[
+                  const SizedBox(height: 22),
+                  _sectionTitle(
+                    'Circle requests',
+                    '${incomingRequests.length} people want to join your Circle.',
+                  ),
+                  const SizedBox(height: 10),
+                  for (final person in incomingRequests) ...[
+                    _requestTile(person),
+                    const SizedBox(height: 9),
+                  ],
+                ],
                 const SizedBox(height: 18),
                 _sectionTitle(
                   'How are you showing up?',
@@ -391,7 +551,7 @@ class _CircleScreenState extends State<CircleScreen> {
                   height: 112,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: members.length + 1,
+                    itemCount: circleMembers.length + 1,
                     separatorBuilder: (_, __) => const SizedBox(width: 10),
                     itemBuilder: (_, index) {
                       if (index == 0) {
@@ -407,7 +567,7 @@ class _CircleScreenState extends State<CircleScreen> {
                           ),
                         );
                       }
-                      return _memberCard(members[index - 1]);
+                      return _memberCard(circleMembers[index - 1]);
                     },
                   ),
                 ),
@@ -497,6 +657,57 @@ class _CircleScreenState extends State<CircleScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _requestTile(_CircleCandidate person) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF6E8),
+        border: Border.all(color: line),
+        borderRadius: BorderRadius.circular(17),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: person.color,
+            child: Text(
+              person.initials,
+              style: const TextStyle(
+                color: ink,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  person.name,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                Text(
+                  person.username,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Decline request',
+            onPressed: () => _declineRequest(person),
+            icon: const Icon(Icons.close_rounded),
+          ),
+          FilledButton(
+            onPressed: () => _acceptRequest(person),
+            style: FilledButton.styleFrom(backgroundColor: sage),
+            child: const Text('Accept'),
+          ),
+        ],
       ),
     );
   }
@@ -777,6 +988,20 @@ class _CircleScreenState extends State<CircleScreen> {
       ),
     );
   }
+}
+
+class _CircleCandidate {
+  const _CircleCandidate(
+    this.name,
+    this.username,
+    this.initials,
+    this.color,
+  );
+
+  final String name;
+  final String username;
+  final String initials;
+  final Color color;
 }
 
 class _CircleMember {
