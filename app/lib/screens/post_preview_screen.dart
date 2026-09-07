@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/village_post_service.dart';
+import 'village_feed_screen.dart';
+
 class VillagePostDraft {
   const VillagePostDraft({
     required this.question,
@@ -117,9 +120,21 @@ class PostPreviewScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 FilledButton.icon(
-                  onPressed: () => Navigator.of(context).pushReplacement(
-                    MaterialPageRoute<void>(builder: (_) => PostSubmittedScreen(post: post)),
-                  ),
+                  onPressed: () async {
+                    await VillagePostService().publish(
+                      question: post.question,
+                      category: post.category,
+                      audience: post.audience,
+                      anonymous: post.anonymous,
+                      needsSupport: post.needsSupport,
+                    );
+                    if (!context.mounted) return;
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute<void>(
+                        builder: (_) => PostSubmittedScreen(post: post),
+                      ),
+                    );
+                  },
                   style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.all(17)),
                   iconAlignment: IconAlignment.end,
                   icon: const Icon(Icons.send_outlined),
@@ -184,8 +199,28 @@ class PostSubmittedScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                      style: FilledButton.styleFrom(backgroundColor: PostPreviewScreen.sage, padding: const EdgeInsets.all(17)),
+                      onPressed: () => Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const VillageFeedScreen(
+                            initialFilter: 'My Posts',
+                          ),
+                        ),
+                        (route) => route.isFirst,
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: PostPreviewScreen.sage,
+                        padding: const EdgeInsets.all(17),
+                      ),
+                      icon: const Icon(Icons.forum_outlined),
+                      label: const Text('View in My Posts'),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context)
+                          .popUntil((route) => route.isFirst),
                       icon: const Icon(Icons.home_outlined),
                       label: const Text('Return Home'),
                     ),

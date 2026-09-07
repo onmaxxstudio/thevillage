@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/check_in_service.dart';
 import 'ask_village_screen.dart';
 import 'circle_screen.dart';
+import 'village_feed_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -79,6 +80,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void openCircle() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const CircleScreen()),
+    );
+  }
+
+  void openVillage() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const VillageFeedScreen()),
     );
   }
 
@@ -176,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
             for (final item in const [
               (Icons.home_rounded, 'Home'),
               (Icons.groups_2_outlined, 'My Circle'),
-              (Icons.book_outlined, 'Village Library'),
+              (Icons.forum_outlined, 'Village'),
               (Icons.settings_outlined, 'Settings'),
             ])
               ListTile(
@@ -186,6 +193,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.pop(context);
                   if (item.$2 == 'My Circle') {
                     openCircle();
+                  } else if (item.$2 == 'Village') {
+                    openVillage();
                   } else if (item.$2 != 'Home') {
                     comingSoon(item.$2);
                   }
@@ -651,7 +660,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTrendingCard() {
     return InkWell(
-      onTap: () => comingSoon('This conversation'),
+      onTap: openVillage,
       borderRadius: BorderRadius.circular(21),
       child: Container(
         padding: const EdgeInsets.all(17),
@@ -746,6 +755,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     openAsk();
                   } else if (index == 1) {
                     openCircle();
+                  } else if (index == 3) {
+                    openVillage();
                   } else if (index != 0) {
                     comingSoon(items[index].$2);
                   }
