@@ -419,6 +419,164 @@ class _CircleScreenState extends State<CircleScreen> {
     }
   }
 
+  Future<void> _messageMember(_CircleMember member) async {
+    final controller = TextEditingController();
+    final sent = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          22,
+          4,
+          22,
+          MediaQuery.viewInsetsOf(sheetContext).bottom + 24,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Message ${member.name}',
+                style: GoogleFonts.playfairDisplay(
+                  color: sage,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text('Send a calm, private message to someone you trust.'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                minLines: 3,
+                maxLines: 6,
+                maxLength: 500,
+                decoration: InputDecoration(
+                  hintText: 'Write your message…',
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: .65),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+              const Row(
+                children: [
+                  Icon(Icons.lock_outline_rounded, color: sage, size: 17),
+                  SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Only you and this Circle member can see this message.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    if (controller.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(sheetContext).showSnackBar(
+                        const SnackBar(content: Text('Write a message first.')),
+                      );
+                      return;
+                    }
+                    Navigator.pop(sheetContext, true);
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: sage,
+                    padding: const EdgeInsets.all(15),
+                  ),
+                  icon: const Icon(Icons.send_rounded),
+                  label: const Text('Send Private Message'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    controller.dispose();
+
+    if (sent == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Private message sent to ${member.name}.')),
+      );
+    }
+  }
+
+  Future<void> _quickCheckIn(_CircleMember member) async {
+    final checkIn = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 2, 18, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Quick Check-In',
+                style: GoogleFonts.playfairDisplay(
+                  color: sage,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text('Send ${member.name} a gentle one-tap message.'),
+              const SizedBox(height: 12),
+              for (final option in const [
+                ('Thinking of you', Icons.favorite_outline_rounded),
+                ('How are you doing?', Icons.waving_hand_outlined),
+                ('Do you need anything?', Icons.volunteer_activism_outlined),
+              ])
+                Card(
+                  color: Colors.white.withValues(alpha: .62),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(color: line),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: ListTile(
+                    leading: Icon(option.$2, color: sage),
+                    title: Text(
+                      option.$1,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    trailing: const Icon(Icons.send_rounded, size: 18),
+                    onTap: () => Navigator.pop(sheetContext, option.$1),
+                  ),
+                ),
+              const SizedBox(height: 6),
+              const Row(
+                children: [
+                  Icon(Icons.lock_outline_rounded, color: sage, size: 16),
+                  SizedBox(width: 6),
+                  Text('Private to this Circle member.'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (checkIn != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('“$checkIn” sent privately to ${member.name}.'),
+        ),
+      );
+    }
+  }
+
   Future<void> _findPeople() async {
     final searchController = TextEditingController();
     var query = '';
@@ -698,7 +856,7 @@ class _CircleScreenState extends State<CircleScreen> {
                 ),
                 const SizedBox(height: 10),
                 SizedBox(
-                  height: 112,
+                  height: 138,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: circleMembers.length + 1,
@@ -715,6 +873,7 @@ class _CircleScreenState extends State<CircleScreen> {
                                 : sharedStatusNote,
                             status != 'Quiet today',
                           ),
+                          isSelf: true,
                         );
                       }
                       return _memberCard(circleMembers[index - 1]);
@@ -1060,10 +1219,10 @@ class _CircleScreenState extends State<CircleScreen> {
     );
   }
 
-  Widget _memberCard(_CircleMember member) {
+  Widget _memberCard(_CircleMember member, {bool isSelf = false}) {
     return Container(
-      width: 128,
-      padding: const EdgeInsets.all(11),
+      width: 136,
+      padding: const EdgeInsets.fromLTRB(9, 8, 9, 7),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: .58),
         border: Border.all(color: line),
@@ -1075,13 +1234,14 @@ class _CircleScreenState extends State<CircleScreen> {
             clipBehavior: Clip.none,
             children: [
               CircleAvatar(
-                radius: 23,
+                radius: 19,
                 backgroundColor: member.color,
                 child: Text(
                   member.initials,
                   style: const TextStyle(
                     color: ink,
                     fontWeight: FontWeight.w800,
+                    fontSize: 12,
                   ),
                 ),
               ),
@@ -1089,8 +1249,8 @@ class _CircleScreenState extends State<CircleScreen> {
                 right: -1,
                 bottom: -1,
                 child: Container(
-                  width: 13,
-                  height: 13,
+                  width: 12,
+                  height: 12,
                   decoration: BoxDecoration(
                     color: member.available
                         ? const Color(0xFF5D8E62)
@@ -1102,8 +1262,11 @@ class _CircleScreenState extends State<CircleScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(member.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(
+            member.name,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
           Text(
             member.status,
             textAlign: TextAlign.center,
@@ -1111,6 +1274,53 @@ class _CircleScreenState extends State<CircleScreen> {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 10.5),
           ),
+          const Spacer(),
+          if (isSelf)
+            const Text(
+              'Your status',
+              style: TextStyle(
+                color: sage,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  tooltip: 'Message ${member.name}',
+                  onPressed: () => _messageMember(member),
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 34,
+                    height: 30,
+                  ),
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: sage,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  tooltip: 'Quick check-in with ${member.name}',
+                  onPressed: () => _quickCheckIn(member),
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 34,
+                    height: 30,
+                  ),
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    Icons.favorite_outline_rounded,
+                    color: gold,
+                    size: 19,
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );
