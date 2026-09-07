@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../navigation/village_navigation_scope.dart';
 import 'post_preview_screen.dart';
 
 class AskVillageScreen extends StatefulWidget {
@@ -69,7 +70,8 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       appBar: AppBar(
         backgroundColor: cream,
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () =>
+              VillageNavigationScope.of(context).onSelect(0),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Column(
