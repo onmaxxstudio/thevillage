@@ -2,6 +2,59 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+class VillageReply {
+  const VillageReply({
+    required this.id,
+    required this.text,
+    required this.author,
+    required this.createdAt,
+    this.supportCount = 0,
+    this.supportedByMe = false,
+  });
+
+  final String id;
+  final String text;
+  final String author;
+  final DateTime createdAt;
+  final int supportCount;
+  final bool supportedByMe;
+
+  Map<String, Object> toJson() => {
+        'id': id,
+        'text': text,
+        'author': author,
+        'createdAt': createdAt.toIso8601String(),
+        'supportCount': supportCount,
+        'supportedByMe': supportedByMe,
+      };
+
+  factory VillageReply.fromJson(Map<String, dynamic> json) {
+    return VillageReply(
+      id: json['id'] as String? ?? '',
+      text: json['text'] as String? ?? '',
+      author: json['author'] as String? ?? 'Village neighbor',
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
+      supportCount: json['supportCount'] as int? ?? 0,
+      supportedByMe: json['supportedByMe'] as bool? ?? false,
+    );
+  }
+
+  VillageReply copyWith({
+    int? supportCount,
+    bool? supportedByMe,
+  }) {
+    return VillageReply(
+      id: id,
+      text: text,
+      author: author,
+      createdAt: createdAt,
+      supportCount: supportCount ?? this.supportCount,
+      supportedByMe: supportedByMe ?? this.supportedByMe,
+    );
+  }
+}
+
 class VillagePost {
   const VillagePost({
     required this.id,
@@ -28,7 +81,7 @@ class VillagePost {
   final int supportCount;
   final bool saved;
   final bool supportedByMe;
-  final List<String> replies;
+  final List<VillageReply> replies;
   final bool isMine;
 
   Map<String, Object> toJson() => {
@@ -42,7 +95,7 @@ class VillagePost {
         'supportCount': supportCount,
         'saved': saved,
         'supportedByMe': supportedByMe,
-        'replies': replies,
+        'replies': replies.map((reply) => reply.toJson()).toList(),
         'isMine': isMine,
       };
 
@@ -60,7 +113,26 @@ class VillagePost {
       saved: json['saved'] as bool? ?? false,
       supportedByMe: json['supportedByMe'] as bool? ?? false,
       replies: (json['replies'] as List<dynamic>? ?? const [])
-          .whereType<String>()
+          .map((item) {
+            if (item is String) {
+              return VillageReply(
+                id: 'legacy-${item.hashCode}',
+                text: item,
+                author: 'Village neighbor',
+                createdAt: DateTime.now(),
+              );
+            }
+            if (item is Map<String, dynamic>) {
+              return VillageReply.fromJson(item);
+            }
+            if (item is Map) {
+              return VillageReply.fromJson(
+                item.map((key, value) => MapEntry(key.toString(), value)),
+              );
+            }
+            return null;
+          })
+          .whereType<VillageReply>()
           .toList(),
       isMine: json['isMine'] as bool? ?? true,
     );
@@ -70,7 +142,7 @@ class VillagePost {
     int? supportCount,
     bool? saved,
     bool? supportedByMe,
-    List<String>? replies,
+    List<VillageReply>? replies,
   }) {
     return VillagePost(
       id: id,
@@ -135,10 +207,7 @@ class VillagePostService {
   Future<void> save(List<VillagePost> posts) {
     return _preferences.setStringList(
       _storageKey,
-      posts
-          .where((post) => post.isMine)
-          .map((post) => jsonEncode(post.toJson()))
-          .toList(),
+      posts.map((post) => jsonEncode(post.toJson())).toList(),
     );
   }
 }
