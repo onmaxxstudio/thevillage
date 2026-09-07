@@ -76,14 +76,10 @@ class ProfileService {
 
   static String _fallbackUsername(User user) {
     final displayName = _cleanUsername(user.displayName ?? '');
+    final sanitized =
+        displayName.replaceAll(RegExp(r'[^A-Za-z0-9_]'), '');
     final compact =
-        displayName.replaceAll(RegExp(r'[^A-Za-z0-9_]'), '').substring(
-              0,
-              displayName
-                  .replaceAll(RegExp(r'[^A-Za-z0-9_]'), '')
-                  .length
-                  .clamp(0, 20),
-            );
+        sanitized.length > 20 ? sanitized.substring(0, 20) : sanitized;
     if (_isValidUsername(compact)) return compact;
     return 'member_${user.uid.substring(0, 6)}';
   }
