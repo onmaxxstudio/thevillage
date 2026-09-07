@@ -24,6 +24,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   final VillagePostService service = VillagePostService();
   final TextEditingController searchController = TextEditingController();
   List<VillagePost> posts = [];
+  final Set<String> expandedReplyPosts = {};
   bool loading = true;
   late String filter;
 
@@ -145,6 +146,14 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     if (index < 0) return;
     setState(() => posts[index] = post.copyWith(saved: !post.saved));
     await _persistMine();
+  }
+
+  void _toggleReplies(VillagePost post) {
+    setState(() {
+      if (!expandedReplyPosts.add(post.id)) {
+        expandedReplyPosts.remove(post.id);
+      }
+    });
   }
 
   Future<void> _openReplies(VillagePost post) async {
@@ -552,7 +561,11 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
               TextButton.icon(
                 onPressed: () => _openReplies(post),
                 icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                label: Text('Reply ${post.replies.length}'),
+                label: Text(
+                  post.replies.isEmpty
+                      ? 'Be first to reply'
+                      : 'Reply (${post.replies.length})',
+                ),
               ),
               const Spacer(),
               IconButton(
@@ -567,6 +580,93 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
               ),
             ],
           ),
+          if (post.replies.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => _toggleReplies(post),
+                style: TextButton.styleFrom(
+                  foregroundColor: sage,
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 7),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      expandedReplyPosts.contains(post.id)
+                          ? 'Hide replies'
+                          : 'View all ${post.replies.length} '
+                              '${post.replies.length == 1 ? 'reply' : 'replies'}',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(width: 5),
+                    Icon(
+                      expandedReplyPosts.contains(post.id)
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (expandedReplyPosts.contains(post.id)) ...[
+              const SizedBox(height: 4),
+              for (var index = 0;
+                  index < post.replies.length;
+                  index++)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(11),
+                  decoration: BoxDecoration(
+                    color: paleSage.withValues(alpha: .58),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const CircleAvatar(
+                        radius: 15,
+                        backgroundColor: Colors.white,
+                        child: Icon(
+                          Icons.person_outline_rounded,
+                          color: sage,
+                          size: 17,
+                        ),
+                      ),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Village neighbor',
+                              style: TextStyle(
+                                color: sage,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(post.replies[index]),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: () => _openReplies(post),
+                  icon: const Icon(Icons.add_comment_outlined, size: 18),
+                  label: const Text('Add your reply'),
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );
