@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class VillageProfile {
@@ -49,6 +50,9 @@ class BlockedAccount {
 }
 
 class ProfileService {
+  static final ValueNotifier<String?> usernameNotifier =
+      ValueNotifier<String?>(null);
+
   FirebaseAuth get _auth => FirebaseAuth.instance;
 
   User get _user {
@@ -61,7 +65,9 @@ class ProfileService {
   static Future<String?> currentUsername() async {
     final user = FirebaseAuth.instance.currentUser;
     final username = user?.displayName?.trim();
-    return username == null || username.isEmpty ? null : username;
+    final resolved = username == null || username.isEmpty ? null : username;
+    usernameNotifier.value = resolved;
+    return resolved;
   }
 
   /// Backward-compatible helper used by the Circle username search.
@@ -104,6 +110,7 @@ class ProfileService {
     }
     await _user.updateDisplayName(username);
     await _user.reload();
+    usernameNotifier.value = username;
   }
 
   Future<void> requestEmailChange(String newEmail) async {
