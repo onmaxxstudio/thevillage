@@ -6,10 +6,96 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function validUsername(value) {
+      return value is string &&
+        value.size() >= 3 &&
+        value.size() <= 20 &&
+        value.matches('^[A-Za-z0-9_]+$');
+    }
+
     function ownsPost(postId) {
       return signedIn() &&
         get(/databases/$(database)/documents/village_post_owners/$(postId))
           .data.uid == request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow get: if isSelf(uid);
+      allow list: if false;
+
+      allow create, update: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly([
+          'uid',
+          'username',
+          'usernameLower',
+          'email',
+          'photoUrl',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        request.resource.data.uid == request.auth.uid &&
+        validUsername(request.resource.data.username) &&
+        request.resource.data.usernameLower ==
+          request.resource.data.username.lower() &&
+        request.resource.data.email is string &&
+        request.resource.data.photoUrl is string;
+
+      allow delete: if isSelf(uid);
+    }
+
+    match /public_profiles/{uid} {
+      allow get, list: if signedIn();
+
+      allow create, update: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly([
+          'uid',
+          'username',
+          'usernameLower',
+          'photoUrl',
+          'updatedAt'
+        ]) &&
+        request.resource.data.uid == request.auth.uid &&
+        validUsername(request.resource.data.username) &&
+        request.resource.data.usernameLower ==
+          request.resource.data.username.lower() &&
+        request.resource.data.photoUrl is string;
+
+      allow delete: if isSelf(uid);
+    }
+
+    match /usernames/{usernameLower} {
+      allow get: if signedIn();
+      allow list: if false;
+
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly([
+          'uid',
+          'username',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        request.resource.data.uid == request.auth.uid &&
+        validUsername(request.resource.data.username) &&
+        usernameLower == request.resource.data.username.lower();
+
+      allow update: if signedIn() &&
+        resource.data.uid == request.auth.uid &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'uid',
+          'username',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        validUsername(request.resource.data.username) &&
+        usernameLower == request.resource.data.username.lower();
+
+      allow delete: if signedIn() &&
+        resource.data.uid == request.auth.uid;
     }
 
     match /village_posts/{postId} {
@@ -31,10 +117,13 @@ service cloud.firestore {
         request.resource.data.question.size() <= 1000 &&
         request.resource.data.category is string &&
         request.resource.data.audience == 'The Village' &&
-        request.resource.data.author in ['@KindHeart', 'Anonymous Neighbor'] &&
+        request.resource.data.author is string &&
+        request.resource.data.author.size() >= 3 &&
+        request.resource.data.author.size() <= 30 &&
         request.resource.data.createdAt is timestamp &&
         request.resource.data.needsSupport is bool &&
         request.resource.data.supportCount == 0 &&
+        request.resource.data.replies is list &&
         request.resource.data.replies.size() == 0;
 
       allow update: if signedIn() &&
@@ -50,6 +139,7 @@ service cloud.firestore {
 
     match /village_post_owners/{postId} {
       allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly(['uid', 'createdAt']) &&
         request.resource.data.uid == request.auth.uid;
       allow get, list: if signedIn() &&
         resource.data.uid == request.auth.uid;
