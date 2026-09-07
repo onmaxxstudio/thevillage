@@ -66,23 +66,24 @@ class _Header extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 14),
           child: Column(
             children: [
-              const _BotanicalMark(),
               Text(
                 'Ask the Village',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.playfairDisplay(
-                  fontSize: 46,
+                  fontSize: 51,
                   fontWeight: FontWeight.w600,
-                  height: 1.06,
+                  height: 1,
                   color: CreateAccountScreen._sage,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
+              const _WelcomeStyleDivider(),
+              const SizedBox(height: 12),
               Text(
                 'Real People. Real Support. Real Answers.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
-                  fontSize: 14,
+                  fontSize: 15.5,
                   fontWeight: FontWeight.w500,
                   color: CreateAccountScreen._ink,
                 ),
@@ -105,18 +106,33 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _BotanicalMark extends StatelessWidget {
-  const _BotanicalMark();
+class _WelcomeStyleDivider extends StatelessWidget {
+  const _WelcomeStyleDivider();
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 70,
-      height: 28,
-      child: Image.asset(
-        'assets/images/welcome_branch.png',
-        fit: BoxFit.contain,
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(
+          width: 76,
+          child: Divider(color: Color(0xFFC8A35E)),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 52,
+          height: 25,
+          child: Image.asset(
+            'assets/images/welcome_branch.png',
+            fit: BoxFit.contain,
+          ),
+        ),
+        const SizedBox(width: 10),
+        const SizedBox(
+          width: 76,
+          child: Divider(color: Color(0xFFC8A35E)),
+        ),
+      ],
     );
   }
 }
@@ -241,9 +257,9 @@ class _AccountCardState extends State<_AccountCard> {
         children: [
           Text(
             'Create Your Account',
-            style: GoogleFonts.inter(
-              fontSize: 23,
-              fontWeight: FontWeight.w700,
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 32,
+              fontWeight: FontWeight.w600,
               color: CreateAccountScreen._sage,
             ),
           ),
@@ -320,9 +336,7 @@ class _AccountCardState extends State<_AccountCard> {
               ),
             ],
           ),
-          const SizedBox(height: 22),
-          const _PrivacyCard(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
         ],
       ),
     );
@@ -375,64 +389,6 @@ class _AuthButton extends StatelessWidget {
   }
 }
 
-class _PrivacyCard extends StatelessWidget {
-  const _PrivacyCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 15),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F1E8),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFC9CDB9)),
-            ),
-            child: const Icon(
-              Icons.lock_outline_rounded,
-              color: CreateAccountScreen._sage,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Your privacy matters.',
-                  style: GoogleFonts.inter(
-                    color: CreateAccountScreen._sage,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  'We never sell your data. Your journey, your story, stays with you.',
-                  style: GoogleFonts.inter(
-                    color: CreateAccountScreen._ink,
-                    fontSize: 12.5,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _GoogleMark extends StatelessWidget {
   const _GoogleMark();
 
@@ -468,5 +424,3 @@ class _Divider extends StatelessWidget {
     );
   }
 }
-
-// Privacy card intentionally removed to match approved Create Account design.
