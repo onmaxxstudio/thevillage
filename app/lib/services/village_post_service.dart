@@ -93,6 +93,7 @@ class VillagePost {
     this.supportedByMe = false,
     this.replies = const [],
     this.isMine = true,
+    this.authorUid,
   });
 
   final String id;
@@ -100,6 +101,7 @@ class VillagePost {
   final String category;
   final String audience;
   final String author;
+  final String? authorUid;
   final DateTime createdAt;
   final bool needsSupport;
   final int supportCount;
@@ -114,6 +116,7 @@ class VillagePost {
         'category': category,
         'audience': audience,
         'author': author,
+        if (authorUid != null) 'authorUid': authorUid!,
         'createdAt': createdAt.toIso8601String(),
         'needsSupport': needsSupport,
         'supportCount': supportCount,
@@ -128,6 +131,7 @@ class VillagePost {
         'category': category,
         'audience': audience,
         'author': author,
+        if (authorUid != null) 'authorUid': authorUid!,
         'createdAt': Timestamp.fromDate(createdAt),
         'needsSupport': needsSupport,
         'supportCount': supportCount,
@@ -147,6 +151,7 @@ class VillagePost {
       category: json['category'] as String? ?? 'Other',
       audience: json['audience'] as String? ?? 'The Village',
       author: json['author'] as String? ?? '@KindHeart',
+      authorUid: json['authorUid'] as String?,
       createdAt: createdAt,
       needsSupport: json['needsSupport'] as bool? ?? false,
       supportCount: json['supportCount'] as int? ?? 0,
@@ -191,6 +196,7 @@ class VillagePost {
       category: category,
       audience: audience,
       author: author,
+      authorUid: authorUid,
       createdAt: createdAt,
       needsSupport: needsSupport,
       supportCount: supportCount ?? this.supportCount,
@@ -296,6 +302,7 @@ class VillagePostService {
           category: category,
           audience: audience,
           author: resolvedAuthor,
+          authorUid: anonymous ? null : user.uid,
           createdAt: now,
           needsSupport: needsSupport,
         );
@@ -321,6 +328,8 @@ class VillagePostService {
       category: category,
       audience: audience,
       author: resolvedAuthor,
+      authorUid:
+          anonymous ? null : FirebaseAuth.instance.currentUser?.uid,
       createdAt: now,
       needsSupport: needsSupport,
     );
@@ -352,6 +361,47 @@ class VillagePostService {
         // The local copy remains available and can sync after reconnecting.
       }
     }
+  }
+
+  Future<void> notifyPostOwner({
+    required VillagePost post,
+    required String type,
+  }) async {
+    final actor = FirebaseAuth.instance.currentUser;
+    final recipientUid = post.authorUid;
+    if (!_cloudReady ||
+        actor == null ||
+        recipientUid == null ||
+        recipientUid == actor.uid ||
+        post.id.startsWith('sample-')) {
+      return;
+    }
+
+    final notificationId = type == 'post_support'
+        ? '${post.id}_${actor.uid}_support'
+        : '${post.id}_${actor.uid}_${DateTime.now().microsecondsSinceEpoch}';
+    final username =
+        await ProfileService.currentUsername() ?? 'A Village member';
+    await FirebaseFirestore.instance
+        .collection('notifications')
+        .doc(recipientUid)
+        .collection('items')
+        .doc(notificationId)
+        .set({
+      'recipientUid': recipientUid,
+      'actorUid': actor.uid,
+      'type': type,
+      'title': type == 'post_support'
+          ? 'Someone supported your question'
+          : 'New reply to your question',
+      'message': type == 'post_support'
+          ? '@$username supported your Village question.'
+          : '@$username replied to your Village question.',
+      'destinationIndex': 3,
+      'postId': post.id,
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> delete(VillagePost post) async {
