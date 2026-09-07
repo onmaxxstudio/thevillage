@@ -176,6 +176,37 @@ class _CircleScreenState extends State<CircleScreen> {
     await _saveReachOuts();
   }
 
+  Future<void> _deleteReachOut(int index) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: cream,
+        title: const Text('Delete this reach-out?'),
+        content: const Text(
+          'This permanently removes it from My Reach-Outs.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Keep It'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted || index >= myReachOuts.length) return;
+    setState(() => myReachOuts.removeAt(index));
+    await _saveReachOuts();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Reach-out deleted.')),
+    );
+  }
+
   Future<void> _openReachOut() async {
     final need = selectedNeed;
     if (need == null) {
@@ -803,20 +834,30 @@ class _CircleScreenState extends State<CircleScreen> {
             '${reachOut.audience}  •  $date',
             style: const TextStyle(fontSize: 11.5),
           ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () => _toggleReachOut(index),
-              icon: Icon(
-                reachOut.completed
-                    ? Icons.refresh_rounded
-                    : Icons.check_circle_outline_rounded,
-                size: 17,
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: () => _deleteReachOut(index),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red.shade700,
+                ),
+                icon: const Icon(Icons.delete_outline_rounded, size: 17),
+                label: const Text('Delete'),
               ),
-              label: Text(
-                reachOut.completed ? 'Reopen' : 'Mark Complete',
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () => _toggleReachOut(index),
+                icon: Icon(
+                  reachOut.completed
+                      ? Icons.refresh_rounded
+                      : Icons.check_circle_outline_rounded,
+                  size: 17,
+                ),
+                label: Text(
+                  reachOut.completed ? 'Reopen' : 'Mark Complete',
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),

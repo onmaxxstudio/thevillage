@@ -239,6 +239,37 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     await _persistMine();
   }
 
+  Future<void> _deletePost(VillagePost post) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: cream,
+        title: const Text('Delete this post?'),
+        content: const Text(
+          'This permanently removes it from the Village and My Posts.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Keep It'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => posts.removeWhere((item) => item.id == post.id));
+    await _persistMine();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Post deleted.')),
+    );
+  }
+
   void _report(VillagePost post) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -452,12 +483,30 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                 ),
               PopupMenuButton<String>(
                 tooltip: 'Post options',
-                onSelected: (_) => _report(post),
-                itemBuilder: (_) => const [
-                  PopupMenuItem(
-                    value: 'report',
-                    child: Text('Report for safety review'),
-                  ),
+                onSelected: (value) {
+                  if (value == 'delete') {
+                    _deletePost(post);
+                  } else {
+                    _report(post);
+                  }
+                },
+                itemBuilder: (_) => [
+                  if (post.isMine)
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline_rounded),
+                          SizedBox(width: 8),
+                          Text('Delete my post'),
+                        ],
+                      ),
+                    )
+                  else
+                    const PopupMenuItem(
+                      value: 'report',
+                      child: Text('Report for safety review'),
+                    ),
                 ],
               ),
             ],
