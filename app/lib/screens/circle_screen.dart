@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/profile_service.dart';
+
 class CircleScreen extends StatefulWidget {
   const CircleScreen({super.key});
 
@@ -124,6 +126,7 @@ class _CircleScreenState extends State<CircleScreen> {
     super.initState();
     circleMembers = List<_CircleMember>.of(members);
     _loadStatus();
+    ProfileService.currentUsername();
   }
 
   Future<void> _loadStatus() async {
@@ -1180,17 +1183,29 @@ class _CircleScreenState extends State<CircleScreen> {
                     separatorBuilder: (_, __) => const SizedBox(width: 10),
                     itemBuilder: (_, index) {
                       if (index == 0) {
-                        return _memberCard(
-                          _CircleMember(
-                            'You',
-                            'KH',
-                            paleSage,
-                            sharedStatusNote.isEmpty
-                                ? status
-                                : sharedStatusNote,
-                            status != 'Quiet today',
-                          ),
-                          isSelf: true,
+                        return ValueListenableBuilder<String?>(
+                          valueListenable: ProfileService.usernameNotifier,
+                          builder: (context, username, _) {
+                            final cleanUsername = username?.trim() ?? '';
+                            final displayUsername = cleanUsername.isEmpty
+                                ? '@username'
+                                : '@$cleanUsername';
+                            final initials = cleanUsername.isEmpty
+                                ? '?'
+                                : cleanUsername.substring(0, 1).toUpperCase();
+                            return _memberCard(
+                              _CircleMember(
+                                displayUsername,
+                                initials,
+                                paleSage,
+                                sharedStatusNote.isEmpty
+                                    ? status
+                                    : sharedStatusNote,
+                                status != 'Quiet today',
+                              ),
+                              isSelf: true,
+                            );
+                          },
                         );
                       }
                       return _memberCard(circleMembers[index - 1]);
