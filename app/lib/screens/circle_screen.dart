@@ -28,6 +28,26 @@ class _CircleScreenState extends State<CircleScreen> {
     _CircleMember('Avery', 'AL', Color(0xFFB7C8CE), 'At work', false),
   ];
 
+  static const memberPosts = <String, List<String>>{
+    'Maya': [
+      'Some days support looks like listening without trying to fix it.',
+      'Taking a quiet reset tonight and making room for rest.',
+    ],
+    'Jordan': [
+      'A small check-in can change someone’s whole day.',
+    ],
+    'Nia': [
+      'I have space to listen today if anyone needs a gentle conversation.',
+      'Shared a reminder: asking for help is a form of strength.',
+    ],
+    'Cam': [
+      'Choosing a quiet day and protecting my peace.',
+    ],
+    'Avery': [
+      'Busy today, but I’ll check back in with the Circle later.',
+    ],
+  };
+
   static const searchablePeople = [
     _CircleCandidate('Aisha', '@AishaTalks', 'AT', Color(0xFFD6B8A7)),
     _CircleCandidate('Lena', '@LenaCares', 'LC', Color(0xFFB8C9A8)),
@@ -67,6 +87,7 @@ class _CircleScreenState extends State<CircleScreen> {
   static const _statusKey = 'ask_the_village_circle_status';
   static const _statusNoteKey = 'ask_the_village_circle_status_note';
   static const _reachOutsKey = 'ask_the_village_circle_reach_outs';
+  static const _circleMessagesKey = 'ask_the_village_circle_messages';
   static const _dismissedRemindersKey =
       'ask_the_village_dismissed_reminders';
   static const _dismissedActivityKey = 'ask_the_village_dismissed_activity';
@@ -81,6 +102,7 @@ class _CircleScreenState extends State<CircleScreen> {
   final Set<int> dismissedActivity = {};
   final Set<String> sentRequests = {};
   List<_ReachOut> myReachOuts = [];
+  List<_CircleMessage> circleMessages = [];
   final List<_CircleCandidate> incomingRequests = [
     const _CircleCandidate(
       'Monique',
@@ -113,6 +135,19 @@ class _CircleScreenState extends State<CircleScreen> {
         await _preferences.getStringList(_dismissedRemindersKey) ?? const [];
     final savedDismissedActivity =
         await _preferences.getStringList(_dismissedActivityKey) ?? const [];
+    final savedCircleMessages =
+        await _preferences.getStringList(_circleMessagesKey) ?? const [];
+    final loadedCircleMessages = <_CircleMessage>[];
+    for (final item in savedCircleMessages) {
+      try {
+        loadedCircleMessages.add(
+          _CircleMessage.fromJson(jsonDecode(item) as Map<String, dynamic>),
+        );
+      } on Object {
+        // Keep the rest if one locally saved message is damaged.
+      }
+    }
+    loadedCircleMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final loadedReachOuts = <_ReachOut>[];
     for (final item in savedReachOuts) {
       try {
@@ -132,6 +167,7 @@ class _CircleScreenState extends State<CircleScreen> {
       sharedStatusNote = savedNote ?? '';
       statusNoteController.text = sharedStatusNote;
       myReachOuts = loadedReachOuts;
+      circleMessages = loadedCircleMessages;
       dismissedReminders
         ..clear()
         ..addAll(
@@ -419,9 +455,16 @@ class _CircleScreenState extends State<CircleScreen> {
     }
   }
 
+  Future<void> _saveCircleMessages() {
+    return _preferences.setStringList(
+      _circleMessagesKey,
+      circleMessages.map((item) => jsonEncode(item.toJson())).toList(),
+    );
+  }
+
   Future<void> _messageMember(_CircleMember member) async {
     final controller = TextEditingController();
-    final sent = await showModalBottomSheet<bool>(
+    final sentMessage = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cream,
@@ -480,13 +523,14 @@ class _CircleScreenState extends State<CircleScreen> {
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: () {
-                    if (controller.text.trim().isEmpty) {
+                    final message = controller.text.trim();
+                    if (message.isEmpty) {
                       ScaffoldMessenger.of(sheetContext).showSnackBar(
                         const SnackBar(content: Text('Write a message first.')),
                       );
                       return;
                     }
-                    Navigator.pop(sheetContext, true);
+                    Navigator.pop(sheetContext, message);
                   },
                   style: FilledButton.styleFrom(
                     backgroundColor: sage,
@@ -503,7 +547,19 @@ class _CircleScreenState extends State<CircleScreen> {
     );
     controller.dispose();
 
-    if (sent == true && mounted) {
+    if (sentMessage != null && mounted) {
+      setState(() {
+        circleMessages.insert(
+          0,
+          _CircleMessage(
+            memberName: member.name,
+            text: sentMessage,
+            createdAt: DateTime.now(),
+          ),
+        );
+      });
+      await _saveCircleMessages();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Private message sent to ${member.name}.')),
       );
@@ -569,6 +625,19 @@ class _CircleScreenState extends State<CircleScreen> {
     );
 
     if (checkIn != null && mounted) {
+      setState(() {
+        circleMessages.insert(
+          0,
+          _CircleMessage(
+            memberName: member.name,
+            text: checkIn,
+            createdAt: DateTime.now(),
+            isQuickCheckIn: true,
+          ),
+        );
+      });
+      await _saveCircleMessages();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('“$checkIn” sent privately to ${member.name}.'),
@@ -576,6 +645,215 @@ class _CircleScreenState extends State<CircleScreen> {
       );
     }
   }
+
+  String _shortMessageDate(DateTime date) {
+    final now = DateTime.now();
+    if (now.year == date.year &&
+        now.month == date.month &&
+        now.day == date.day) {
+      final hour = date.hour == 0
+          ? 12
+          : date.hour > 12
+              ? date.hour - 12
+              : date.hour;
+      final minute = date.minute.toString().padLeft(2, '0');
+      final period = date.hour >= 12 ? 'PM' : 'AM';
+      return 'Today · $hour:$minute $period';
+    }
+    return '${date.month}/${date.day}/${date.year}';
+  }
+
+  Future<void> _openMemberProfile(_CircleMember member) async {
+    final messages = circleMessages
+        .where((item) => item.memberName == member.name)
+        .toList();
+    final posts = memberPosts[member.name] ?? const <String>[];
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: .82,
+        minChildSize: .55,
+        maxChildSize: .94,
+        builder: (_, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 31,
+                  backgroundColor: member.color,
+                  child: Text(
+                    member.initials,
+                    style: const TextStyle(
+                      color: ink,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        member.name,
+                        style: GoogleFonts.playfairDisplay(
+                          color: sage,
+                          fontSize: 29,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(member.status),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.lock_outline_rounded, color: sage, size: 19),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      _messageMember(member);
+                    },
+                    style: FilledButton.styleFrom(backgroundColor: sage),
+                    icon: const Icon(Icons.chat_bubble_outline_rounded),
+                    label: const Text('Message'),
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      _quickCheckIn(member);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: sage,
+                      side: const BorderSide(color: sage),
+                    ),
+                    icon: const Icon(Icons.favorite_outline_rounded),
+                    label: const Text('Check In'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 25),
+            Text(
+              'Messages between you',
+              style: GoogleFonts.playfairDisplay(
+                color: ink,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Private conversation history',
+              style: TextStyle(color: Color(0xFF687067), fontSize: 12),
+            ),
+            const SizedBox(height: 10),
+            if (messages.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .55),
+                  border: Border.all(color: line),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Text(
+                  'No messages yet. Send a message or a gentle check-in.',
+                ),
+              )
+            else
+              for (final message in messages.take(5))
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(13),
+                  decoration: BoxDecoration(
+                    color: message.isQuickCheckIn
+                        ? const Color(0xFFFFF3E4)
+                        : paleSage,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        message.isQuickCheckIn
+                            ? Icons.favorite_outline_rounded
+                            : Icons.chat_bubble_outline_rounded,
+                        color: message.isQuickCheckIn ? gold : sage,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              message.text,
+                              style: const TextStyle(
+                                color: ink,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'You · ${_shortMessageDate(message.createdAt)}',
+                              style: const TextStyle(fontSize: 10.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            const SizedBox(height: 22),
+            Text(
+              'Posts shared by ${member.name}',
+              style: GoogleFonts.playfairDisplay(
+                color: ink,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Circle-only posts appear here—no likes or popularity counts.',
+              style: TextStyle(color: Color(0xFF687067), fontSize: 12),
+            ),
+            const SizedBox(height: 10),
+            if (posts.isEmpty)
+              const Text('No Circle posts shared yet.')
+            else
+              for (final post in posts)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 9),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: .62),
+                    border: Border.all(color: line),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(post),
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Future<void> _findPeople() async {
     final searchController = TextEditingController();
@@ -1220,108 +1498,112 @@ class _CircleScreenState extends State<CircleScreen> {
   }
 
   Widget _memberCard(_CircleMember member, {bool isSelf = false}) {
-    return Container(
-      width: 136,
-      padding: const EdgeInsets.fromLTRB(9, 8, 9, 7),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .58),
-        border: Border.all(color: line),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              CircleAvatar(
-                radius: 19,
-                backgroundColor: member.color,
-                child: Text(
-                  member.initials,
-                  style: const TextStyle(
-                    color: ink,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              Positioned(
-                right: -1,
-                bottom: -1,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: member.available
-                        ? const Color(0xFF5D8E62)
-                        : const Color(0xFFB8B1A7),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: cream, width: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            member.name,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          Text(
-            member.status,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 10.5),
-          ),
-          const Spacer(),
-          if (isSelf)
-            const Text(
-              'Your status',
-              style: TextStyle(
-                color: sage,
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-              ),
-            )
-          else
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return InkWell(
+      onTap: isSelf ? null : () => _openMemberProfile(member),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: 136,
+        padding: const EdgeInsets.fromLTRB(9, 8, 9, 7),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .58),
+          border: Border.all(color: line),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
               children: [
-                IconButton(
-                  tooltip: 'Message ${member.name}',
-                  onPressed: () => _messageMember(member),
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints.tightFor(
-                    width: 34,
-                    height: 30,
-                  ),
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    color: sage,
-                    size: 18,
+                CircleAvatar(
+                  radius: 19,
+                  backgroundColor: member.color,
+                  child: Text(
+                    member.initials,
+                    style: const TextStyle(
+                      color: ink,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                IconButton(
-                  tooltip: 'Quick check-in with ${member.name}',
-                  onPressed: () => _quickCheckIn(member),
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints.tightFor(
-                    width: 34,
-                    height: 30,
-                  ),
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(
-                    Icons.favorite_outline_rounded,
-                    color: gold,
-                    size: 19,
+                Positioned(
+                  right: -1,
+                  bottom: -1,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: member.available
+                          ? const Color(0xFF5D8E62)
+                          : const Color(0xFFB8B1A7),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: cream, width: 2),
+                    ),
                   ),
                 ),
               ],
             ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              member.name,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            Text(
+              member.status,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 10.5),
+            ),
+            const Spacer(),
+            if (isSelf)
+              const Text(
+                'Your status',
+                style: TextStyle(
+                  color: sage,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    tooltip: 'Message ${member.name}',
+                    onPressed: () => _messageMember(member),
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 34,
+                      height: 30,
+                    ),
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      color: sage,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: 'Quick check-in with ${member.name}',
+                    onPressed: () => _quickCheckIn(member),
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 34,
+                      height: 30,
+                    ),
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(
+                      Icons.favorite_outline_rounded,
+                      color: gold,
+                      size: 19,
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1565,6 +1847,39 @@ class _CircleCandidate {
   final String username;
   final String initials;
   final Color color;
+}
+
+
+class _CircleMessage {
+  const _CircleMessage({
+    required this.memberName,
+    required this.text,
+    required this.createdAt,
+    this.isQuickCheckIn = false,
+  });
+
+  factory _CircleMessage.fromJson(Map<String, dynamic> json) {
+    return _CircleMessage(
+      memberName: json['memberName'] as String? ?? '',
+      text: json['text'] as String? ?? '',
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
+      isQuickCheckIn: json['isQuickCheckIn'] as bool? ?? false,
+    );
+  }
+
+  final String memberName;
+  final String text;
+  final DateTime createdAt;
+  final bool isQuickCheckIn;
+
+  Map<String, dynamic> toJson() => {
+    'memberName': memberName,
+    'text': text,
+    'createdAt': createdAt.toIso8601String(),
+    'isQuickCheckIn': isQuickCheckIn,
+  };
 }
 
 class _CircleMember {
