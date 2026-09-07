@@ -107,6 +107,7 @@ service cloud.firestore {
           'category',
           'audience',
           'author',
+          'authorUid',
           'createdAt',
           'needsSupport',
           'supportCount',
@@ -120,6 +121,16 @@ service cloud.firestore {
         request.resource.data.author is string &&
         request.resource.data.author.size() >= 3 &&
         request.resource.data.author.size() <= 30 &&
+        (
+          (
+            request.resource.data.author == 'Anonymous Neighbor' &&
+            !request.resource.data.keys().hasAny(['authorUid'])
+          ) ||
+          (
+            request.resource.data.author != 'Anonymous Neighbor' &&
+            request.resource.data.authorUid == request.auth.uid
+          )
+        ) &&
         request.resource.data.createdAt is timestamp &&
         request.resource.data.needsSupport is bool &&
         request.resource.data.supportCount == 0 &&
@@ -279,6 +290,7 @@ service cloud.firestore {
           'title',
           'message',
           'destinationIndex',
+          'postId',
           'isRead',
           'createdAt'
         ]) &&
@@ -295,6 +307,13 @@ service cloud.firestore {
           (
             request.resource.data.type == 'circle_request' &&
             exists(/databases/$(database)/documents/circle_requests/$(recipientUid)/incoming/$(request.auth.uid))
+          ) ||
+          (
+            request.resource.data.type in ['post_reply', 'post_support'] &&
+            request.resource.data.postId is string &&
+            get(/databases/$(database)/documents/village_posts/$(request.resource.data.postId))
+              .data.authorUid == recipientUid &&
+            request.auth.uid != recipientUid
           )
         );
     }
