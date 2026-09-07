@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'firebase_options.dart';
-import 'screens/home_screen.dart';
+import 'navigation/village_app_shell.dart';
 import 'screens/village_promise_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'services/auth_service.dart';
@@ -106,7 +106,7 @@ class _SignedInDestinationState extends State<_SignedInDestination> {
           );
         }
         return snapshot.data!
-            ? const HomeScreen()
+            ? const VillageAppShell()
             : const VillagePromiseScreen();
       },
     );
