@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/auth_service.dart';
 import 'home_screen.dart';
 
 class VillagePromiseScreen extends StatefulWidget {
@@ -16,7 +17,28 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
   static const gold = Color(0xFFC8A35E);
   static const ink = Color(0xFF172019);
 
+  final auth = AuthService();
   bool agreed = false;
+  bool saving = false;
+
+  Future<void> acceptPromise() async {
+    if (!agreed || saving) return;
+    setState(() => saving = true);
+    try {
+      await auth.acceptVillagePromise();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AuthService.messageFor(error))),
+      );
+      setState(() => saving = false);
+    }
+  }
 
   static const promises = <(IconData, String)>[
     (Icons.favorite_border_rounded, 'I will treat people with kindness.'),
@@ -127,14 +149,8 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
                             width: double.infinity,
                             height: 55,
                             child: FilledButton.icon(
-                              onPressed: agreed
-                                  ? () => Navigator.of(context).pushAndRemoveUntil(
-                                        MaterialPageRoute<void>(
-                                          builder: (_) => const HomeScreen(),
-                                        ),
-                                        (route) => false,
-                                      )
-                                  : null,
+                              onPressed:
+                                  agreed && !saving ? acceptPromise : null,
                               style: FilledButton.styleFrom(
                                 backgroundColor: sage,
                                 disabledBackgroundColor: sage.withValues(alpha: 0.38),
