@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/village_post_service.dart';
+import 'ask_village_screen.dart';
 
 class VillageFeedScreen extends StatefulWidget {
   const VillageFeedScreen({super.key, this.initialFilter = 'All'});
@@ -416,6 +417,16 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     super.dispose();
   }
 
+  Future<void> _createVillagePost() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const AskVillageScreen(),
+      ),
+    );
+    if (!mounted) return;
+    await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final shown = visiblePosts;
@@ -450,7 +461,29 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                       padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
                       children: [
                         _welcomeCard(),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _createVillagePost,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: sage,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(17),
+                              ),
+                            ),
+                            icon: const Icon(Icons.add_rounded),
+                            label: const Text(
+                              'Create a Post',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                         TextField(
                           controller: searchController,
                           decoration: InputDecoration(
@@ -558,6 +591,13 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                 ? 'Your questions will appear here after you publish them.'
                 : 'No posts match this view yet.',
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 14),
+          FilledButton.icon(
+            onPressed: _createVillagePost,
+            style: FilledButton.styleFrom(backgroundColor: sage),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Create a Post'),
           ),
         ],
       ),
