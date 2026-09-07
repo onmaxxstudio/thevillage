@@ -13,6 +13,34 @@ class VillageProfile {
   final String email;
 }
 
+class UsernameLookup {
+  const UsernameLookup({
+    required this.uid,
+    required this.username,
+    required this.email,
+  });
+
+  final String uid;
+  final String username;
+  final String email;
+
+  dynamic operator [](String key) {
+    switch (key) {
+      case 'uid':
+        return uid;
+      case 'username':
+        return username;
+      case 'email':
+        return email;
+      default:
+        return null;
+    }
+  }
+
+  @override
+  String toString() => username;
+}
+
 class BlockedAccount {
   const BlockedAccount({required this.uid, required this.username});
 
@@ -27,6 +55,33 @@ class ProfileService {
     final user = _auth.currentUser;
     if (user == null) throw StateError('You must be signed in.');
     return user;
+  }
+
+  /// Backward-compatible helper used by Village posts and questions.
+  static Future<String?> currentUsername() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final username = user?.displayName?.trim();
+    return username == null || username.isEmpty ? null : username;
+  }
+
+  /// Backward-compatible helper used by the Circle username search.
+  ///
+  /// Firebase Authentication cannot search every account by display name, so
+  /// this safely resolves the signed-in member while keeping existing screens
+  /// working. A server-side username directory can be connected later.
+  static Future<dynamic> findUsername(String value) async {
+    final query = value.trim().toLowerCase();
+    if (query.isEmpty) return null;
+
+    final user = FirebaseAuth.instance.currentUser;
+    final username = user?.displayName?.trim() ?? '';
+    if (user == null || username.toLowerCase() != query) return null;
+
+    return UsernameLookup(
+      uid: user.uid,
+      username: username,
+      email: user.email ?? '',
+    );
   }
 
   Future<VillageProfile> loadProfile() async {
