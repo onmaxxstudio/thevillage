@@ -47,6 +47,24 @@ service cloud.firestore {
       allow delete: if isSelf(uid);
     }
 
+    match /users/{uid}/blocked/{blockedUid} {
+      allow get, list, create, update, delete: if isSelf(uid) &&
+        (
+          request.method == 'get' ||
+          request.method == 'list' ||
+          request.method == 'delete' ||
+          (
+            request.resource.data.keys().hasOnly([
+              'uid',
+              'username',
+              'createdAt'
+            ]) &&
+            request.resource.data.uid == blockedUid &&
+            request.resource.data.username is string
+          )
+        );
+    }
+
     match /public_profiles/{uid} {
       allow get, list: if signedIn();
 
@@ -316,6 +334,43 @@ service cloud.firestore {
             request.auth.uid != recipientUid
           )
         );
+    }
+
+    match /reports/{reportId} {
+      allow read, update, delete: if false;
+
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly([
+          'reporterUid',
+          'reportedUid',
+          'targetType',
+          'targetId',
+          'reason',
+          'details',
+          'status',
+          'createdAt'
+        ]) &&
+        request.resource.data.reporterUid == request.auth.uid &&
+        request.resource.data.reportedUid is string &&
+        request.resource.data.targetType in [
+          'post',
+          'reply',
+          'profile',
+          'message'
+        ] &&
+        request.resource.data.targetId is string &&
+        request.resource.data.targetId.size() > 0 &&
+        request.resource.data.reason in [
+          'Harassment',
+          'Hate or discrimination',
+          'Dangerous advice',
+          'Spam or scam',
+          'Privacy concern',
+          'Other'
+        ] &&
+        request.resource.data.details is string &&
+        request.resource.data.details.size() <= 500 &&
+        request.resource.data.status == 'open';
     }
 
     match /{document=**} {
