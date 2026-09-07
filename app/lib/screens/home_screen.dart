@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     loadHistory();
-    NotificationService().load();
+    NotificationService().startListening();
   }
 
   Future<void> loadHistory() async {
