@@ -371,13 +371,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDashboardRow() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: _buildCheckInCard()),
-        const SizedBox(width: 12),
-        Expanded(child: _buildCircleCard()),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 480) {
+          return Column(
+            children: [
+              _buildCheckInCard(),
+              const SizedBox(height: 12),
+              _buildCircleCard(),
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _buildCheckInCard()),
+            const SizedBox(width: 12),
+            Expanded(child: _buildCircleCard()),
+          ],
+        );
+      },
     );
   }
 
@@ -565,116 +578,151 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildAskCard() {
-    return Container(
-      height: 184,
-      padding: const EdgeInsets.fromLTRB(22, 18, 18, 18),
-      decoration: BoxDecoration(
-        color: sage,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1F172019),
-            blurRadius: 14,
-            offset: Offset(0, 7),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            left: -25,
-            bottom: -24,
-            child: Opacity(
-              opacity: .5,
-              child: Image.asset(
-                'assets/images/welcome_branch.png',
-                width: 155,
-                color: const Color(0xFFE4C48A),
-                colorBlendMode: BlendMode.srcIn,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 440;
+
+        final callToAction = Column(
+          crossAxisAlignment:
+              compact ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+          children: [
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment:
+                  compact ? Alignment.centerLeft : Alignment.center,
+              child: Text(
+                'Ask the Village',
+                style: GoogleFonts.playfairDisplay(
+                  color: cream,
+                  fontSize: compact ? 31 : 36,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'Ask the Village',
-                        style: GoogleFonts.playfairDisplay(
-                          color: cream,
-                          fontSize: 36,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      'Real People. Real Support. Real Answers.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 13),
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: FilledButton.icon(
-                        onPressed: openAsk,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: cream,
-                          foregroundColor: sage,
-                        ),
-                        iconAlignment: IconAlignment.end,
-                        icon: const Icon(Icons.arrow_forward_rounded),
-                        label: const Text(
-                          'Ask Now',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Container(
-                width: 1,
-                height: 120,
-                color: const Color(0x99E4C48A),
-              ),
-              const SizedBox(width: 14),
-              const Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.diversity_1_outlined,
-                      color: Color(0xFFE4C48A),
-                      size: 44,
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'REAL\nQUESTIONS.\nBRIGHTER\nDAYS.',
-                      textAlign: TextAlign.center,
+            const Text(
+              'Real People. Real Support. Real Answers.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white, fontSize: 13),
+            ),
+            if (compact) ...[
+              const SizedBox(height: 10),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.diversity_1_outlined,
+                    color: Color(0xFFE4C48A),
+                    size: 24,
+                  ),
+                  SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'Real questions. Brighter days.',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 10,
-                        height: 1.55,
-                        letterSpacing: 2,
+                        fontSize: 11,
+                        letterSpacing: .7,
                       ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ],
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: openAsk,
+                style: FilledButton.styleFrom(
+                  backgroundColor: cream,
+                  foregroundColor: sage,
                 ),
+                iconAlignment: IconAlignment.end,
+                icon: const Icon(Icons.arrow_forward_rounded),
+                label: const Text(
+                  'Ask Now',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+
+        return Container(
+          height: compact ? 194 : 184,
+          padding: const EdgeInsets.fromLTRB(22, 18, 18, 18),
+          decoration: BoxDecoration(
+            color: sage,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1F172019),
+                blurRadius: 14,
+                offset: Offset(0, 7),
               ),
             ],
           ),
-        ],
-      ),
+          child: Stack(
+            children: [
+              Positioned(
+                left: -25,
+                bottom: -24,
+                child: Opacity(
+                  opacity: .5,
+                  child: Image.asset(
+                    'assets/images/welcome_branch.png',
+                    width: 155,
+                    color: const Color(0xFFE4C48A),
+                    colorBlendMode: BlendMode.srcIn,
+                  ),
+                ),
+              ),
+              if (compact)
+                callToAction
+              else
+                Row(
+                  children: [
+                    Expanded(flex: 3, child: callToAction),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 1,
+                      height: 120,
+                      color: const Color(0x99E4C48A),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.diversity_1_outlined,
+                            color: Color(0xFFE4C48A),
+                            size: 44,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'REAL\nQUESTIONS.\nBRIGHTER\nDAYS.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              height: 1.55,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
