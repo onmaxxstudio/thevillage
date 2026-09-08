@@ -116,14 +116,9 @@ class _VillageBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final narrowPhone = MediaQuery.sizeOf(context).width < 700;
-    final safariToolbarClearance = narrowPhone ? 72.0 : 0.0;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: safariToolbarClearance),
-      child: SafeArea(
-        top: false,
-        child: Material(
+    return SafeArea(
+      top: false,
+      child: Material(
           color: Colors.transparent,
           child: Container(
             margin: const EdgeInsets.fromLTRB(18, 4, 18, 8),
@@ -201,7 +196,6 @@ class _VillageBottomBar extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
