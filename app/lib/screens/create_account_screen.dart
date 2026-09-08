@@ -217,7 +217,29 @@ class _AccountCardState extends State<_AccountCard> {
   final auth = AuthService();
   bool loading = false;
 
-  Future<void> authenticate(Future<Object?> Function() action) async {
+  Future<void> _showAppleUnavailable() {
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Apple sign-in is not available yet'),
+        content: const Text(
+          'Apple must be enabled and connected in Firebase before this button '
+          'can sign you in. Please use Google or email for now.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> authenticate(
+    String method,
+    Future<Object?> Function() action,
+  ) async {
     if (loading) return;
     setState(() => loading = true);
     try {
@@ -237,7 +259,7 @@ class _AccountCardState extends State<_AccountCard> {
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Google sign-in error'),
+          title: Text('$method error'),
           content: SelectableText(message),
           actions: [
             TextButton(
@@ -290,7 +312,7 @@ class _AccountCardState extends State<_AccountCard> {
             label: 'Continue with Apple',
             onPressed: loading
                 ? null
-                : () => authenticate(auth.signInWithApple),
+                : () => _showAppleUnavailable(),
           ),
           const SizedBox(height: 11),
           _AuthButton(
@@ -298,7 +320,7 @@ class _AccountCardState extends State<_AccountCard> {
             label: 'Continue with Google',
             onPressed: loading
                 ? null
-                : () => authenticate(auth.signInWithGoogle),
+                : () => authenticate('Google sign-in', auth.signInWithGoogle),
           ),
           const SizedBox(height: 11),
           _AuthButton(

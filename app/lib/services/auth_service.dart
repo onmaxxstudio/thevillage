@@ -52,12 +52,13 @@ class AuthService {
 
   bool _googleInitialized = false;
 
-  Future<UserCredential> signInWithGoogle() async {
+  Future<void> signInWithGoogle() async {
     final provider = GoogleAuthProvider();
     if (kIsWeb) {
-      final credential = await _auth.signInWithPopup(provider);
-      await ProfileService().ensureCurrentUserProfile();
-      return credential;
+      // A full-page redirect is more reliable than a popup in iPhone/iPad
+      // Safari and when the app is hosted on GitHub Pages.
+      await _auth.signInWithRedirect(provider);
+      return;
     }
 
     if (!_googleInitialized) {
@@ -74,9 +75,8 @@ class AuthService {
     final credential = GoogleAuthProvider.credential(
       idToken: googleAuth.idToken,
     );
-    final userCredential = await _auth.signInWithCredential(credential);
+    await _auth.signInWithCredential(credential);
     await ProfileService().ensureCurrentUserProfile();
-    return userCredential;
   }
 
   Future<UserCredential> signInWithApple() async {
