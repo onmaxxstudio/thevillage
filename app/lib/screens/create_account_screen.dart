@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../navigation/village_app_shell.dart';
 import '../services/auth_service.dart';
 import 'email_sign_up_screen.dart';
-import 'home_screen.dart';
 import 'sign_in_screen.dart';
 import 'village_promise_screen.dart';
 
@@ -227,7 +227,7 @@ class _AccountCardState extends State<_AccountCard> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => acceptedPromise
-              ? const HomeScreen()
+              ? const VillageAppShell()
               : const VillagePromiseScreen(),
         ),
       );
