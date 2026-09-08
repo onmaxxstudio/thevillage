@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/check_in_service.dart';
+import '../services/circle_service.dart';
 import '../services/notification_service.dart';
+import '../services/profile_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
 import 'circle_screen.dart';
@@ -28,7 +32,11 @@ class _HomeScreenState extends State<HomeScreen> {
   static const line = Color(0xFFE3D8C9);
 
   final CheckInService checkInService = CheckInService();
+  final CircleService circleService = CircleService();
+  StreamSubscription<List<CirclePerson>>? circleSubscription;
   List<MoodCheckIn> history = [];
+  List<CirclePerson> circleMembers = [];
+  String currentUsername = 'Village member';
 
   static const moods = <(IconData, String)>[
     (Icons.sentiment_very_satisfied_outlined, 'Great'),
@@ -68,7 +76,37 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     loadHistory();
+    _connectRealProfileData();
     NotificationService().startListening();
+  }
+
+  void _connectRealProfileData() {
+    ProfileService.usernameNotifier.addListener(_usernameChanged);
+    ProfileService.currentUsername().then((username) {
+      if (!mounted || username == null || username.trim().isEmpty) return;
+      setState(() => currentUsername = username.trim());
+    });
+    circleSubscription = circleService.members().listen(
+      (people) {
+        if (mounted) setState(() => circleMembers = people);
+      },
+      onError: (_) {
+        if (mounted) setState(() => circleMembers = []);
+      },
+    );
+  }
+
+  void _usernameChanged() {
+    final username = ProfileService.usernameNotifier.value?.trim();
+    if (!mounted || username == null || username.isEmpty) return;
+    setState(() => currentUsername = username);
+  }
+
+  @override
+  void dispose() {
+    ProfileService.usernameNotifier.removeListener(_usernameChanged);
+    circleSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> loadHistory() async {
@@ -332,7 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Text(
-                        'KindHeart ♡',
+                        '$currentUsername ♡',
                         style: GoogleFonts.playfairDisplay(
                           color: sage,
                           fontSize: 34,
@@ -520,43 +558,53 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 4),
-          const Text(
-            '3 people available',
+          Text(
+            circleMembers.isEmpty
+                ? 'No people added yet'
+                : '${circleMembers.length} people in your Circle',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 10.5),
+            style: const TextStyle(fontSize: 10.5),
           ),
           const Spacer(),
           Row(
             children: [
-              for (final alignment in const [-1.0, -.5, 0.0, .5])
-                Align(
-                  widthFactor: .68,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: cream, width: 2),
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/images/create_account_hero.png',
-                        fit: BoxFit.cover,
-                        alignment: Alignment(alignment, 0),
+              if (circleMembers.isEmpty) ...[
+                const Icon(Icons.person_add_alt_1_rounded, color: sage, size: 22),
+                const SizedBox(width: 7),
+                const Text(
+                  'Invite someone',
+                  style: TextStyle(color: sage, fontWeight: FontWeight.w700),
+                ),
+              ] else ...[
+                for (final member in circleMembers.take(4))
+                  Align(
+                    widthFactor: .76,
+                    child: CircleAvatar(
+                      radius: 15,
+                      backgroundColor: paleSage,
+                      child: Text(
+                        member.username.isEmpty
+                            ? '?'
+                            : member.username[0].toUpperCase(),
+                        style: const TextStyle(
+                          color: sage,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ),
-                ),
+              ],
               const Spacer(),
-              const Text(
-                '+7',
-                style: TextStyle(
-                  color: sage,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
+              if (circleMembers.isNotEmpty)
+                Text(
+                  '${circleMembers.length}',
+                  style: const TextStyle(
+                    color: sage,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
                 ),
-              ),
             ],
           ),
         ],
