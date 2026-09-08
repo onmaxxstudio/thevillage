@@ -55,9 +55,10 @@ class AuthService {
   Future<void> signInWithGoogle() async {
     final provider = GoogleAuthProvider();
     if (kIsWeb) {
-      // A full-page redirect is more reliable than a popup in iPhone/iPad
-      // Safari and when the app is hosted on GitHub Pages.
-      await _auth.signInWithRedirect(provider);
+      // GitHub Pages cannot proxy Firebase's redirect helper. A popup keeps
+      // the authentication result in the same app session.
+      final credential = await _auth.signInWithPopup(provider);
+      await ProfileService().ensureCurrentUserProfile();
       return;
     }
 
