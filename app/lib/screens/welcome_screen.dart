@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'create_account_screen.dart';
+import 'sign_in_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -32,7 +33,7 @@ class WelcomeScreen extends StatelessWidget {
                       child: Column(
                         children: [
                           Text(
-                            'The Village',
+                            'Ask the Village',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.playfairDisplay(
                               color: _green,
@@ -45,7 +46,7 @@ class WelcomeScreen extends StatelessWidget {
                           const _BotanicalDivider(),
                           const SizedBox(height: 14),
                           Text(
-                            'Real People. Real Support. Real Connection.',
+                            'Real People. Real Support. Real Answers.',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: _ink,
@@ -79,7 +80,15 @@ class WelcomeScreen extends StatelessWidget {
                             },
                           ),
                           const SizedBox(height: 12),
-                          const _SignInButton(),
+                          _SignInButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const SignInScreen(),
+                                ),
+                              );
+                            },
+                          ),
                           const SizedBox(height: 22),
                           const _PrivacyMessage(),
                         ],
@@ -320,7 +329,7 @@ class _PrimaryButton extends StatelessWidget {
           ),
         ),
         child: Text(
-          'Join The Village',
+          'Join the Village',
           style: GoogleFonts.inter(fontSize: 19, fontWeight: FontWeight.w600),
         ),
       ),
@@ -329,7 +338,9 @@ class _PrimaryButton extends StatelessWidget {
 }
 
 class _SignInButton extends StatelessWidget {
-  const _SignInButton();
+  const _SignInButton({required this.onPressed});
+
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -337,7 +348,7 @@ class _SignInButton extends StatelessWidget {
       width: double.infinity,
       height: 57,
       child: OutlinedButton(
-        onPressed: () {},
+        onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: WelcomeScreen._green,
           side: const BorderSide(color: WelcomeScreen._green, width: 1.25),

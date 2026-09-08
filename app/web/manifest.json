@@ -1,6 +1,6 @@
 {
-    "name": "The Village",
-    "short_name": "The Village",
+    "name": "Ask the Village",
+    "short_name": "Ask Village",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

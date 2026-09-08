@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/auth_service.dart';
+import 'email_sign_up_screen.dart';
+import 'home_screen.dart';
+import 'sign_in_screen.dart';
+import 'village_promise_screen.dart';
+
 class CreateAccountScreen extends StatelessWidget {
   const CreateAccountScreen({super.key});
 
@@ -60,23 +66,24 @@ class _Header extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 14),
           child: Column(
             children: [
-              const _BotanicalMark(),
               Text(
-                'The Village',
+                'Ask the Village',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.playfairDisplay(
-                  fontSize: 46,
+                  fontSize: 51,
                   fontWeight: FontWeight.w600,
-                  height: 1.06,
+                  height: 1,
                   color: CreateAccountScreen._sage,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
+              const _WelcomeStyleDivider(),
+              const SizedBox(height: 12),
               Text(
-                'Real People. Real Support. Real Connection.',
+                'Real People. Real Support. Real Answers.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
-                  fontSize: 14,
+                  fontSize: 15.5,
                   fontWeight: FontWeight.w500,
                   color: CreateAccountScreen._ink,
                 ),
@@ -99,18 +106,33 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _BotanicalMark extends StatelessWidget {
-  const _BotanicalMark();
+class _WelcomeStyleDivider extends StatelessWidget {
+  const _WelcomeStyleDivider();
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 70,
-      height: 28,
-      child: Image.asset(
-        'assets/images/welcome_branch.png',
-        fit: BoxFit.contain,
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(
+          width: 76,
+          child: Divider(color: Color(0xFFC8A35E)),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 52,
+          height: 25,
+          child: Image.asset(
+            'assets/images/welcome_branch.png',
+            fit: BoxFit.contain,
+          ),
+        ),
+        const SizedBox(width: 10),
+        const SizedBox(
+          width: 76,
+          child: Divider(color: Color(0xFFC8A35E)),
+        ),
+      ],
     );
   }
 }
@@ -184,8 +206,40 @@ class _ReferenceCrop extends StatelessWidget {
   }
 }
 
-class _AccountCard extends StatelessWidget {
+class _AccountCard extends StatefulWidget {
   const _AccountCard();
+
+  @override
+  State<_AccountCard> createState() => _AccountCardState();
+}
+
+class _AccountCardState extends State<_AccountCard> {
+  final auth = AuthService();
+  bool loading = false;
+
+  Future<void> authenticate(Future<Object?> Function() action) async {
+    if (loading) return;
+    setState(() => loading = true);
+    try {
+      await action();
+      final acceptedPromise = await auth.hasAcceptedVillagePromise();
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => acceptedPromise
+              ? const HomeScreen()
+              : const VillagePromiseScreen(),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AuthService.messageFor(error))),
+      );
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -203,9 +257,9 @@ class _AccountCard extends StatelessWidget {
         children: [
           Text(
             'Create Your Account',
-            style: GoogleFonts.inter(
-              fontSize: 23,
-              fontWeight: FontWeight.w700,
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 32,
+              fontWeight: FontWeight.w600,
               color: CreateAccountScreen._sage,
             ),
           ),
@@ -220,17 +274,33 @@ class _AccountCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 19),
-          const _AuthButton(
-            icon: Icon(Icons.apple, size: 26),
+          _AuthButton(
+            icon: const Icon(Icons.apple, size: 26),
             label: 'Continue with Apple',
+            onPressed: loading
+                ? null
+                : () => authenticate(auth.signInWithApple),
           ),
           const SizedBox(height: 11),
-          const _AuthButton(icon: _GoogleMark(), label: 'Continue with Google'),
+          _AuthButton(
+            icon: const _GoogleMark(),
+            label: 'Continue with Google',
+            onPressed: loading
+                ? null
+                : () => authenticate(auth.signInWithGoogle),
+          ),
           const SizedBox(height: 11),
-          const _AuthButton(
-            icon: Icon(Icons.mail_outline_rounded,
+          _AuthButton(
+            icon: const Icon(Icons.mail_outline_rounded,
                 size: 27, color: CreateAccountScreen._sage),
             label: 'Continue with Email',
+            onPressed: loading
+                ? null
+                : () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const EmailSignUpScreen(),
+                      ),
+                    ),
           ),
           const SizedBox(height: 17),
           const _Divider(),
@@ -242,7 +312,13 @@ class _AccountCard extends StatelessWidget {
               Text('Already have an account? ',
                   style: GoogleFonts.inter(fontSize: 14)),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const SignInScreen(),
+                    ),
+                  );
+                },
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,
                   minimumSize: const Size(42, 30),
@@ -260,18 +336,24 @@ class _AccountCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 34),
+          const SizedBox(height: 10),
         ],
       ),
     );
   }
+
 }
 
 class _AuthButton extends StatelessWidget {
-  const _AuthButton({required this.icon, required this.label});
+  const _AuthButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
 
   final Widget icon;
   final String label;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +361,7 @@ class _AuthButton extends StatelessWidget {
       width: double.infinity,
       height: 52,
       child: OutlinedButton(
-        onPressed: () {},
+        onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: CreateAccountScreen._ink,
           backgroundColor: const Color(0xFFFFFCF7),
@@ -342,5 +424,3 @@ class _Divider extends StatelessWidget {
     );
   }
 }
-
-// Privacy card intentionally removed to match approved Create Account design.

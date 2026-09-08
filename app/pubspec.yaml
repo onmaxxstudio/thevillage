@@ -1,5 +1,5 @@
-name: ineedmyvillage
-description: "A new Flutter project."
+name: ask_the_village
+description: "A private, supportive community for real questions and real answers."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -31,6 +31,11 @@ dependencies:
   flutter:
     sdk: flutter
   google_fonts: ^8.2.1
+  firebase_core: ^4.12.0
+  firebase_auth: ^6.5.2
+  cloud_firestore: ^6.9.0
+  google_sign_in: ^7.2.0
+  shared_preferences: ^2.5.5
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class in the material Icons class.
