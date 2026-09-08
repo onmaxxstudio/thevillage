@@ -17,25 +17,6 @@ class CreateAccountScreen extends StatelessWidget {
   static const _cream = Color(0xFFFFFAF1);
   static const _line = Color(0xFFD9D1C3);
 
-  Future<void> _showAppleUnavailable() {
-    return showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Apple sign-in is not available yet'),
-        content: const Text(
-          'Apple must be enabled and connected in Firebase before this button '
-          'can sign you in. Please use Google or email for now.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -235,6 +216,25 @@ class _AccountCard extends StatefulWidget {
 class _AccountCardState extends State<_AccountCard> {
   final auth = AuthService();
   bool loading = false;
+
+  Future<void> _showAppleUnavailable() {
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Apple sign-in is not available yet'),
+        content: const Text(
+          'Apple must be enabled and connected in Firebase before this button '
+          'can sign you in. Please use Google or email for now.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> authenticate(
     String method,
