@@ -2,9 +2,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../navigation/village_app_shell.dart';
 import '../services/auth_service.dart';
 import 'create_account_screen.dart';
-import 'home_screen.dart';
 import 'village_promise_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -55,7 +55,7 @@ class _SignInScreenState extends State<SignInScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => acceptedPromise
-              ? const HomeScreen()
+              ? const VillageAppShell()
               : const VillagePromiseScreen(),
         ),
       );
@@ -272,7 +272,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             child: FilledButton.icon(
                               onPressed: () => Navigator.of(context).push(
                                 MaterialPageRoute<void>(
-                                  builder: (_) => const HomeScreen(),
+                                  builder: (_) => const VillageAppShell(),
                                 ),
                               ),
                               style: FilledButton.styleFrom(
