@@ -150,7 +150,7 @@ class VillagePost {
       question: json['question'] as String? ?? '',
       category: json['category'] as String? ?? 'Other',
       audience: json['audience'] as String? ?? 'The Village',
-      author: json['author'] as String? ?? '@KindHeart',
+      author: json['author'] as String? ?? '@VillageMember',
       authorUid: json['authorUid'] as String?,
       createdAt: createdAt,
       needsSupport: json['needsSupport'] as bool? ?? false,
@@ -269,9 +269,9 @@ class VillagePostService {
     final posts = <VillagePost>[];
     for (final item in stored) {
       try {
-        posts.add(
-          VillagePost.fromJson(jsonDecode(item) as Map<String, dynamic>),
-        );
+        final post =
+            VillagePost.fromJson(jsonDecode(item) as Map<String, dynamic>);
+        if (!post.id.startsWith('sample-')) posts.add(post);
       } on Object {
         // Ignore one damaged local post without losing the others.
       }
@@ -289,7 +289,7 @@ class VillagePostService {
   }) async {
     final now = DateTime.now();
     final username =
-        await ProfileService.currentUsername() ?? 'KindHeart';
+        await ProfileService.currentUsername() ?? 'VillageMember';
     final resolvedAuthor =
         anonymous ? 'Anonymous Neighbor' : '@$username';
     if (_cloudReady && audience != 'My Circle') {
