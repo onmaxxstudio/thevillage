@@ -21,4 +21,4 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter analyze --no-fatal-warnings --no-fatal-infos
-      - run: flutter build web --wasm
+      - run: flutter build web
