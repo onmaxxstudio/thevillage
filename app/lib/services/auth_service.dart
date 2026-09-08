@@ -128,6 +128,12 @@ class AuthService {
           'Too many attempts. Please wait a moment and try again.',
         'popup-closed-by-user' || 'canceled-popup-request' =>
           'Sign-in was canceled.',
+        'unauthorized-domain' =>
+            'This website must be added to Firebase Authorized domains.',
+        'operation-not-allowed' =>
+            'This sign-in option must be enabled in Firebase Authentication.',
+        'network-request-failed' =>
+            'Firebase could not connect. Check your internet connection and try again.',
         'account-exists-with-different-credential' =>
           'That email already uses a different sign-in method.',
         _ => error.message ?? 'We could not sign you in. Please try again.',
