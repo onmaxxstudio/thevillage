@@ -92,7 +92,8 @@ class _VillageAppShellState extends State<VillageAppShell> {
             onSelect: selectTab,
           ),
         ),
-      );
+      ),
+    );
   }
 }
 
@@ -195,7 +196,6 @@ class _VillageBottomBar extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
