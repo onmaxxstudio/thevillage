@@ -3,7 +3,7 @@ name: Deploy Ask the Village
 on:
   push:
     branches:
-      - codex/entry-flow-20260905
+      - main
   workflow_dispatch:
 
 permissions:
