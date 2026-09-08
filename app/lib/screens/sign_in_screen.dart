@@ -234,7 +234,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                   ),
-                  if (Firebase.apps.isEmpty) ...[
+                  ...[
                     const SizedBox(height: 18),
                     Container(
                       width: double.infinity,
@@ -253,7 +253,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                           const SizedBox(height: 7),
                           Text(
-                            'Web Preview Mode',
+                            'Preview the Full App',
                             style: GoogleFonts.inter(
                               color: sage,
                               fontSize: 17,
@@ -262,8 +262,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                           const SizedBox(height: 4),
                           const Text(
-                            'Sign-in is not connected in this browser yet. '
-                            'You can still preview the app screens.',
+                            'Open the complete working app without signing in while account setup is being finished.',
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 12),
@@ -280,7 +279,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 padding: const EdgeInsets.all(14),
                               ),
                               icon: const Icon(Icons.visibility_outlined),
-                              label: const Text('Preview Home Screen'),
+                              label: const Text('Preview the Full App'),
                             ),
                           ),
                         ],
