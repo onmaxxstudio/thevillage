@@ -371,26 +371,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDashboardRow() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 480) {
-          return Column(
-            children: [
-              _buildCheckInCard(),
-              const SizedBox(height: 12),
-              _buildCircleCard(),
-            ],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: _buildCheckInCard()),
-            const SizedBox(width: 12),
-            Expanded(child: _buildCircleCard()),
-          ],
-        );
-      },
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: _buildCheckInCard()),
+        const SizedBox(width: 10),
+        Expanded(child: _buildCircleCard()),
+      ],
     );
   }
 
@@ -407,59 +394,62 @@ class _HomeScreenState extends State<HomeScreen> {
               const _RoundIcon(
                 icon: Icons.wb_sunny_outlined,
                 gold: true,
-                radius: 20,
+                radius: 16,
               ),
-              const SizedBox(width: 9),
+              const SizedBox(width: 7),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Daily Check-In',
-                        style: GoogleFonts.playfairDisplay(
-                          color: ink,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      entry == null ? 'How are you today?' : 'Today: ${entry.mood}',
-                      style: const TextStyle(fontSize: 11.5),
-                    ),
-                  ],
-                ),
-              ),
-              if (entry != null)
-                TextButton.icon(
-                  onPressed: openHistory,
-                  style: TextButton.styleFrom(
-                    foregroundColor: sage,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 5,
-                    ),
-                    minimumSize: const Size(0, 30),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    textStyle: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Daily Check-In',
+                    maxLines: 1,
+                    style: GoogleFonts.playfairDisplay(
+                      color: ink,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  icon: const Icon(Icons.history_rounded, size: 16),
-                  label: const Text('My History'),
                 ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  entry == null ? 'How are you today?' : 'Today: ${entry.mood}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 10.5),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: openHistory,
+                style: TextButton.styleFrom(
+                  foregroundColor: sage,
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  minimumSize: const Size(0, 24),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                ),
+                icon: const Icon(Icons.history_rounded, size: 14),
+                label: const Text(
+                  'My History',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ],
           ),
           const Spacer(),
           LayoutBuilder(
             builder: (context, constraints) {
               final diameter = ((constraints.maxWidth - 8) / 5)
-                  .clamp(25, 36)
+                  .clamp(21, 28)
                   .toDouble();
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -504,40 +494,47 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const _RoundIcon(
                 icon: Icons.groups_2_outlined,
-                radius: 20,
+                radius: 16,
               ),
-              const SizedBox(width: 9),
+              const SizedBox(width: 7),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'My Circle',
-                      style: GoogleFonts.playfairDisplay(
-                        color: ink,
-                        fontSize: 21,
-                        fontWeight: FontWeight.w600,
-                      ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'My Circle',
+                    maxLines: 1,
+                    style: GoogleFonts.playfairDisplay(
+                      color: ink,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const Text(
-                      '3 people available',
-                      style: TextStyle(fontSize: 11.5),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: sage),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: sage,
+                size: 20,
+              ),
             ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '3 people available',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10.5),
           ),
           const Spacer(),
           Row(
             children: [
               for (final alignment in const [-1.0, -.5, 0.0, .5])
                 Align(
-                  widthFactor: .72,
+                  widthFactor: .68,
                   child: Container(
-                    width: 34,
-                    height: 34,
+                    width: 28,
+                    height: 28,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: cream, width: 2),
@@ -557,7 +554,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   color: sage,
                   fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                  fontSize: 15,
                 ),
               ),
             ],

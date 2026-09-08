@@ -116,82 +116,89 @@ class _VillageBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(18, 4, 18, 8),
-          decoration: BoxDecoration(
-            color: _VillageAppShellState.cream,
-            border: Border.all(color: _VillageAppShellState.line),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1A172019),
-                blurRadius: 16,
-                offset: Offset(0, 6),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
-          child: Row(
-            children: List.generate(items.length, (index) {
-              final isAsk = index == 2;
-              final isSelected = selectedIndex == index;
-              final label = items[index].$2;
-              return Expanded(
-                child: Semantics(
-                  button: true,
-                  selected: isSelected,
-                  label: '$label tab',
-                  child: TextButton(
-                    key: ValueKey('bottom-nav-$index'),
-                    onPressed: () => onSelect(index),
-                    style: TextButton.styleFrom(
-                      foregroundColor: _VillageAppShellState.ink,
-                      padding: const EdgeInsets.symmetric(vertical: 3),
-                      minimumSize: const Size(48, 62),
-                      tapTargetSize: MaterialTapTargetSize.padded,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+    final narrowPhone = MediaQuery.sizeOf(context).width < 700;
+    final safariToolbarClearance = narrowPhone ? 72.0 : 0.0;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: safariToolbarClearance),
+      child: SafeArea(
+        top: false,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(18, 4, 18, 8),
+            decoration: BoxDecoration(
+              color: _VillageAppShellState.cream,
+              border: Border.all(color: _VillageAppShellState.line),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A172019),
+                  blurRadius: 16,
+                  offset: Offset(0, 6),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
+            child: Row(
+              children: List.generate(items.length, (index) {
+                final isAsk = index == 2;
+                final isSelected = selectedIndex == index;
+                final label = items[index].$2;
+                return Expanded(
+                  child: Semantics(
+                    button: true,
+                    selected: isSelected,
+                    label: '$label tab',
+                    child: TextButton(
+                      key: ValueKey('bottom-nav-$index'),
+                      onPressed: () => onSelect(index),
+                      style: TextButton.styleFrom(
+                        foregroundColor: _VillageAppShellState.ink,
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        minimumSize: const Size(48, 62),
+                        tapTargetSize: MaterialTapTargetSize.padded,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: isAsk ? 48 : 38,
+                            height: isAsk ? 48 : 32,
+                            decoration: BoxDecoration(
+                              color: isAsk
+                                  ? _VillageAppShellState.sage
+                                  : isSelected
+                                      ? _VillageAppShellState.paleSage
+                                      : Colors.transparent,
+                              shape:
+                                  isAsk ? BoxShape.circle : BoxShape.rectangle,
+                              borderRadius:
+                                  isAsk ? null : BorderRadius.circular(15),
+                            ),
+                            child: Icon(
+                              items[index].$1,
+                              color: isAsk
+                                  ? Colors.white
+                                  : isSelected
+                                      ? _VillageAppShellState.sage
+                                      : _VillageAppShellState.ink,
+                            ),
+                          ),
+                          Text(
+                            label,
+                            style: const TextStyle(fontSize: 10.5),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: isAsk ? 48 : 38,
-                          height: isAsk ? 48 : 32,
-                          decoration: BoxDecoration(
-                            color: isAsk
-                                ? _VillageAppShellState.sage
-                                : isSelected
-                                    ? _VillageAppShellState.paleSage
-                                    : Colors.transparent,
-                            shape: isAsk ? BoxShape.circle : BoxShape.rectangle,
-                            borderRadius:
-                                isAsk ? null : BorderRadius.circular(15),
-                          ),
-                          child: Icon(
-                            items[index].$1,
-                            color: isAsk
-                                ? Colors.white
-                                : isSelected
-                                    ? _VillageAppShellState.sage
-                                    : _VillageAppShellState.ink,
-                          ),
-                        ),
-                        Text(
-                          label,
-                          style: const TextStyle(fontSize: 10.5),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
-              );
-            }),
+                );
+              }),
+            ),
           ),
         ),
       ),
