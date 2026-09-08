@@ -16,7 +16,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDnbaobLdWYLXY8pAbWKfWi8OvBlA28TGY',
+    apiKey: 'AIzaSyAjXDKTYTMssHLilY8lPIYEniRtVixtXJ0',
     appId: '1:696766963629:web:05ca4af248f98628c08b24',
     messagingSenderId: '696766963629',
     projectId: 'the-village-d7af4',
