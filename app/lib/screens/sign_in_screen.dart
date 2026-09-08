@@ -38,6 +38,7 @@ class _SignInScreenState extends State<SignInScreen> {
   Future<void> submit() async {
     if (!(formKey.currentState?.validate() ?? false)) return;
     await authenticate(
+      'Email sign-in',
       () => auth.signInWithEmail(
         emailController.text,
         passwordController.text,
@@ -45,7 +46,10 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
-  Future<void> authenticate(Future<Object?> Function() action) async {
+  Future<void> authenticate(
+    String method,
+    Future<Object?> Function() action,
+  ) async {
     if (loading) return;
     setState(() => loading = true);
     try {
@@ -65,7 +69,7 @@ class _SignInScreenState extends State<SignInScreen> {
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Google sign-in error'),
+          title: Text('$method error'),
           content: SelectableText(message),
           actions: [
             TextButton(
@@ -78,6 +82,25 @@ class _SignInScreenState extends State<SignInScreen> {
     } finally {
       if (mounted) setState(() => loading = false);
     }
+  }
+
+  Future<void> _showAppleUnavailable() {
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Apple sign-in is not available yet'),
+        content: const Text(
+          'Apple must be enabled and connected in Firebase before this button '
+          'can sign you in. Please use Google or email for now.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> resetPassword() async {
@@ -226,7 +249,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                   label: 'Apple',
                                   onPressed: loading
                                       ? null
-                                      : () => authenticate(auth.signInWithApple),
+                                      : () => _showAppleUnavailable(),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -236,7 +259,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                   label: 'Google',
                                   onPressed: loading
                                       ? null
-                                      : () => authenticate(auth.signInWithGoogle),
+                                      : () => authenticate('Google sign-in', auth.signInWithGoogle),
                                 ),
                               ),
                             ],
