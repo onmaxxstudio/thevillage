@@ -53,7 +53,8 @@ class AuthService {
   bool _googleInitialized = false;
 
   Future<void> signInWithGoogle() async {
-    final provider = GoogleAuthProvider();
+    final provider = GoogleAuthProvider()
+      ..setCustomParameters({'prompt': 'select_account'});
     if (kIsWeb) {
       // GitHub Pages cannot proxy Firebase's redirect helper. A popup keeps
       // the authentication result in the same app session.
