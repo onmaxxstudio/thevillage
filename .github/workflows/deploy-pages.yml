@@ -32,9 +32,9 @@ jobs:
         working-directory: app
         run: flutter pub get
 
-      - name: Build website
+      - name: Build website without stale PWA cache
         working-directory: app
-        run: flutter build web --release --base-href /thevillage/
+        run: flutter build web --release --base-href /thevillage/ --pwa-strategy=none
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
