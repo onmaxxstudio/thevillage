@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../screens/ask_village_screen.dart';
@@ -73,9 +72,6 @@ class _VillageAppShellState extends State<VillageAppShell> {
 
   @override
   Widget build(BuildContext context) {
-    final mobileBrowserClearance =
-        kIsWeb && MediaQuery.sizeOf(context).width < 700 ? 72.0 : 0.0;
-
     return VillageNavigationScope(
       selectedIndex: selectedIndex,
       onSelect: selectTab,
@@ -87,22 +83,13 @@ class _VillageAppShellState extends State<VillageAppShell> {
         },
         child: Scaffold(
           backgroundColor: cream,
-          body: Padding(
-            padding: EdgeInsets.only(bottom: mobileBrowserClearance),
-            child: Column(
-              children: [
-                Expanded(
-                  child: IndexedStack(
-                    index: selectedIndex,
-                    children: List.generate(5, buildTabNavigator),
-                  ),
-                ),
-                _VillageBottomBar(
-                  selectedIndex: selectedIndex,
-                  onSelect: selectTab,
-                ),
-              ],
-            ),
+          body: IndexedStack(
+            index: selectedIndex,
+            children: List.generate(5, buildTabNavigator),
+          ),
+          bottomNavigationBar: _VillageBottomBar(
+            selectedIndex: selectedIndex,
+            onSelect: selectTab,
           ),
         ),
       ),
@@ -119,96 +106,42 @@ class _VillageBottomBar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelect;
 
-  static const items = [
-    (Icons.home_rounded, 'Home'),
-    (Icons.groups_2_outlined, 'Circle'),
-    (Icons.add_rounded, 'Ask'),
-    (Icons.chat_bubble_outline_rounded, 'Village'),
-    (Icons.person_outline_rounded, 'Profile'),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: Material(
-          color: Colors.transparent,
-          child: Container(
-            margin: const EdgeInsets.fromLTRB(18, 4, 18, 8),
-            decoration: BoxDecoration(
-              color: _VillageAppShellState.cream,
-              border: Border.all(color: _VillageAppShellState.line),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x1A172019),
-                  blurRadius: 16,
-                  offset: Offset(0, 6),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
-            child: Row(
-              children: List.generate(items.length, (index) {
-                final isAsk = index == 2;
-                final isSelected = selectedIndex == index;
-                final label = items[index].$2;
-                return Expanded(
-                  child: Semantics(
-                    button: true,
-                    selected: isSelected,
-                    label: '$label tab',
-                    child: TextButton(
-                      key: ValueKey('bottom-nav-$index'),
-                      onPressed: () => onSelect(index),
-                      style: TextButton.styleFrom(
-                        foregroundColor: _VillageAppShellState.ink,
-                        padding: const EdgeInsets.symmetric(vertical: 3),
-                        minimumSize: const Size(48, 62),
-                        tapTargetSize: MaterialTapTargetSize.padded,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: isAsk ? 48 : 38,
-                            height: isAsk ? 48 : 32,
-                            decoration: BoxDecoration(
-                              color: isAsk
-                                  ? _VillageAppShellState.sage
-                                  : isSelected
-                                      ? _VillageAppShellState.paleSage
-                                      : Colors.transparent,
-                              shape:
-                                  isAsk ? BoxShape.circle : BoxShape.rectangle,
-                              borderRadius:
-                                  isAsk ? null : BorderRadius.circular(15),
-                            ),
-                            child: Icon(
-                              items[index].$1,
-                              color: isAsk
-                                  ? Colors.white
-                                  : isSelected
-                                      ? _VillageAppShellState.sage
-                                      : _VillageAppShellState.ink,
-                            ),
-                          ),
-                          Text(
-                            label,
-                            style: const TextStyle(fontSize: 10.5),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
+      child: BottomNavigationBar(
+        currentIndex: selectedIndex,
+        onTap: onSelect,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: _VillageAppShellState.cream,
+        selectedItemColor: _VillageAppShellState.sage,
+        unselectedItemColor: _VillageAppShellState.ink,
+        showUnselectedLabels: true,
+        elevation: 16,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_rounded),
+            label: 'Home',
           ),
-        ),
-      );
+          BottomNavigationBarItem(
+            icon: Icon(Icons.groups_2_outlined),
+            label: 'Circle',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle, size: 36),
+            label: 'Ask',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline_rounded),
+            label: 'Village',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline_rounded),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
   }
 }

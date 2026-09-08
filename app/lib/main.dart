@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'firebase_options.dart';
@@ -22,9 +20,6 @@ Future<void> main() async {
     // AuthService shows a clear setup error instead of bypassing sign-in.
   }
   runApp(const MyApp());
-  if (kIsWeb) {
-    SemanticsBinding.instance.ensureSemantics();
-  }
 }
 
 class MyApp extends StatelessWidget {
