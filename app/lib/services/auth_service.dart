@@ -55,7 +55,9 @@ class AuthService {
   Future<UserCredential> signInWithGoogle() async {
     final provider = GoogleAuthProvider();
     if (kIsWeb) {
-      final credential = await _auth.signInWithPopup(provider);
+      // A full-page redirect is more reliable than a popup in iPhone/iPad
+      // Safari and when the app is hosted on GitHub Pages.
+      final credential = await _auth.signInWithRedirect(provider);
       await ProfileService().ensureCurrentUserProfile();
       return credential;
     }
