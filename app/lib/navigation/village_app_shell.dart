@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../screens/ask_village_screen.dart';
@@ -72,6 +73,9 @@ class _VillageAppShellState extends State<VillageAppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final mobileBrowserClearance =
+        kIsWeb && MediaQuery.sizeOf(context).width < 700 ? 72.0 : 0.0;
+
     return VillageNavigationScope(
       selectedIndex: selectedIndex,
       onSelect: selectTab,
@@ -83,13 +87,22 @@ class _VillageAppShellState extends State<VillageAppShell> {
         },
         child: Scaffold(
           backgroundColor: cream,
-          body: IndexedStack(
-            index: selectedIndex,
-            children: List.generate(5, buildTabNavigator),
-          ),
-          bottomNavigationBar: _VillageBottomBar(
-            selectedIndex: selectedIndex,
-            onSelect: selectTab,
+          body: Padding(
+            padding: EdgeInsets.only(bottom: mobileBrowserClearance),
+            child: Column(
+              children: [
+                Expanded(
+                  child: IndexedStack(
+                    index: selectedIndex,
+                    children: List.generate(5, buildTabNavigator),
+                  ),
+                ),
+                _VillageBottomBar(
+                  selectedIndex: selectedIndex,
+                  onSelect: selectTab,
+                ),
+              ],
+            ),
           ),
         ),
       ),
