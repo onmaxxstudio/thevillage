@@ -139,7 +139,7 @@ class AuthService {
         _ => error.message ?? 'We could not sign you in. Please try again.',
       };
     }
-    return 'We could not sign you in. Please try again.';
+    return 'Sign-in error: $error';
   }
 }
 

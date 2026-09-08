@@ -233,8 +233,19 @@ class _AccountCardState extends State<_AccountCard> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AuthService.messageFor(error))),
+      final message = AuthService.messageFor(error);
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Google sign-in error'),
+          content: SelectableText(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
       );
     } finally {
       if (mounted) setState(() => loading = false);
