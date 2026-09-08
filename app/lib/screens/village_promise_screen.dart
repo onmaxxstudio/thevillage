@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../navigation/village_app_shell.dart';
 import '../services/auth_service.dart';
-import 'home_screen.dart';
 
 class VillagePromiseScreen extends StatefulWidget {
   const VillagePromiseScreen({super.key});
@@ -28,7 +28,7 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
       await auth.acceptVillagePromise();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+        MaterialPageRoute<void>(builder: (_) => const VillageAppShell()),
         (route) => false,
       );
     } catch (error) {
