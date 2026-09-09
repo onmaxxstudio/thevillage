@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/auth_service.dart';
@@ -122,6 +123,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await service.sendPasswordReset();
       if (mounted) showMessage('Password reset email sent.');
+    } catch (error) {
+      if (mounted) showMessage(messageFor(error));
+    }
+  }
+
+  Future<void> exportMyData() async {
+    try {
+      final data = await service.exportMyData();
+      await Clipboard.setData(ClipboardData(text: data));
+      if (!mounted) return;
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: cream,
+          title: const Text('Your data is ready'),
+          content: const Text(
+            'A readable copy of your account data was copied. You can paste it into Notes, Files, or a document and save it.',
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      );
     } catch (error) {
       if (mounted) showMessage(messageFor(error));
     }
@@ -306,6 +333,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         const BlockedAccountsScreen(),
                                   ),
                                 ),
+                              ),
+                              const Divider(color: line),
+                              _actionTile(
+                                icon: Icons.download_outlined,
+                                title: 'Export my data',
+                                onTap: exportMyData,
                               ),
                               const Divider(color: line),
                               _actionTile(

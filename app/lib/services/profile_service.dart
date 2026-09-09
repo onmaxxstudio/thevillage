@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -374,6 +376,94 @@ class ProfileService {
       );
     }
     await _auth.sendPasswordResetEmail(email: email);
+  }
+
+  Future<String> exportMyData() async {
+    final user = _user;
+    final payload = <String, Object?>{
+      'exportedAt': DateTime.now().toIso8601String(),
+      'account': {
+        'uid': user.uid,
+        'email': user.email ?? '',
+        'username': await currentUsername() ?? '',
+      },
+    };
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        final results = await Future.wait([
+          _userDocument(user.uid)
+              .collection('blocked')
+              .limit(500)
+              .get(),
+          _firestore
+              .collection('circles')
+              .doc(user.uid)
+              .collection('members')
+              .limit(500)
+              .get(),
+          _firestore
+              .collection('notifications')
+              .doc(user.uid)
+              .collection('items')
+              .orderBy('createdAt', descending: true)
+              .limit(500)
+              .get(),
+          _firestore
+              .collection('check_ins')
+              .doc(user.uid)
+              .collection('items')
+              .orderBy('createdAt', descending: true)
+              .limit(500)
+              .get(),
+          _firestore
+              .collection('village_post_owners')
+              .where('uid', isEqualTo: user.uid)
+              .limit(500)
+              .get(),
+        ]);
+        List<Map<String, Object?>> documents(
+          QuerySnapshot<Map<String, dynamic>> snapshot,
+        ) => snapshot.docs.map((doc) => {
+          'id': doc.id,
+          ...doc.data().map(
+            (key, value) => MapEntry(key, _exportValue(value)),
+          ),
+        }).toList();
+
+        payload['blockedAccounts'] = documents(results[0]);
+        payload['circleMembers'] = documents(results[1]);
+        payload['notifications'] = documents(results[2]);
+        payload['checkIns'] = documents(results[3]);
+        final ownerDocs = results[4].docs;
+        final posts = await Future.wait(ownerDocs.map((owner) async {
+          final post = await _firestore
+              .collection('village_posts')
+              .doc(owner.id)
+              .get();
+          return post.exists
+              ? {'id': post.id, ...post.data()!.map(
+                  (key, value) => MapEntry(key, _exportValue(value)),
+                )}
+              : <String, Object?>{};
+        }));
+        payload['posts'] = posts.where((post) => post.isNotEmpty).toList();
+      } on Object {
+        payload['notice'] =
+            'Some cloud information was unavailable when this copy was made.';
+      }
+    }
+    return const JsonEncoder.withIndent('  ').convert(payload);
+  }
+
+  static Object? _exportValue(Object? value) {
+    if (value is Timestamp) return value.toDate().toIso8601String();
+    if (value is Iterable) return value.map(_exportValue).toList();
+    if (value is Map) {
+      return value.map(
+        (key, item) => MapEntry(key.toString(), _exportValue(item)),
+      );
+    }
+    return value;
   }
 
   String get _blockedKey => 'blocked_accounts_${_user.uid}';

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../navigation/village_navigation_scope.dart';
 import 'community_safety_screen.dart';
+import 'legal_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -130,6 +131,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           setState(() => checkInReminders = value);
                           update('setting_checkin_notifications', value);
                         },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Text(
+                  'Privacy & legal',
+                  style: GoogleFonts.playfairDisplay(
+                    color: sage,
+                    fontSize: 23,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 0,
+                  color: Colors.white.withValues(alpha: .58),
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(color: line),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(
+                          Icons.privacy_tip_outlined,
+                          color: sage,
+                        ),
+                        title: const Text('Privacy Policy'),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const LegalScreen(
+                              document: LegalDocument.privacy,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.description_outlined, color: sage),
+                        title: const Text('Terms of Use'),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const LegalScreen(
+                              document: LegalDocument.terms,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

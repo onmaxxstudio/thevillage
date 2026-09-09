@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../navigation/village_navigation_scope.dart';
 import '../services/profile_service.dart';
@@ -32,6 +34,11 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   String currentUsername = 'VillageMember';
 
   static const _draftKey = 'ask_the_village_current_draft';
+  String get draftKey {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'signed_out';
+    return '${_draftKey}_$uid';
+  }
+
   static const supportIntents = [
     ('Advice', Icons.lightbulb_outline_rounded),
     ('Just listen', Icons.hearing_rounded),
@@ -73,13 +80,44 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     super.dispose();
   }
 
-  void preview() {
+  Future<void> preview() async {
     final question = questionController.text.trim();
     if (question.length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please write a little more before previewing.')),
       );
       return;
+    }
+    final crisisLanguage = RegExp(
+      r'\b(suicide|kill myself|end my life|hurt myself|self harm|want to die)\b',
+      caseSensitive: false,
+    ).hasMatch(question);
+    if (crisisLanguage) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: cream,
+          title: const Text('You deserve immediate support'),
+          content: const Text(
+            'The Village is peer support and cannot provide emergency help. In the U.S., call or text 988 for crisis support. If anyone is in immediate danger, call 911.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => launchUrl(Uri(scheme: 'sms', path: '988')),
+              child: const Text('Text 988'),
+            ),
+            FilledButton(
+              onPressed: () => launchUrl(Uri(scheme: 'tel', path: '988')),
+              child: const Text('Call 988'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Continue to Preview'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
     }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -424,7 +462,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
 
   Future<void> _saveDraft() async {
     await preferences.setString(
-      _draftKey,
+      draftKey,
       jsonEncode({
         'question': questionController.text,
         'category': category,
@@ -441,7 +479,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   }
 
   Future<void> _restoreDraft() async {
-    final raw = await preferences.getString(_draftKey);
+    final raw = await preferences.getString(draftKey);
     if (!mounted) return;
     if (raw == null) {
       ScaffoldMessenger.of(context).showSnackBar(

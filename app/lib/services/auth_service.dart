@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase_options.dart';
 import 'profile_service.dart';
+import 'notification_service.dart';
 
 class AuthService {
   FirebaseAuth get _auth {
@@ -114,7 +115,11 @@ class AuthService {
     await preferences.setBool(_promiseKey(user.uid), true);
   }
 
-  Future<void> signOut() => _auth.signOut();
+  Future<void> signOut() async {
+    await NotificationService.stopListening();
+    ProfileService.usernameNotifier.value = null;
+    await _auth.signOut();
+  }
 
   static String messageFor(Object error) {
     if (error is AuthSetupException) return error.message;

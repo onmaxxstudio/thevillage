@@ -354,6 +354,17 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     controller.dispose();
     if (reply == null || !mounted) return;
 
+    try {
+      await service.guardReply();
+    } on PostValidationException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+      return;
+    }
+
     final index = posts.indexWhere((item) => item.id == post.id);
     if (index < 0) return;
     setState(() {
@@ -362,6 +373,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
       expandedReplyPosts.add(post.id);
     });
     await _persistMine();
+    await service.recordReply();
     try {
       await service.notifyPostOwner(
         post: posts[index],
@@ -432,6 +444,116 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Post deleted.')),
     );
+  }
+
+  Future<void> _editPost(VillagePost post) async {
+    final controller = TextEditingController(text: post.question);
+    var category = post.category;
+    var intent = post.supportIntent;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: cream,
+          title: const Text('Edit your post'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: controller,
+                  minLines: 4,
+                  maxLines: 8,
+                  maxLength: 1500,
+                  decoration: const InputDecoration(
+                    labelText: 'Your question',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  initialValue: category,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                  items: const [
+                    'Relationships',
+                    'Mental Health',
+                    'Parenting',
+                    'Life & Growth',
+                    'Friendship',
+                    'Work & School',
+                    'Other',
+                  ].map((value) => DropdownMenuItem(
+                    value: value,
+                    child: Text(value),
+                  )).toList(),
+                  onChanged: (value) {
+                    if (value != null) setDialogState(() => category = value);
+                  },
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  initialValue: intent,
+                  decoration: const InputDecoration(labelText: 'Support wanted'),
+                  items: const [
+                    'Advice', 'Just listen', 'Encouragement', 'Prayer',
+                    'Practical help',
+                  ].map((value) => DropdownMenuItem(
+                    value: value,
+                    child: Text(value),
+                  )).toList(),
+                  onChanged: (value) {
+                    if (value != null) setDialogState(() => intent = value);
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Save Changes'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (saved != true) {
+      controller.dispose();
+      return;
+    }
+    try {
+      final updated = await service.edit(
+        post,
+        question: controller.text,
+        category: category,
+        supportIntent: intent,
+      );
+      final index = posts.indexWhere((item) => item.id == post.id);
+      if (mounted && index >= 0) {
+        setState(() => posts[index] = updated);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Your post was updated.')),
+        );
+      }
+    } on PostValidationException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not update this post. Try again.')),
+        );
+      }
+    } finally {
+      controller.dispose();
+    }
   }
 
   Future<void> _report(VillagePost post) async {
@@ -1020,6 +1142,8 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                 onSelected: (value) {
                   if (value == 'delete') {
                     _deletePost(post);
+                  } else if (value == 'edit') {
+                    _editPost(post);
                   } else if (value == 'block') {
                     _blockAuthor(post);
                   } else {
@@ -1027,7 +1151,17 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                   }
                 },
                 itemBuilder: (_) => [
-                  if (post.isMine)
+                  if (post.isMine) ...[
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined),
+                          SizedBox(width: 8),
+                          Text('Edit my post'),
+                        ],
+                      ),
+                    ),
                     const PopupMenuItem(
                       value: 'delete',
                       child: Row(
@@ -1037,7 +1171,8 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                           Text('Delete my post'),
                         ],
                       ),
-                    )
+                    ),
+                  ]
                   else ...[
                     const PopupMenuItem(
                       value: 'report',

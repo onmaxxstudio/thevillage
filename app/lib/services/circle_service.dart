@@ -150,8 +150,24 @@ class CircleService {
         .collection('incoming')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map(CircleRequest.fromDocument).toList());
+        .asyncMap((snapshot) async {
+          final requests = snapshot.docs.map(CircleRequest.fromDocument).toList();
+          return Future.wait(requests.map((request) async {
+            final latest = await ProfileService.publicUsername(
+              request.sender.uid,
+            );
+            if (latest == null) return request;
+            return CircleRequest(
+              sender: CirclePerson(
+                uid: request.sender.uid,
+                username: latest,
+                photoUrl: request.sender.photoUrl,
+                status: request.sender.status,
+              ),
+              createdAt: request.createdAt,
+            );
+          }));
+        });
   }
 
   Stream<List<CirclePerson>> members() {
@@ -161,12 +177,23 @@ class CircleService {
         .collection('members')
         .orderBy('usernameLower')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((document) => CirclePerson.fromJson({
+        .asyncMap((snapshot) async {
+          final people = snapshot.docs
+              .map((document) => CirclePerson.fromJson({
                   ...document.data(),
                   'uid': document.id,
                 }))
-            .toList());
+              .toList();
+          return Future.wait(people.map((person) async {
+            final latest = await ProfileService.publicUsername(person.uid);
+            return CirclePerson(
+              uid: person.uid,
+              username: latest ?? person.username,
+              photoUrl: person.photoUrl,
+              status: person.status,
+            );
+          }));
+        });
   }
 
   Future<void> acceptRequest(CircleRequest request) async {
@@ -302,6 +329,25 @@ class CircleService {
       message: '@$username sent you a message.',
       destinationIndex: 1,
     );
+  }
+
+  Future<void> markMessagesRead(String otherUid) async {
+    final snapshot = await _firestore
+        .collection('conversations')
+        .doc(conversationId(otherUid))
+        .collection('messages')
+        .where('recipientUid', isEqualTo: _user.uid)
+        .where('readAt', isNull: true)
+        .limit(100)
+        .get();
+    if (snapshot.docs.isEmpty) return;
+    final batch = _firestore.batch();
+    for (final document in snapshot.docs) {
+      batch.update(document.reference, {
+        'readAt': FieldValue.serverTimestamp(),
+      });
+    }
+    await batch.commit();
   }
 
   Future<void> updateStatus(String status) async {
