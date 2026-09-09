@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../screens/ask_village_screen.dart';
 import '../screens/circle_screen.dart';
+import '../screens/community_hub_screen.dart';
 import '../screens/home_screen.dart';
-import '../screens/profile_screen.dart';
 import '../screens/village_feed_screen.dart';
 import 'village_navigation_scope.dart';
 
@@ -33,7 +33,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
     CircleScreen(),
     AskVillageScreen(),
     VillageFeedScreen(),
-    ProfileScreen(),
+    CommunityHubScreen(),
   ];
 
   void selectTab(int index) {
@@ -137,8 +137,8 @@ class _VillageBottomBar extends StatelessWidget {
             label: 'Village',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline_rounded),
-            label: 'Profile',
+            icon: Icon(Icons.diversity_3_outlined),
+            label: 'Community',
           ),
         ],
       ),

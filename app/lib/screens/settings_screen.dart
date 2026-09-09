@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../navigation/village_navigation_scope.dart';
 import 'community_safety_screen.dart';
 import 'legal_screen.dart';
+import 'profile_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -212,8 +212,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Username, email, password, blocked accounts and sign out.',
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                    onTap: () =>
-                        VillageNavigationScope.of(context).onSelect(4),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const ProfileScreen(),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 22),
