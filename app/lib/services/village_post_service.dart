@@ -88,6 +88,9 @@ class VillagePost {
     required this.author,
     required this.createdAt,
     required this.needsSupport,
+    this.supportIntent = 'Advice',
+    this.followUpStatus = 'Open',
+    this.resolvedAt,
     this.supportCount = 0,
     this.saved = false,
     this.supportedByMe = false,
@@ -104,6 +107,9 @@ class VillagePost {
   final String? authorUid;
   final DateTime createdAt;
   final bool needsSupport;
+  final String supportIntent;
+  final String followUpStatus;
+  final DateTime? resolvedAt;
   final int supportCount;
   final bool saved;
   final bool supportedByMe;
@@ -119,6 +125,9 @@ class VillagePost {
         if (authorUid != null) 'authorUid': authorUid!,
         'createdAt': createdAt.toIso8601String(),
         'needsSupport': needsSupport,
+        'supportIntent': supportIntent,
+        'followUpStatus': followUpStatus,
+        if (resolvedAt != null) 'resolvedAt': resolvedAt!.toIso8601String(),
         'supportCount': supportCount,
         'saved': saved,
         'supportedByMe': supportedByMe,
@@ -134,6 +143,9 @@ class VillagePost {
         if (authorUid != null) 'authorUid': authorUid!,
         'createdAt': Timestamp.fromDate(createdAt),
         'needsSupport': needsSupport,
+        'supportIntent': supportIntent,
+        'followUpStatus': followUpStatus,
+        if (resolvedAt != null) 'resolvedAt': Timestamp.fromDate(resolvedAt!),
         'supportCount': supportCount,
         'replies': replies.map((reply) => reply.toCloudJson()).toList(),
       };
@@ -145,6 +157,12 @@ class VillagePost {
       String value => DateTime.tryParse(value) ?? DateTime.now(),
       _ => DateTime.now(),
     };
+    final rawResolvedAt = json['resolvedAt'];
+    final resolvedAt = switch (rawResolvedAt) {
+      Timestamp value => value.toDate(),
+      String value => DateTime.tryParse(value),
+      _ => null,
+    };
     return VillagePost(
       id: json['id'] as String? ?? '',
       question: json['question'] as String? ?? '',
@@ -154,6 +172,9 @@ class VillagePost {
       authorUid: json['authorUid'] as String?,
       createdAt: createdAt,
       needsSupport: json['needsSupport'] as bool? ?? false,
+      supportIntent: json['supportIntent'] as String? ?? 'Advice',
+      followUpStatus: json['followUpStatus'] as String? ?? 'Open',
+      resolvedAt: resolvedAt,
       supportCount: json['supportCount'] as int? ?? 0,
       saved: json['saved'] as bool? ?? false,
       supportedByMe: json['supportedByMe'] as bool? ?? false,
@@ -189,6 +210,9 @@ class VillagePost {
     bool? supportedByMe,
     List<VillageReply>? replies,
     bool? isMine,
+    bool? needsSupport,
+    String? followUpStatus,
+    DateTime? resolvedAt,
   }) {
     return VillagePost(
       id: id,
@@ -198,7 +222,10 @@ class VillagePost {
       author: author,
       authorUid: authorUid,
       createdAt: createdAt,
-      needsSupport: needsSupport,
+      needsSupport: needsSupport ?? this.needsSupport,
+      supportIntent: supportIntent,
+      followUpStatus: followUpStatus ?? this.followUpStatus,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
       supportCount: supportCount ?? this.supportCount,
       saved: saved ?? this.saved,
       supportedByMe: supportedByMe ?? this.supportedByMe,
@@ -286,6 +313,7 @@ class VillagePostService {
     required String audience,
     required bool anonymous,
     required bool needsSupport,
+    required String supportIntent,
   }) async {
     final now = DateTime.now();
     final username =
@@ -305,6 +333,7 @@ class VillagePostService {
           authorUid: anonymous ? null : user.uid,
           createdAt: now,
           needsSupport: needsSupport,
+          supportIntent: supportIntent,
         );
         final batch = FirebaseFirestore.instance.batch();
         batch.set(postReference, post.toCloudJson());
@@ -332,6 +361,7 @@ class VillagePostService {
           anonymous ? null : FirebaseAuth.instance.currentUser?.uid,
       createdAt: now,
       needsSupport: needsSupport,
+      supportIntent: supportIntent,
     );
     await _saveLocal([post, ...local]);
     return post;
@@ -347,11 +377,10 @@ class VillagePostService {
       if (post.id.startsWith('sample-') || post.audience == 'My Circle') {
         continue;
       }
-      batch.set(
-        _posts.doc(post.id),
-        post.toCloudJson(),
-        SetOptions(merge: true),
-      );
+      batch.update(_posts.doc(post.id), {
+        'supportCount': post.supportCount,
+        'replies': post.replies.map((reply) => reply.toCloudJson()).toList(),
+      });
       hasCloudChanges = true;
     }
     if (hasCloudChanges) {
@@ -421,6 +450,28 @@ class VillagePostService {
       // Firestore rules will reject deleting a post the user does not own.
       rethrow;
     }
+  }
+
+  Future<void> updateFollowUp(
+    VillagePost post, {
+    required String status,
+  }) async {
+    final resolved = status == 'Resolved';
+    final updated = post.copyWith(
+      followUpStatus: status,
+      needsSupport: resolved ? false : post.needsSupport,
+      resolvedAt: resolved ? DateTime.now() : post.resolvedAt,
+    );
+    final local = await _loadLocal();
+    await _saveLocal([
+      for (final item in local) if (item.id == post.id) updated else item,
+    ]);
+    if (!_cloudReady || post.audience == 'My Circle') return;
+    await _posts.doc(post.id).update({
+      'followUpStatus': status,
+      'needsSupport': updated.needsSupport,
+      if (resolved) 'resolvedAt': Timestamp.fromDate(updated.resolvedAt!),
+    });
   }
 
   Future<void> _saveLocal(List<VillagePost> posts) {

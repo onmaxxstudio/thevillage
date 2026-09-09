@@ -1508,62 +1508,24 @@ class _CircleScreenState extends State<CircleScreen> {
               'Small follow-ups can mean everything.',
             ),
             const SizedBox(height: 9),
-            if (dismissedReminders.length == 2)
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text('No care reminders right now.'),
-              )
-            else ...[
-              if (!dismissedReminders.contains(0))
-                _reminderTile(
-                  0,
-                  'Check on Maya tonight',
-                  'She asked for someone to listen.',
-                ),
-              if (!dismissedReminders.contains(0) &&
-                  !dismissedReminders.contains(1))
-                const SizedBox(height: 8),
-              if (!dismissedReminders.contains(1))
-                _reminderTile(
-                  1,
-                  'Celebrate Jordan',
-                  'They shared good news about a new job.',
-                ),
-            ],
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'No care reminders right now. Follow-ups from real Circle activity will appear here.',
+              ),
+            ),
             const SizedBox(height: 18),
             _sectionTitle(
               'Circle activity',
               'Only updates people chose to share.',
             ),
             const SizedBox(height: 9),
-            if (dismissedActivity.length == 2)
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text('No new Circle activity.'),
-              )
-            else ...[
-              if (!dismissedActivity.contains(0))
-                _activityTile(
-                  index: 0,
-                  initials: 'NB',
-                  color: const Color(0xFFD8C58F),
-                  name: 'Nia',
-                  update: 'Available to talk for the next hour.',
-                  time: '12 min ago',
-                ),
-              if (!dismissedActivity.contains(0) &&
-                  !dismissedActivity.contains(1))
-                const SizedBox(height: 8),
-              if (!dismissedActivity.contains(1))
-                _activityTile(
-                  index: 1,
-                  initials: 'JR',
-                  color: const Color(0xFFAFC3A5),
-                  name: 'Jordan',
-                  update: 'Celebrating a small win today.',
-                  time: '1 hr ago',
-                ),
-            ],
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'No new Circle activity. Updates will appear when members choose to share them.',
+              ),
+            ),
             const SizedBox(height: 16),
             _privacyCard(),
           ],

@@ -40,7 +40,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Join Ask the Village'), findsOneWidget);
-    expect(find.text('Your name'), findsOneWidget);
+    expect(find.text('Username'), findsOneWidget);
     expect(find.text('Confirm password'), findsOneWidget);
     expect(find.text('Create My Account'), findsOneWidget);
   });
