@@ -51,6 +51,21 @@ class ProfileService {
   static final ValueNotifier<String?> usernameNotifier =
       ValueNotifier<String?>(null);
 
+  static String _localUsernameKey(String uid) => 'profile_username_$uid';
+
+  static Future<String?> _localUsername(String uid) async {
+    final preferences = await SharedPreferences.getInstance();
+    final username = _cleanUsername(
+      preferences.getString(_localUsernameKey(uid)) ?? '',
+    );
+    return _isValidUsername(username) ? username : null;
+  }
+
+  static Future<void> _saveLocalUsername(String uid, String username) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(_localUsernameKey(uid), username);
+  }
+
   FirebaseAuth get _auth => FirebaseAuth.instance;
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
@@ -90,33 +105,48 @@ class ProfileService {
   Future<void> ensureCurrentUserProfile({String? preferredUsername}) async {
     final user = _user;
     final requested = _cleanUsername(preferredUsername ?? '');
+    final local = await _localUsername(user.uid);
     final fallback = _fallbackUsername(user);
-    final desired = _isValidUsername(requested) ? requested : fallback;
+    final desired = _isValidUsername(requested)
+        ? requested
+        : local ?? fallback;
 
     if (Firebase.apps.isEmpty) {
+      await _saveLocalUsername(user.uid, desired);
       usernameNotifier.value = desired;
       return;
     }
 
     try {
+      // A username saved on this device is newer than an older Firestore or
+      // Firebase Auth display name. Keep it visible while cloud sync retries.
+      if (local != null && !_isValidUsername(requested)) {
+        usernameNotifier.value = local;
+        await _claimUsername(user: user, username: local);
+        return;
+      }
+
       final userReference = _userDocument(user.uid);
       final existing = await userReference.get();
       if (existing.exists) {
         final saved = existing.data()?['username'] as String?;
         if (saved != null && saved.isNotEmpty) {
+          await _saveLocalUsername(user.uid, saved);
           usernameNotifier.value = saved;
-          if (user.displayName != saved) await user.updateDisplayName(saved);
+          try {
+            if (user.displayName != saved) await user.updateDisplayName(saved);
+          } on Object {
+            // Firestore remains the source of truth if Auth profile sync fails.
+          }
           return;
         }
       }
 
       await _claimUsername(user: user, username: desired);
-    } on FirebaseException {
+    } on Object {
       // Authentication remains usable while Firestore rules are being deployed.
-      usernameNotifier.value =
-          _cleanUsername(user.displayName ?? '').isNotEmpty
-              ? _cleanUsername(user.displayName ?? '')
-              : desired;
+      await _saveLocalUsername(user.uid, desired);
+      usernameNotifier.value = desired;
     }
   }
 
@@ -127,6 +157,7 @@ class ProfileService {
     final lower = username.toLowerCase();
     final userReference = _userDocument(user.uid);
     final newUsernameReference = _usernameDocument(lower);
+    String? conflictingUid;
 
     await _firestore.runTransaction((transaction) async {
       final userSnapshot = await transaction.get(userReference);
@@ -140,10 +171,12 @@ class ProfileService {
 
       final claimedUid = newClaim.data()?['uid'] as String?;
       if (newClaim.exists && claimedUid != user.uid) {
-        throw const ProfileValidationException(
-          'That username is already taken. Try another one.',
-        );
+        // Do not throw a custom Dart exception inside a Firestore web
+        // transaction. Safari boxes it as an unreadable converted Future.
+        conflictingUid = claimedUid ?? 'unknown';
+        return;
       }
+      conflictingUid = null;
 
       transaction.set(newUsernameReference, {
         'uid': user.uid,
@@ -185,13 +218,30 @@ class ProfileService {
       );
     });
 
-    if (user.displayName != username) await user.updateDisplayName(username);
+    if (conflictingUid != null) {
+      throw const ProfileValidationException(
+        'That username is already taken. Try another one.',
+      );
+    }
+
+    await _saveLocalUsername(user.uid, username);
     usernameNotifier.value = username;
+    try {
+      if (user.displayName != username) await user.updateDisplayName(username);
+    } on Object {
+      // The public profile and local cache already contain the new username.
+    }
   }
 
   static Future<String?> currentUsername() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
+
+    final local = await _localUsername(user.uid);
+    if (local != null) {
+      usernameNotifier.value = local;
+      return local;
+    }
 
     if (Firebase.apps.isNotEmpty) {
       try {
@@ -201,6 +251,7 @@ class ProfileService {
             .get();
         final saved = snapshot.data()?['username'] as String?;
         if (saved != null && saved.trim().isNotEmpty) {
+          await _saveLocalUsername(user.uid, saved.trim());
           usernameNotifier.value = saved.trim();
           return saved.trim();
         }
@@ -211,6 +262,7 @@ class ProfileService {
 
     final username = _cleanUsername(user.displayName ?? '');
     final resolved = username.isEmpty ? null : username;
+    if (resolved != null) await _saveLocalUsername(user.uid, resolved);
     usernameNotifier.value = resolved;
     return resolved;
   }
@@ -286,20 +338,23 @@ class ProfileService {
       );
     }
 
+    final user = _user;
     try {
-      await _claimUsername(user: _user, username: username);
+      await _claimUsername(user: user, username: username);
     } on ProfileValidationException {
       rethrow;
-    } on FirebaseException catch (error) {
-      if (error.code == 'permission-denied' ||
-          error.code == 'unavailable' ||
-          error.code == 'failed-precondition') {
-        await _user.updateDisplayName(username);
-        await _user.reload();
-        usernameNotifier.value = username;
-        return;
+    } on Object {
+      // Keep the username working throughout the app when Firestore is
+      // temporarily unavailable or its rules have not finished deploying.
+      await _saveLocalUsername(user.uid, username);
+      usernameNotifier.value = username;
+      try {
+        if (user.displayName != username) {
+          await user.updateDisplayName(username);
+        }
+      } on Object {
+        // Local state is enough to update every current-user surface.
       }
-      rethrow;
     }
   }
 
