@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CommunitySafetyScreen extends StatelessWidget {
   const CommunitySafetyScreen({super.key});
@@ -81,6 +82,34 @@ class CommunitySafetyScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () =>
+                            launchUrl(Uri(scheme: 'tel', path: '988')),
+                        icon: const Icon(Icons.call_outlined),
+                        label: const Text('Call 988'),
+                      ),
+                    ),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () =>
+                            launchUrl(Uri(scheme: 'sms', path: '988')),
+                        icon: const Icon(Icons.sms_outlined),
+                        label: const Text('Text 988'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: () => launchUrl(Uri(scheme: 'tel', path: '911')),
+                  icon: const Icon(Icons.emergency_outlined),
+                  label: const Text('Immediate danger? Call 911'),
                 ),
               ],
             ),

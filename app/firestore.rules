@@ -187,6 +187,22 @@ service cloud.firestore {
               'Resolved'
             ] &&
             request.resource.data.needsSupport is bool
+          ) ||
+          (
+            ownsPost(postId) &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['question', 'category', 'supportIntent']) &&
+            request.resource.data.question is string &&
+            request.resource.data.question.size() >= 10 &&
+            request.resource.data.question.size() <= 1500 &&
+            request.resource.data.category is string &&
+            request.resource.data.supportIntent in [
+              'Advice',
+              'Just listen',
+              'Encouragement',
+              'Prayer',
+              'Practical help'
+            ]
           )
         );
 
@@ -398,6 +414,33 @@ service cloud.firestore {
         request.resource.data.details is string &&
         request.resource.data.details.size() <= 500 &&
         request.resource.data.status == 'open';
+    }
+
+    match /check_ins/{uid}/items/{dayId} {
+      allow get, list, delete: if isSelf(uid);
+
+      allow create, update: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly([
+          'mood',
+          'details',
+          'periodStarted',
+          'healthNotes',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        request.resource.data.mood in [
+          'Great',
+          'Good',
+          'Okay',
+          'Low',
+          'Struggling'
+        ] &&
+        request.resource.data.details is string &&
+        request.resource.data.details.size() <= 500 &&
+        request.resource.data.periodStarted is bool &&
+        request.resource.data.healthNotes is string &&
+        request.resource.data.healthNotes.size() <= 500 &&
+        request.resource.data.createdAt is timestamp;
     }
 
     match /{document=**} {

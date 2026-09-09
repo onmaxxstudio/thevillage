@@ -14,6 +14,7 @@ class VillageNotification {
     required this.message,
     required this.createdAt,
     required this.destinationIndex,
+    this.type = 'other',
     this.isRead = false,
   });
 
@@ -22,6 +23,7 @@ class VillageNotification {
   final String message;
   final DateTime createdAt;
   final int destinationIndex;
+  final String type;
   final bool isRead;
 
   VillageNotification copyWith({bool? isRead}) => VillageNotification(
@@ -30,6 +32,7 @@ class VillageNotification {
         message: message,
         createdAt: createdAt,
         destinationIndex: destinationIndex,
+        type: type,
         isRead: isRead ?? this.isRead,
       );
 
@@ -39,6 +42,7 @@ class VillageNotification {
         'message': message,
         'createdAt': createdAt.toIso8601String(),
         'destinationIndex': destinationIndex,
+        'type': type,
         'isRead': isRead,
       };
 
@@ -52,13 +56,14 @@ class VillageNotification {
           ? rawCreatedAt.toDate()
           : DateTime.tryParse(rawCreatedAt as String? ?? '') ?? DateTime.now(),
       destinationIndex: json['destinationIndex'] as int? ?? 0,
+      type: json['type'] as String? ?? 'other',
       isRead: json['isRead'] as bool? ?? false,
     );
   }
 }
 
 class NotificationService {
-  static const _storageKey = 'ask_the_village_notifications';
+  static const _legacyStorageKey = 'ask_the_village_notifications';
   static const _legacyIds = {
     'welcome-reply',
     'circle-request',
@@ -68,6 +73,11 @@ class NotificationService {
   static StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
 
   final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
+
+  String get _storageKey {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'signed_out';
+    return '${_legacyStorageKey}_$uid';
+  }
 
   bool get _cloudReady =>
       Firebase.apps.isNotEmpty && FirebaseAuth.instance.currentUser != null;
@@ -91,8 +101,9 @@ class NotificationService {
                   'id': document.id,
                 }))
             .toList();
-        await _saveLocal(notifications);
-        return notifications;
+        final filtered = await _applyPreferences(notifications);
+        await _saveLocal(filtered);
+        return filtered;
       } on FirebaseException {
         // Use the last cached real notifications while offline.
       }
@@ -106,8 +117,11 @@ class NotificationService {
       await load();
       return;
     }
-    _subscription =
-        _items.orderBy('createdAt', descending: true).limit(100).snapshots().listen(
+    _subscription = _items
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .snapshots()
+        .listen(
       (snapshot) {
         final notifications = snapshot.docs
             .map((document) => VillageNotification.fromJson({
@@ -115,10 +129,48 @@ class NotificationService {
                   'id': document.id,
                 }))
             .toList();
-        _saveLocal(notifications);
+        _applyPreferences(notifications).then(_saveLocal);
       },
       onError: (_) => load(),
     );
+  }
+
+  Future<List<VillageNotification>> _applyPreferences(
+    List<VillageNotification> notifications,
+  ) async {
+    final replies =
+        await _preferences.getBool('setting_reply_notifications') ?? true;
+    final circle =
+        await _preferences.getBool('setting_circle_notifications') ?? true;
+    return notifications.where((item) {
+      if (!replies &&
+          const {'post_reply', 'post_support'}.contains(_typeFor(item))) {
+        return false;
+      }
+      if (!circle &&
+          const {'circle_request', 'circle_accepted', 'message'}
+              .contains(_typeFor(item))) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  String _typeFor(VillageNotification notification) {
+    if (notification.type != 'other') return notification.type;
+    final title = notification.title.toLowerCase();
+    if (title.contains('request accepted')) return 'circle_accepted';
+    if (title.contains('circle request')) return 'circle_request';
+    if (title.contains('private message')) return 'message';
+    if (title.contains('repl')) return 'post_reply';
+    if (title.contains('support')) return 'post_support';
+    return 'other';
+  }
+
+  static Future<void> stopListening() async {
+    await _subscription?.cancel();
+    _subscription = null;
+    unreadCount.value = 0;
   }
 
   Future<List<VillageNotification>> _loadLocal() async {

@@ -1091,7 +1091,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Your mood, period start date, and health notes stay private on this device.',
+                    'Your mood, period start date, and health notes stay private to your account.',
                     style: TextStyle(fontSize: 12),
                   ),
                 ),

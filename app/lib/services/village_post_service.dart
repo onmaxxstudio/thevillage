@@ -205,6 +205,9 @@ class VillagePost {
   }
 
   VillagePost copyWith({
+    String? question,
+    String? category,
+    String? supportIntent,
     int? supportCount,
     bool? saved,
     bool? supportedByMe,
@@ -216,14 +219,14 @@ class VillagePost {
   }) {
     return VillagePost(
       id: id,
-      question: question,
-      category: category,
+      question: question ?? this.question,
+      category: category ?? this.category,
       audience: audience,
       author: author,
       authorUid: authorUid,
       createdAt: createdAt,
       needsSupport: needsSupport ?? this.needsSupport,
-      supportIntent: supportIntent,
+      supportIntent: supportIntent ?? this.supportIntent,
       followUpStatus: followUpStatus ?? this.followUpStatus,
       resolvedAt: resolvedAt ?? this.resolvedAt,
       supportCount: supportCount ?? this.supportCount,
@@ -236,12 +239,16 @@ class VillagePost {
 }
 
 class VillagePostService {
-  static const _storageKey = 'ask_the_village_posts';
   static const _postsCollection = 'village_posts';
   static const _ownersCollection = 'village_post_owners';
 
   final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
   bool lastLoadUsedCloud = false;
+
+  String get _storageKey {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'signed_out';
+    return 'ask_the_village_posts_$uid';
+  }
 
   bool get _cloudReady =>
       Firebase.apps.isNotEmpty && FirebaseAuth.instance.currentUser != null;
@@ -315,6 +322,13 @@ class VillagePostService {
     required bool needsSupport,
     required String supportIntent,
   }) async {
+    final trimmedQuestion = question.trim();
+    if (trimmedQuestion.length < 10 || trimmedQuestion.length > 1500) {
+      throw const PostValidationException(
+        'Write between 10 and 1,500 characters.',
+      );
+    }
+    await _enforceRateLimit('post', const Duration(seconds: 20));
     final now = DateTime.now();
     final username =
         await ProfileService.currentUsername() ?? 'VillageMember';
@@ -326,7 +340,7 @@ class VillagePostService {
         final postReference = _posts.doc();
         final post = VillagePost(
           id: postReference.id,
-          question: question.trim(),
+          question: trimmedQuestion,
           category: category,
           audience: audience,
           author: resolvedAuthor,
@@ -344,6 +358,7 @@ class VillagePostService {
         await batch.commit();
         final local = await _loadLocal();
         await _saveLocal([post, ...local]);
+        await _recordAction('post', now);
         return post;
       } on FirebaseException {
         // Fall back locally rather than lose a post the user already wrote.
@@ -353,7 +368,7 @@ class VillagePostService {
     final local = await _loadLocal();
     final post = VillagePost(
       id: now.microsecondsSinceEpoch.toString(),
-      question: question.trim(),
+      question: trimmedQuestion,
       category: category,
       audience: audience,
       author: resolvedAuthor,
@@ -364,7 +379,38 @@ class VillagePostService {
       supportIntent: supportIntent,
     );
     await _saveLocal([post, ...local]);
+    await _recordAction('post', now);
     return post;
+  }
+
+  Future<void> guardReply() async {
+    await _enforceRateLimit('reply', const Duration(seconds: 8));
+  }
+
+  Future<void> recordReply() => _recordAction('reply', DateTime.now());
+
+  String _rateKey(String action) {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'signed_out';
+    return 'village_last_${action}_at_$uid';
+  }
+
+  Future<void> _enforceRateLimit(String action, Duration minimumGap) async {
+    final raw = await _preferences.getString(_rateKey(action));
+    final last = raw == null ? null : DateTime.tryParse(raw);
+    if (last != null && DateTime.now().difference(last) < minimumGap) {
+      throw PostValidationException(
+        action == 'post'
+            ? 'Please wait a few seconds before posting again.'
+            : 'Please wait a few seconds before replying again.',
+      );
+    }
+  }
+
+  Future<void> _recordAction(String action, DateTime time) {
+    return _preferences.setString(
+      _rateKey(action),
+      time.toIso8601String(),
+    );
   }
 
   Future<void> save(List<VillagePost> posts) async {
@@ -452,6 +498,37 @@ class VillagePostService {
     }
   }
 
+  Future<VillagePost> edit(
+    VillagePost post, {
+    required String question,
+    required String category,
+    required String supportIntent,
+  }) async {
+    final trimmed = question.trim();
+    if (trimmed.length < 10 || trimmed.length > 1500) {
+      throw const PostValidationException(
+        'Write between 10 and 1,500 characters.',
+      );
+    }
+    final updated = post.copyWith(
+      question: trimmed,
+      category: category,
+      supportIntent: supportIntent,
+    );
+    final local = await _loadLocal();
+    await _saveLocal([
+      for (final item in local) if (item.id == post.id) updated else item,
+    ]);
+    if (_cloudReady && !post.id.startsWith('sample-')) {
+      await _posts.doc(post.id).update({
+        'question': trimmed,
+        'category': category,
+        'supportIntent': supportIntent,
+      });
+    }
+    return updated;
+  }
+
   Future<void> updateFollowUp(
     VillagePost post, {
     required String status,
@@ -480,4 +557,9 @@ class VillagePostService {
       posts.map((post) => jsonEncode(post.toJson())).toList(),
     );
   }
+}
+
+class PostValidationException implements Exception {
+  const PostValidationException(this.message);
+  final String message;
 }

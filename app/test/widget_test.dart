@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ask_the_village/main.dart';
+import 'package:ask_the_village/services/notification_service.dart';
+import 'package:ask_the_village/services/village_post_service.dart';
 
 void main() {
   testWidgets('welcome screen opens the create account screen', (tester) async {
@@ -43,5 +45,48 @@ void main() {
     expect(find.text('Username'), findsOneWidget);
     expect(find.text('Confirm password'), findsOneWidget);
     expect(find.text('Create My Account'), findsOneWidget);
+  });
+
+  test('post edits preserve identity and engagement', () {
+    final createdAt = DateTime(2026, 9, 9);
+    final post = VillagePost(
+      id: 'post-1',
+      question: 'How can I support a friend?',
+      category: 'Friendship',
+      audience: 'The Village',
+      author: '@Ariel',
+      createdAt: createdAt,
+      needsSupport: true,
+      supportCount: 4,
+    );
+
+    final edited = post.copyWith(
+      question: 'How can I listen to a friend with more care?',
+      supportIntent: 'Just listen',
+    );
+
+    expect(edited.question, contains('more care'));
+    expect(edited.supportIntent, 'Just listen');
+    expect(edited.id, post.id);
+    expect(edited.createdAt, createdAt);
+    expect(edited.supportCount, 4);
+  });
+
+  test('notification type survives local serialization', () {
+    final createdAt = DateTime(2026, 9, 9);
+    final original = VillageNotification(
+      id: 'notice-1',
+      title: 'New reply',
+      message: 'A neighbor replied.',
+      createdAt: createdAt,
+      destinationIndex: 3,
+      type: 'post_reply',
+    );
+
+    final restored = VillageNotification.fromJson(original.toJson());
+
+    expect(restored.type, 'post_reply');
+    expect(restored.destinationIndex, 3);
+    expect(restored.createdAt, createdAt);
   });
 }

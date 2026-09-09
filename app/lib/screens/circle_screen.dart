@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -80,6 +81,11 @@ class _CircleScreenState extends State<CircleScreen> {
   List<_CircleCandidate> incomingRequests = [];
   late final List<_CircleMember> circleMembers;
 
+  String _key(String base) {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'signed_out';
+    return '${base}_$uid';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -137,16 +143,18 @@ class _CircleScreenState extends State<CircleScreen> {
   }
 
   Future<void> _loadStatus() async {
-    final savedStatus = await _preferences.getString(_statusKey);
-    final savedNote = await _preferences.getString(_statusNoteKey);
+    final savedStatus = await _preferences.getString(_key(_statusKey));
+    final savedNote = await _preferences.getString(_key(_statusNoteKey));
     final savedReachOuts =
-        await _preferences.getStringList(_reachOutsKey) ?? const [];
+        await _preferences.getStringList(_key(_reachOutsKey)) ?? const [];
     final savedDismissedReminders =
-        await _preferences.getStringList(_dismissedRemindersKey) ?? const [];
+        await _preferences.getStringList(_key(_dismissedRemindersKey)) ??
+            const [];
     final savedDismissedActivity =
-        await _preferences.getStringList(_dismissedActivityKey) ?? const [];
+        await _preferences.getStringList(_key(_dismissedActivityKey)) ??
+            const [];
     final savedCircleMessages =
-        await _preferences.getStringList(_circleMessagesKey) ?? const [];
+        await _preferences.getStringList(_key(_circleMessagesKey)) ?? const [];
     final loadedCircleMessages = <_CircleMessage>[];
     for (final item in savedCircleMessages) {
       try {
@@ -201,8 +209,8 @@ class _CircleScreenState extends State<CircleScreen> {
       sharedStatusNote = '';
       statusNoteController.clear();
     });
-    await _preferences.setString(_statusKey, option);
-    await _preferences.setString(_statusNoteKey, '');
+    await _preferences.setString(_key(_statusKey), option);
+    await _preferences.setString(_key(_statusNoteKey), '');
     try {
       await circleService.updateStatus(option);
     } on Object {
@@ -219,8 +227,8 @@ class _CircleScreenState extends State<CircleScreen> {
       return;
     }
     setState(() => sharedStatusNote = note);
-    await _preferences.setString(_statusKey, status);
-    await _preferences.setString(_statusNoteKey, note);
+    await _preferences.setString(_key(_statusKey), status);
+    await _preferences.setString(_key(_statusNoteKey), note);
     try {
       await circleService.updateStatus(note);
     } on Object {
@@ -243,11 +251,11 @@ class _CircleScreenState extends State<CircleScreen> {
 
   Future<void> _saveDismissedItems() async {
     await _preferences.setStringList(
-      _dismissedRemindersKey,
+      _key(_dismissedRemindersKey),
       dismissedReminders.map((index) => index.toString()).toList(),
     );
     await _preferences.setStringList(
-      _dismissedActivityKey,
+      _key(_dismissedActivityKey),
       dismissedActivity.map((index) => index.toString()).toList(),
     );
   }
@@ -290,7 +298,7 @@ class _CircleScreenState extends State<CircleScreen> {
 
   Future<void> _saveReachOuts() {
     return _preferences.setStringList(
-      _reachOutsKey,
+      _key(_reachOutsKey),
       myReachOuts.map((item) => jsonEncode(item.toJson())).toList(),
     );
   }
@@ -479,7 +487,7 @@ class _CircleScreenState extends State<CircleScreen> {
 
   Future<void> _saveCircleMessages() {
     return _preferences.setStringList(
-      _circleMessagesKey,
+      _key(_circleMessagesKey),
       circleMessages.map((item) => jsonEncode(item.toJson())).toList(),
     );
   }
@@ -724,9 +732,28 @@ class _CircleScreenState extends State<CircleScreen> {
   }
 
   Future<void> _openMemberProfile(_CircleMember member) async {
-    final messages = circleMessages
+    var messages = circleMessages
         .where((item) => item.memberName == member.name)
         .toList();
+    if (member.uid != null) {
+      try {
+        final remote = await circleService.messages(member.uid!).first;
+        messages = remote
+            .map(
+              (message) => _CircleMessage(
+                memberName: member.name,
+                text: message.text,
+                createdAt: message.createdAt,
+                isMine:
+                    message.senderUid == FirebaseAuth.instance.currentUser?.uid,
+              ),
+            )
+            .toList();
+        await circleService.markMessagesRead(member.uid!);
+      } on Object {
+        // Continue with this account's cached conversation while offline.
+      }
+    }
     const posts = <String>[];
 
     await showModalBottomSheet<void>(
@@ -870,7 +897,8 @@ class _CircleScreenState extends State<CircleScreen> {
                             ),
                             const SizedBox(height: 3),
                             Text(
-                              'You · ${_shortMessageDate(message.createdAt)}',
+                              '${message.isMine ? 'You' : member.name} · '
+                              '${_shortMessageDate(message.createdAt)}',
                               style: const TextStyle(fontSize: 10.5),
                             ),
                           ],
@@ -2101,6 +2129,7 @@ class _CircleMessage {
     required this.text,
     required this.createdAt,
     this.isQuickCheckIn = false,
+    this.isMine = true,
   });
 
   factory _CircleMessage.fromJson(Map<String, dynamic> json) {
@@ -2111,6 +2140,7 @@ class _CircleMessage {
           DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),
       isQuickCheckIn: json['isQuickCheckIn'] as bool? ?? false,
+      isMine: json['isMine'] as bool? ?? true,
     );
   }
 
@@ -2118,12 +2148,14 @@ class _CircleMessage {
   final String text;
   final DateTime createdAt;
   final bool isQuickCheckIn;
+  final bool isMine;
 
   Map<String, dynamic> toJson() => {
     'memberName': memberName,
     'text': text,
     'createdAt': createdAt.toIso8601String(),
     'isQuickCheckIn': isQuickCheckIn,
+    'isMine': isMine,
   };
 }
 
