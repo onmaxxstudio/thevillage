@@ -82,7 +82,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : notifications.isEmpty
-              ? const Center(child: Text('You have no notifications yet.'))
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(28),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CircleAvatar(
+                            radius: 34,
+                            backgroundColor: paleSage,
+                            child: Icon(
+                              Icons.notifications_none_rounded,
+                              color: sage,
+                              size: 36,
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          Text(
+                            'You’re all caught up.',
+                            style: GoogleFonts.playfairDisplay(
+                              color: sage,
+                              fontSize: 25,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          const Text(
+                            'Replies, support, Circle requests and private messages will appear here.',
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
               : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(18, 12, 18, 30),
                   itemCount: notifications.length,

@@ -138,14 +138,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void comingSoon(String feature) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text('$feature is the next part of your village.')),
-      );
-  }
-
   Future<void> openCheckIn({String? initialMood}) async {
     final result = await showModalBottomSheet<_CheckInResult>(
       context: context,
@@ -805,7 +797,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Trending in the Village',
+                    'Visit the Village',
                     style: GoogleFonts.playfairDisplay(
                       color: ink,
                       fontSize: 22,
@@ -813,13 +805,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const Text(
-                    'What helped you feel like yourself again?',
+                    'Read real questions, offer support, or start a conversation.',
                     style: TextStyle(fontSize: 14.5),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    '♡ 124     ◯ 28 replies',
-                    style: TextStyle(fontSize: 12),
                   ),
                 ],
               ),

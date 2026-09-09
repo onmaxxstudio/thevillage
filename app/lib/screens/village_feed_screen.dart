@@ -267,7 +267,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                     children: [
                       ChoiceChip(
                         avatar: const Icon(Icons.person_outline_rounded, size: 17),
-                        label: const Text('@KindHeart'),
+                        label: Text(currentHandle),
                         selected: !anonymous,
                         onSelected: (_) => setSheetState(() => anonymous = false),
                         selectedColor: paleSage,
@@ -530,6 +530,141 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${post.author} was blocked.')),
     );
+  }
+
+  Future<void> _reportReply(VillageReply reply) async {
+    final reason = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 2, 18, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Why are you reporting this reply?',
+                style: GoogleFonts.playfairDisplay(
+                  color: sage,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              for (final option in const [
+                'Harassment',
+                'Hate or discrimination',
+                'Dangerous advice',
+                'Spam or scam',
+                'Privacy concern',
+                'Other',
+              ])
+                ListTile(
+                  title: Text(option),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => Navigator.pop(sheetContext, option),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (reason == null || !mounted) return;
+    try {
+      await safetyService.report(
+        targetType: 'reply',
+        targetId: reply.id,
+        reason: reason,
+        reportedUid: reply.authorUid,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Thank you. This reply was sent for safety review.')),
+      );
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not send the report. Try again.')),
+      );
+    }
+  }
+
+  Future<void> _blockReplyAuthor(VillageReply reply) async {
+    final uid = reply.authorUid;
+    if (uid == null) return;
+    await safetyService.blockUser(uid: uid, username: reply.author);
+    if (!mounted) return;
+    await _load();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${reply.author} was blocked.')),
+    );
+  }
+
+  Future<void> _openFollowUp(VillagePost post) async {
+    final status = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'How are you feeling now?',
+                style: GoogleFonts.playfairDisplay(
+                  color: sage,
+                  fontSize: 27,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                'Update the Village so people know whether you still need support.',
+              ),
+              const SizedBox(height: 14),
+              for (final option in const [
+                ('Feeling better', Icons.sentiment_satisfied_outlined),
+                ('Still need support', Icons.volunteer_activism_outlined),
+                ('Resolved', Icons.check_circle_outline_rounded),
+              ])
+                ListTile(
+                  leading: Icon(option.$2, color: sage),
+                  title: Text(option.$1),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => Navigator.pop(sheetContext, option.$1),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (status == null || !mounted) return;
+    try {
+      await service.updateFollowUp(post, status: status);
+      final index = posts.indexWhere((item) => item.id == post.id);
+      if (!mounted || index < 0) return;
+      setState(() {
+        posts[index] = post.copyWith(
+          followUpStatus: status,
+          needsSupport: status == 'Resolved' ? false : post.needsSupport,
+          resolvedAt: status == 'Resolved' ? DateTime.now() : post.resolvedAt,
+        );
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Your follow-up is now “$status.”')),
+      );
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save your follow-up. Try again.')),
+      );
+    }
   }
 
   @override
@@ -802,6 +937,31 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                   fontWeight: FontWeight.w800,
                 ),
               ),
+              if (reply.authorUid != FirebaseAuth.instance.currentUser?.uid)
+                PopupMenuButton<String>(
+                  tooltip: 'Reply options',
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (value) {
+                    if (value == 'block') {
+                      _blockReplyAuthor(reply);
+                    } else {
+                      _reportReply(reply);
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(
+                      value: 'report',
+                      child: Text('Report reply'),
+                    ),
+                    if (reply.authorUid != null)
+                      const PopupMenuItem(
+                        value: 'block',
+                        child: Text('Block account'),
+                      ),
+                  ],
+                  icon: const Icon(Icons.more_horiz_rounded, size: 18),
+                ),
             ],
           ),
         ],
@@ -905,6 +1065,9 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                 const Color(0xFFFFE8BE),
               ),
               if (post.needsSupport) _label('Needs support', blush),
+              _label('Looking for ${post.supportIntent.toLowerCase()}', const Color(0xFFF1EEE4)),
+              if (post.followUpStatus != 'Open')
+                _label(post.followUpStatus, const Color(0xFFDDE9DA)),
             ],
           ),
           const SizedBox(height: 12),
@@ -954,6 +1117,21 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
               ),
             ],
           ),
+          if (post.isMine) ...[
+            const SizedBox(height: 5),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _openFollowUp(post),
+                icon: const Icon(Icons.check_in_outlined, size: 18),
+                label: Text(
+                  post.followUpStatus == 'Open'
+                      ? 'Share a follow-up'
+                      : 'Update follow-up',
+                ),
+              ),
+            ),
+          ],
           if (post.replies.isNotEmpty) ...[
             const SizedBox(height: 2),
             SizedBox(

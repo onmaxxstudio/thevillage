@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../navigation/village_navigation_scope.dart';
+import '../services/profile_service.dart';
 import 'post_preview_screen.dart';
 
 class AskVillageScreen extends StatefulWidget {
@@ -19,10 +23,22 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   static const line = Color(0xFFE3D8C9);
 
   final questionController = TextEditingController();
+  final preferences = SharedPreferencesAsync();
   bool anonymous = false;
   bool needsSupport = false;
   String audience = 'The Village';
   String category = 'Relationships';
+  String supportIntent = 'Advice';
+  String currentUsername = 'VillageMember';
+
+  static const _draftKey = 'ask_the_village_current_draft';
+  static const supportIntents = [
+    ('Advice', Icons.lightbulb_outline_rounded),
+    ('Just listen', Icons.hearing_rounded),
+    ('Encouragement', Icons.favorite_border_rounded),
+    ('Prayer', Icons.auto_awesome_outlined),
+    ('Practical help', Icons.handshake_outlined),
+  ];
 
   static const categories = [
     'Relationships',
@@ -35,7 +51,24 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    currentUsername =
+        ProfileService.usernameNotifier.value ?? 'VillageMember';
+    ProfileService.usernameNotifier.addListener(_usernameChanged);
+    ProfileService.currentUsername();
+  }
+
+  void _usernameChanged() {
+    final value = ProfileService.usernameNotifier.value?.trim();
+    if (mounted && value != null && value.isNotEmpty) {
+      setState(() => currentUsername = value);
+    }
+  }
+
+  @override
   void dispose() {
+    ProfileService.usernameNotifier.removeListener(_usernameChanged);
     questionController.dispose();
     super.dispose();
   }
@@ -57,6 +90,8 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
             audience: audience,
             anonymous: anonymous,
             needsSupport: needsSupport,
+            supportIntent: supportIntent,
+            username: currentUsername,
           ),
         ),
       ),
@@ -90,7 +125,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         centerTitle: true,
         actions: [
           TextButton.icon(
-            onPressed: () => _notice('Drafts'),
+            onPressed: _restoreDraft,
             icon: const Icon(Icons.note_alt_outlined),
             label: const Text('Drafts'),
           ),
@@ -113,7 +148,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                           selected: !anonymous,
                           icon: Icons.person_rounded,
                           title: 'Use my username',
-                          subtitle: '@KindHeart',
+                          subtitle: '@$currentUsername',
                           onTap: () => setState(() => anonymous = false),
                         ),
                       ),
@@ -132,24 +167,61 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                 ),
                 const SizedBox(height: 14),
                 _section(
+                  title: 'What kind of support do you want?',
+                  subtitle: 'This helps people respond in the way you need.',
+                  child: Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: [
+                      for (final intent in supportIntents)
+                        ChoiceChip(
+                          avatar: Icon(intent.$2, size: 17),
+                          label: Text(intent.$1),
+                          selected: supportIntent == intent.$1,
+                          selectedColor: const Color(0xFFE8EBDD),
+                          side: BorderSide(
+                            color: supportIntent == intent.$1 ? sage : line,
+                          ),
+                          onSelected: (_) =>
+                              setState(() => supportIntent = intent.$1),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _section(
                   title: 'Who can see your post?',
-                  subtitle: 'You choose your audience.',
+                  subtitle: 'Public questions belong in the Village. Private reach-outs belong in your trusted Circle.',
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          for (final option in ['My Circle', 'The Village', 'Both'])
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(13),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F3E9),
+                          border: Border.all(color: sage),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.groups_outlined, color: sage),
+                            SizedBox(width: 10),
                             Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 3),
-                                child: _smallChoice(
-                                  option,
-                                  audience == option,
-                                  () => setState(() => audience = option),
-                                ),
+                              child: Text(
+                                'The Village — visible to signed-in community members',
+                                style: TextStyle(fontWeight: FontWeight.w700),
                               ),
                             ),
-                        ],
+                            Icon(Icons.check_circle, color: sage),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () =>
+                            VillageNavigationScope.of(context).onSelect(1),
+                        icon: const Icon(Icons.lock_outline_rounded),
+                        label: const Text('Send a private reach-out to My Circle'),
                       ),
                       const SizedBox(height: 12),
                       Container(
@@ -219,20 +291,21 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          _helper(Icons.auto_awesome_outlined, 'Help me find\nthe words'),
-                          _helper(Icons.lightbulb_outline_rounded, 'Tips for a\ngreat post'),
-                          _helper(Icons.content_copy_outlined, 'Examples from\nthe Village'),
-                        ],
-                      ),
-                      const SizedBox(height: 13),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _attachment(Icons.photo_outlined, 'Photo'),
-                          _attachment(Icons.videocam_outlined, 'Video'),
-                          _attachment(Icons.mic_none_rounded, 'Voice'),
-                          _attachment(Icons.poll_outlined, 'Poll'),
-                          _attachment(Icons.location_on_outlined, 'Location'),
+                          _helper(
+                            Icons.auto_awesome_outlined,
+                            'Help me find\nthe words',
+                            () => _writingHelp('starter'),
+                          ),
+                          _helper(
+                            Icons.lightbulb_outline_rounded,
+                            'Tips for a\ngreat post',
+                            () => _writingHelp('tips'),
+                          ),
+                          _helper(
+                            Icons.content_copy_outlined,
+                            'Example\nquestion',
+                            () => _writingHelp('example'),
+                          ),
                         ],
                       ),
                     ],
@@ -258,7 +331,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _notice('Your draft'),
+                        onPressed: _saveDraft,
                         icon: const Icon(Icons.bookmark_border_rounded),
                         label: const Text('Save Draft'),
                       ),
@@ -337,34 +410,10 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     );
   }
 
-  Widget _smallChoice(String title, bool selected, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        height: 89,
-        padding: const EdgeInsets.all(7),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFF1F3E9) : cream,
-          border: Border.all(color: selected ? sage : line),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.groups_outlined, color: selected ? sage : gold),
-            const SizedBox(height: 4),
-            FittedBox(child: Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700))),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _helper(IconData icon, String text) {
+  Widget _helper(IconData icon, String text, VoidCallback onTap) {
     return Expanded(
       child: InkWell(
-        onTap: () => _notice(text.replaceAll('\n', ' ')),
+        onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(5),
           child: Column(children: [Icon(icon, color: gold, size: 21), Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10))]),
@@ -373,20 +422,83 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     );
   }
 
-  Widget _attachment(IconData icon, String label) {
-    return InkWell(
-      onTap: () => _notice(label),
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.all(5),
-        child: Column(children: [Icon(icon, color: sage), Text(label, style: const TextStyle(fontSize: 9.5))]),
-      ),
+  Future<void> _saveDraft() async {
+    await preferences.setString(
+      _draftKey,
+      jsonEncode({
+        'question': questionController.text,
+        'category': category,
+        'audience': audience,
+        'anonymous': anonymous,
+        'needsSupport': needsSupport,
+        'supportIntent': supportIntent,
+      }),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Draft saved on this device.')),
     );
   }
 
-  void _notice(String feature) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('$feature will be available as we build the next features.')));
+  Future<void> _restoreDraft() async {
+    final raw = await preferences.getString(_draftKey);
+    if (!mounted) return;
+    if (raw == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You do not have a saved draft yet.')),
+      );
+      return;
+    }
+    try {
+      final draft = jsonDecode(raw) as Map<String, dynamic>;
+      setState(() {
+        questionController.text = draft['question'] as String? ?? '';
+        category = draft['category'] as String? ?? category;
+        audience = 'The Village';
+        anonymous = draft['anonymous'] as bool? ?? anonymous;
+        needsSupport = draft['needsSupport'] as bool? ?? needsSupport;
+        supportIntent = draft['supportIntent'] as String? ?? supportIntent;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your draft was restored.')),
+      );
+    } on Object {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('That draft could not be opened.')),
+      );
+    }
+  }
+
+  Future<void> _writingHelp(String type) async {
+    final message = switch (type) {
+      'starter' =>
+        'Try: “I’m going through ____. What I need most right now is ____.”',
+      'tips' =>
+        'Share only what feels safe. Say what happened, how you feel, and what kind of response would help.',
+      _ =>
+        '“I’m feeling overwhelmed by a change at home. I don’t need solutions yet—could someone just listen?”',
+    };
+    final useText = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: cream,
+        title: const Text('A gentle way to begin'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Close'),
+          ),
+          if (type != 'tips')
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Use This'),
+            ),
+        ],
+      ),
+    );
+    if (useText == true && mounted) {
+      setState(() => questionController.text = message.replaceAll('Try: ', ''));
+    }
   }
 }

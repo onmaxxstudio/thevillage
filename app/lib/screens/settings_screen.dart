@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../navigation/village_navigation_scope.dart';
+import 'community_safety_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -162,6 +163,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
                     onTap: () =>
                         VillageNavigationScope.of(context).onSelect(4),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Text(
+                  'Community',
+                  style: GoogleFonts.playfairDisplay(
+                    color: sage,
+                    fontSize: 23,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 0,
+                  color: Colors.white.withValues(alpha: .58),
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(color: line),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: ListTile(
+                    leading: const Icon(Icons.shield_outlined, color: sage),
+                    title: const Text(
+                      'Community and safety',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: const Text(
+                      'Guidelines, privacy reminders and safety tools.',
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const CommunitySafetyScreen(),
+                      ),
+                    ),
                   ),
                 ),
               ],

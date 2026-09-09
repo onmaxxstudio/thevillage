@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../navigation/village_navigation_scope.dart';
 import '../services/village_post_service.dart';
-import 'village_feed_screen.dart';
 
 class VillagePostDraft {
   const VillagePostDraft({
@@ -11,6 +11,8 @@ class VillagePostDraft {
     required this.audience,
     required this.anonymous,
     required this.needsSupport,
+    required this.supportIntent,
+    required this.username,
   });
 
   final String question;
@@ -18,6 +20,8 @@ class VillagePostDraft {
   final String audience;
   final bool anonymous;
   final bool needsSupport;
+  final String supportIntent;
+  final String username;
 }
 
 class PostPreviewScreen extends StatelessWidget {
@@ -32,7 +36,7 @@ class PostPreviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = post.anonymous ? 'Anonymous Neighbor' : '@KindHeart';
+    final name = post.anonymous ? 'Anonymous Neighbor' : '@${post.username}';
     return Scaffold(
       backgroundColor: cream,
       appBar: AppBar(
@@ -82,6 +86,16 @@ class PostPreviewScreen extends StatelessWidget {
                               side: BorderSide.none,
                               backgroundColor: const Color(0xFFF1EEE4),
                             ),
+                            const SizedBox(height: 7),
+                            Chip(
+                              avatar: const Icon(
+                                Icons.volunteer_activism_outlined,
+                                size: 17,
+                              ),
+                              label: Text('Looking for: ${post.supportIntent}'),
+                              side: BorderSide.none,
+                              backgroundColor: const Color(0xFFE8EBDD),
+                            ),
                             const SizedBox(height: 10),
                             Text(post.question, style: const TextStyle(fontSize: 20, height: 1.4, fontWeight: FontWeight.w700)),
                             if (post.needsSupport) ...[
@@ -127,6 +141,7 @@ class PostPreviewScreen extends StatelessWidget {
                       audience: post.audience,
                       anonymous: post.anonymous,
                       needsSupport: post.needsSupport,
+                      supportIntent: post.supportIntent,
                     );
                     if (!context.mounted) return;
                     Navigator.of(context).pushReplacement(
@@ -188,6 +203,11 @@ class PostSubmittedScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(post.category, style: const TextStyle(color: PostPreviewScreen.sage, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 5),
+                        Text(
+                          'Looking for ${post.supportIntent.toLowerCase()}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
                         const SizedBox(height: 9),
                         Text(post.question, style: const TextStyle(fontSize: 18, height: 1.4, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 12),
@@ -199,28 +219,22 @@ class PostSubmittedScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () => Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const VillageFeedScreen(
-                            initialFilter: 'My Posts',
-                          ),
-                        ),
-                        (route) => route.isFirst,
-                      ),
+                      onPressed: () =>
+                          VillageNavigationScope.of(context).onSelect(3),
                       style: FilledButton.styleFrom(
                         backgroundColor: PostPreviewScreen.sage,
                         padding: const EdgeInsets.all(17),
                       ),
                       icon: const Icon(Icons.forum_outlined),
-                      label: const Text('View in My Posts'),
+                      label: const Text('View in the Village'),
                     ),
                   ),
                   const SizedBox(height: 10),
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => Navigator.of(context)
-                          .popUntil((route) => route.isFirst),
+                      onPressed: () =>
+                          VillageNavigationScope.of(context).onSelect(0),
                       icon: const Icon(Icons.home_outlined),
                       label: const Text('Return Home'),
                     ),

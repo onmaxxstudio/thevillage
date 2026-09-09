@@ -128,12 +128,15 @@ service cloud.firestore {
           'authorUid',
           'createdAt',
           'needsSupport',
+          'supportIntent',
+          'followUpStatus',
+          'resolvedAt',
           'supportCount',
           'replies'
         ]) &&
         request.resource.data.question is string &&
         request.resource.data.question.size() >= 10 &&
-        request.resource.data.question.size() <= 1000 &&
+        request.resource.data.question.size() <= 1500 &&
         request.resource.data.category is string &&
         request.resource.data.audience == 'The Village' &&
         request.resource.data.author is string &&
@@ -151,17 +154,41 @@ service cloud.firestore {
         ) &&
         request.resource.data.createdAt is timestamp &&
         request.resource.data.needsSupport is bool &&
+        request.resource.data.supportIntent in [
+          'Advice',
+          'Just listen',
+          'Encouragement',
+          'Prayer',
+          'Practical help'
+        ] &&
+        request.resource.data.followUpStatus == 'Open' &&
         request.resource.data.supportCount == 0 &&
         request.resource.data.replies is list &&
         request.resource.data.replies.size() == 0;
 
       allow update: if signedIn() &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['supportCount', 'replies']) &&
-        request.resource.data.supportCount is int &&
-        request.resource.data.supportCount >= 0 &&
-        request.resource.data.replies is list &&
-        request.resource.data.replies.size() <= 500;
+        (
+          (
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['supportCount', 'replies']) &&
+            request.resource.data.supportCount is int &&
+            request.resource.data.supportCount >= 0 &&
+            request.resource.data.replies is list &&
+            request.resource.data.replies.size() <= 500
+          ) ||
+          (
+            ownsPost(postId) &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['followUpStatus', 'needsSupport', 'resolvedAt']) &&
+            request.resource.data.followUpStatus in [
+              'Open',
+              'Feeling better',
+              'Still need support',
+              'Resolved'
+            ] &&
+            request.resource.data.needsSupport is bool
+          )
+        );
 
       allow delete: if ownsPost(postId);
     }
