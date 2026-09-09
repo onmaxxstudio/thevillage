@@ -941,7 +941,6 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                 PopupMenuButton<String>(
                   tooltip: 'Reply options',
                   padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
                   onSelected: (value) {
                     if (value == 'block') {
                       _blockReplyAuthor(reply);
@@ -1123,7 +1122,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () => _openFollowUp(post),
-                icon: const Icon(Icons.check_in_outlined, size: 18),
+                icon: const Icon(Icons.fact_check_outlined, size: 18),
                 label: Text(
                   post.followUpStatus == 'Open'
                       ? 'Share a follow-up'
