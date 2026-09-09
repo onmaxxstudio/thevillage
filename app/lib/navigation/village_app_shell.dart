@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../screens/ask_village_screen.dart';
 import '../screens/circle_screen.dart';
-import '../screens/community_hub_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
+import '../screens/village_feed_screen.dart';
 import 'village_navigation_scope.dart';
 
 class VillageAppShell extends StatefulWidget {
@@ -32,7 +32,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
     HomeScreen(),
     CircleScreen(),
     AskVillageScreen(),
-    CommunityHubScreen(),
+    VillageFeedScreen(),
     ProfileScreen(),
   ];
 

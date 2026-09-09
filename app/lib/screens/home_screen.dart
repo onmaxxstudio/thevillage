@@ -10,6 +10,7 @@ import '../services/profile_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
 import 'circle_screen.dart';
+import 'community_hub_screen.dart';
 import 'village_feed_screen.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart';
@@ -122,6 +123,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void openProfile() => VillageNavigationScope.of(context).onSelect(4);
 
+  void openCommunityHub() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const CommunityHubScreen(),
+      ),
+    );
+  }
+
   void openNotifications() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -191,6 +200,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 14),
                       _buildAskCard(),
                       const SizedBox(height: 18),
+                      _buildCommunityHubCard(),
+                      const SizedBox(height: 14),
                       _buildTrendingCard(),
                     ],
                   ),
@@ -224,6 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
               (Icons.home_rounded, 'Home'),
               (Icons.groups_2_outlined, 'My Circle'),
               (Icons.forum_outlined, 'Village'),
+              (Icons.diversity_3_outlined, 'Community Hub'),
               (Icons.settings_outlined, 'Settings'),
             ])
               ListTile(
@@ -235,6 +247,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     openCircle();
                   } else if (item.$2 == 'Village') {
                     openVillage();
+                  } else if (item.$2 == 'Community Hub') {
+                    openCommunityHub();
                   } else if (item.$2 == 'Settings') {
                     openSettings();
                   }
@@ -807,6 +821,59 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Text(
                     'Read real questions, offer support, or start a conversation.',
                     style: TextStyle(fontSize: 14.5),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: sage),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommunityHubCard() {
+    return InkWell(
+      onTap: openCommunityHub,
+      borderRadius: BorderRadius.circular(23),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: paleSage,
+          border: Border.all(color: line),
+          borderRadius: BorderRadius.circular(23),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x10172019),
+              blurRadius: 12,
+              offset: Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const CircleAvatar(
+              radius: 30,
+              backgroundColor: cream,
+              child: Icon(Icons.diversity_3_outlined, color: sage, size: 29),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Community Hub',
+                    style: GoogleFonts.playfairDisplay(
+                      color: ink,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Find your people, explore resources, and gather for live events.',
+                    style: TextStyle(fontSize: 14.5, height: 1.35),
                   ),
                 ],
               ),
