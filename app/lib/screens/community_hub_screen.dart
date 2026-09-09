@@ -22,15 +22,13 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   static const line = Color(0xFFE3D8C9);
 
   final CommunityHubService service = CommunityHubService();
-  int selectedSection = 1;
-  String feedSearch = '';
+  int selectedSection = 0;
   bool loadingPreferences = true;
   Set<String> joined = {};
   Set<String> savedResources = {};
   Set<String> registeredEvents = {};
 
   static const sections = <(IconData, String)>[
-    (Icons.forum_outlined, 'Feed'),
     (Icons.groups_2_outlined, 'Communities'),
     (Icons.menu_book_outlined, 'Resources'),
     (Icons.calendar_month_outlined, 'Events'),
@@ -91,6 +89,118 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
         'What does rest look like for you this week?',
         'Name one habit that helps you feel grounded.',
         'What are you ready to release?',
+      ],
+    ),
+    _CommunityInfo(
+      id: 'faith',
+      name: 'Faith & Spirituality',
+      description: 'Encouragement, reflection, prayer, and spiritual growth.',
+      icon: Icons.auto_awesome_outlined,
+      color: Color(0xFFE9E1F0),
+      memberLabel: 'Open community',
+      conversationSearch: 'Prayer',
+      prompts: [
+        'What is giving you hope in this season?',
+        'Is there something your community can pray about with you?',
+        'Share a practice that helps you feel spiritually grounded.',
+      ],
+    ),
+    _CommunityInfo(
+      id: 'men',
+      name: 'Men',
+      description: 'Honest support for life, relationships, and wellbeing.',
+      icon: Icons.man_2_outlined,
+      color: Color(0xFFDCE5E7),
+      memberLabel: 'Open community',
+      conversationSearch: 'Life & Growth',
+      prompts: [
+        'What pressure have you been carrying quietly?',
+        'What does healthy support look like to you?',
+        'What is one area where you want to grow?',
+      ],
+    ),
+    _CommunityInfo(
+      id: 'friendship',
+      name: 'Friendship',
+      description: 'Build stronger friendships and navigate changing ones.',
+      icon: Icons.people_outline_rounded,
+      color: Color(0xFFF2E4D4),
+      memberLabel: 'Open community',
+      conversationSearch: 'Friendship',
+      prompts: [
+        'What makes you feel valued in a friendship?',
+        'How do you reconnect after growing apart?',
+        'What friendship lesson did you learn the hard way?',
+      ],
+    ),
+    _CommunityInfo(
+      id: 'career',
+      name: 'Career & Purpose',
+      description: 'Support for work, goals, confidence, and next steps.',
+      icon: Icons.work_outline_rounded,
+      color: Color(0xFFE6E2D5),
+      memberLabel: 'Open community',
+      conversationSearch: 'Work & School',
+      prompts: [
+        'What professional goal are you working toward?',
+        'Where do you need more confidence at work?',
+        'What would a meaningful next step look like?',
+      ],
+    ),
+    _CommunityInfo(
+      id: 'grief',
+      name: 'Grief & Healing',
+      description: 'A gentle space for loss, remembrance, and healing.',
+      icon: Icons.eco_outlined,
+      color: Color(0xFFDDE6DF),
+      memberLabel: 'Open community',
+      conversationSearch: 'Grief',
+      prompts: [
+        'What do you wish people understood about your grief?',
+        'Is there a memory you would like to share today?',
+        'What has brought even a small amount of comfort?',
+      ],
+    ),
+    _CommunityInfo(
+      id: 'new_beginnings',
+      name: 'New Beginnings',
+      description: 'Support through moves, transitions, endings, and fresh starts.',
+      icon: Icons.wb_sunny_outlined,
+      color: Color(0xFFFFE9CB),
+      memberLabel: 'Open community',
+      conversationSearch: 'Life & Growth',
+      prompts: [
+        'What new chapter are you stepping into?',
+        'What are you leaving behind with gratitude?',
+        'What would help this transition feel less lonely?',
+      ],
+    ),
+    _CommunityInfo(
+      id: 'caregivers',
+      name: 'Caregivers',
+      description: 'Care, resources, and understanding for those who give care.',
+      icon: Icons.health_and_safety_outlined,
+      color: Color(0xFFE3EAD7),
+      memberLabel: 'Open community',
+      conversationSearch: 'Practical help',
+      prompts: [
+        'What part of caregiving feels heaviest right now?',
+        'Where could you accept help this week?',
+        'Share one way you care for yourself, too.',
+      ],
+    ),
+    _CommunityInfo(
+      id: 'empty_nest',
+      name: 'Life After the Kids',
+      description: 'Rediscover identity, connection, and purpose in a new season.',
+      icon: Icons.home_outlined,
+      color: Color(0xFFECE3D8),
+      memberLabel: 'Open community',
+      conversationSearch: 'Life & Growth',
+      prompts: [
+        'What are you rediscovering about yourself?',
+        'How has home life changed in this season?',
+        'What dream finally has room to grow?',
       ],
     ),
   ];
@@ -239,12 +349,12 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   }
 
   void _openCommunityFeed(_CommunityInfo community) {
-    setState(() {
-      feedSearch = community.conversationSearch;
-      selectedSection = 0;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Showing ${community.name} conversations.')),
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => VillageFeedScreen(
+          initialSearch: community.conversationSearch,
+        ),
+      ),
     );
   }
 
@@ -290,11 +400,6 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
               child: IndexedStack(
                 index: selectedSection,
                 children: [
-                  VillageFeedScreen(
-                    key: ValueKey(feedSearch),
-                    embedded: true,
-                    initialSearch: feedSearch,
-                  ),
                   _communitiesView(),
                   _resourcesView(),
                   _eventsView(),
@@ -377,7 +482,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
         _featuredCard(),
         const SizedBox(height: 22),
         _sectionHeading(
-          'Your Communities',
+          'Explore Communities',
           'Join a space and make it your own.',
         ),
         const SizedBox(height: 12),
