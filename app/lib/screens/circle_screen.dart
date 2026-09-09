@@ -25,41 +25,6 @@ class _CircleScreenState extends State<CircleScreen> {
   static const ink = Color(0xFF172019);
   static const line = Color(0xFFE3D8C9);
 
-  static const members = [
-    _CircleMember('Maya', 'MS', Color(0xFFD9B8A8), 'Available to listen', true),
-    _CircleMember('Jordan', 'JR', Color(0xFFAFC3A5), 'Free after 6 PM', true),
-    _CircleMember('Nia', 'NB', Color(0xFFD8C58F), 'Can text now', true),
-    _CircleMember('Cam', 'CW', Color(0xFFC7B5CF), 'Quiet day', false),
-    _CircleMember('Avery', 'AL', Color(0xFFB7C8CE), 'At work', false),
-  ];
-
-  static const memberPosts = <String, List<String>>{
-    'Maya': [
-      'Some days support looks like listening without trying to fix it.',
-      'Taking a quiet reset tonight and making room for rest.',
-    ],
-    'Jordan': [
-      'A small check-in can change someone’s whole day.',
-    ],
-    'Nia': [
-      'I have space to listen today if anyone needs a gentle conversation.',
-      'Shared a reminder: asking for help is a form of strength.',
-    ],
-    'Cam': [
-      'Choosing a quiet day and protecting my peace.',
-    ],
-    'Avery': [
-      'Busy today, but I’ll check back in with the Circle later.',
-    ],
-  };
-
-  static const searchablePeople = [
-    _CircleCandidate('Aisha', '@AishaTalks', 'AT', Color(0xFFD6B8A7)),
-    _CircleCandidate('Lena', '@LenaCares', 'LC', Color(0xFFB8C9A8)),
-    _CircleCandidate('Rae', '@RaeListens', 'RL', Color(0xFFD5C18C)),
-    _CircleCandidate('Tasha', '@TashaM', 'TM', Color(0xFFC9B8D4)),
-  ];
-
   static const supportChoices = [
     (
       Icons.hearing_rounded,
@@ -762,7 +727,7 @@ class _CircleScreenState extends State<CircleScreen> {
     final messages = circleMessages
         .where((item) => item.memberName == member.name)
         .toList();
-    final posts = memberPosts[member.name] ?? const <String>[];
+    const posts = <String>[];
 
     await showModalBottomSheet<void>(
       context: context,

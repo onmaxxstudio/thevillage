@@ -32,7 +32,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   List<VillagePost> posts = [];
   final Set<String> expandedReplyPosts = {};
   bool loading = true;
-  String currentUsername = 'KindHeart';
+  String currentUsername = 'VillageMember';
   final Map<String, String> usernamesByUid = {};
   late String filter;
 
@@ -50,7 +50,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     filter = filters.contains(widget.initialFilter) ? widget.initialFilter : 'All';
     searchController.addListener(_refresh);
     currentUsername =
-        ProfileService.usernameNotifier.value ?? 'KindHeart';
+        ProfileService.usernameNotifier.value ?? 'VillageMember';
     ProfileService.usernameNotifier.addListener(_usernameChanged);
     ProfileService.currentUsername();
     _load();
@@ -74,8 +74,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   String _replyAuthor(VillageReply reply) {
     if (reply.author == 'Anonymous Neighbor') return reply.author;
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
-    final isMyReply = reply.authorUid == currentUid ||
-        (reply.authorUid == null && reply.author == '@KindHeart');
+    final isMyReply = reply.authorUid == currentUid;
     if (isMyReply) return currentHandle;
     final latestUsername = usernamesByUid[reply.authorUid];
     return latestUsername == null ? reply.author : '@$latestUsername';
@@ -127,86 +126,11 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
         .toList();
     await _loadPublicUsernames(visibleSaved);
     if (!mounted) return;
-    final savedIds = visibleSaved.map((post) => post.id).toSet();
-    final newSamples = service.lastLoadUsedCloud
-        ? const <VillagePost>[]
-        : _samplePosts().where((post) => !savedIds.contains(post.id));
     setState(() {
-      posts = [...visibleSaved, ...newSamples];
+      posts = visibleSaved;
       posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       loading = false;
     });
-  }
-
-  List<VillagePost> _samplePosts() {
-    final now = DateTime.now();
-    return [
-      VillagePost(
-        id: 'sample-rest',
-        question:
-            'What helps you quiet your mind when you know you need rest but cannot slow down?',
-        category: 'Mental Health',
-        audience: 'The Village',
-        author: '@GentleGrowth',
-        createdAt: now.subtract(const Duration(minutes: 24)),
-        needsSupport: true,
-        supportCount: 18,
-        replies: [
-          VillageReply(
-            id: 'sample-rest-reply-1',
-            text:
-                'I put my phone in another room and breathe for five minutes.',
-            author: '@CalmCorner',
-            createdAt: now.subtract(const Duration(minutes: 18)),
-            supportCount: 7,
-          ),
-          VillageReply(
-            id: 'sample-rest-reply-2',
-            text:
-                'A warm shower and writing down tomorrow’s worries helps me.',
-            author: 'Anonymous Neighbor',
-            createdAt: now.subtract(const Duration(minutes: 12)),
-            supportCount: 4,
-          ),
-        ],
-        isMine: false,
-      ),
-      VillagePost(
-        id: 'sample-boundaries',
-        question:
-            'How do you set a boundary with family without feeling like you are abandoning them?',
-        category: 'Relationships',
-        audience: 'The Village',
-        author: 'Anonymous Neighbor',
-        createdAt: now.subtract(const Duration(hours: 3)),
-        needsSupport: false,
-        supportCount: 31,
-        replies: [
-          VillageReply(
-            id: 'sample-boundaries-reply-1',
-            text:
-                'A boundary can protect the relationship instead of ending it.',
-            author: '@GentleTruth',
-            createdAt: now.subtract(const Duration(hours: 2)),
-            supportCount: 11,
-          ),
-        ],
-        isMine: false,
-      ),
-      VillagePost(
-        id: 'sample-parent',
-        question:
-            'What is one simple routine that made weekday mornings easier for your family?',
-        category: 'Parenting',
-        audience: 'My Circle',
-        author: '@MorningGrace',
-        createdAt: now.subtract(const Duration(days: 1)),
-        needsSupport: false,
-        supportCount: 12,
-        replies: const <VillageReply>[],
-        isMine: false,
-      ),
-    ];
   }
 
   List<VillagePost> get visiblePosts {
