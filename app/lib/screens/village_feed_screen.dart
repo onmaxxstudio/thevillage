@@ -9,9 +9,16 @@ import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
 
 class VillageFeedScreen extends StatefulWidget {
-  const VillageFeedScreen({super.key, this.initialFilter = 'All'});
+  const VillageFeedScreen({
+    super.key,
+    this.initialFilter = 'All',
+    this.initialSearch = '',
+    this.embedded = false,
+  });
 
   final String initialFilter;
+  final String initialSearch;
+  final bool embedded;
 
   @override
   State<VillageFeedScreen> createState() => _VillageFeedScreenState();
@@ -48,6 +55,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   void initState() {
     super.initState();
     filter = filters.contains(widget.initialFilter) ? widget.initialFilter : 'All';
+    searchController.text = widget.initialSearch;
     searchController.addListener(_refresh);
     currentUsername =
         ProfileService.usernameNotifier.value ?? 'VillageMember';
@@ -807,7 +815,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     final shown = visiblePosts;
     return Scaffold(
       backgroundColor: cream,
-      appBar: AppBar(
+      appBar: widget.embedded ? null : AppBar(
         backgroundColor: cream,
         leading: IconButton(
           tooltip: 'Back',
