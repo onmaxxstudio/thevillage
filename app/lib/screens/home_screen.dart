@@ -293,23 +293,6 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  tooltip: 'Profile',
-                  onPressed: openProfile,
-                  icon: CircleAvatar(
-                    radius: 16,
-                    backgroundColor: paleSage,
-                    child: Text(
-                      currentUsername.isEmpty
-                          ? 'V'
-                          : currentUsername[0].toUpperCase(),
-                      style: const TextStyle(
-                        color: sage,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
                 ValueListenableBuilder<int>(
                   valueListenable: NotificationService.unreadCount,
                   builder: (context, unreadCount, _) => Stack(
