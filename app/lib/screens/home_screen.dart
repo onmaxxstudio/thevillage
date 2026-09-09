@@ -8,10 +8,6 @@ import '../services/circle_service.dart';
 import '../services/notification_service.dart';
 import '../services/profile_service.dart';
 import '../navigation/village_navigation_scope.dart';
-import 'ask_village_screen.dart';
-import 'circle_screen.dart';
-import 'community_hub_screen.dart';
-import 'village_feed_screen.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
@@ -121,15 +117,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void openVillage() => VillageNavigationScope.of(context).onSelect(3);
 
-  void openProfile() => VillageNavigationScope.of(context).onSelect(4);
-
-  void openCommunityHub() {
+  void openProfile() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => const CommunityHubScreen(),
+        builder: (_) => const ProfileScreen(),
       ),
     );
   }
+
+  void openCommunityHub() => VillageNavigationScope.of(context).onSelect(4);
 
   void openNotifications() {
     Navigator.of(context).push(
@@ -235,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
               (Icons.home_rounded, 'Home'),
               (Icons.groups_2_outlined, 'My Circle'),
               (Icons.forum_outlined, 'Village'),
-              (Icons.diversity_3_outlined, 'Community Hub'),
+              (Icons.person_outline_rounded, 'Profile'),
               (Icons.settings_outlined, 'Settings'),
             ])
               ListTile(
@@ -247,8 +243,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     openCircle();
                   } else if (item.$2 == 'Village') {
                     openVillage();
-                  } else if (item.$2 == 'Community Hub') {
-                    openCommunityHub();
+                  } else if (item.$2 == 'Profile') {
+                    openProfile();
                   } else if (item.$2 == 'Settings') {
                     openSettings();
                   }
@@ -275,13 +271,16 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 children: [
                   Image.asset('assets/images/welcome_branch.png', height: 22),
-                  Text(
-                    'Ask the Village',
-                    style: GoogleFonts.playfairDisplay(
-                      color: sage,
-                      fontSize: 31,
-                      height: 1,
-                      fontWeight: FontWeight.w600,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'Ask the Village',
+                      style: GoogleFonts.playfairDisplay(
+                        color: sage,
+                        fontSize: 31,
+                        height: 1,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   Text(
@@ -291,40 +290,64 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            ValueListenableBuilder<int>(
-              valueListenable: NotificationService.unreadCount,
-              builder: (context, unreadCount, _) => Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  IconButton(
-                    tooltip: 'Notifications',
-                    onPressed: openNotifications,
-                    icon:
-                        const Icon(Icons.notifications_none_rounded, size: 29),
-                  ),
-                  if (unreadCount > 0)
-                    Positioned(
-                      right: 3,
-                      top: 0,
-                      child: Container(
-                        constraints: const BoxConstraints(minWidth: 18),
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: sage,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          unreadCount > 9 ? '9+' : '$unreadCount',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
-                        ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: 'Profile',
+                  onPressed: openProfile,
+                  icon: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: paleSage,
+                    child: Text(
+                      currentUsername.isEmpty
+                          ? 'V'
+                          : currentUsername[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: sage,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                ],
-              ),
+                  ),
+                ),
+                ValueListenableBuilder<int>(
+                  valueListenable: NotificationService.unreadCount,
+                  builder: (context, unreadCount, _) => Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        tooltip: 'Notifications',
+                        onPressed: openNotifications,
+                        icon: const Icon(
+                          Icons.notifications_none_rounded,
+                          size: 29,
+                        ),
+                      ),
+                      if (unreadCount > 0)
+                        Positioned(
+                          right: 3,
+                          top: 0,
+                          child: Container(
+                            constraints: const BoxConstraints(minWidth: 18),
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: sage,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              unreadCount > 9 ? '9+' : '$unreadCount',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
