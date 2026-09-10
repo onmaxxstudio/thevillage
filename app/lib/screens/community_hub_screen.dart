@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../navigation/village_navigation_scope.dart';
 import '../services/community_hub_service.dart';
+import '../services/village_post_service.dart';
 import 'village_feed_screen.dart';
 
 class CommunityHubScreen extends StatefulWidget {
@@ -27,6 +28,8 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   Set<String> joined = {};
   Set<String> savedResources = {};
   Set<String> registeredEvents = {};
+  Map<String, int> memberCounts = {};
+  List<VillagePost> villagePosts = [];
 
   static const sections = <(IconData, String)>[
     (Icons.groups_2_outlined, 'Communities'),
@@ -221,6 +224,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
         'Ask one clear question, then make room for the answer.',
         'Pause if either person becomes overwhelmed and agree when to return.',
       ],
+      communityIds: ['relationships'],
     ),
     _ResourceInfo(
       id: 'support_friend',
@@ -237,6 +241,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
         'Offer one specific form of help instead of saying “anything you need.”',
         'Check in again later; support should not end with one conversation.',
       ],
+      communityIds: ['friendship', 'women'],
     ),
     _ResourceInfo(
       id: 'grounding_reset',
@@ -253,6 +258,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
         'Name five things you see, four you feel, and three you hear.',
         'Choose one small next step rather than solving everything at once.',
       ],
+      communityIds: ['wellness', 'grief', 'caregivers', 'new_beginnings'],
     ),
     _ResourceInfo(
       id: 'boundary_check',
@@ -269,6 +275,58 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
         'Say the boundary simply and explain what action you will take.',
         'Follow through consistently while leaving room for respectful dialogue.',
       ],
+      communityIds: ['women', 'men', 'career', 'relationships'],
+    ),
+    _ResourceInfo(
+      id: 'parenting_pause',
+      title: 'A calmer reset for hard parenting moments',
+      category: 'Moms',
+      readTime: '4 min practice',
+      icon: Icons.child_care_outlined,
+      color: Color(0xFFFFE8BE),
+      introduction:
+          'A brief pause can help you respond with more steadiness when everyone is overwhelmed.',
+      steps: [
+        'Make sure everyone is physically safe, then slow your own breathing.',
+        'Name what is happening without labeling the child.',
+        'Offer one simple choice or next step.',
+        'Reconnect after the moment instead of expecting perfection.',
+      ],
+      communityIds: ['moms'],
+    ),
+    _ResourceInfo(
+      id: 'hope_reflection',
+      title: 'A reflection for seasons of uncertainty',
+      category: 'Faith & Spirituality',
+      readTime: '5 min reflection',
+      icon: Icons.auto_awesome_outlined,
+      color: Color(0xFFE9E1F0),
+      introduction:
+          'Use this quiet reflection to name what you are carrying and reconnect with hope.',
+      steps: [
+        'Name the worry that feels loudest today.',
+        'Recall one moment when support arrived unexpectedly.',
+        'Write one prayer, intention, or grounding truth.',
+        'Choose one small action that reflects hope.',
+      ],
+      communityIds: ['faith'],
+    ),
+    _ResourceInfo(
+      id: 'empty_nest_identity',
+      title: 'Rediscovering yourself in a new season',
+      category: 'Life After the Kids',
+      readTime: '6 min exercise',
+      icon: Icons.home_outlined,
+      color: Color(0xFFECE3D8),
+      introduction:
+          'A changing home can create both grief and possibility. This exercise makes room for both.',
+      steps: [
+        'List what you miss without judging the feeling.',
+        'Name an interest or dream you set aside.',
+        'Choose one relationship you want to nurture differently.',
+        'Plan one small experience that belongs to this new chapter.',
+      ],
+      communityIds: ['empty_nest'],
     ),
   ];
 
@@ -313,12 +371,19 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       service.joinedCommunities(),
       service.savedResources(),
       service.registeredEvents(),
+      service.memberCounts(communities.map((community) => community.id)),
+      VillagePostService().load(),
     ]);
     if (!mounted) return;
     setState(() {
-      joined = values[0];
-      savedResources = values[1];
-      registeredEvents = values[2];
+      joined = values[0] as Set<String>;
+      savedResources = values[1] as Set<String>;
+      registeredEvents = values[2] as Set<String>;
+      memberCounts = values[3] as Map<String, int>;
+      villagePosts = values[4] as List<VillagePost>;
+      for (final id in joined) {
+        if ((memberCounts[id] ?? 0) < 1) memberCounts[id] = 1;
+      }
       loadingPreferences = false;
     });
   }
@@ -328,10 +393,23 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   }
 
   Future<void> _toggleCommunity(_CommunityInfo community) async {
+    final wasJoined = joined.contains(community.id);
     setState(() {
       if (!joined.add(community.id)) joined.remove(community.id);
+      memberCounts[community.id] =
+          ((memberCounts[community.id] ?? 0) + (wasJoined ? -1 : 1))
+              .clamp(0, 999999)
+              .toInt();
     });
     await service.saveJoinedCommunities(joined);
+    await service.setCommunityMembership(community.id, !wasJoined);
+    final refreshed = await service.memberCounts([community.id]);
+    if (mounted) {
+      setState(() {
+        final count = refreshed[community.id] ?? 0;
+        memberCounts[community.id] = !wasJoined && count < 1 ? 1 : count;
+      });
+    }
   }
 
   Future<void> _toggleResource(_ResourceInfo resource) async {
@@ -346,6 +424,24 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       if (!registeredEvents.add(event.id)) registeredEvents.remove(event.id);
     });
     await service.saveRegisteredEvents(registeredEvents);
+  }
+
+  String _memberLabel(_CommunityInfo community) {
+    final count = memberCounts[community.id] ?? 0;
+    return '$count ${count == 1 ? 'member' : 'members'}';
+  }
+
+  List<VillagePost> _questionsFor(_CommunityInfo community) {
+    return villagePosts.where((post) {
+      return community.questionCategories.contains(post.category) ||
+          community.supportIntents.contains(post.supportIntent);
+    }).toList();
+  }
+
+  List<_ResourceInfo> _resourcesFor(_CommunityInfo community) {
+    return resources
+        .where((resource) => resource.communityIds.contains(community.id))
+        .toList();
   }
 
   void _openCommunityFeed(_CommunityInfo community) {
@@ -611,7 +707,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
               ),
               const SizedBox(height: 3),
               Text(
-                community.memberLabel,
+                _memberLabel(community),
                 style: const TextStyle(fontSize: 10.5),
               ),
               const SizedBox(height: 9),
@@ -636,6 +732,8 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   }
 
   void _openCommunity(_CommunityInfo community) {
+    final questions = _questionsFor(community);
+    final communityResources = _resourcesFor(community);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => Scaffold(
@@ -686,7 +784,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            community.memberLabel,
+                            _memberLabel(community),
                             style: const TextStyle(
                               color: sage,
                               fontWeight: FontWeight.w800,
@@ -697,20 +795,66 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
                     ),
                     const SizedBox(height: 22),
                     _sectionHeading(
-                      'Conversation starters',
-                      'A gentle place to begin.',
+                      'Questions Asked',
+                      questions.isEmpty
+                          ? 'Be the first to ask this community.'
+                          : '${questions.length} recent ${questions.length == 1 ? 'question' : 'questions'} from the Village.',
                     ),
                     const SizedBox(height: 10),
-                    for (final prompt in community.prompts)
+                    if (questions.isEmpty)
+                      for (final prompt in community.prompts)
+                        Card(
+                          color: Colors.white.withValues(alpha: .62),
+                          child: ListTile(
+                            leading: const Icon(
+                              Icons.lightbulb_outline_rounded,
+                              color: gold,
+                            ),
+                            title: Text(prompt),
+                            subtitle: const Text('Conversation idea'),
+                          ),
+                        )
+                    else
+                      for (final post in questions.take(8))
                       Card(
                         color: Colors.white.withValues(alpha: .62),
                         child: ListTile(
-                          leading: const Icon(Icons.chat_bubble_outline_rounded,
-                              color: sage),
-                          title: Text(prompt),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.of(this.context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => VillageFeedScreen(
+                                  initialSearch: post.question,
+                                ),
+                              ),
+                            );
+                          },
+                          leading: const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            color: sage,
+                          ),
+                          title: Text(
+                            post.question,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            '${post.author}  •  ${post.replies.length} ${post.replies.length == 1 ? 'reply' : 'replies'}',
+                          ),
+                          trailing: const Icon(Icons.chevron_right_rounded),
                         ),
                       ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 22),
+                    _sectionHeading(
+                      'Resources for ${community.name}',
+                      'Guidance selected for this community.',
+                    ),
+                    const SizedBox(height: 10),
+                    for (final resource in communityResources) ...[
+                      _resourceCard(resource),
+                      const SizedBox(height: 10),
+                    ],
+                    const SizedBox(height: 8),
                     FilledButton.icon(
                       onPressed: () {
                         Navigator.pop(context);
@@ -1102,6 +1246,22 @@ class _CommunityInfo {
   final String memberLabel;
   final String conversationSearch;
   final List<String> prompts;
+
+  List<String> get questionCategories => switch (id) {
+        'moms' => const ['Parenting'],
+        'relationships' => const ['Relationships'],
+        'wellness' => const ['Mental Health'],
+        'friendship' => const ['Friendship'],
+        'career' => const ['Work & School'],
+        'grief' => const ['Mental Health', 'Life & Growth'],
+        _ => const ['Life & Growth'],
+      };
+
+  List<String> get supportIntents => switch (id) {
+        'faith' => const ['Prayer'],
+        'caregivers' => const ['Practical help'],
+        _ => const [],
+      };
 }
 
 class _ResourceInfo {
@@ -1114,6 +1274,7 @@ class _ResourceInfo {
     required this.color,
     required this.introduction,
     required this.steps,
+    required this.communityIds,
   });
 
   final String id;
@@ -1124,6 +1285,7 @@ class _ResourceInfo {
   final Color color;
   final String introduction;
   final List<String> steps;
+  final List<String> communityIds;
 }
 
 class _EventInfo {
