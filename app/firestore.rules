@@ -443,6 +443,14 @@ service cloud.firestore {
         request.resource.data.createdAt is timestamp;
     }
 
+    match /community_members/{communityId}/members/{uid} {
+      allow get, list: if signedIn();
+      allow create, update: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly(['uid', 'joinedAt']) &&
+        request.resource.data.uid == uid;
+      allow delete: if isSelf(uid);
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
