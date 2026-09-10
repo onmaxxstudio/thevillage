@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../screens/ask_village_screen.dart';
 import '../screens/circle_screen.dart';
-import '../screens/community_hub_screen.dart';
+import '../screens/community_hub_v2_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/village_feed_screen.dart';
 import 'village_navigation_scope.dart';
@@ -17,9 +17,7 @@ class VillageAppShell extends StatefulWidget {
 class _VillageAppShellState extends State<VillageAppShell> {
   static const cream = Color(0xFFFFFAF1);
   static const sage = Color(0xFF355C3B);
-  static const paleSage = Color(0xFFE8EBDD);
   static const ink = Color(0xFF172019);
-  static const line = Color(0xFFE3D8C9);
 
   int selectedIndex = 0;
 
@@ -33,7 +31,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
     CircleScreen(),
     AskVillageScreen(),
     VillageFeedScreen(),
-    CommunityHubScreen(),
+    CommunityHubV2Screen(),
   ];
 
   void selectTab(int index) {
