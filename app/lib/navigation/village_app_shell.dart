@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../screens/ask_village_screen.dart';
 import '../screens/circle_screen.dart';
-import '../screens/community_hub_screen.dart';
+import '../screens/community_hub_premium_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/village_feed_screen.dart';
 import 'village_navigation_scope.dart';
@@ -28,7 +28,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
     CircleScreen(),
     AskVillageScreen(),
     VillageFeedScreen(),
-    CommunityHubScreen(),
+    CommunityHubPremiumScreen(),
   ];
 
   void selectTab(int index) {
@@ -87,31 +87,11 @@ class _VillageAppShellState extends State<VillageAppShell> {
             indicatorColor: sage.withValues(alpha: .13),
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
             destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined, color: ink),
-                selectedIcon: Icon(Icons.home_rounded, color: sage),
-                label: 'Home',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.people_outline_rounded, color: ink),
-                selectedIcon: Icon(Icons.people_rounded, color: sage),
-                label: 'Circle',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.add_circle_outline_rounded, color: ink),
-                selectedIcon: Icon(Icons.add_circle_rounded, color: sage),
-                label: 'Ask',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.forum_outlined, color: ink),
-                selectedIcon: Icon(Icons.forum_rounded, color: sage),
-                label: 'Village',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.diversity_3_outlined, color: ink),
-                selectedIcon: Icon(Icons.diversity_3_rounded, color: sage),
-                label: 'Community',
-              ),
+              NavigationDestination(icon: Icon(Icons.home_outlined, color: ink), selectedIcon: Icon(Icons.home_rounded, color: sage), label: 'Home'),
+              NavigationDestination(icon: Icon(Icons.people_outline_rounded, color: ink), selectedIcon: Icon(Icons.people_rounded, color: sage), label: 'Circle'),
+              NavigationDestination(icon: Icon(Icons.add_circle_outline_rounded, color: ink), selectedIcon: Icon(Icons.add_circle_rounded, color: sage), label: 'Ask'),
+              NavigationDestination(icon: Icon(Icons.forum_outlined, color: ink), selectedIcon: Icon(Icons.forum_rounded, color: sage), label: 'Village'),
+              NavigationDestination(icon: Icon(Icons.diversity_3_outlined, color: ink), selectedIcon: Icon(Icons.diversity_3_rounded, color: sage), label: 'Community'),
             ],
           ),
         ),
