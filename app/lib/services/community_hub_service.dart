@@ -24,24 +24,26 @@ class CommunityHubService {
   }
 
   Future<Map<String, int>> memberCounts(Iterable<String> communityIds) async {
+    final ids = communityIds.toList();
     final counts = <String, int>{};
-    for (final id in communityIds) {
+    for (final id in ids) {
       counts[id] = 0;
     }
     if (!_cloudReady) return counts;
-    for (final id in communityIds) {
+    await Future.wait(ids.map((id) async {
       try {
         final snapshot = await FirebaseFirestore.instance
             .collection('community_members')
             .doc(id)
             .collection('members')
             .count()
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 3));
         counts[id] = snapshot.count ?? 0;
-      } on FirebaseException {
+      } on Object {
         // Keep a trustworthy zero rather than inventing a member count.
       }
-    }
+    }));
     return counts;
   }
 
