@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../screens/ask_village_screen.dart';
 import '../screens/circle_screen.dart';
-import '../screens/community_hub_v2_screen.dart';
+import '../screens/community_hub_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/village_feed_screen.dart';
 import 'village_navigation_scope.dart';
@@ -21,17 +21,14 @@ class _VillageAppShellState extends State<VillageAppShell> {
 
   int selectedIndex = 0;
 
-  final navigatorKeys = List.generate(
-    5,
-    (_) => GlobalKey<NavigatorState>(),
-  );
+  final navigatorKeys = List.generate(5, (_) => GlobalKey<NavigatorState>());
 
   static const rootPages = <Widget>[
     HomeScreen(),
     CircleScreen(),
     AskVillageScreen(),
     VillageFeedScreen(),
-    CommunityHubV2Screen(),
+    CommunityHubScreen(),
   ];
 
   void selectTab(int index) {
@@ -40,9 +37,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
       navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
       return;
     }
-    setState(() {
-      selectedIndex = index;
-    });
+    setState(() => selectedIndex = index);
   }
 
   Widget buildTabNavigator(int index) {
@@ -83,62 +78,43 @@ class _VillageAppShellState extends State<VillageAppShell> {
           backgroundColor: cream,
           body: IndexedStack(
             index: selectedIndex,
-            children: List.generate(5, buildTabNavigator),
+            children: List.generate(rootPages.length, buildTabNavigator),
           ),
-          bottomNavigationBar: _VillageBottomBar(
+          bottomNavigationBar: NavigationBar(
             selectedIndex: selectedIndex,
-            onSelect: selectTab,
+            onDestinationSelected: selectTab,
+            backgroundColor: cream,
+            indicatorColor: sage.withValues(alpha: .13),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined, color: ink),
+                selectedIcon: Icon(Icons.home_rounded, color: sage),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.people_outline_rounded, color: ink),
+                selectedIcon: Icon(Icons.people_rounded, color: sage),
+                label: 'Circle',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.add_circle_outline_rounded, color: ink),
+                selectedIcon: Icon(Icons.add_circle_rounded, color: sage),
+                label: 'Ask',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.forum_outlined, color: ink),
+                selectedIcon: Icon(Icons.forum_rounded, color: sage),
+                label: 'Village',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.diversity_3_outlined, color: ink),
+                selectedIcon: Icon(Icons.diversity_3_rounded, color: sage),
+                label: 'Community',
+              ),
+            ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _VillageBottomBar extends StatelessWidget {
-  const _VillageBottomBar({
-    required this.selectedIndex,
-    required this.onSelect,
-  });
-
-  final int selectedIndex;
-  final ValueChanged<int> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: BottomNavigationBar(
-        currentIndex: selectedIndex,
-        onTap: onSelect,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: _VillageAppShellState.cream,
-        selectedItemColor: _VillageAppShellState.sage,
-        unselectedItemColor: _VillageAppShellState.ink,
-        showUnselectedLabels: true,
-        elevation: 16,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.groups_2_outlined),
-            label: 'Circle',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle, size: 36),
-            label: 'Ask',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline_rounded),
-            label: 'Village',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.diversity_3_outlined),
-            label: 'Community',
-          ),
-        ],
       ),
     );
   }
