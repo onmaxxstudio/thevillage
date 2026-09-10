@@ -367,24 +367,55 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   }
 
   Future<void> _loadPreferences() async {
-    final values = await Future.wait([
-      service.joinedCommunities(),
-      service.savedResources(),
-      service.registeredEvents(),
-      service.memberCounts(communities.map((community) => community.id)),
-      VillagePostService().load(),
-    ]);
+    Set<String> loadedJoined = {};
+    Set<String> loadedResources = {};
+    Set<String> loadedEvents = {};
+    try {
+      final values = await Future.wait([
+        service.joinedCommunities(),
+        service.savedResources(),
+        service.registeredEvents(),
+      ]).timeout(const Duration(seconds: 4));
+      loadedJoined = values[0];
+      loadedResources = values[1];
+      loadedEvents = values[2];
+    } on Object {
+      // The Hub should still open if one saved preference cannot be read.
+    }
     if (!mounted) return;
     setState(() {
-      joined = values[0] as Set<String>;
-      savedResources = values[1] as Set<String>;
-      registeredEvents = values[2] as Set<String>;
-      memberCounts = values[3] as Map<String, int>;
-      villagePosts = values[4] as List<VillagePost>;
+      joined = loadedJoined;
+      savedResources = loadedResources;
+      registeredEvents = loadedEvents;
+      loadingPreferences = false;
+    });
+    await _loadCommunityContent();
+  }
+
+  Future<void> _loadCommunityContent() async {
+    Map<String, int> loadedCounts = {};
+    List<VillagePost> loadedPosts = [];
+    try {
+      loadedCounts = await service
+          .memberCounts(communities.map((community) => community.id))
+          .timeout(const Duration(seconds: 6));
+    } on Object {
+      // Counts can update later without blocking the rest of the Hub.
+    }
+    try {
+      loadedPosts = await VillagePostService()
+          .load()
+          .timeout(const Duration(seconds: 6));
+    } on Object {
+      // Show the honest empty state if questions are temporarily unavailable.
+    }
+    if (!mounted) return;
+    setState(() {
+      memberCounts = loadedCounts;
+      villagePosts = loadedPosts;
       for (final id in joined) {
         if ((memberCounts[id] ?? 0) < 1) memberCounts[id] = 1;
       }
-      loadingPreferences = false;
     });
   }
 
