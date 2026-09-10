@@ -24,7 +24,6 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
 
   final CommunityHubService service = CommunityHubService();
   int selectedSection = 0;
-  bool loadingPreferences = true;
   Set<String> joined = {};
   Set<String> savedResources = {};
   Set<String> registeredEvents = {};
@@ -387,7 +386,6 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       joined = loadedJoined;
       savedResources = loadedResources;
       registeredEvents = loadedEvents;
-      loadingPreferences = false;
     });
     await _loadCommunityContent();
   }
@@ -1242,9 +1240,6 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   }
 
   Widget _centeredList({required List<Widget> children}) {
-    if (loadingPreferences) {
-      return const Center(child: CircularProgressIndicator());
-    }
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 620),
