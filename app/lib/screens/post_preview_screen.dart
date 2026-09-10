@@ -13,6 +13,8 @@ class VillagePostDraft {
     required this.needsSupport,
     required this.supportIntent,
     required this.username,
+    this.communityId,
+    this.communityName,
   });
 
   final String question;
@@ -22,12 +24,23 @@ class VillagePostDraft {
   final bool needsSupport;
   final String supportIntent;
   final String username;
+  final String? communityId;
+  final String? communityName;
 }
 
 class PostPreviewScreen extends StatelessWidget {
-  const PostPreviewScreen({super.key, required this.post});
+  const PostPreviewScreen({
+    super.key,
+    required this.post,
+    this.suggestionId,
+    this.suggestedQuestionText,
+    this.onSuggestedQuestionPosted,
+  });
 
   final VillagePostDraft post;
+  final String? suggestionId;
+  final String? suggestedQuestionText;
+  final Future<void> Function(String suggestionId)? onSuggestedQuestionPosted;
   static const cream = Color(0xFFFFFAF1);
   static const sage = Color(0xFF496B4F);
   static const gold = Color(0xFFC8A35E);
@@ -86,6 +99,18 @@ class PostPreviewScreen extends StatelessWidget {
                               side: BorderSide.none,
                               backgroundColor: const Color(0xFFF1EEE4),
                             ),
+                            if (post.communityName != null) ...[
+                              const SizedBox(height: 7),
+                              Chip(
+                                avatar: const Icon(
+                                  Icons.diversity_3_outlined,
+                                  size: 17,
+                                ),
+                                label: Text('${post.communityName} Community'),
+                                side: BorderSide.none,
+                                backgroundColor: const Color(0xFFFFF1DE),
+                              ),
+                            ],
                             const SizedBox(height: 7),
                             Chip(
                               avatar: const Icon(
@@ -142,11 +167,23 @@ class PostPreviewScreen extends StatelessWidget {
                       anonymous: post.anonymous,
                       needsSupport: post.needsSupport,
                       supportIntent: post.supportIntent,
+                      communityId: post.communityId,
+                      communityName: post.communityName,
                     );
+                    final usedSuggestionId = suggestionId;
+                    final suggestionWasUsed = usedSuggestionId != null &&
+                        suggestedQuestionText?.trim().toLowerCase() ==
+                            post.question.trim().toLowerCase();
+                    if (suggestionWasUsed) {
+                      await onSuggestedQuestionPosted?.call(usedSuggestionId!);
+                    }
                     if (!context.mounted) return;
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute<void>(
-                        builder: (_) => PostSubmittedScreen(post: post),
+                        builder: (_) => PostSubmittedScreen(
+                          post: post,
+                          fromSuggestedQuestion: suggestionWasUsed,
+                        ),
                       ),
                     );
                   },
@@ -167,9 +204,19 @@ class PostPreviewScreen extends StatelessWidget {
 }
 
 class PostSubmittedScreen extends StatelessWidget {
-  const PostSubmittedScreen({super.key, required this.post});
+  const PostSubmittedScreen({
+    super.key,
+    required this.post,
+    this.fromSuggestedQuestion = false,
+  });
 
   final VillagePostDraft post;
+  final bool fromSuggestedQuestion;
+
+  void _leavePostingFlow(BuildContext context, int tabIndex) {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    VillageNavigationScope.of(context).onSelect(tabIndex);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,6 +259,17 @@ class PostSubmittedScreen extends StatelessWidget {
                         Text(post.question, style: const TextStyle(fontSize: 18, height: 1.4, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 12),
                         Text('Shared with ${post.audience}', style: const TextStyle(fontSize: 12)),
+                        if (post.communityName != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Posted in ${post.communityName}',
+                            style: const TextStyle(
+                              color: PostPreviewScreen.sage,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -220,7 +278,7 @@ class PostSubmittedScreen extends StatelessWidget {
                     width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: () =>
-                          VillageNavigationScope.of(context).onSelect(3),
+                          _leavePostingFlow(context, 3),
                       style: FilledButton.styleFrom(
                         backgroundColor: PostPreviewScreen.sage,
                         padding: const EdgeInsets.all(17),
@@ -233,10 +291,16 @@ class PostSubmittedScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () =>
-                          VillageNavigationScope.of(context).onSelect(0),
-                      icon: const Icon(Icons.home_outlined),
-                      label: const Text('Return Home'),
+                      onPressed: () => _leavePostingFlow(
+                        context,
+                        fromSuggestedQuestion ? 4 : 0,
+                      ),
+                      icon: Icon(fromSuggestedQuestion
+                          ? Icons.diversity_3_outlined
+                          : Icons.home_outlined),
+                      label: Text(fromSuggestedQuestion
+                          ? 'Return to Community'
+                          : 'Return Home'),
                     ),
                   ),
                 ],

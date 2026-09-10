@@ -81,6 +81,28 @@ class CommunityHubService {
     await preferences.setStringList(_key('saved_resources'), sorted);
   }
 
+  Future<Set<String>> usedSuggestedQuestions() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences
+            .getStringList(_key('used_suggested_questions'))
+            ?.toSet() ??
+        <String>{};
+  }
+
+  Future<void> markSuggestedQuestionUsed(String suggestionId) async {
+    final preferences = await SharedPreferences.getInstance();
+    final used = preferences
+            .getStringList(_key('used_suggested_questions'))
+            ?.toSet() ??
+        <String>{};
+    used.add(suggestionId);
+    final sorted = used.toList()..sort();
+    await preferences.setStringList(
+      _key('used_suggested_questions'),
+      sorted,
+    );
+  }
+
   Future<Set<String>> registeredEvents() async {
     final preferences = await SharedPreferences.getInstance();
     return preferences.getStringList(_key('registered_events'))?.toSet() ??

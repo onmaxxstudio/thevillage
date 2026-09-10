@@ -126,6 +126,8 @@ service cloud.firestore {
           'audience',
           'author',
           'authorUid',
+          'communityId',
+          'communityName',
           'createdAt',
           'needsSupport',
           'supportIntent',
@@ -138,6 +140,22 @@ service cloud.firestore {
         request.resource.data.question.size() >= 10 &&
         request.resource.data.question.size() <= 1500 &&
         request.resource.data.category is string &&
+        (
+          !request.resource.data.keys().hasAny(['communityId']) ||
+          (
+            request.resource.data.communityId is string &&
+            request.resource.data.communityId.size() >= 2 &&
+            request.resource.data.communityId.size() <= 40
+          )
+        ) &&
+        (
+          !request.resource.data.keys().hasAny(['communityName']) ||
+          (
+            request.resource.data.communityName is string &&
+            request.resource.data.communityName.size() >= 2 &&
+            request.resource.data.communityName.size() <= 50
+          )
+        ) &&
         request.resource.data.audience == 'The Village' &&
         request.resource.data.author is string &&
         request.resource.data.author.size() >= 3 &&

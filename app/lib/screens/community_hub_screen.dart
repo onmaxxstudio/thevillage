@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../navigation/village_navigation_scope.dart';
 import '../services/community_hub_service.dart';
 import '../services/village_post_service.dart';
+import 'ask_village_screen.dart';
 import 'village_feed_screen.dart';
 
 class CommunityHubScreen extends StatefulWidget {
@@ -27,6 +28,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   Set<String> joined = {};
   Set<String> savedResources = {};
   Set<String> registeredEvents = {};
+  Set<String> usedSuggestedQuestions = {};
   Map<String, int> memberCounts = {};
   List<VillagePost> villagePosts = [];
 
@@ -212,16 +214,17 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       id: 'hard_conversation',
       title: 'A gentler way to start a hard conversation',
       category: 'Relationships',
-      readTime: '4 min read',
       icon: Icons.forum_outlined,
       color: Color(0xFFF1DED8),
       introduction:
-          'The first minute of a difficult conversation can shape everything that follows. Begin with clarity, care, and one issue at a time.',
+          'The first minute of a difficult conversation often shapes everything that follows. A gentle opening does not mean hiding what matters or making yourself smaller. It means creating the best conditions for honesty, listening, and repair. Use this guide before the conversation, during it, and again afterward if you need a reset.',
       steps: [
-        'Choose a calm time instead of starting in the heat of the moment.',
-        'Lead with what you feel and need, not a judgment about the other person.',
-        'Ask one clear question, then make room for the answer.',
-        'Pause if either person becomes overwhelmed and agree when to return.',
+        'Decide what the conversation is really about. Write the issue in one sentence and separate it from every older disappointment. If your sentence includes “always” or “never,” make it more specific. A focused conversation is easier to understand and less likely to feel like an attack.',
+        'Choose a time when neither person is rushing, exhausted, or already overwhelmed. Try: “There is something important I want us to work through. Is now okay, or can we choose a time tonight?” A planned conversation is not avoidance; it is preparation.',
+        'Open with an observation rather than a verdict. Describe what happened, then name your feeling and need: “When our plans changed without us talking, I felt unimportant. I need us to make those decisions together.” This gives the other person something clear to respond to.',
+        'Ask one honest question and make room for the answer. You might ask, “What was happening for you in that moment?” Listen for meaning before preparing your defense. Reflect back what you heard, even when you remember the event differently.',
+        'If either person becomes flooded, pause with a return plan. Say when you will continue—such as after a twenty-minute walk or the next morning. A pause without a return time can feel like abandonment; a planned pause protects the conversation.',
+        'End by naming one next action, not by demanding a total transformation. Agree on what each person will try, when you will check in, and what repair would feel meaningful. Later, notice effort as clearly as you noticed the original problem.',
       ],
       communityIds: ['relationships'],
     ),
@@ -229,16 +232,17 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       id: 'support_friend',
       title: 'How to support someone without trying to fix them',
       category: 'Friendship',
-      readTime: '3 min read',
       icon: Icons.volunteer_activism_outlined,
       color: Color(0xFFFFE8BE),
       introduction:
-          'Support often starts with presence. You do not need the perfect answer to help someone feel less alone.',
+          'Support often begins with presence rather than answers. When someone trusts you with something tender, the pressure to say the perfect thing can make you rush into advice. This guide helps you slow down, understand what kind of care is wanted, and offer support without taking over the other person’s experience.',
       steps: [
-        'Ask whether they want listening, advice, encouragement, or practical help.',
-        'Reflect what you heard before sharing your perspective.',
-        'Offer one specific form of help instead of saying “anything you need.”',
-        'Check in again later; support should not end with one conversation.',
+        'Start by asking what support would feel helpful: listening, advice, encouragement, distraction, or practical help. Do not assume that silence means they want solutions. Giving choices returns some control to a person who may already feel powerless.',
+        'Listen for both the facts and the feeling underneath them. Put your phone down, avoid interrupting, and resist comparing their story with your own. Simple responses such as “That sounds exhausting” or “I can see why that hurt” communicate that you are staying with them.',
+        'Reflect back what you heard before offering your perspective. Try: “It sounds like you are not only upset about what happened—you also feel alone in handling it.” They can correct you if needed, and that correction helps you understand them more accurately.',
+        'When advice is requested, offer possibilities rather than commands. Ask what they have already considered and what obstacles they see. The goal is to help them think, not to prove that you know the answer. Respect that the final decision belongs to them.',
+        'Make practical offers specific and realistic. “I can bring dinner Tuesday,” “I can sit with you during the appointment,” or “I can call tomorrow evening” is easier to accept than “Let me know if you need anything.” Only offer what you can reliably do.',
+        'Follow up after the urgent moment passes. Remember an important date, send a brief check-in, or ask how the next step went. Consistent, low-pressure care often matters more than one intense conversation. If the situation involves danger or crisis, help them reach qualified support.',
       ],
       communityIds: ['friendship', 'women'],
     ),
@@ -246,16 +250,17 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       id: 'grounding_reset',
       title: 'A five-minute grounding reset',
       category: 'Wellness',
-      readTime: '5 min practice',
       icon: Icons.spa_outlined,
       color: Color(0xFFDDE7D7),
       introduction:
-          'Use this brief reset when your thoughts feel fast or your body feels tense. Move gently and stop if anything feels uncomfortable.',
+          'Use this grounding reset when your thoughts feel fast, your body feels tense, or the day has pulled you away from yourself. Grounding does not erase a hard situation. It gives your nervous system a few quieter minutes so you can choose your next response with more steadiness. Move gently and stop if anything feels uncomfortable.',
       steps: [
-        'Place both feet down and notice the support beneath you.',
-        'Breathe in for four, pause for two, and breathe out for six.',
-        'Name five things you see, four you feel, and three you hear.',
-        'Choose one small next step rather than solving everything at once.',
+        'Settle into a supported position. Place both feet on the floor or notice where your body meets the chair or bed. Press down gently and name the surface holding you. Let your shoulders drop without forcing them.',
+        'Breathe in comfortably for four counts, pause for two, and breathe out for six. Repeat five times. Keep the breath easy rather than unusually deep. If counting creates stress, simply make each exhale a little longer than the inhale.',
+        'Orient yourself to the present. Name five things you can see, four sensations you can feel, three sounds you can hear, two scents you notice, and one taste or comforting thing you can imagine. Take your time instead of racing through the list.',
+        'Release tension in small places. Unclench your jaw, soften your hands, lower your tongue from the roof of your mouth, and move your shoulders slowly. Notice which area changes first. There is no need to make your whole body relax at once.',
+        'Name what is true right now without predicting what comes next: “I am in my room. I am having a hard moment. I am breathing. I can choose one next step.” Present-tense facts can interrupt the mind’s urge to solve every possible future.',
+        'Choose one caring action that takes less than ten minutes: drink water, step outside, text someone safe, write the next task down, or rest. Grounding is complete when you feel able to take that one step—not when every feeling has disappeared.',
       ],
       communityIds: ['wellness', 'grief', 'caregivers', 'new_beginnings'],
     ),
@@ -263,16 +268,17 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       id: 'boundary_check',
       title: 'The boundary check-in',
       category: 'Life & Growth',
-      readTime: '6 min exercise',
       icon: Icons.shield_outlined,
       color: Color(0xFFE8EBDD),
       introduction:
-          'A boundary is a clear description of what you will do to protect your wellbeing. This check-in helps turn discomfort into a practical next step.',
+          'A boundary is a clear description of what you will do to protect your wellbeing, time, safety, or values. It is not a punishment and it cannot force another person to change. This check-in helps you understand repeated discomfort, choose a realistic limit, communicate it clearly, and prepare to follow through.',
       steps: [
-        'Notice the situation that repeatedly leaves you resentful or depleted.',
-        'Name the limit you need without trying to control another person.',
-        'Say the boundary simply and explain what action you will take.',
-        'Follow through consistently while leaving room for respectful dialogue.',
+        'Identify the pattern. Think of a situation that repeatedly leaves you resentful, anxious, unsafe, or depleted. Write what happens, who is involved, and what you usually do afterward. Your emotional response is information, even if you are not yet sure what boundary you need.',
+        'Separate the request from the boundary. A request asks another person to change: “Please do not raise your voice.” A boundary explains your response: “If yelling begins, I will end the conversation and return when we can speak calmly.” Both can be useful, but only your action is within your control.',
+        'Choose a limit you can actually maintain. Consider your safety, responsibilities, finances, and support system. A dramatic boundary that you cannot follow may create more confusion. A smaller consistent boundary is often stronger than a large threat made in the heat of the moment.',
+        'Communicate it simply. Name the behavior, the limit, and your action without building a courtroom case. Try: “I want to talk about this, but I will not continue while I am being insulted. If that happens, I will step away and we can try later.”',
+        'Expect discomfort. Someone may be surprised, disappointed, or resistant—especially if the old pattern benefited them. Their reaction does not automatically mean your boundary is wrong. Stay open to respectful conversation without debating whether your needs are allowed to exist.',
+        'Follow through calmly and review the result. Notice whether the boundary protects what it was meant to protect. Adjust the wording or action if needed. If setting a limit could increase danger, seek help from a qualified professional or trusted safety resource before announcing it.',
       ],
       communityIds: ['women', 'men', 'career', 'relationships'],
     ),
@@ -280,16 +286,17 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       id: 'parenting_pause',
       title: 'A calmer reset for hard parenting moments',
       category: 'Moms',
-      readTime: '4 min practice',
       icon: Icons.child_care_outlined,
       color: Color(0xFFFFE8BE),
       introduction:
-          'A brief pause can help you respond with more steadiness when everyone is overwhelmed.',
+          'Hard parenting moments can activate both a child’s nervous system and your own. A pause is not about becoming perfectly calm or ignoring the behavior. It creates enough space to protect safety, understand the need beneath the moment, and respond in a way you are less likely to regret.',
       steps: [
-        'Make sure everyone is physically safe, then slow your own breathing.',
-        'Name what is happening without labeling the child.',
-        'Offer one simple choice or next step.',
-        'Reconnect after the moment instead of expecting perfection.',
+        'Begin with safety. Move dangerous objects, create physical space, and lower stimulation where possible. Use fewer words while emotions are high. If you feel close to losing control, place the child somewhere safe and take the briefest safe pause available.',
+        'Regulate yourself before teaching. Put both feet down, relax your hands, and lengthen one exhale. Lower your voice and slow your pace. Children often borrow steadiness from the adult nearby, but this is practice—not a test of whether you are a good parent.',
+        'Describe what you see without labeling the child: “You wanted more time and stopping feels really hard.” Validation does not mean changing the limit. It tells the child that feelings are acceptable even when certain actions are not.',
+        'Hold the limit in one clear sentence: “I will not let you hit,” “The tablet is finished for tonight,” or “We are leaving now.” Avoid adding a long lecture while the child cannot process it. Repeat the same calm sentence if necessary.',
+        'Offer one manageable choice that works for you: “Do you want to walk or hold my hand?” or “Would you like quiet time on the couch or in your room?” Too many choices can add pressure. The boundary stays the same while the child gets a little agency.',
+        'Reconnect after the storm. Offer comfort, talk briefly about what happened, and practice what to do next time. If you yelled or reacted harshly, repair honestly: name your behavior, apologize, and explain your plan. Repair teaches responsibility more powerfully than pretending parents never struggle.',
       ],
       communityIds: ['moms'],
     ),
@@ -297,16 +304,17 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       id: 'hope_reflection',
       title: 'A reflection for seasons of uncertainty',
       category: 'Faith & Spirituality',
-      readTime: '5 min reflection',
       icon: Icons.auto_awesome_outlined,
       color: Color(0xFFE9E1F0),
       introduction:
-          'Use this quiet reflection to name what you are carrying and reconnect with hope.',
+          'Uncertainty can make the mind demand an answer before one is available. This reflection offers a quieter way to hold what you cannot control while reconnecting with hope, faith, and one faithful next step. Adapt the language to your own beliefs; the purpose is honest reflection, not forced positivity.',
       steps: [
-        'Name the worry that feels loudest today.',
-        'Recall one moment when support arrived unexpectedly.',
-        'Write one prayer, intention, or grounding truth.',
-        'Choose one small action that reflects hope.',
+        'Become still for a moment and name what feels loudest. Write the worry without editing it into something more acceptable. Then add: “What I fear this could mean is…” Naming the deeper fear can make the burden clearer and easier to bring into prayer or reflection.',
+        'Separate what is known from what is imagined. Make two short lists: facts you have today and outcomes your mind is predicting. Both deserve compassion, but they are not the same. Let this distinction create a little room around the uncertainty.',
+        'Recall a time when strength, wisdom, provision, or support arrived in a way you did not expect. Do not use the memory to dismiss today’s pain. Let it remind you that the current moment is not the whole story and that help can take more than one form.',
+        'Write a prayer, intention, or grounding truth in language that feels honest. It can hold doubt and hope together: “I do not know what happens next. Help me recognize the support available today and give me courage for the step that belongs to me.”',
+        'Identify what you can release for today. You may release the demand to have every answer, someone else’s reaction, or the pressure to appear strong. Imagine setting it down temporarily. Releasing control is not giving up; it is making room to move wisely.',
+        'Choose one action that reflects hope: make the call, ask for prayer, rest, prepare what you can, or offer kindness to someone else. End by naming one thing you are grateful for without requiring gratitude to cancel grief or uncertainty.',
       ],
       communityIds: ['faith'],
     ),
@@ -314,16 +322,17 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       id: 'empty_nest_identity',
       title: 'Rediscovering yourself in a new season',
       category: 'Life After the Kids',
-      readTime: '6 min exercise',
       icon: Icons.home_outlined,
       color: Color(0xFFECE3D8),
       introduction:
-          'A changing home can create both grief and possibility. This exercise makes room for both.',
+          'When children leave home, the quiet can hold pride, grief, relief, uncertainty, and possibility at the same time. There is no correct emotional response and no deadline for finding a new rhythm. This exercise helps you honor what changed while beginning to rediscover the parts of you that still want attention.',
       steps: [
-        'List what you miss without judging the feeling.',
-        'Name an interest or dream you set aside.',
-        'Choose one relationship you want to nurture differently.',
-        'Plan one small experience that belongs to this new chapter.',
+        'Name what you miss in specific language: the noise at dinner, being needed in a familiar way, shared routines, or knowing the shape of each day. Let yourself grieve ordinary details. Missing the old season does not mean you are unable to appreciate the new one.',
+        'Notice what has changed in your identity. Finish the sentence “For years, much of my life revolved around…” and then “Now I have room to…” Do not pressure yourself to make the second answer impressive. Even wanting more rest is meaningful information.',
+        'Revisit interests that became smaller during active parenting. List what once made you curious, playful, creative, connected, or proud. Circle one that still has energy. You are not trying to become your younger self; you are meeting who you are now.',
+        'Look at the relationships around you. Consider your partner, friends, relatives, community, and relationship with yourself. Choose one connection you want to nurture more intentionally, and identify a specific invitation or habit that could support it.',
+        'Create a gentle weekly anchor for this chapter: a class, walk, volunteer hour, standing phone call, creative practice, or unhurried meal. Start small enough that it feels welcoming rather than like another responsibility. New identity grows through repeated lived experiences.',
+        'Stay connected to your children without making their independence a rejection. Discuss communication expectations openly, respect changing boundaries, and build new rituals together. At the same time, allow your life to expand. Loving them and investing in yourself can happen side by side.',
       ],
       communityIds: ['empty_nest'],
     ),
@@ -369,15 +378,18 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
     Set<String> loadedJoined = {};
     Set<String> loadedResources = {};
     Set<String> loadedEvents = {};
+    Set<String> loadedSuggestions = {};
     try {
       final values = await Future.wait([
         service.joinedCommunities(),
         service.savedResources(),
         service.registeredEvents(),
+        service.usedSuggestedQuestions(),
       ]).timeout(const Duration(seconds: 4));
       loadedJoined = values[0];
       loadedResources = values[1];
       loadedEvents = values[2];
+      loadedSuggestions = values[3];
     } on Object {
       // The Hub should still open if one saved preference cannot be read.
     }
@@ -386,6 +398,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       joined = loadedJoined;
       savedResources = loadedResources;
       registeredEvents = loadedEvents;
+      usedSuggestedQuestions = loadedSuggestions;
     });
     await _loadCommunityContent();
   }
@@ -462,6 +475,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
 
   List<VillagePost> _questionsFor(_CommunityInfo community) {
     return villagePosts.where((post) {
+      if (post.communityId != null) return post.communityId == community.id;
       return community.questionCategories.contains(post.category) ||
           community.supportIntents.contains(post.supportIntent);
     }).toList();
@@ -471,6 +485,68 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
     return resources
         .where((resource) => resource.communityIds.contains(community.id))
         .toList();
+  }
+
+  String _suggestionId(_CommunityInfo community, int index) =>
+      '${community.id}.$index';
+
+  String _normalizedQuestion(String value) =>
+      value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+
+  List<(String, String)> _availableSuggestions(_CommunityInfo community) {
+    final postedQuestions = villagePosts
+        .map((post) => _normalizedQuestion(post.question))
+        .toSet();
+    return [
+      for (var index = 0; index < community.prompts.length; index++)
+        if (!usedSuggestedQuestions.contains(_suggestionId(community, index)) &&
+            !postedQuestions.contains(
+              _normalizedQuestion(community.prompts[index]),
+            ))
+          (_suggestionId(community, index), community.prompts[index]),
+    ];
+  }
+
+  Future<void> _postSuggestedQuestion(
+    _CommunityInfo community,
+    String suggestionId,
+    String question,
+  ) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AskVillageScreen(
+          initialQuestion: question,
+          initialCategory: community.questionCategories.first,
+          initialSupportIntent: community.supportIntents.isEmpty
+              ? 'Advice'
+              : community.supportIntents.first,
+          initialCommunityId: community.id,
+          initialCommunityName: community.name,
+          suggestionId: suggestionId,
+          onSuggestedQuestionPosted: (id) async {
+            await service.markSuggestedQuestionUsed(id);
+            if (!mounted) return;
+            setState(() => usedSuggestedQuestions.add(id));
+            await _loadCommunityContent();
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _askCommunity(_CommunityInfo community) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AskVillageScreen(
+          initialCategory: community.questionCategories.first,
+          initialSupportIntent: community.supportIntents.isEmpty
+              ? 'Advice'
+              : community.supportIntents.first,
+          initialCommunityId: community.id,
+          initialCommunityName: community.name,
+        ),
+      ),
+    );
   }
 
   void _openCommunityFeed(_CommunityInfo community) {
@@ -763,6 +839,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   void _openCommunity(_CommunityInfo community) {
     final questions = _questionsFor(community);
     final communityResources = _resourcesFor(community);
+    final suggestions = _availableSuggestions(community);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => Scaffold(
@@ -824,6 +901,53 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
                     ),
                     const SizedBox(height: 22),
                     _sectionHeading(
+                      'Suggested Questions',
+                      suggestions.isEmpty
+                          ? 'You have used every suggestion in this community.'
+                          : 'Choose one to start a meaningful conversation.',
+                    ),
+                    const SizedBox(height: 10),
+                    if (suggestions.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: paleSage,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.check_circle_outline_rounded,
+                                color: sage),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'New conversation starters will be added soon.',
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      for (final suggestion in suggestions)
+                        Card(
+                          color: Colors.white.withValues(alpha: .62),
+                          child: ListTile(
+                            onTap: () => _postSuggestedQuestion(
+                              community,
+                              suggestion.$1,
+                              suggestion.$2,
+                            ),
+                            leading: const Icon(
+                              Icons.lightbulb_outline_rounded,
+                              color: gold,
+                            ),
+                            title: Text(suggestion.$2),
+                            subtitle: const Text('Tap to use this question'),
+                            trailing: const Icon(Icons.arrow_forward_rounded),
+                          ),
+                        ),
+                    const SizedBox(height: 22),
+                    _sectionHeading(
                       'Questions Asked',
                       questions.isEmpty
                           ? 'Be the first to ask this community.'
@@ -831,18 +955,17 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
                     ),
                     const SizedBox(height: 10),
                     if (questions.isEmpty)
-                      for (final prompt in community.prompts)
-                        Card(
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: .62),
-                          child: ListTile(
-                            leading: const Icon(
-                              Icons.lightbulb_outline_rounded,
-                              color: gold,
-                            ),
-                            title: Text(prompt),
-                            subtitle: const Text('Conversation idea'),
-                          ),
-                        )
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: line),
+                        ),
+                        child: const Text(
+                          'No questions have been posted here yet. Choose a suggested question above or write your own.',
+                        ),
+                      )
                     else
                       for (final post in questions.take(8))
                       Card(
@@ -898,10 +1021,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
                     ),
                     const SizedBox(height: 9),
                     OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        VillageNavigationScope.of(this.context).onSelect(2);
-                      },
+                      onPressed: () => _askCommunity(community),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: sage,
                         padding: const EdgeInsets.symmetric(vertical: 15),
@@ -1295,7 +1415,6 @@ class _ResourceInfo {
     required this.id,
     required this.title,
     required this.category,
-    required this.readTime,
     required this.icon,
     required this.color,
     required this.introduction,
@@ -1306,12 +1425,22 @@ class _ResourceInfo {
   final String id;
   final String title;
   final String category;
-  final String readTime;
   final IconData icon;
   final Color color;
   final String introduction;
   final List<String> steps;
   final List<String> communityIds;
+
+  String get readTime {
+    final content = '$introduction ${steps.join(' ')}';
+    final wordCount = content
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .length;
+    final minutes = (wordCount / 180).ceil().clamp(1, 60);
+    return 'About $minutes min read';
+  }
 }
 
 class _EventInfo {

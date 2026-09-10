@@ -11,7 +11,24 @@ import '../services/profile_service.dart';
 import 'post_preview_screen.dart';
 
 class AskVillageScreen extends StatefulWidget {
-  const AskVillageScreen({super.key});
+  const AskVillageScreen({
+    super.key,
+    this.initialQuestion,
+    this.initialCategory,
+    this.initialSupportIntent,
+    this.initialCommunityId,
+    this.initialCommunityName,
+    this.suggestionId,
+    this.onSuggestedQuestionPosted,
+  });
+
+  final String? initialQuestion;
+  final String? initialCategory;
+  final String? initialSupportIntent;
+  final String? initialCommunityId;
+  final String? initialCommunityName;
+  final String? suggestionId;
+  final Future<void> Function(String suggestionId)? onSuggestedQuestionPosted;
 
   @override
   State<AskVillageScreen> createState() => _AskVillageScreenState();
@@ -60,6 +77,13 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   @override
   void initState() {
     super.initState();
+    questionController.text = widget.initialQuestion ?? '';
+    if (categories.contains(widget.initialCategory)) {
+      category = widget.initialCategory!;
+    }
+    if (supportIntents.any((item) => item.$1 == widget.initialSupportIntent)) {
+      supportIntent = widget.initialSupportIntent!;
+    }
     currentUsername =
         ProfileService.usernameNotifier.value ?? 'VillageMember';
     ProfileService.usernameNotifier.addListener(_usernameChanged);
@@ -130,7 +154,13 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
             needsSupport: needsSupport,
             supportIntent: supportIntent,
             username: currentUsername,
+            communityId: widget.initialCommunityId,
+            communityName: widget.initialCommunityName,
           ),
+          suggestionId: widget.suggestionId,
+          suggestedQuestionText:
+              widget.suggestionId == null ? null : widget.initialQuestion,
+          onSuggestedQuestionPosted: widget.onSuggestedQuestionPosted,
         ),
       ),
     );

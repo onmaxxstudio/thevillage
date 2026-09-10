@@ -97,6 +97,8 @@ class VillagePost {
     this.replies = const [],
     this.isMine = true,
     this.authorUid,
+    this.communityId,
+    this.communityName,
   });
 
   final String id;
@@ -105,6 +107,8 @@ class VillagePost {
   final String audience;
   final String author;
   final String? authorUid;
+  final String? communityId;
+  final String? communityName;
   final DateTime createdAt;
   final bool needsSupport;
   final String supportIntent;
@@ -123,6 +127,8 @@ class VillagePost {
         'audience': audience,
         'author': author,
         if (authorUid != null) 'authorUid': authorUid!,
+        if (communityId != null) 'communityId': communityId!,
+        if (communityName != null) 'communityName': communityName!,
         'createdAt': createdAt.toIso8601String(),
         'needsSupport': needsSupport,
         'supportIntent': supportIntent,
@@ -141,6 +147,8 @@ class VillagePost {
         'audience': audience,
         'author': author,
         if (authorUid != null) 'authorUid': authorUid!,
+        if (communityId != null) 'communityId': communityId!,
+        if (communityName != null) 'communityName': communityName!,
         'createdAt': Timestamp.fromDate(createdAt),
         'needsSupport': needsSupport,
         'supportIntent': supportIntent,
@@ -170,6 +178,8 @@ class VillagePost {
       audience: json['audience'] as String? ?? 'The Village',
       author: json['author'] as String? ?? '@VillageMember',
       authorUid: json['authorUid'] as String?,
+      communityId: json['communityId'] as String?,
+      communityName: json['communityName'] as String?,
       createdAt: createdAt,
       needsSupport: json['needsSupport'] as bool? ?? false,
       supportIntent: json['supportIntent'] as String? ?? 'Advice',
@@ -224,6 +234,8 @@ class VillagePost {
       audience: audience,
       author: author,
       authorUid: authorUid,
+      communityId: communityId,
+      communityName: communityName,
       createdAt: createdAt,
       needsSupport: needsSupport ?? this.needsSupport,
       supportIntent: supportIntent ?? this.supportIntent,
@@ -321,6 +333,8 @@ class VillagePostService {
     required bool anonymous,
     required bool needsSupport,
     required String supportIntent,
+    String? communityId,
+    String? communityName,
   }) async {
     final trimmedQuestion = question.trim();
     if (trimmedQuestion.length < 10 || trimmedQuestion.length > 1500) {
@@ -345,17 +359,34 @@ class VillagePostService {
           audience: audience,
           author: resolvedAuthor,
           authorUid: anonymous ? null : user.uid,
+          communityId: communityId,
+          communityName: communityName,
           createdAt: now,
           needsSupport: needsSupport,
           supportIntent: supportIntent,
         );
-        final batch = FirebaseFirestore.instance.batch();
-        batch.set(postReference, post.toCloudJson());
-        batch.set(_owners.doc(post.id), {
-          'uid': user.uid,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-        await batch.commit();
+        Future<void> commit(Map<String, Object> postData) async {
+          final batch = FirebaseFirestore.instance.batch();
+          batch.set(postReference, postData);
+          batch.set(_owners.doc(post.id), {
+            'uid': user.uid,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+          await batch.commit();
+        }
+
+        try {
+          await commit(post.toCloudJson());
+        } on FirebaseException {
+          if (communityId == null) rethrow;
+          // Keep the post public while older deployed rules are being updated.
+          // The local copy retains its community so the author sees it in the
+          // correct group immediately.
+          final compatibleData = Map<String, Object>.from(post.toCloudJson())
+            ..remove('communityId')
+            ..remove('communityName');
+          await commit(compatibleData);
+        }
         final local = await _loadLocal();
         await _saveLocal([post, ...local]);
         await _recordAction('post', now);
@@ -374,6 +405,8 @@ class VillagePostService {
       author: resolvedAuthor,
       authorUid:
           anonymous ? null : FirebaseAuth.instance.currentUser?.uid,
+      communityId: communityId,
+      communityName: communityName,
       createdAt: now,
       needsSupport: needsSupport,
       supportIntent: supportIntent,

@@ -89,4 +89,23 @@ void main() {
     expect(restored.destinationIndex, 3);
     expect(restored.createdAt, createdAt);
   });
+
+  test('community questions keep their exact community', () {
+    final original = VillagePost(
+      id: 'community-post-1',
+      question: 'What support would make this week feel lighter?',
+      category: 'Life & Growth',
+      audience: 'The Village',
+      author: '@Ariel',
+      createdAt: DateTime(2026, 9, 10),
+      needsSupport: false,
+      communityId: 'women',
+      communityName: 'Women',
+    );
+
+    final restored = VillagePost.fromJson(original.toJson());
+
+    expect(restored.communityId, 'women');
+    expect(restored.communityName, 'Women');
+  });
 }
