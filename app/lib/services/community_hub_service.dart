@@ -1,7 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CommunityHubService {
+  bool get _cloudReady =>
+      Firebase.apps.isNotEmpty && FirebaseAuth.instance.currentUser != null;
+
   String get _ownerKey =>
       FirebaseAuth.instance.currentUser?.uid ?? 'signed-out-preview';
 
@@ -16,6 +21,50 @@ class CommunityHubService {
     final preferences = await SharedPreferences.getInstance();
     final sorted = values.toList()..sort();
     await preferences.setStringList(_key('joined'), sorted);
+  }
+
+  Future<Map<String, int>> memberCounts(Iterable<String> communityIds) async {
+    final counts = <String, int>{};
+    for (final id in communityIds) {
+      counts[id] = 0;
+    }
+    if (!_cloudReady) return counts;
+    for (final id in communityIds) {
+      try {
+        final snapshot = await FirebaseFirestore.instance
+            .collection('community_members')
+            .doc(id)
+            .collection('members')
+            .count()
+            .get();
+        counts[id] = snapshot.count ?? 0;
+      } on FirebaseException {
+        // Keep a trustworthy zero rather than inventing a member count.
+      }
+    }
+    return counts;
+  }
+
+  Future<void> setCommunityMembership(String communityId, bool joined) async {
+    if (!_cloudReady) return;
+    final user = FirebaseAuth.instance.currentUser!;
+    final reference = FirebaseFirestore.instance
+        .collection('community_members')
+        .doc(communityId)
+        .collection('members')
+        .doc(user.uid);
+    try {
+      if (joined) {
+        await reference.set({
+          'uid': user.uid,
+          'joinedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        await reference.delete();
+      }
+    } on FirebaseException {
+      // Local membership still works when cloud permissions are unavailable.
+    }
   }
 
   Future<Set<String>> savedResources() async {
