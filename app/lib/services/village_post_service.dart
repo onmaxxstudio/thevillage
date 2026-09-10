@@ -291,12 +291,19 @@ class VillagePostService {
         };
         final cloudPosts = postSnapshot.docs.map((doc) {
           final local = localById[doc.id];
+          final cloudData = doc.data();
           return VillagePost.fromJson({
-            ...doc.data(),
+            ...cloudData,
             'id': doc.id,
             'isMine': ownedIds.contains(doc.id),
             'saved': local?.saved ?? false,
             'supportedByMe': local?.supportedByMe ?? false,
+            if (!cloudData.containsKey('communityId') &&
+                local?.communityId != null)
+              'communityId': local!.communityId,
+            if (!cloudData.containsKey('communityName') &&
+                local?.communityName != null)
+              'communityName': local!.communityName,
           });
         }).toList();
         lastLoadUsedCloud = true;

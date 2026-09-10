@@ -476,6 +476,17 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   List<VillagePost> _questionsFor(_CommunityInfo community) {
     return villagePosts.where((post) {
       if (post.communityId != null) return post.communityId == community.id;
+      final normalizedPost = _normalizedQuestion(post.question);
+      final matchesSuggestedQuestion = communities.any(
+        (item) => item.prompts.any(
+          (prompt) => _normalizedQuestion(prompt) == normalizedPost,
+        ),
+      );
+      if (matchesSuggestedQuestion) {
+        return community.prompts.any(
+          (prompt) => _normalizedQuestion(prompt) == normalizedPost,
+        );
+      }
       return community.questionCategories.contains(post.category) ||
           community.supportIntents.contains(post.supportIntent);
     }).toList();
