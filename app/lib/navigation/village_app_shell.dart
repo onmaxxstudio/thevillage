@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../screens/ask_village_screen.dart';
 import '../screens/circle_screen.dart';
-import '../screens/community_hub_premium_screen.dart';
+import '../screens/community_hub_managed_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/village_feed_screen.dart';
 import 'village_navigation_scope.dart';
@@ -28,7 +28,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
     CircleScreen(),
     AskVillageScreen(),
     VillageFeedScreen(),
-    CommunityHubPremiumScreen(),
+    CommunityHubManagedScreen(),
   ];
 
   void selectTab(int index) {
