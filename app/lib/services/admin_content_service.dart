@@ -11,6 +11,21 @@ class AdminContentService {
     return _collection(type).orderBy('sortOrder').snapshots();
   }
 
+  Future<List<ManagedContentItem>> loadPublished(String type) async {
+    if (!cloudReady) return const [];
+    try {
+      final snapshot = await _collection(type)
+          .where('published', isEqualTo: true)
+          .orderBy('sortOrder')
+          .get();
+      return snapshot.docs
+          .map((doc) => ManagedContentItem(id: doc.id, data: doc.data()))
+          .toList(growable: false);
+    } on FirebaseException {
+      return const [];
+    }
+  }
+
   Future<void> save({
     required String type,
     String? id,
@@ -37,4 +52,14 @@ class AdminContentService {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
+}
+
+class ManagedContentItem {
+  const ManagedContentItem({required this.id, required this.data});
+
+  final String id;
+  final Map<String, dynamic> data;
+
+  String text(String key, [String fallback = '']) =>
+      (data[key] ?? fallback).toString();
 }
