@@ -10,6 +10,12 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    function isAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
+    }
+
     function validUsername(value) {
       return value is string &&
         value.size() >= 3 &&
@@ -21,6 +27,29 @@ service cloud.firestore {
       return signedIn() &&
         get(/databases/$(database)/documents/village_post_owners/$(postId))
           .data.uid == request.auth.uid;
+    }
+
+    match /admins/{uid} {
+      allow get: if isSelf(uid);
+      allow list, create, update, delete: if false;
+    }
+
+    match /admin_communities/{itemId} {
+      allow get, list: if signedIn() &&
+        (isAdmin() || resource.data.published == true);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /admin_resources/{itemId} {
+      allow get, list: if signedIn() &&
+        (isAdmin() || resource.data.published == true);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /admin_events/{itemId} {
+      allow get, list: if signedIn() &&
+        (isAdmin() || resource.data.published == true);
+      allow create, update, delete: if isAdmin();
     }
 
     match /users/{uid} {

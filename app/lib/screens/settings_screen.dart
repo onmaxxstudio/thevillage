@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/admin_access_service.dart';
 import 'community_safety_screen.dart';
 import 'legal_screen.dart';
 import 'profile_screen.dart';
+import 'village_admin_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -20,9 +22,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static const line = Color(0xFFE3D8C9);
 
   final preferences = SharedPreferencesAsync();
+  final adminAccess = AdminAccessService();
   bool replies = true;
   bool circleRequests = true;
   bool checkInReminders = true;
+  bool isAdmin = false;
   bool loading = true;
 
   @override
@@ -32,38 +36,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> load() async {
-    final values = await Future.wait([
+    final values = await Future.wait<Object?>([
       preferences.getBool('setting_reply_notifications'),
       preferences.getBool('setting_circle_notifications'),
       preferences.getBool('setting_checkin_notifications'),
+      adminAccess.isCurrentUserAdmin(),
     ]);
     if (!mounted) return;
     setState(() {
-      replies = values[0] ?? true;
-      circleRequests = values[1] ?? true;
-      checkInReminders = values[2] ?? true;
+      replies = values[0] as bool? ?? true;
+      circleRequests = values[1] as bool? ?? true;
+      checkInReminders = values[2] as bool? ?? true;
+      isAdmin = values[3] as bool? ?? false;
       loading = false;
     });
   }
 
-  Future<void> update(String key, bool value) async {
-    await preferences.setBool(key, value);
-  }
+  Future<void> update(String key, bool value) => preferences.setBool(key, value);
 
-  Widget settingSwitch({
-    required String title,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return SwitchListTile(
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-      subtitle: Text(subtitle),
-      value: value,
-      activeThumbColor: sage,
-      onChanged: onChanged,
-    );
-  }
+  Widget section(String title, Widget child) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: GoogleFonts.playfairDisplay(
+                  color: sage, fontSize: 23, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          child,
+          const SizedBox(height: 22),
+        ],
+      );
+
+  Widget card(Widget child, {Color? color}) => Card(
+        elevation: 0,
+        color: color ?? Colors.white.withValues(alpha: .58),
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: line),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: child,
+      );
+
+  Widget settingSwitch(String title, String subtitle, bool value,
+          ValueChanged<bool> changed) =>
+      SwitchListTile(
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: Text(subtitle),
+        value: value,
+        activeThumbColor: sage,
+        onChanged: changed,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -71,184 +92,135 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: cream,
       appBar: AppBar(
         backgroundColor: cream,
-        title: Text(
-          'Settings',
-          style: GoogleFonts.playfairDisplay(
-            color: sage,
-            fontSize: 28,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: Text('Settings',
+            style: GoogleFonts.playfairDisplay(
+                color: sage, fontSize: 28, fontWeight: FontWeight.w600)),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.fromLTRB(18, 12, 18, 30),
               children: [
-                Text(
-                  'Notifications',
-                  style: GoogleFonts.playfairDisplay(
-                    color: sage,
-                    fontSize: 23,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Card(
-                  elevation: 0,
-                  color: Colors.white.withValues(alpha: .58),
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(color: line),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Column(
-                    children: [
-                      settingSwitch(
-                        title: 'Replies and support',
-                        subtitle: 'Updates on your Village posts and comments.',
-                        value: replies,
-                        onChanged: (value) {
-                          setState(() => replies = value);
-                          update('setting_reply_notifications', value);
-                        },
-                      ),
-                      const Divider(height: 1),
-                      settingSwitch(
-                        title: 'Circle requests',
-                        subtitle: 'Requests and activity from trusted people.',
-                        value: circleRequests,
-                        onChanged: (value) {
-                          setState(() => circleRequests = value);
-                          update('setting_circle_notifications', value);
-                        },
-                      ),
-                      const Divider(height: 1),
-                      settingSwitch(
-                        title: 'Daily check-in reminder',
-                        subtitle: 'A gentle reminder to record how you feel.',
-                        value: checkInReminders,
-                        onChanged: (value) {
-                          setState(() => checkInReminders = value);
-                          update('setting_checkin_notifications', value);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Text(
-                  'Privacy & legal',
-                  style: GoogleFonts.playfairDisplay(
-                    color: sage,
-                    fontSize: 23,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Card(
-                  elevation: 0,
-                  color: Colors.white.withValues(alpha: .58),
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(color: line),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Column(
-                    children: [
+                if (isAdmin)
+                  section(
+                    'Village management',
+                    card(
                       ListTile(
-                        leading: const Icon(
-                          Icons.privacy_tip_outlined,
-                          color: sage,
+                        leading: const CircleAvatar(
+                          backgroundColor: paleSage,
+                          child: Icon(Icons.admin_panel_settings_outlined,
+                              color: sage),
                         ),
+                        title: const Text('Village Admin',
+                            style: TextStyle(fontWeight: FontWeight.w800)),
+                        subtitle: const Text(
+                            'Create and edit communities, resources and events without touching code.'),
+                        trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                            size: 16),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                              builder: (_) => const VillageAdminScreen()),
+                        ),
+                      ),
+                      color: paleSage,
+                    ),
+                  ),
+                section(
+                  'Notifications',
+                  card(
+                    Column(children: [
+                      settingSwitch(
+                          'Replies and support',
+                          'Updates on your Village posts and comments.',
+                          replies, (v) {
+                        setState(() => replies = v);
+                        update('setting_reply_notifications', v);
+                      }),
+                      const Divider(height: 1),
+                      settingSwitch(
+                          'Circle requests',
+                          'Requests and activity from trusted people.',
+                          circleRequests, (v) {
+                        setState(() => circleRequests = v);
+                        update('setting_circle_notifications', v);
+                      }),
+                      const Divider(height: 1),
+                      settingSwitch(
+                          'Daily check-in reminder',
+                          'A gentle reminder to record how you feel.',
+                          checkInReminders, (v) {
+                        setState(() => checkInReminders = v);
+                        update('setting_checkin_notifications', v);
+                      }),
+                    ]),
+                  ),
+                ),
+                section(
+                  'Privacy & legal',
+                  card(
+                    Column(children: [
+                      ListTile(
+                        leading: const Icon(Icons.privacy_tip_outlined,
+                            color: sage),
                         title: const Text('Privacy Policy'),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
                             builder: (_) => const LegalScreen(
-                              document: LegalDocument.privacy,
-                            ),
+                                document: LegalDocument.privacy),
                           ),
                         ),
                       ),
                       const Divider(height: 1),
                       ListTile(
-                        leading: const Icon(Icons.description_outlined, color: sage),
+                        leading: const Icon(Icons.description_outlined,
+                            color: sage),
                         title: const Text('Terms of Use'),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
                             builder: (_) => const LegalScreen(
-                              document: LegalDocument.terms,
-                            ),
+                                document: LegalDocument.terms),
                           ),
                         ),
                       ),
-                    ],
+                    ]),
                   ),
                 ),
-                const SizedBox(height: 22),
-                Text(
+                section(
                   'Account',
-                  style: GoogleFonts.playfairDisplay(
-                    color: sage,
-                    fontSize: 23,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Card(
-                  elevation: 0,
-                  color: paleSage,
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(color: line),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: ListTile(
-                    leading: const Icon(Icons.person_outline_rounded, color: sage),
-                    title: const Text(
-                      'Profile and account',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: const Text(
-                      'Username, email, password, blocked accounts and sign out.',
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const ProfileScreen(),
+                  card(
+                    ListTile(
+                      leading: const Icon(Icons.person_outline_rounded,
+                          color: sage),
+                      title: const Text('Profile and account',
+                          style: TextStyle(fontWeight: FontWeight.w700)),
+                      subtitle: const Text(
+                          'Username, email, password, blocked accounts and sign out.'),
+                      trailing:
+                          const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                            builder: (_) => const ProfileScreen()),
                       ),
                     ),
+                    color: paleSage,
                   ),
                 ),
-                const SizedBox(height: 22),
-                Text(
+                section(
                   'Community',
-                  style: GoogleFonts.playfairDisplay(
-                    color: sage,
-                    fontSize: 23,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Card(
-                  elevation: 0,
-                  color: Colors.white.withValues(alpha: .58),
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(color: line),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: ListTile(
-                    leading: const Icon(Icons.shield_outlined, color: sage),
-                    title: const Text(
-                      'Community and safety',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: const Text(
-                      'Guidelines, privacy reminders and safety tools.',
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const CommunitySafetyScreen(),
+                  card(
+                    ListTile(
+                      leading: const Icon(Icons.shield_outlined, color: sage),
+                      title: const Text('Community and safety',
+                          style: TextStyle(fontWeight: FontWeight.w700)),
+                      subtitle: const Text(
+                          'Guidelines, privacy reminders and safety tools.'),
+                      trailing:
+                          const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                            builder: (_) => const CommunitySafetyScreen()),
                       ),
                     ),
                   ),
