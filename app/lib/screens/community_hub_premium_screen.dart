@@ -5,6 +5,7 @@ import '../services/admin_content_service.dart';
 import '../services/community_hub_service.dart';
 import '../services/village_post_service.dart';
 import 'ask_village_screen.dart';
+import 'community_detail_screen.dart';
 import 'village_feed_screen.dart';
 
 class CommunityHubPremiumScreen extends StatefulWidget {
@@ -219,13 +220,15 @@ class _CommunityHubPremiumScreenState extends State<CommunityHubPremiumScreen> {
   Widget _sectionTitle(String title, String note) => Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Expanded(child: Text(title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: ink))), Text(note, style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w700, color: gold))]);
 
   void _openCommunity(_Community community) {
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => Scaffold(backgroundColor: cream, body: SafeArea(child: ListView(padding: const EdgeInsets.all(20), children: [
-      IconButton(alignment: Alignment.centerLeft, padding: EdgeInsets.zero, onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back_rounded)),
-      ClipRRect(borderRadius: BorderRadius.circular(26), child: SizedBox(height: 250, child: Stack(fit: StackFit.expand, children: [community.imageUrl.isEmpty ? _fallbackCover() : Image.network(community.imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallbackCover()), const DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Color(0xD8000000)]))), Positioned(left: 18, right: 18, bottom: 18, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(community.name, style: GoogleFonts.playfairDisplay(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w700)), const SizedBox(height: 5), Text(community.description, style: const TextStyle(color: Colors.white, height: 1.35))]))]))),
-      const SizedBox(height: 18), Row(children: [Expanded(child: FilledButton(onPressed: () => _toggleJoin(community), style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.symmetric(vertical: 14)), child: Text(joined.contains(community.id) ? 'Joined' : 'Join Community'))), const SizedBox(width: 10), Expanded(child: OutlinedButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => AskVillageScreen(initialCategory: community.category, initialCommunityId: community.id, initialCommunityName: community.name))), child: const Text('Ask')))]),
-      const SizedBox(height: 24), _sectionTitle('Community Pulse', 'What people need'), const SizedBox(height: 10), _softCard('This space is for lived experience, support, and useful conversation.', 'Suggested questions, active discussions, resources, and events for this community will surface here as the Village grows.'), const SizedBox(height: 20),
-      FilledButton.icon(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => VillageFeedScreen(initialSearch: community.category))), style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.symmetric(vertical: 14)), icon: const Icon(Icons.forum_outlined), label: const Text('View Conversations')),
-    ])))));
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => CommunityDetailScreen(
+        id: community.id,
+        name: community.name,
+        description: community.description,
+        category: community.category,
+        imageUrl: community.imageUrl,
+      ),
+    )).then((_) => _load());
   }
 
   void _showJourneyPicker() {
