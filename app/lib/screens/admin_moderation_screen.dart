@@ -69,12 +69,19 @@ class _AdminModerationScreenState extends State<AdminModerationScreen> {
             itemCount: docs.length,
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (_, index) {
-              final data = docs[index].data();
+              final doc = docs[index];
+              final data = doc.data();
               return Card(
                 child: ListTile(
                   title: Text((data['question'] ?? 'Untitled post').toString()),
                   subtitle: Text(
                     '${data['author'] ?? 'Village member'} • ${data['category'] ?? 'Other'}',
+                  ),
+                  trailing: IconButton(
+                    tooltip: 'Delete post',
+                    color: Colors.red.shade700,
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    onPressed: () => _deletePost(doc.id),
                   ),
                 ),
               );
@@ -102,6 +109,8 @@ class _AdminModerationScreenState extends State<AdminModerationScreen> {
               final doc = docs[index];
               final data = doc.data();
               final status = (data['status'] ?? 'open').toString();
+              final targetType = (data['targetType'] ?? 'content').toString();
+              final targetId = (data['targetId'] ?? '').toString();
               return Card(
                 child: Padding(
                   padding: const EdgeInsets.all(14),
@@ -109,7 +118,7 @@ class _AdminModerationScreenState extends State<AdminModerationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${(data['targetType'] ?? 'content').toString().toUpperCase()} • ${data['reason'] ?? 'Report'}',
+                        '${targetType.toUpperCase()} • ${data['reason'] ?? 'Report'}',
                         style: const TextStyle(fontWeight: FontWeight.w800),
                       ),
                       if ((data['details'] ?? '').toString().isNotEmpty) ...[
@@ -118,21 +127,40 @@ class _AdminModerationScreenState extends State<AdminModerationScreen> {
                       ],
                       const SizedBox(height: 8),
                       Text('Status: $status'),
-                      if (status == 'open') ...[
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          children: [
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (status == 'open')
                             OutlinedButton(
                               onPressed: () => _setStatus(doc.id, 'dismissed'),
                               child: const Text('Dismiss'),
                             ),
+                          if (status == 'open')
                             FilledButton(
                               style: FilledButton.styleFrom(backgroundColor: sage),
                               onPressed: () => _setStatus(doc.id, 'resolved'),
                               child: const Text('Resolve'),
                             ),
-                          ],
+                          if (targetType == 'post' || targetType == 'reply')
+                            OutlinedButton(
+                              onPressed: () => _deleteReportedTarget(
+                                reportId: doc.id,
+                                targetType: targetType,
+                                targetId: targetId,
+                              ),
+                              child: Text(
+                                targetType == 'post' ? 'Delete Post' : 'Delete Reply',
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (targetType == 'message') ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Message report ready for admin review.',
+                          style: TextStyle(fontSize: 12),
                         ),
                       ],
                     ],
@@ -144,6 +172,38 @@ class _AdminModerationScreenState extends State<AdminModerationScreen> {
         },
       );
 
+  Future<void> _deletePost(String id) async {
+    if (!await _confirm('Delete this post?')) return;
+    try {
+      await service.deletePost(id);
+      _snack('Post deleted.');
+    } on FirebaseException catch (error) {
+      _snack('Could not delete post: ${error.message ?? error.code}');
+    }
+  }
+
+  Future<void> _deleteReportedTarget({
+    required String reportId,
+    required String targetType,
+    required String targetId,
+  }) async {
+    if (!await _confirm('Delete reported $targetType?')) return;
+    try {
+      final removed = await service.deleteReportedTarget(
+        targetType: targetType,
+        targetId: targetId,
+      );
+      if (!removed) {
+        _snack('That content could not be located.');
+        return;
+      }
+      await service.setReportStatus(reportId, 'resolved');
+      _snack('Reported content deleted and report resolved.');
+    } on FirebaseException catch (error) {
+      _snack('Could not remove content: ${error.message ?? error.code}');
+    }
+  }
+
   Future<void> _setStatus(String id, String status) async {
     try {
       await service.setReportStatus(id, status);
@@ -152,6 +212,26 @@ class _AdminModerationScreenState extends State<AdminModerationScreen> {
       _snack('Could not update report: ${error.message ?? error.code}');
     }
   }
+
+  Future<bool> _confirm(String title) async =>
+      (await showDialog<bool>(
+        context: context,
+        useRootNavigator: false,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(title),
+          content: const Text('This cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Confirm'),
+            ),
+          ],
+        ),
+      )) ?? false;
 
   Widget _error(Object? error) => Padding(
         padding: const EdgeInsets.all(24),
