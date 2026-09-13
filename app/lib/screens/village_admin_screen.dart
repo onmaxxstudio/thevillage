@@ -19,6 +19,7 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
   int tab = 0;
 
   String get type => ['communities', 'resources', 'events', 'questions'][tab];
+  String get storageType => tab == 3 ? 'resources' : type;
   String get singular => ['Community', 'Resource', 'Event', 'Suggested Question'][tab];
 
   @override
@@ -73,7 +74,7 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
     }
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       key: ValueKey(type),
-      stream: service.watch(type),
+      stream: service.watch(storageType),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Padding(
@@ -82,7 +83,11 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
           );
         }
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        final docs = snapshot.data!.docs;
+        final allDocs = snapshot.data!.docs;
+        final docs = allDocs.where((doc) {
+          final isQuestion = (doc.data()['kind'] ?? '').toString() == 'question';
+          return tab == 3 ? isQuestion : tab == 1 ? !isQuestion : true;
+        }).toList();
         if (docs.isEmpty) {
           return Center(child: Padding(
             padding: const EdgeInsets.all(32),
@@ -118,7 +123,7 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
                     Row(children: [
                       Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5), decoration: BoxDecoration(color: published ? sage.withValues(alpha: .1) : Colors.black.withValues(alpha: .05), borderRadius: BorderRadius.circular(99)), child: Text(published ? 'Published' : 'Draft', style: TextStyle(color: published ? sage : ink, fontWeight: FontWeight.w600))),
                       const Spacer(),
-                      Switch(value: published, onChanged: (v) => service.setPublished(type, doc.id, v)),
+                      Switch(value: published, onChanged: (v) => service.setPublished(storageType, doc.id, v)),
                     ]),
                   ])),
                   PopupMenuButton<String>(
@@ -164,7 +169,7 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
     );
     if (ok != true) return;
     try {
-      await service.delete(type, id);
+      await service.delete(storageType, id);
       if (!mounted) return;
       ScaffoldMessenger.of(context)..hideCurrentSnackBar()..showSnackBar(SnackBar(content: Text('$itemType deleted.')));
     } on FirebaseException catch (error) {
@@ -215,8 +220,9 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
                   if (tab != 0) 'community': community.text.trim(),
                   if (tab == 1) 'body': body.text.trim(),
                   if (tab == 2) 'dateTimeLabel': date.text.trim(),
+                  if (tab == 3) 'kind': 'question',
                 };
-                await service.save(type: type, id: id, data: values);
+                await service.save(type: storageType, id: id, data: values);
                 if (sheetContext.mounted) Navigator.pop(sheetContext);
               },
               icon: const Icon(Icons.publish_outlined),
