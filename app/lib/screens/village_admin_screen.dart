@@ -137,12 +137,45 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
   }
 
   Future<void> _confirmDelete(String id) async {
-    final ok = await showDialog<bool>(context: context, builder: (_) => AlertDialog(
-      title: Text('Delete $singular?'),
-      content: const Text('This removes it from the admin content collection. This cannot be undone.'),
-      actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete'))],
-    ));
-    if (ok == true) await service.delete(type, id);
+    final itemType = singular;
+    final ok = await showDialog<bool>(
+      context: context,
+      useRootNavigator: false,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Delete $itemType?'),
+        content: const Text('This removes it from the admin content collection. This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (ok != true) return;
+
+    try {
+      await service.delete(type, id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text('$itemType deleted.')),
+        );
+    } on FirebaseException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text('Could not delete $itemType: ${error.message ?? error.code}')),
+        );
+    }
   }
 
   Future<void> _openEditor({String? id, Map<String, dynamic>? existing}) async {
