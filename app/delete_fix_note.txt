@@ -1,1 +1,0 @@
-Village Admin delete confirmation routing fix.
