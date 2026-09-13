@@ -11,16 +11,32 @@ class AdminContentService {
     return _collection(type).orderBy('sortOrder').snapshots();
   }
 
+  List<ManagedContentItem> _publishedItems(
+      QuerySnapshot<Map<String, dynamic>> snapshot) {
+    final items = snapshot.docs
+        .where((doc) => doc.data()['published'] == true)
+        .map((doc) => ManagedContentItem(id: doc.id, data: doc.data()))
+        .toList();
+    items.sort((a, b) {
+      final aOrder = a.data['sortOrder'];
+      final bOrder = b.data['sortOrder'];
+      final av = aOrder is num ? aOrder.toInt() : 0;
+      final bv = bOrder is num ? bOrder.toInt() : 0;
+      return av.compareTo(bv);
+    });
+    return items;
+  }
+
+  Stream<List<ManagedContentItem>> watchPublished(String type) {
+    if (!cloudReady) return Stream.value(const []);
+    return _collection(type).snapshots().map(_publishedItems);
+  }
+
   Future<List<ManagedContentItem>> loadPublished(String type) async {
     if (!cloudReady) return const [];
     try {
-      final snapshot = await _collection(type)
-          .where('published', isEqualTo: true)
-          .orderBy('sortOrder')
-          .get();
-      return snapshot.docs
-          .map((doc) => ManagedContentItem(id: doc.id, data: doc.data()))
-          .toList(growable: false);
+      final snapshot = await _collection(type).get();
+      return _publishedItems(snapshot);
     } on FirebaseException {
       return const [];
     }
