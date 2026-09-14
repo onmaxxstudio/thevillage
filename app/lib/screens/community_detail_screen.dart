@@ -726,9 +726,66 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
       );
 
+  List<ManagedContentItem> _fallbackItems(String type) {
+    if (widget.id != 'men') return const <ManagedContentItem>[];
+    if (type == 'resources') {
+      return const [
+        ManagedContentItem(id: 'men_support', data: {
+          'title': 'Strength includes asking for support',
+          'description': 'A practical guide to naming pressure, opening an honest conversation, and building dependable friendships.',
+          'category': 'Men',
+        }),
+        ManagedContentItem(id: 'fatherhood', data: {
+          'title': 'Showing up as the father you want to be',
+          'description': 'Use presence, patience, repair, and everyday consistency to help children feel safe, seen, and supported.',
+          'category': 'Men',
+        }),
+        ManagedContentItem(id: 'mens_relationships', data: {
+          'title': 'Communicating before frustration becomes distance',
+          'description': 'Simple ways to name what you need, listen without becoming defensive, and reconnect with your partner.',
+          'category': 'Men',
+        }),
+      ];
+    }
+    if (type == 'questions') {
+      return const [
+        ManagedContentItem(id: 'men_question_pressure', data: {
+          'kind': 'question',
+          'question': 'How do you handle the pressure to always appear strong?',
+          'category': 'Men',
+        }),
+        ManagedContentItem(id: 'men_question_friendship', data: {
+          'kind': 'question',
+          'question': 'How have you built honest friendships with other men as an adult?',
+          'category': 'Men',
+        }),
+        ManagedContentItem(id: 'men_question_fatherhood', data: {
+          'kind': 'question',
+          'question': 'What has helped you become a more present father or partner?',
+          'category': 'Men',
+        }),
+      ];
+    }
+    return const <ManagedContentItem>[];
+  }
+
+  Widget _managedCards(List<ManagedContentItem> items, Widget Function(ManagedContentItem) card) {
+    return Column(
+      children: [
+        for (final item in items.take(6)) ...[
+          card(item),
+          const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+
   Widget _suggestions() {
     if (!adminService.cloudReady) {
-      return _empty('Suggested conversation starters will appear here.');
+      final fallback = _fallbackItems('questions');
+      return fallback.isEmpty
+          ? _empty('Suggested conversation starters will appear here.')
+          : _managedCards(fallback, _suggestionCard);
     }
     return StreamBuilder<List<ManagedContentItem>>(
       stream: adminService.watchPublished('resources'),
@@ -742,17 +799,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             (post) => post.question.trim().toLowerCase() == question.trim().toLowerCase(),
           );
         }).toList();
-        if (items.isEmpty) {
+        final visible = items.isEmpty ? _fallbackItems('questions') : items;
+        if (visible.isEmpty) {
           return _empty('No suggested questions right now. Ask what is on your mind.');
         }
-        return Column(
-          children: [
-            for (final item in items.take(3)) ...[
-              _suggestionCard(item),
-              const SizedBox(height: 10),
-            ],
-          ],
-        );
+        return _managedCards(visible.take(3).toList(), _suggestionCard);
       },
     );
   }
@@ -790,7 +841,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     String empty, {
     bool excludeQuestions = false,
   }) {
-    if (!adminService.cloudReady) return _empty(empty);
+    if (!adminService.cloudReady) {
+      final fallback = _fallbackItems(type);
+      return fallback.isEmpty ? _empty(empty) : _managedCards(fallback, card);
+    }
     return StreamBuilder<List<ManagedContentItem>>(
       stream: adminService.watchPublished(type),
       builder: (context, snapshot) {
@@ -800,15 +854,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               (item) => !excludeQuestions || item.text('kind').toLowerCase() != 'question',
             )
             .toList();
-        if (items.isEmpty) return _empty(empty);
-        return Column(
-          children: [
-            for (final item in items.take(6)) ...[
-              card(item),
-              const SizedBox(height: 10),
-            ],
-          ],
-        );
+        final visible = items.isEmpty ? _fallbackItems(type) : items;
+        if (visible.isEmpty) return _empty(empty);
+        return _managedCards(visible, card);
       },
     );
   }
