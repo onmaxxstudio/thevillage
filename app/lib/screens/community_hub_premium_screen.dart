@@ -37,6 +37,7 @@ class _CommunityHubPremiumScreenState extends State<CommunityHubPremiumScreen> {
 
   static const communities = <_Community>[
     _Community('relationships', 'Relationships', 'For the conversations you cannot always have with people you know.', 'Relationships', 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85'),
+    _Community('men', 'Men', 'Honest conversation about relationships, fatherhood, purpose, friendship, pressure, and emotional wellbeing.', 'Men', 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1200&q=85'),
     _Community('women', 'Women', 'Support, perspective, and connection through every season of womanhood.', 'Life & Growth', 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'),
     _Community('moms', 'Moms', 'Real talk and practical support for motherhood.', 'Parenting', 'https://images.unsplash.com/photo-1543342386-1f1350e27861?auto=format&fit=crop&w=1200&q=85'),
     _Community('friendship', 'Friendship', 'Navigate closeness, change, conflict, and connection.', 'Friendship', 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'),
@@ -49,6 +50,8 @@ class _CommunityHubPremiumScreenState extends State<CommunityHubPremiumScreen> {
 
   static const resources = <_Resource>[
     _Resource('repair', 'Relationships', 'Repair after a hard argument', 'A practical guide to cooling down, taking responsibility, listening well, and choosing one next step.', '6 min read'),
+    _Resource('men-support', 'Men', 'Strength includes asking for support', 'A practical guide for naming pressure, starting an honest conversation, building dependable friendships, and asking for the kind of support you actually need.', '7 min read'),
+    _Resource('fatherhood', 'Men', 'Showing up as the father you want to be', 'Reflect on presence, patience, repair, and the everyday choices that help children feel safe, seen, and supported.', '6 min read'),
     _Resource('support', 'Friendship', 'Support someone without trying to fix them', 'Learn how to listen, ask what kind of help is wanted, and follow up in a way that feels caring instead of controlling.', '5 min read'),
     _Resource('grounding', 'Wellness', 'A five-minute grounding reset', 'A simple body-and-senses reset for moments when your thoughts feel fast or the day feels too loud.', '5 min read'),
     _Resource('boundary', 'Life & Growth', 'The boundary check-in', 'Identify the pattern, separate a request from a boundary, and choose a limit you can actually maintain.', '7 min read'),
@@ -58,6 +61,7 @@ class _CommunityHubPremiumScreenState extends State<CommunityHubPremiumScreen> {
 
   static const events = <_VillageEvent>[
     _VillageEvent('communication', 'Couples Communication Night', 'Relationships', 'Virtual', 'Coming soon', 'A guided conversation on feeling heard, repairing conflict, and reconnecting.'),
+    _VillageEvent('men-real-talk', 'Men’s Real Talk Circle', 'Men', 'Virtual', 'Coming soon', 'An honest, low-pressure conversation about relationships, fatherhood, purpose, friendship, and the weight men carry.'),
     _VillageEvent('moms-coffee', 'New Mom Coffee Chat', 'Moms', 'Virtual', 'Coming soon', 'A low-pressure space for honest conversation about motherhood, identity, and support.'),
     _VillageEvent('starting-over', 'Starting Over Circle', 'New Beginnings', 'Virtual', 'Coming soon', 'For people navigating a new chapter, big transition, or fresh start.'),
     _VillageEvent('career-reset', 'Career Reset Workshop', 'Career & Purpose', 'Virtual', 'Coming soon', 'Clarify what feels stuck and leave with one realistic next step.'),
@@ -185,7 +189,7 @@ class _CommunityHubPremiumScreenState extends State<CommunityHubPremiumScreen> {
 
   Widget _resources() => ListView(padding: const EdgeInsets.fromLTRB(20, 12, 20, 32), children: [
     _sectionTitle('Resource Library', 'Useful enough to come back to'), const SizedBox(height: 6),
-    Text('Practical guides for relationships, wellness, motherhood, friendship, work, and life transitions.', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6E746D), height: 1.45)), const SizedBox(height: 16),
+    Text('Practical guides for relationships, wellness, motherhood, fatherhood, friendship, work, and life transitions.', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6E746D), height: 1.45)), const SizedBox(height: 16),
     for (final resource in resources) ...[_resourceCard(resource), const SizedBox(height: 12)],
   ]);
 
