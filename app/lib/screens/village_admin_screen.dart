@@ -17,6 +17,7 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
   static const ink = Color(0xFF172019);
 
   static const builtInCommunities = <Map<String, String>>[
+    {'id':'men','name':'Men','description':'Honest advice about relationships, fatherhood, purpose, friendship, pressure, and emotional wellbeing.','category':'Men','imageUrl':'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1200&q=85'},
     {'id':'relationships','name':'Relationships','description':'For the conversations you cannot always have with people you know.','category':'Relationships','imageUrl':'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85'},
     {'id':'women','name':'Women','description':'Support, perspective, and connection through every season of womanhood.','category':'Life & Growth','imageUrl':'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'},
     {'id':'moms','name':'Moms','description':'Real talk and practical support for motherhood.','category':'Parenting','imageUrl':'https://images.unsplash.com/photo-1543342386-1f1350e27861?auto=format&fit=crop&w=1200&q=85'},
