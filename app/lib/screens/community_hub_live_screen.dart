@@ -5,6 +5,7 @@ import '../services/admin_content_service.dart';
 import '../services/community_hub_service.dart';
 import '../services/personalization_service.dart';
 import 'community_detail_screen.dart';
+import 'find_help_screen.dart';
 
 class CommunityHubLiveScreen extends StatefulWidget {
   const CommunityHubLiveScreen({super.key});
@@ -105,7 +106,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                 ],
               ),
             ),
-            Expanded(child: IndexedStack(index: selected, children: [_communities(), _managedList('resources', 'Resource Library', Icons.menu_book_outlined), _managedList('events', 'Happening in the Village', Icons.calendar_month_outlined)])),
+            Expanded(child: IndexedStack(index: selected, children: [_communities(), const FindHelpScreen(), _managedList('events', 'Happening in the Village', Icons.calendar_month_outlined)])),
           ],
         ),
       ),
