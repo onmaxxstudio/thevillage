@@ -7,6 +7,7 @@ import '../services/check_in_service.dart';
 import '../services/circle_service.dart';
 import '../services/notification_service.dart';
 import '../services/profile_service.dart';
+import '../services/personalization_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart';
@@ -34,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<MoodCheckIn> history = [];
   List<CirclePerson> circleMembers = [];
   String currentUsername = 'Village member';
+  bool showPeriodTracking = false;
 
   static const moods = <(IconData, String)>[
     (Icons.sentiment_very_satisfied_outlined, 'Great'),
@@ -73,6 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     loadHistory();
+    _loadPersonalization();
     _connectRealProfileData();
     NotificationService().startListening();
   }
@@ -109,6 +112,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> loadHistory() async {
     final saved = await checkInService.load();
     if (mounted) setState(() => history = saved);
+  }
+
+  Future<void> _loadPersonalization() async {
+    final value = await PersonalizationService().load();
+    if (mounted) setState(() => showPeriodTracking = value.periodTracking);
   }
 
   void openAsk() => VillageNavigationScope.of(context).onSelect(2);
@@ -149,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isScrollControlled: true,
       backgroundColor: cream,
       showDragHandle: true,
-      builder: (_) => _CheckInSheet(existing: today, initialMood: initialMood),
+      builder: (_) => _CheckInSheet(existing: today, initialMood: initialMood, showPeriodTracking: showPeriodTracking),
     );
     if (result == null) return;
     final saved = await checkInService.saveToday(
@@ -168,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void openHistory() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => MoodHistoryScreen(history: history),
+        builder: (_) => MoodHistoryScreen(history: history, showPeriodTracking: showPeriodTracking),
       ),
     );
   }
@@ -966,10 +974,11 @@ class _CheckInResult {
 }
 
 class _CheckInSheet extends StatefulWidget {
-  const _CheckInSheet({this.existing, this.initialMood});
+  const _CheckInSheet({this.existing, this.initialMood, required this.showPeriodTracking});
 
   final MoodCheckIn? existing;
   final String? initialMood;
+  final bool showPeriodTracking;
 
   @override
   State<_CheckInSheet> createState() => _CheckInSheetState();
@@ -1089,26 +1098,28 @@ class _CheckInSheetState extends State<_CheckInSheet> {
               ],
             ),
             const SizedBox(height: 20),
-            CheckboxListTile(
-              value: periodStarted,
-              onChanged: (value) {
-                setState(() => periodStarted = value ?? false);
-              },
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              activeColor: _HomeScreenState.sage,
-              title: Text(
-                'My period started today',
-                style: GoogleFonts.inter(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+            if (widget.showPeriodTracking) ...[
+              CheckboxListTile(
+                value: periodStarted,
+                onChanged: (value) {
+                  setState(() => periodStarted = value ?? false);
+                },
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                activeColor: _HomeScreenState.sage,
+                title: Text(
+                  'My period started today',
+                  style: GoogleFonts.inter(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: const Text(
+                  'Saving the start date helps estimate your next period.',
                 ),
               ),
-              subtitle: const Text(
-                'Saving the start date helps estimate your next period.',
-              ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
+            ],
             Text(
               'Health notes (optional)',
               style: GoogleFonts.inter(
@@ -1197,9 +1208,10 @@ class _CheckInSheetState extends State<_CheckInSheet> {
 }
 
 class MoodHistoryScreen extends StatelessWidget {
-  const MoodHistoryScreen({super.key, required this.history});
+  const MoodHistoryScreen({super.key, required this.history, required this.showPeriodTracking});
 
   final List<MoodCheckIn> history;
+  final bool showPeriodTracking;
 
   @override
   Widget build(BuildContext context) {
@@ -1218,8 +1230,10 @@ class MoodHistoryScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
-          _PeriodPredictionCard(history: history),
-          const SizedBox(height: 14),
+          if (showPeriodTracking) ...[
+            _PeriodPredictionCard(history: history),
+            const SizedBox(height: 14),
+          ],
           _MoodTrendChart(history: history),
           const SizedBox(height: 22),
           Text(
