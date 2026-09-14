@@ -66,6 +66,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
 
   static const categories = [
     'Relationships',
+    'Men',
     'Mental Health',
     'Parenting',
     'Life & Growth',
