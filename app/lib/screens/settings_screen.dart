@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/admin_access_service.dart';
 import 'community_safety_screen.dart';
 import 'legal_screen.dart';
+import 'personalization_screen.dart';
 import 'profile_screen.dart';
 import 'village_admin_screen.dart';
 
@@ -125,6 +126,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: paleSage,
                     ),
                   ),
+                section(
+                  'Your experience',
+                  card(
+                    ListTile(
+                      leading: const CircleAvatar(
+                        backgroundColor: paleSage,
+                        child: Icon(Icons.tune_rounded, color: sage),
+                      ),
+                      title: const Text('Personalize your Village', style: TextStyle(fontWeight: FontWeight.w800)),
+                      subtitle: const Text('Identity, support topics, and period tracking.'),
+                      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(builder: (_) => const PersonalizationScreen()),
+                      ),
+                    ),
+                  ),
+                ),
                 section(
                   'Notifications',
                   card(
