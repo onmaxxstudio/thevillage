@@ -42,22 +42,6 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     'WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming',
   };
 
-  static const statePositions = <String, (double, double)>{
-    'WA':(.08,.08),'OR':(.07,.19),'CA':(.07,.41),'NV':(.14,.34),
-    'ID':(.18,.19),'MT':(.29,.10),'WY':(.29,.25),'UT':(.23,.35),
-    'AZ':(.23,.51),'CO':(.36,.35),'NM':(.34,.52),'ND':(.44,.13),
-    'SD':(.44,.24),'NE':(.46,.34),'KS':(.47,.43),'OK':(.49,.52),
-    'TX':(.46,.66),'MN':(.55,.14),'IA':(.55,.30),'MO':(.58,.41),
-    'AR':(.59,.52),'LA':(.59,.64),'WI':(.63,.19),'IL':(.64,.33),
-    'MS':(.65,.57),'MI':(.70,.18),'IN':(.69,.34),'KY':(.71,.42),
-    'TN':(.72,.49),'AL':(.71,.58),'OH':(.75,.32),'WV':(.78,.41),
-    'GA':(.78,.58),'FL':(.82,.73),'PA':(.82,.30),'VA':(.83,.43),
-    'NC':(.85,.49),'SC':(.83,.56),'NY':(.87,.22),'VT':(.89,.12),
-    'NH':(.93,.14),'ME':(.96,.09),'MA':(.94,.23),'RI':(.96,.27),
-    'CT':(.92,.27),'NJ':(.89,.32),'DE':(.89,.37),'MD':(.86,.37),
-    'AK':(.12,.78),'HI':(.30,.82),
-  };
-
   static const needs = <(String, IconData)>[
     ('Food', Icons.restaurant_outlined),
     ('Rent & Housing', Icons.home_outlined),
@@ -296,77 +280,125 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ]),
       );
 
-  String _stateLabel(String code) => code;
+  Future<void> _chooseState() async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.sizeOf(context).height * .72,
+          child: Column(
+            children: [
+              Text('Choose your state', style: GoogleFonts.playfairDisplay(fontSize: 27, fontWeight: FontWeight.w700, color: ink)),
+              const SizedBox(height: 5),
+              const Text('We will show statewide and nationwide help.'),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView.separated(
+                  itemCount: stateNames.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1, color: line),
+                  itemBuilder: (context, index) {
+                    final entry = stateNames.entries.elementAt(index);
+                    return ListTile(
+                      leading: Container(
+                        width: 38,
+                        height: 30,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(9)),
+                        child: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w900, color: sage)),
+                      ),
+                      title: Text(entry.value, style: const TextStyle(fontWeight: FontWeight.w700)),
+                      trailing: selectedState == entry.key ? const Icon(Icons.check_circle_rounded, color: sage) : const Icon(Icons.chevron_right_rounded, color: sage),
+                      onTap: () => Navigator.pop(context, entry.key),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (choice != null && mounted) setState(() => selectedState = choice);
+  }
 
   Widget _map() => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: Colors.white.withValues(alpha: .72), borderRadius: BorderRadius.circular(22), border: Border.all(color: line)),
-        child: Column(children: [
-          Row(children: [
-            const Icon(Icons.touch_app_outlined, color: gold, size: 19),
-            const SizedBox(width: 7),
-            Expanded(child: Text(selectedState == null ? 'Tap a state on the map' : stateNames[selectedState]!, style: const TextStyle(fontWeight: FontWeight.w800, color: ink))),
-            if (selectedState != null) TextButton(onPressed: () => setState(() => selectedState = null), child: const Text('Clear')),
-          ]),
-          const SizedBox(height: 8),
-          AspectRatio(
-            aspectRatio: 959 / 593,
-            child: LayoutBuilder(builder: (context, constraints) {
-              const markerWidth = 25.0;
-              const markerHeight = 18.0;
-              return Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned.fill(
-                    child: SvgPicture.asset(
-                      'assets/images/us_states_map.svg',
-                      fit: BoxFit.contain,
-                      semanticsLabel: 'Map of the United States with state boundaries',
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4F0E8),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: line),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.map_outlined, color: gold, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Find help in your state', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink))),
+                if (selectedState != null) TextButton(onPressed: () => setState(() => selectedState = null), child: const Text('Clear')),
+              ],
+            ),
+            const SizedBox(height: 10),
+            InkWell(
+              onTap: _chooseState,
+              borderRadius: BorderRadius.circular(17),
+              child: AspectRatio(
+                aspectRatio: 959 / 593,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(17),
+                        child: SvgPicture.asset(
+                          'assets/images/us_states_map.svg',
+                          fit: BoxFit.contain,
+                          semanticsLabel: 'United States map showing state boundaries',
+                        ),
+                      ),
                     ),
-                  ),
-                  for (final entry in statePositions.entries)
                     Positioned(
-                      left: (constraints.maxWidth - markerWidth) * entry.value.$1,
-                      top: (constraints.maxHeight - markerHeight) * entry.value.$2,
-                      child: Tooltip(
-                        message: stateNames[entry.key]!,
-                        child: InkWell(
-                          onTap: () => setState(() => selectedState = entry.key),
-                          borderRadius: BorderRadius.circular(8),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 160),
-                            width: markerWidth,
-                            height: markerHeight,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: selectedState == entry.key ? gold.withValues(alpha: .95) : Colors.transparent,
-                              borderRadius: BorderRadius.circular(5),
-                              border: Border.all(color: selectedState == entry.key ? gold : Colors.transparent, width: 1.2),
-                            ),
-                            child: Text(
-                              _stateLabel(entry.key),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.visible,
-                              style: GoogleFonts.oswald(
-                                fontSize: 8.5,
-                                height: 1,
-                                fontWeight: FontWeight.w700,
-                                color: selectedState == entry.key ? ink : Colors.white,
-                                shadows: const [Shadow(color: Color(0x66000000), blurRadius: 1)],
-                              ),
-                            ),
+                      left: 0,
+                      right: 0,
+                      bottom: 13,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: .95),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 7)],
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.touch_app_outlined, color: sage, size: 17),
+                              SizedBox(width: 6),
+                              Text('Choose your state', style: TextStyle(color: sage, fontWeight: FontWeight.w800, fontSize: 12)),
+                            ],
                           ),
                         ),
                       ),
                     ),
-                ],
-              );
-            }),
-          ),
-          const SizedBox(height: 8),
-          const Text('Tap any state abbreviation. Alaska and Hawaii are included.', style: TextStyle(fontSize: 10.5, color: Color(0xFF6C726C))),
-        ]),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _chooseState,
+              icon: const Icon(Icons.location_on_outlined),
+              label: Text(selectedState == null ? 'Select a state' : stateNames[selectedState]!),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: sage,
+                minimumSize: const Size.fromHeight(46),
+                side: const BorderSide(color: sage),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ],
+        ),
       );
 
   Widget _needs() => Wrap(
