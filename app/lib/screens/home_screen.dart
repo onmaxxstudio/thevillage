@@ -75,6 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     loadHistory();
+    PersonalizationService.notifier.addListener(_personalizationChanged);
     _loadPersonalization();
     _connectRealProfileData();
     NotificationService().startListening();
@@ -105,6 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     ProfileService.usernameNotifier.removeListener(_usernameChanged);
+    PersonalizationService.notifier.removeListener(_personalizationChanged);
     circleSubscription?.cancel();
     super.dispose();
   }
@@ -117,6 +119,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadPersonalization() async {
     final value = await PersonalizationService().load();
     if (mounted) setState(() => showPeriodTracking = value.periodTracking);
+  }
+
+  void _personalizationChanged() {
+    final value = PersonalizationService.notifier.value;
+    if (mounted && value != null) {
+      setState(() => showPeriodTracking = value.periodTracking);
+    }
   }
 
   void openAsk() => VillageNavigationScope.of(context).onSelect(2);
@@ -1165,7 +1174,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 ),
               ),
             ),
-            const Row(
+            Row(
               children: [
                 Icon(
                   Icons.lock_outline_rounded,
@@ -1175,7 +1184,9 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Your mood, period start date, and health notes stay private to your account.',
+                    widget.showPeriodTracking
+                        ? 'Your mood, period start date, and health notes stay private to your account.'
+                        : 'Your mood and health notes stay private to your account.',
                     style: TextStyle(fontSize: 12),
                   ),
                 ),
