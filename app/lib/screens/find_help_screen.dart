@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -41,14 +42,21 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     'WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming',
   };
 
-  static const mapCells = <String>[
-    'WA','','MT','ND','MN','WI','','MI','NY','ME',
-    'OR','ID','WY','SD','IA','IL','IN','OH','PA','NH',
-    'CA','NV','UT','CO','NE','MO','KY','WV','VA','MA',
-    'AZ','NM','KS','OK','AR','TN','NC','SC','MD','CT',
-    '','TX','LA','MS','AL','GA','FL','DE','NJ','RI',
-    'AK','HI','','','','','','','','VT',
-  ];
+  static const statePositions = <String, (double, double)>{
+    'WA':(.08,.08),'OR':(.07,.19),'CA':(.07,.41),'NV':(.14,.34),
+    'ID':(.18,.19),'MT':(.29,.10),'WY':(.29,.25),'UT':(.23,.35),
+    'AZ':(.23,.51),'CO':(.36,.35),'NM':(.34,.52),'ND':(.44,.13),
+    'SD':(.44,.24),'NE':(.46,.34),'KS':(.47,.43),'OK':(.49,.52),
+    'TX':(.46,.66),'MN':(.55,.14),'IA':(.55,.30),'MO':(.58,.41),
+    'AR':(.59,.52),'LA':(.59,.64),'WI':(.63,.19),'IL':(.64,.33),
+    'MS':(.65,.57),'MI':(.70,.18),'IN':(.69,.34),'KY':(.71,.42),
+    'TN':(.72,.49),'AL':(.71,.58),'OH':(.75,.32),'WV':(.78,.41),
+    'GA':(.78,.58),'FL':(.82,.73),'PA':(.82,.30),'VA':(.83,.43),
+    'NC':(.85,.49),'SC':(.83,.56),'NY':(.87,.22),'VT':(.89,.12),
+    'NH':(.93,.14),'ME':(.96,.09),'MA':(.94,.23),'RI':(.96,.27),
+    'CT':(.92,.27),'NJ':(.89,.32),'DE':(.89,.37),'MD':(.86,.37),
+    'AK':(.12,.78),'HI':(.30,.82),
+  };
 
   static const needs = <(String, IconData)>[
     ('Food', Icons.restaurant_outlined),
@@ -295,41 +303,63 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           Row(children: [
             const Icon(Icons.touch_app_outlined, color: gold, size: 19),
             const SizedBox(width: 7),
-            Expanded(child: Text(selectedState == null ? 'Tap a state to see available help' : stateNames[selectedState]!, style: const TextStyle(fontWeight: FontWeight.w800, color: ink))),
+            Expanded(child: Text(selectedState == null ? 'Tap a state on the map' : stateNames[selectedState]!, style: const TextStyle(fontWeight: FontWeight.w800, color: ink))),
             if (selectedState != null) TextButton(onPressed: () => setState(() => selectedState = null), child: const Text('Clear')),
           ]),
           const SizedBox(height: 8),
-          LayoutBuilder(builder: (context, constraints) {
-            final size = (constraints.maxWidth - 9 * 3) / 10;
-            return Wrap(
-              spacing: 3,
-              runSpacing: 3,
-              children: [
-                for (final code in mapCells)
-                  SizedBox(
-                    width: size,
-                    height: size * .82,
-                    child: code.isEmpty
-                        ? const SizedBox.shrink()
-                        : InkWell(
-                            onTap: () => setState(() => selectedState = code),
-                            borderRadius: BorderRadius.circular(6),
-                            child: Container(
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: selectedState == code ? sage : paleSage,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: selectedState == code ? sage : const Color(0xFFC9D1C4)),
+          AspectRatio(
+            aspectRatio: 959 / 593,
+            child: LayoutBuilder(builder: (context, constraints) {
+              const markerWidth = 22.0;
+              const markerHeight = 17.0;
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: SvgPicture.asset(
+                      'assets/images/us_states_map.svg',
+                      fit: BoxFit.contain,
+                      semanticsLabel: 'Map of the United States with state boundaries',
+                    ),
+                  ),
+                  for (final entry in statePositions.entries)
+                    Positioned(
+                      left: (constraints.maxWidth - markerWidth) * entry.value.$1,
+                      top: (constraints.maxHeight - markerHeight) * entry.value.$2,
+                      child: Tooltip(
+                        message: stateNames[entry.key]!,
+                        child: InkWell(
+                          onTap: () => setState(() => selectedState = entry.key),
+                          borderRadius: BorderRadius.circular(8),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 160),
+                            width: markerWidth,
+                            height: markerHeight,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: selectedState == entry.key ? gold : Colors.white.withValues(alpha: .86),
+                              borderRadius: BorderRadius.circular(7),
+                              border: Border.all(color: selectedState == entry.key ? ink : sage, width: selectedState == entry.key ? 1.5 : .7),
+                              boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 2)],
+                            ),
+                            child: Text(
+                              entry.key,
+                              style: TextStyle(
+                                fontSize: 7.5,
+                                fontWeight: FontWeight.w900,
+                                color: selectedState == entry.key ? ink : sage,
                               ),
-                              child: FittedBox(child: Text(code, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: selectedState == code ? Colors.white : ink))),
                             ),
                           ),
-                  ),
-              ],
-            );
-          }),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            }),
+          ),
           const SizedBox(height: 8),
-          const Text('All 50 states are selectable. Nationwide resources appear for every state.', style: TextStyle(fontSize: 10.5, color: Color(0xFF6C726C))),
+          const Text('Tap any state abbreviation. Alaska and Hawaii are included.', style: TextStyle(fontSize: 10.5, color: Color(0xFF6C726C))),
         ]),
       );
 
