@@ -188,10 +188,10 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   Widget _twoRows(List<_Community> items) {
     if (items.isEmpty) return Container(padding: const EdgeInsets.all(18), child: const Text('No communities found. Try another search.'));
     return SizedBox(
-      height: 390,
+      height: 304,
       child: GridView.builder(
         scrollDirection: Axis.horizontal,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: .82),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: .9),
         itemCount: items.length,
         itemBuilder: (context, index) => _communityCard(items[index]),
       ),
@@ -202,24 +202,24 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     final count = memberCounts[community.id] ?? 0;
     final isJoined = joined.contains(community.id);
     return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(18),
       child: Stack(
         fit: StackFit.expand,
         children: [
           community.imageUrl.isEmpty ? _fallback() : Image.network(community.imageUrl, fit: BoxFit.cover, errorBuilder: (context, error, stack) => _fallback()),
           const DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x16000000), Color(0xD8000000)]))),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(9),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Align(alignment: Alignment.topRight, child: InkWell(onTap: () => _toggleJoin(community), child: Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)), child: Text(isJoined ? 'Joined' : 'Join', style: const TextStyle(color: sage, fontSize: 10, fontWeight: FontWeight.w800))))),
+              Align(alignment: Alignment.topRight, child: InkWell(onTap: () => _toggleJoin(community), child: Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)), child: Text(isJoined ? 'Joined' : 'Join', style: const TextStyle(color: sage, fontSize: 9, fontWeight: FontWeight.w800))))),
               const Spacer(),
-              Text(community.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.playfairDisplay(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 3),
-              Text(community.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 10.5, height: 1.2)),
-              const SizedBox(height: 5),
-              Text('$count ${count == 1 ? 'member' : 'members'}', style: const TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 5),
-              InkWell(onTap: () => _open(community), child: const Text('Enter community →', style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w800))),
+              Text(community.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.playfairDisplay(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              Text(community.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 9, height: 1.15)),
+              const SizedBox(height: 4),
+              Text('$count ${count == 1 ? 'member' : 'members'}', style: const TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              InkWell(onTap: () => _open(community), child: const Text('Enter community →', style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w800))),
             ]),
           ),
         ],
@@ -268,7 +268,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     );
   }
 
-  Widget _fallback() => Container(color: sage, child: const Center(child: Icon(Icons.groups_2_outlined, color: Colors.white, size: 40)));
+  Widget _fallback() => Container(color: sage, child: const Center(child: Icon(Icons.groups_2_outlined, color: Colors.white, size: 34)));
 }
 
 class _Community {
