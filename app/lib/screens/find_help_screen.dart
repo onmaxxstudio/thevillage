@@ -296,6 +296,12 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ]),
       );
 
+  String _stateLabel(String code) {
+    const short = <String>{'CT','DE','RI','MD','NJ','MA','VT','NH','ME','HI'};
+    if (short.contains(code)) return code;
+    return stateNames[code]!.toUpperCase().replaceAll(' ', '\n');
+  }
+
   Widget _map() => Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(color: Colors.white.withValues(alpha: .72), borderRadius: BorderRadius.circular(22), border: Border.all(color: line)),
@@ -310,8 +316,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           AspectRatio(
             aspectRatio: 959 / 593,
             child: LayoutBuilder(builder: (context, constraints) {
-              const markerWidth = 22.0;
-              const markerHeight = 17.0;
+              const markerWidth = 48.0;
+              const markerHeight = 27.0;
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -337,17 +343,21 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                             height: markerHeight,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: selectedState == entry.key ? gold : Colors.white.withValues(alpha: .86),
-                              borderRadius: BorderRadius.circular(7),
-                              border: Border.all(color: selectedState == entry.key ? ink : sage, width: selectedState == entry.key ? 1.5 : .7),
-                              boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 2)],
+                              color: selectedState == entry.key ? gold.withValues(alpha: .95) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(color: selectedState == entry.key ? gold : Colors.transparent, width: 1.2),
                             ),
                             child: Text(
-                              entry.key,
-                              style: TextStyle(
-                                fontSize: 7.5,
-                                fontWeight: FontWeight.w900,
-                                color: selectedState == entry.key ? ink : sage,
+                              _stateLabel(entry.key),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.visible,
+                              style: GoogleFonts.oswald(
+                                fontSize: 7.3,
+                                height: .86,
+                                fontWeight: FontWeight.w700,
+                                color: selectedState == entry.key ? ink : Colors.white,
+                                shadows: const [Shadow(color: Color(0x66000000), blurRadius: 1)],
                               ),
                             ),
                           ),
@@ -359,7 +369,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             }),
           ),
           const SizedBox(height: 8),
-          const Text('Tap any state abbreviation. Alaska and Hawaii are included.', style: TextStyle(fontSize: 10.5, color: Color(0xFF6C726C))),
+          const Text('Tap any state name. Alaska and Hawaii are included.', style: TextStyle(fontSize: 10.5, color: Color(0xFF6C726C))),
         ]),
       );
 
