@@ -3,81 +3,279 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/admin_content_service.dart';
 import '../services/community_hub_service.dart';
-import '../services/village_post_service.dart';
 import 'community_detail_screen.dart';
-import 'village_feed_screen.dart';
 
 class CommunityHubLiveScreen extends StatefulWidget {
   const CommunityHubLiveScreen({super.key});
+
   @override
-  State<CommunityHubLiveScreen> createState()=>_CommunityHubLiveScreenState();
+  State<CommunityHubLiveScreen> createState() => _CommunityHubLiveScreenState();
 }
 
-class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen>{
-  static const cream=Color(0xFFFFFAF1),sage=Color(0xFF355C3B),ink=Color(0xFF172019),gold=Color(0xFFB78943),line=Color(0xFFE7DED1),blush=Color(0xFFF3E2DD);
-  final hub=CommunityHubService(); final admin=AdminContentService(); final postsService=VillagePostService();
-  final searchController=TextEditingController();
-  int selected=0; bool loading=true; String communityQuery='';
-  Set<String> joined={},savedResources={},registeredEvents={}; Map<String,int> memberCounts={}; List<VillagePost> posts=[];
+class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
+  static const cream = Color(0xFFFFFAF1);
+  static const sage = Color(0xFF355C3B);
+  static const ink = Color(0xFF172019);
+  static const gold = Color(0xFFB78943);
+  static const line = Color(0xFFE7DED1);
 
-  static const builtInCommunities=<_Community>[
-    _Community('relationships','Relationships','For the conversations you cannot always have with people you know.','Relationships','https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85'),
-    _Community('women','Women','Support, perspective, and connection through every season of womanhood.','Life & Growth','https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'),
-    _Community('moms','Moms','Real talk and practical support for motherhood.','Parenting','https://images.unsplash.com/photo-1543342386-1f1350e27861?auto=format&fit=crop&w=1200&q=85'),
-    _Community('friendship','Friendship','Navigate closeness, change, conflict, and connection.','Friendship','https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'),
-    _Community('wellness','Wellness','Gentle support for emotional and everyday wellbeing.','Mental Health','https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=85'),
-    _Community('career','Career & Purpose','Work, confidence, growth, and your next move.','Work & School','https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=85'),
-    _Community('grief','Grief & Healing','A softer place for loss, remembrance, and healing.','Grief','https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85'),
-    _Community('new_beginnings','New Beginnings','Moves, endings, transitions, and fresh starts.','Life & Growth','https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=85'),
-    _Community('caregivers','Caregivers','Care and understanding for people who care for others.','Practical help','https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1200&q=85'),
-  ];
-  static const builtInResources=<_Resource>[
-    _Resource('repair','Relationships','Repair after a hard argument','A practical guide to cooling down, taking responsibility, listening well, and choosing one next step.','6 min read'),
-    _Resource('support','Friendship','Support someone without trying to fix them','Learn how to listen, ask what kind of help is wanted, and follow up in a way that feels caring instead of controlling.','5 min read'),
-    _Resource('grounding','Wellness','A five-minute grounding reset','A simple body-and-senses reset for moments when your thoughts feel fast or the day feels too loud.','5 min read'),
-    _Resource('boundary','Life & Growth','The boundary check-in','Identify the pattern, separate a request from a boundary, and choose a limit you can actually maintain.','7 min read'),
-    _Resource('parenting','Moms','A calmer reset for hard parenting moments','Regulate first, use fewer words, hold the limit clearly, and reconnect after the hard moment.','6 min read'),
-    _Resource('career','Career & Purpose','A practical career reset','Name what is actually stuck and choose one move that creates useful information about what comes next.','8 min read'),
-  ];
-  static const builtInEvents=<_VillageEvent>[
-    _VillageEvent('communication','Couples Communication Night','Relationships','Virtual','Coming soon','A guided conversation on feeling heard, repairing conflict, and reconnecting.'),
-    _VillageEvent('moms-coffee','New Mom Coffee Chat','Moms','Virtual','Coming soon','A low-pressure space for honest conversation about motherhood, identity, and support.'),
-    _VillageEvent('starting-over','Starting Over Circle','New Beginnings','Virtual','Coming soon','For people navigating a new chapter, big transition, or fresh start.'),
-    _VillageEvent('career-reset','Career Reset Workshop','Career & Purpose','Virtual','Coming soon','Clarify what feels stuck and leave with one realistic next step.'),
+  final admin = AdminContentService();
+  final hub = CommunityHubService();
+  final searchController = TextEditingController();
+
+  int selected = 0;
+  String query = '';
+  Set<String> joined = {};
+  Map<String, int> memberCounts = {};
+
+  static const builtIns = <_Community>[
+    _Community('relationships', 'Relationships', 'For the conversations you cannot always have with people you know.', 'Relationships', 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85'),
+    _Community('women', 'Women', 'Support, perspective, and connection through every season of womanhood.', 'Life & Growth', 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'),
+    _Community('moms', 'Moms', 'Real talk and practical support for motherhood.', 'Parenting', 'https://images.unsplash.com/photo-1543342386-1f1350e27861?auto=format&fit=crop&w=1200&q=85'),
+    _Community('friendship', 'Friendship', 'Navigate closeness, change, conflict, and connection.', 'Friendship', 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'),
+    _Community('wellness', 'Wellness', 'Gentle support for emotional and everyday wellbeing.', 'Mental Health', 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=85'),
+    _Community('career', 'Career & Purpose', 'Work, confidence, growth, and your next move.', 'Work & School', 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=85'),
+    _Community('grief', 'Grief & Healing', 'A softer place for loss, remembrance, and healing.', 'Grief', 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85'),
+    _Community('new_beginnings', 'New Beginnings', 'Moves, endings, transitions, and fresh starts.', 'Life & Growth', 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=85'),
+    _Community('caregivers', 'Caregivers', 'Care and understanding for people who care for others.', 'Practical help', 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1200&q=85'),
   ];
 
-  @override void initState(){super.initState();_load();}
-  @override void dispose(){searchController.dispose();super.dispose();}
-  Future<void> _load()async{try{final v=await Future.wait<Object>([hub.joinedCommunities(),hub.savedResources(),hub.registeredEvents(),hub.memberCounts(builtInCommunities.map((e)=>e.id)),postsService.load()]);if(!mounted)return;setState((){joined=v[0] as Set<String>;savedResources=v[1] as Set<String>;registeredEvents=v[2] as Set<String>;memberCounts=v[3] as Map<String,int>;posts=v[4] as List<VillagePost>;loading=false;});}catch(_){if(mounted)setState(()=>loading=false);}}
+  @override
+  void initState() {
+    super.initState();
+    _loadMemberships();
+  }
 
-  @override Widget build(BuildContext context)=>Scaffold(backgroundColor:cream,body:SafeArea(bottom:false,child:loading?const Center(child:CircularProgressIndicator(color:sage)):Column(children:[Padding(padding:const EdgeInsets.fromLTRB(20,18,20,10),child:Column(children:[Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('COMMUNITY HUB',style:GoogleFonts.inter(fontSize:11,fontWeight:FontWeight.w800,letterSpacing:1.6,color:gold)),const SizedBox(height:4),Text('Find your people.',style:GoogleFonts.playfairDisplay(fontSize:32,fontWeight:FontWeight.w700,color:ink))])),Container(width:44,height:44,decoration:BoxDecoration(color:const Color(0xFFE9EEE4),borderRadius:BorderRadius.circular(14)),child:const Icon(Icons.diversity_3_outlined,color:sage))]),const SizedBox(height:16),_tabs()])),Expanded(child:IndexedStack(index:selected,children:[_communitiesTab(),_resourcesTab(),_eventsTab()]))])));
-  Widget _tabs(){const labels=[('Communities',Icons.groups_2_outlined),('Resources',Icons.menu_book_outlined),('Events',Icons.calendar_month_outlined)];return Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFE9EEE4),borderRadius:BorderRadius.circular(18),border:Border.all(color:line)),child:Row(children:List.generate(labels.length,(i){final active=selected==i;return Expanded(child:InkWell(borderRadius:BorderRadius.circular(14),onTap:()=>setState(()=>selected=i),child:AnimatedContainer(duration:const Duration(milliseconds:180),padding:const EdgeInsets.symmetric(vertical:10),decoration:BoxDecoration(color:active?Colors.white:Colors.transparent,borderRadius:BorderRadius.circular(14)),child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(labels[i].$2,size:18,color:active?sage:ink),const SizedBox(width:6),Text(labels[i].$1,style:GoogleFonts.inter(fontSize:12,fontWeight:active?FontWeight.w800:FontWeight.w600,color:active?sage:ink))]))));}))));}
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
 
-  Widget _communitiesTab(){final trending=[...posts]..sort((a,b)=>(b.replies.length*3+b.supportCount).compareTo(a.replies.length*3+a.supportCount));return ListView(padding:const EdgeInsets.fromLTRB(20,12,20,32),children:[TextField(readOnly:true,onTap:_showJourneyPicker,decoration:InputDecoration(prefixIcon:const Icon(Icons.search_rounded,color:sage),hintText:'What are you going through?',suffixIcon:const Icon(Icons.tune_rounded),filled:true,fillColor:Colors.white.withValues(alpha:.72),border:OutlineInputBorder(borderRadius:BorderRadius.circular(18),borderSide:const BorderSide(color:line)))),const SizedBox(height:20),Row(children:[Expanded(child:_sectionTitle('Explore communities','Real spaces for real life')),TextButton(onPressed:_showAllCommunities,child:const Row(mainAxisSize:MainAxisSize.min,children:[Text('See All'),SizedBox(width:2),Icon(Icons.arrow_forward_rounded,size:16)]))]),const SizedBox(height:8),TextField(controller:searchController,onChanged:(v)=>setState(()=>communityQuery=v.trim().toLowerCase()),decoration:InputDecoration(prefixIcon:const Icon(Icons.search_rounded,color:sage),hintText:'Search communities',suffixIcon:communityQuery.isEmpty?null:IconButton(icon:const Icon(Icons.close_rounded),onPressed:(){searchController.clear();setState(()=>communityQuery='');}),filled:true,fillColor:Colors.white.withValues(alpha:.82),contentPadding:const EdgeInsets.symmetric(vertical:13),border:OutlineInputBorder(borderRadius:BorderRadius.circular(16),borderSide:const BorderSide(color:line)),enabledBorder:OutlineInputBorder(borderRadius:BorderRadius.circular(16),borderSide:const BorderSide(color:line)))),const SizedBox(height:12),_communityStream(),const SizedBox(height:24),_sectionTitle('Happening in the Village','Join the conversation'),const SizedBox(height:10),trending.isEmpty?_softCard('The first brave question starts the conversation.','As people post, the most active discussions will surface here.'):InkWell(onTap:()=>Navigator.of(context).push(MaterialPageRoute(builder:(_)=>VillageFeedScreen(initialSearch:trending.first.question))),child:_softCard(trending.first.question,'${trending.first.replies.length} replies • ${trending.first.supportCount} helpful'))]);}
+  Future<void> _loadMemberships() async {
+    try {
+      final values = await Future.wait<Object>([
+        hub.joinedCommunities(),
+        hub.memberCounts(builtIns.map((e) => e.id)),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        joined = values[0] as Set<String>;
+        memberCounts = values[1] as Map<String, int>;
+      });
+    } on Object {
+      // Community discovery remains usable if membership data is unavailable.
+    }
+  }
 
-  List<_Community> _mergeManaged(List<ManagedContentItem> managed){final overrides=<String,ManagedContentItem>{};final custom=<_Community>[];for(final item in managed){final builtin=item.text('builtinId');if(builtin.isNotEmpty){overrides[builtin]=item;}else{final name=item.text('name',item.text('title','Community'));custom.add(_Community('admin_${item.id}',name,item.text('description','A place to connect in the Village.'),item.text('category',name),item.text('imageUrl')));}}final merged=builtInCommunities.map((base){final o=overrides[base.id];return o==null?base:_Community(base.id,o.text('name',base.name),o.text('description',base.description),o.text('category',base.category),o.text('imageUrl',base.imageUrl));}).toList();return [...merged,...custom];}
-  List<_Community> _filtered(List<_Community> items){if(communityQuery.isEmpty)return items;return items.where((c)=>('${c.name} ${c.category} ${c.description}').toLowerCase().contains(communityQuery)).toList();}
-  Widget _communityStream(){if(!admin.cloudReady)return _communityScroller(_filtered(builtInCommunities));return StreamBuilder<List<ManagedContentItem>>(stream:admin.watchPublished('communities'),builder:(context,s)=>_communityScroller(_filtered(_mergeManaged(s.data??const []))));}
-  Widget _communityScroller(List<_Community> items){if(items.isEmpty)return _softCard('No communities found','Try another word or tap See All to browse every community.');return SizedBox(height:388,child:GridView.builder(scrollDirection:Axis.horizontal,physics:const BouncingScrollPhysics(),gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,mainAxisSpacing:12,crossAxisSpacing:12,childAspectRatio:.82),itemCount:items.length,itemBuilder:(_,i)=>_communityCard(items[i])));}
-  Widget _communityCard(_Community c){final count=memberCounts[c.id]??0,isJoined=joined.contains(c.id);return ClipRRect(borderRadius:BorderRadius.circular(22),child:Stack(fit:StackFit.expand,children:[c.imageUrl.isEmpty?_fallbackCover():Image.network(c.imageUrl,fit:BoxFit.cover,errorBuilder:(_,__,___)=>_fallbackCover()),const DecoratedBox(decoration:BoxDecoration(gradient:LinearGradient(begin:Alignment.topCenter,end:Alignment.bottomCenter,colors:[Color(0x12000000),Color(0xD0000000)],stops:[.3,1]))),Padding(padding:const EdgeInsets.all(12),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Align(alignment:Alignment.topRight,child:InkWell(onTap:()=>_toggleJoin(c),child:Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:5),decoration:BoxDecoration(color:Colors.white.withValues(alpha:.92),borderRadius:BorderRadius.circular(18)),child:Text(isJoined?'Joined':'Join',style:const TextStyle(color:sage,fontSize:10,fontWeight:FontWeight.w800))))),const Spacer(),Text(c.name,maxLines:1,overflow:TextOverflow.ellipsis,style:GoogleFonts.playfairDisplay(color:Colors.white,fontSize:19,fontWeight:FontWeight.w700)),const SizedBox(height:3),Text(c.description,maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.white,fontSize:10.5,height:1.2)),const SizedBox(height:5),Row(children:[const Icon(Icons.people_outline_rounded,size:12,color:Colors.white),const SizedBox(width:3),Text('$count ${count==1?'member':'members'}',style:const TextStyle(color:Colors.white,fontSize:9.5,fontWeight:FontWeight.w700))]),const SizedBox(height:5),InkWell(onTap:()=>_openCommunity(c),child:const Row(children:[Text('Enter community',style:TextStyle(color:Colors.white,fontSize:10.5,fontWeight:FontWeight.w800)),SizedBox(width:3),Icon(Icons.arrow_forward_rounded,size:13,color:Colors.white)]))]))]));}
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: cream,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('COMMUNITY HUB', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.6, color: gold)),
+                            const SizedBox(height: 4),
+                            Text('Find your people.', style: GoogleFonts.playfairDisplay(fontSize: 32, fontWeight: FontWeight.w700, color: ink)),
+                          ],
+                        ),
+                      ),
+                      Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFE9EEE4), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.diversity_3_outlined, color: sage)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _tabs(),
+                ],
+              ),
+            ),
+            Expanded(child: IndexedStack(index: selected, children: [_communities(), _managedList('resources', 'Resource Library', Icons.menu_book_outlined), _managedList('events', 'Happening in the Village', Icons.calendar_month_outlined)])),
+          ],
+        ),
+      ),
+    );
+  }
 
-  void _showAllCommunities(){showModalBottomSheet<void>(context:context,isScrollControlled:true,backgroundColor:cream,showDragHandle:true,builder:(_)=>DraggableScrollableSheet(expand:false,initialChildSize:.9,minChildSize:.6,maxChildSize:.95,builder:(context,scroll)=>StreamBuilder<List<ManagedContentItem>>(stream:admin.cloudReady?admin.watchPublished('communities'):const Stream<List<ManagedContentItem>>.empty(),builder:(context,s){final all=admin.cloudReady?_mergeManaged(s.data??const []):builtInCommunities;return Padding(padding:const EdgeInsets.fromLTRB(20,4,20,20),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('All Communities',style:GoogleFonts.playfairDisplay(fontSize:28,fontWeight:FontWeight.w700,color:ink)),const SizedBox(height:4),Text('${all.length} spaces to find your people',style:GoogleFonts.inter(fontSize:12,color:const Color(0xFF6E746D))),const SizedBox(height:14),Expanded(child:ListView.separated(controller:scroll,itemCount:all.length,separatorBuilder:(_,__)=>const SizedBox(height:10),itemBuilder:(_,i){final c=all[i];return InkWell(onTap:(){Navigator.pop(context);_openCommunity(c);},borderRadius:BorderRadius.circular(18),child:Container(padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:Colors.white.withValues(alpha:.8),borderRadius:BorderRadius.circular(18),border:Border.all(color:line)),child:Row(children:[ClipRRect(borderRadius:BorderRadius.circular(13),child:SizedBox(width:58,height:58,child:c.imageUrl.isEmpty?_fallbackCover():Image.network(c.imageUrl,fit:BoxFit.cover,errorBuilder:(_,__,___)=>_fallbackCover()))),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(c.name,style:GoogleFonts.inter(fontSize:15,fontWeight:FontWeight.w800,color:ink)),const SizedBox(height:2),Text(c.description,maxLines:2,overflow:TextOverflow.ellipsis,style:GoogleFonts.inter(fontSize:11.5,height:1.3,color:const Color(0xFF666C66)))])),const Icon(Icons.chevron_right_rounded,color:sage)])));}))) ]);});}));}
+  Widget _tabs() {
+    const labels = [('Communities', Icons.groups_2_outlined), ('Resources', Icons.menu_book_outlined), ('Events', Icons.calendar_month_outlined)];
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(color: const Color(0xFFE9EEE4), borderRadius: BorderRadius.circular(18), border: Border.all(color: line)),
+      child: Row(
+        children: List.generate(labels.length, (index) {
+          final active = selected == index;
+          return Expanded(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () => setState(() => selected = index),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(color: active ? Colors.white : Colors.transparent, borderRadius: BorderRadius.circular(14)),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(labels[index].$2, size: 18, color: active ? sage : ink), const SizedBox(width: 6), Text(labels[index].$1, style: GoogleFonts.inter(fontSize: 12, fontWeight: active ? FontWeight.w800 : FontWeight.w600, color: active ? sage : ink))]),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
 
-  Widget _resourcesTab()=>StreamBuilder<List<ManagedContentItem>>(stream:admin.cloudReady?admin.watchPublished('resources'):const Stream<List<ManagedContentItem>>.empty(),builder:(context,s){final managed=(s.data??const <ManagedContentItem>[]).where((i)=>i.data['kind']!='question').map((i)=>_Resource('admin_${i.id}',i.text('community','Village'),i.text('title','Resource'),i.text('body',i.text('description','')),i.text('readTime','Village guide'))).toList();return ListView(padding:const EdgeInsets.fromLTRB(20,12,20,32),children:[_sectionTitle('Resource Library','Useful enough to come back to'),const SizedBox(height:16),for(final r in [...builtInResources,...managed])...[_resourceCard(r),const SizedBox(height:12)]]);});
-  Widget _resourceCard(_Resource r){final saved=savedResources.contains(r.id);return Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(color:Colors.white.withValues(alpha:.72),borderRadius:BorderRadius.circular(22),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Container(width:44,height:44,decoration:BoxDecoration(color:blush,borderRadius:BorderRadius.circular(14)),child:const Icon(Icons.auto_stories_outlined,color:sage)),const SizedBox(width:12),Expanded(child:Text(r.title,style:GoogleFonts.playfairDisplay(fontSize:19,fontWeight:FontWeight.w700,color:ink))),IconButton(onPressed:()=>_toggleResource(r),icon:Icon(saved?Icons.bookmark_rounded:Icons.bookmark_border_rounded,color:sage))]),const SizedBox(height:8),Text(r.summary,maxLines:4,overflow:TextOverflow.ellipsis,style:GoogleFonts.inter(fontSize:12.5,height:1.45,color:const Color(0xFF545B55))),Row(children:[Text(r.readTime,style:const TextStyle(fontSize:11,fontWeight:FontWeight.w700,color:sage)),const Spacer(),TextButton(onPressed:()=>_showResource(r),child:const Text('Read guide'))]) ]));}
-  Widget _eventsTab()=>StreamBuilder<List<ManagedContentItem>>(stream:admin.cloudReady?admin.watchPublished('events'):const Stream<List<ManagedContentItem>>.empty(),builder:(context,s){final managed=(s.data??const <ManagedContentItem>[]).map((i)=>_VillageEvent('admin_${i.id}',i.text('title','Village Event'),i.text('community','Village'),i.text('format','Virtual'),i.text('dateTimeLabel','Coming soon'),i.text('description',''))).toList();return ListView(padding:const EdgeInsets.fromLTRB(20,12,20,32),children:[_sectionTitle('Happening in the Village','Gather, learn, connect'),const SizedBox(height:16),for(final e in [...builtInEvents,...managed])...[_eventCard(e),const SizedBox(height:12)]]);});
-  Widget _eventCard(_VillageEvent e){final reg=registeredEvents.contains(e.id);return Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(color:Colors.white.withValues(alpha:.74),borderRadius:BorderRadius.circular(22),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e.community.toUpperCase(),style:const TextStyle(color:gold,fontSize:10,fontWeight:FontWeight.w800)),const SizedBox(height:8),Text(e.title,style:GoogleFonts.playfairDisplay(fontSize:22,fontWeight:FontWeight.w700,color:ink)),const SizedBox(height:5),Text(e.description,style:GoogleFonts.inter(fontSize:12.5,color:const Color(0xFF5C635D),height:1.45)),const SizedBox(height:12),Row(children:[Expanded(child:Text(e.schedule,style:const TextStyle(fontSize:11.5,fontWeight:FontWeight.w800,color:sage))),FilledButton(onPressed:()=>_toggleEvent(e),style:FilledButton.styleFrom(backgroundColor:reg?const Color(0xFFE9EEE4):sage,foregroundColor:reg?sage:Colors.white),child:Text(reg?'Following':'Notify Me'))]) ]));}
+  Widget _communities() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      children: [
+        Row(children: [Expanded(child: Text('Explore communities', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: ink))), TextButton(onPressed: _showAll, child: const Text('See All →'))]),
+        const SizedBox(height: 8),
+        TextField(
+          controller: searchController,
+          onChanged: (value) => setState(() => query = value.trim().toLowerCase()),
+          decoration: InputDecoration(prefixIcon: const Icon(Icons.search_rounded, color: sage), hintText: 'Search communities', suffixIcon: query.isEmpty ? null : IconButton(onPressed: () { searchController.clear(); setState(() => query = ''); }, icon: const Icon(Icons.close_rounded)), filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line))),
+        ),
+        const SizedBox(height: 14),
+        _communityStream(),
+        const SizedBox(height: 20),
+        Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Happening in the Village', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)), const SizedBox(height: 5), Text('Join a community to ask questions, share support, and find resources made for what you are going through.', style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: const Color(0xFF666C66)))])),
+      ],
+    );
+  }
 
-  Future<void> _toggleJoin(_Community c)async{final joining=!joined.contains(c.id);setState((){joining?joined.add(c.id):joined.remove(c.id);memberCounts[c.id]=((memberCounts[c.id]??0)+(joining?1:-1)).clamp(0,999999).toInt();});await hub.saveJoinedCommunities(joined);await hub.setCommunityMembership(c.id,joining);}
-  Future<void> _toggleResource(_Resource r)async{setState(()=>savedResources.contains(r.id)?savedResources.remove(r.id):savedResources.add(r.id));await hub.saveResources(savedResources);}
-  Future<void> _toggleEvent(_VillageEvent e)async{setState(()=>registeredEvents.contains(e.id)?registeredEvents.remove(e.id):registeredEvents.add(e.id));await hub.saveRegisteredEvents(registeredEvents);}
-  void _openCommunity(_Community c){Navigator.of(context).push(MaterialPageRoute(builder:(_)=>CommunityDetailScreen(id:c.id,name:c.name,description:c.description,category:c.category,imageUrl:c.imageUrl))).then((_)=>_load());}
-  void _showJourneyPicker(){showModalBottomSheet<void>(context:context,backgroundColor:cream,showDragHandle:true,builder:(sheet)=>StreamBuilder<List<ManagedContentItem>>(stream:admin.cloudReady?admin.watchPublished('communities'):const Stream<List<ManagedContentItem>>.empty(),builder:(context,s){final all=admin.cloudReady?_mergeManaged(s.data??const []):builtInCommunities;return SafeArea(child:Padding(padding:const EdgeInsets.fromLTRB(20,4,20,28),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[Text('What are you going through?',style:GoogleFonts.playfairDisplay(fontSize:26,fontWeight:FontWeight.w700,color:ink)),const SizedBox(height:16),Wrap(spacing:8,runSpacing:8,children:all.map((c)=>ActionChip(label:Text(c.name),onPressed:(){Navigator.pop(sheet);_openCommunity(c);})).toList())]))); }));}
-  void _showResource(_Resource r){showModalBottomSheet<void>(context:context,isScrollControlled:true,backgroundColor:cream,showDragHandle:true,builder:(_)=>Padding(padding:const EdgeInsets.fromLTRB(22,4,22,30),child:ListView(shrinkWrap:true,children:[Text(r.category.toUpperCase(),style:const TextStyle(color:gold,fontSize:10,fontWeight:FontWeight.w900)),const SizedBox(height:7),Text(r.title,style:GoogleFonts.playfairDisplay(fontSize:28,fontWeight:FontWeight.w700,color:ink)),const SizedBox(height:8),Text(r.readTime,style:const TextStyle(color:sage,fontWeight:FontWeight.w800)),const SizedBox(height:18),Text(r.summary,style:GoogleFonts.inter(fontSize:15,height:1.6,color:ink)),const SizedBox(height:20),FilledButton.icon(onPressed:()=>_toggleResource(r),style:FilledButton.styleFrom(backgroundColor:sage),icon:Icon(savedResources.contains(r.id)?Icons.bookmark_remove_outlined:Icons.bookmark_add_outlined),label:Text(savedResources.contains(r.id)?'Remove from Saved':'Save Resource'))])));}
-  Widget _fallbackCover()=>Container(decoration:const BoxDecoration(gradient:LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xFF355C3B),Color(0xFF6F876B)])),child:const Center(child:Icon(Icons.groups_2_outlined,color:Colors.white,size:42)));
-  Widget _softCard(String title,String body)=>Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(color:Colors.white.withValues(alpha:.72),borderRadius:BorderRadius.circular(22),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:GoogleFonts.playfairDisplay(fontSize:19,fontWeight:FontWeight.w700,color:ink)),const SizedBox(height:5),Text(body,style:GoogleFonts.inter(fontSize:12.5,color:const Color(0xFF666C66),height:1.4))]));
-  Widget _sectionTitle(String title,String note)=>Row(crossAxisAlignment:CrossAxisAlignment.end,children:[Expanded(child:Text(title,style:GoogleFonts.inter(fontSize:18,fontWeight:FontWeight.w800,color:ink))),Text(note,style:GoogleFonts.inter(fontSize:10.5,fontWeight:FontWeight.w700,color:gold))]);
+  List<_Community> _merge(List<ManagedContentItem> managed) {
+    final overrides = <String, ManagedContentItem>{};
+    final custom = <_Community>[];
+    for (final item in managed) {
+      final builtinId = item.text('builtinId');
+      if (builtinId.isNotEmpty) {
+        overrides[builtinId] = item;
+      } else {
+        final name = item.text('name', item.text('title', 'Community'));
+        custom.add(_Community('admin_${item.id}', name, item.text('description', 'A place to connect in the Village.'), item.text('category', name), item.text('imageUrl')));
+      }
+    }
+    return [
+      ...builtIns.map((base) {
+        final override = overrides[base.id];
+        if (override == null) return base;
+        return _Community(base.id, override.text('name', base.name), override.text('description', base.description), override.text('category', base.category), override.text('imageUrl', base.imageUrl));
+      }),
+      ...custom,
+    ];
+  }
+
+  List<_Community> _filter(List<_Community> items) {
+    if (query.isEmpty) return items;
+    return items.where((c) => '${c.name} ${c.category} ${c.description}'.toLowerCase().contains(query)).toList();
+  }
+
+  Widget _communityStream() {
+    if (!admin.cloudReady) return _twoRows(_filter(builtIns));
+    return StreamBuilder<List<ManagedContentItem>>(
+      stream: admin.watchPublished('communities'),
+      builder: (context, snapshot) => _twoRows(_filter(_merge(snapshot.data ?? const <ManagedContentItem>[]))),
+    );
+  }
+
+  Widget _twoRows(List<_Community> items) {
+    if (items.isEmpty) return Container(padding: const EdgeInsets.all(18), child: const Text('No communities found. Try another search.'));
+    return SizedBox(
+      height: 390,
+      child: GridView.builder(
+        scrollDirection: Axis.horizontal,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: .82),
+        itemCount: items.length,
+        itemBuilder: (context, index) => _communityCard(items[index]),
+      ),
+    );
+  }
+
+  Widget _communityCard(_Community community) {
+    final count = memberCounts[community.id] ?? 0;
+    final isJoined = joined.contains(community.id);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          community.imageUrl.isEmpty ? _fallback() : Image.network(community.imageUrl, fit: BoxFit.cover, errorBuilder: (context, error, stack) => _fallback()),
+          const DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x16000000), Color(0xD8000000)]))),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Align(alignment: Alignment.topRight, child: InkWell(onTap: () => _toggleJoin(community), child: Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)), child: Text(isJoined ? 'Joined' : 'Join', style: const TextStyle(color: sage, fontSize: 10, fontWeight: FontWeight.w800))))),
+              const Spacer(),
+              Text(community.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.playfairDisplay(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 3),
+              Text(community.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 10.5, height: 1.2)),
+              const SizedBox(height: 5),
+              Text('$count ${count == 1 ? 'member' : 'members'}', style: const TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 5),
+              InkWell(onTap: () => _open(community), child: const Text('Enter community →', style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w800))),
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleJoin(_Community community) async {
+    final joining = !joined.contains(community.id);
+    setState(() {
+      if (joining) { joined.add(community.id); } else { joined.remove(community.id); }
+      memberCounts[community.id] = ((memberCounts[community.id] ?? 0) + (joining ? 1 : -1)).clamp(0, 999999).toInt();
+    });
+    await hub.saveJoinedCommunities(joined);
+    await hub.setCommunityMembership(community.id, joining);
+  }
+
+  void _open(_Community community) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => CommunityDetailScreen(id: community.id, name: community.name, description: community.description, category: community.category, imageUrl: community.imageUrl)));
+  }
+
+  void _showAll() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => StreamBuilder<List<ManagedContentItem>>(
+        stream: admin.cloudReady ? admin.watchPublished('communities') : const Stream<List<ManagedContentItem>>.empty(),
+        builder: (context, snapshot) {
+          final all = admin.cloudReady ? _merge(snapshot.data ?? const <ManagedContentItem>[]) : builtIns;
+          return SizedBox(height: MediaQuery.sizeOf(context).height * .82, child: Padding(padding: const EdgeInsets.fromLTRB(20, 4, 20, 20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('All Communities', style: GoogleFonts.playfairDisplay(fontSize: 28, fontWeight: FontWeight.w700, color: ink)), const SizedBox(height: 4), Text('${all.length} spaces to find your people'), const SizedBox(height: 12), Expanded(child: ListView.separated(itemCount: all.length, separatorBuilder: (context, index) => const Divider(color: line), itemBuilder: (context, index) { final c = all[index]; return ListTile(contentPadding: EdgeInsets.zero, title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(c.description, maxLines: 2, overflow: TextOverflow.ellipsis), trailing: const Icon(Icons.chevron_right_rounded, color: sage), onTap: () { Navigator.pop(sheetContext); _open(c); }); }))])));
+        },
+      ),
+    );
+  }
+
+  Widget _managedList(String type, String title, IconData icon) {
+    if (!admin.cloudReady) return Center(child: Text(title));
+    return StreamBuilder<List<ManagedContentItem>>(
+      stream: admin.watchPublished(type),
+      builder: (context, snapshot) {
+        final items = snapshot.data ?? const <ManagedContentItem>[];
+        return ListView(padding: const EdgeInsets.fromLTRB(20, 14, 20, 32), children: [Text(title, style: GoogleFonts.playfairDisplay(fontSize: 27, fontWeight: FontWeight.w700, color: ink)), const SizedBox(height: 14), if (items.isEmpty) Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)), child: const Text('More Village content is coming soon.')), for (final item in items) Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: line)), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(icon, color: sage), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item.text('title', item.text('name', 'Village')), style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w800, color: ink)), const SizedBox(height: 4), Text(item.text('description', item.text('body', '')), maxLines: 5, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter(fontSize: 12.5, height: 1.4))]))]))]);
+      },
+    );
+  }
+
+  Widget _fallback() => Container(color: sage, child: const Center(child: Icon(Icons.groups_2_outlined, color: Colors.white, size: 40)));
 }
-class _Community{const _Community(this.id,this.name,this.description,this.category,this.imageUrl);final String id,name,description,category,imageUrl;}
-class _Resource{const _Resource(this.id,this.category,this.title,this.summary,this.readTime);final String id,category,title,summary,readTime;}
-class _VillageEvent{const _VillageEvent(this.id,this.title,this.community,this.format,this.schedule,this.description);final String id,title,community,format,schedule,description;}
+
+class _Community {
+  const _Community(this.id, this.name, this.description, this.category, this.imageUrl);
+  final String id;
+  final String name;
+  final String description;
+  final String category;
+  final String imageUrl;
+}
