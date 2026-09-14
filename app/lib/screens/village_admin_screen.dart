@@ -223,6 +223,13 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
     final category=TextEditingController(text:(existing?['category']??'').toString());
     final date=TextEditingController(text:(existing?['dateTimeLabel']??'').toString());
     final body=TextEditingController(text:(existing?['body']??'').toString());
+    final helpState=TextEditingController(text:(existing?['state']??'').toString());
+    final helpNeed=TextEditingController(text:(existing?['need']??'').toString());
+    final helpUrl=TextEditingController(text:(existing?['url']??'').toString());
+    final helpPhone=TextEditingController(text:(existing?['phone']??'').toString());
+    final helpLabel=TextEditingController(text:(existing?['freeLabel']??'Free resource').toString());
+    final helpVerified=TextEditingController(text:(existing?['verifiedAt']??'').toString());
+    bool helpResource=existing?['helpResource']==true;
     bool published=isBuiltIn ? true : existing?['published']==true;
     await showModalBottomSheet<void>(
       context:context,
@@ -240,7 +247,24 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
           if(tab!=3)_field(description,'Short description',lines:3),
           if(tab==0)_field(category,'Category'),
           if(tab!=0)_field(community,'Community / category'),
-          if(tab==1)_field(body,'Resource content',lines:8),
+          if(tab==1)...[
+            _field(body,'Resource content',lines:8),
+            SwitchListTile(
+              contentPadding:EdgeInsets.zero,
+              title:const Text('Show in Find Help directory'),
+              subtitle:const Text('Use this for food, rent, utility, health, or other assistance.'),
+              value:helpResource,
+              onChanged:(value)=>setSheetState(()=>helpResource=value),
+            ),
+            if(helpResource)...[
+              _field(helpState,'State codes (example: FL, GA). Leave blank for nationwide'),
+              _field(helpNeed,'Needs, separated by commas (example: Food, Rent & Housing)'),
+              _field(helpUrl,'Website link'),
+              _field(helpPhone,'Phone number'),
+              _field(helpLabel,'Label (example: Free • Florida)'),
+              _field(helpVerified,'Last verified (example: September 2026)'),
+            ],
+          ],
           if(tab==2)_field(date,'Date & time'),
           if(tab!=3) Padding(
             padding:const EdgeInsets.only(top:14),
@@ -277,6 +301,13 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
                 if(tab==0)'category':category.text.trim(),
                 if(tab!=0)'community':community.text.trim(),
                 if(tab==1)'body':body.text.trim(),
+                if(tab==1)'helpResource':helpResource,
+                if(tab==1&&helpResource)'state':helpState.text.trim(),
+                if(tab==1&&helpResource)'need':helpNeed.text.trim(),
+                if(tab==1&&helpResource)'url':helpUrl.text.trim(),
+                if(tab==1&&helpResource)'phone':helpPhone.text.trim(),
+                if(tab==1&&helpResource)'freeLabel':helpLabel.text.trim(),
+                if(tab==1&&helpResource)'verifiedAt':helpVerified.text.trim(),
                 if(tab==2)'dateTimeLabel':date.text.trim(),
                 if(tab==3)'kind':'question',
                 if(isBuiltIn)'builtinId':(existing?['builtinId']??'').toString(),
