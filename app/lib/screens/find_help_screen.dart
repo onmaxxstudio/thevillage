@@ -296,11 +296,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ]),
       );
 
-  String _stateLabel(String code) {
-    const short = <String>{'CT','DE','RI','MD','NJ','MA','VT','NH','ME','HI'};
-    if (short.contains(code)) return code;
-    return stateNames[code]!.toUpperCase().replaceAll(' ', '\n');
-  }
+  String _stateLabel(String code) => code;
 
   Widget _map() => Container(
         padding: const EdgeInsets.all(12),
@@ -316,8 +312,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           AspectRatio(
             aspectRatio: 959 / 593,
             child: LayoutBuilder(builder: (context, constraints) {
-              const markerWidth = 48.0;
-              const markerHeight = 27.0;
+              const markerWidth = 25.0;
+              const markerHeight = 18.0;
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -353,8 +349,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                               maxLines: 2,
                               overflow: TextOverflow.visible,
                               style: GoogleFonts.oswald(
-                                fontSize: 7.3,
-                                height: .86,
+                                fontSize: 8.5,
+                                height: 1,
                                 fontWeight: FontWeight.w700,
                                 color: selectedState == entry.key ? ink : Colors.white,
                                 shadows: const [Shadow(color: Color(0x66000000), blurRadius: 1)],
@@ -369,7 +365,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             }),
           ),
           const SizedBox(height: 8),
-          const Text('Tap any state name. Alaska and Hawaii are included.', style: TextStyle(fontSize: 10.5, color: Color(0xFF6C726C))),
+          const Text('Tap any state abbreviation. Alaska and Hawaii are included.', style: TextStyle(fontSize: 10.5, color: Color(0xFF6C726C))),
         ]),
       );
 
