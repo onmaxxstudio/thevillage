@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/admin_content_service.dart';
 import '../services/community_hub_service.dart';
+import '../services/personalization_service.dart';
 import 'community_detail_screen.dart';
 
 class CommunityHubLiveScreen extends StatefulWidget {
@@ -27,8 +28,10 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   String query = '';
   Set<String> joined = {};
   Map<String, int> memberCounts = {};
+  VillagePersonalization personalization = const VillagePersonalization.empty();
 
   static const builtIns = <_Community>[
+    _Community('men', 'Men', 'Honest advice about relationships, fatherhood, purpose, friendship, pressure, and emotional wellbeing.', 'Men', 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1200&q=85'),
     _Community('relationships', 'Relationships', 'For the conversations you cannot always have with people you know.', 'Relationships', 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85'),
     _Community('women', 'Women', 'Support, perspective, and connection through every season of womanhood.', 'Life & Growth', 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'),
     _Community('moms', 'Moms', 'Real talk and practical support for motherhood.', 'Parenting', 'https://images.unsplash.com/photo-1543342386-1f1350e27861?auto=format&fit=crop&w=1200&q=85'),
@@ -57,11 +60,13 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
       final values = await Future.wait<Object>([
         hub.joinedCommunities(),
         hub.memberCounts(builtIns.map((e) => e.id)),
+        PersonalizationService().load(),
       ]);
       if (!mounted) return;
       setState(() {
         joined = values[0] as Set<String>;
         memberCounts = values[1] as Map<String, int>;
+        personalization = values[2] as VillagePersonalization;
       });
     } on Object {
       // Community discovery remains usable if membership data is unavailable.
@@ -173,8 +178,18 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   List<_Community> _filter(List<_Community> items) {
-    if (query.isEmpty) return items;
-    return items.where((c) => '${c.name} ${c.category} ${c.description}'.toLowerCase().contains(query)).toList();
+    final filtered = query.isEmpty
+        ? [...items]
+        : items.where((c) => '${c.name} ${c.category} ${c.description}'.toLowerCase().contains(query)).toList();
+    int priority(_Community community) {
+      if (personalization.isMan && community.id == 'men') return 0;
+      if (personalization.isWoman && community.id == 'women') return 0;
+      final searchable = '${community.name} ${community.category}'.toLowerCase();
+      if (personalization.interests.any((interest) => searchable.contains(interest.toLowerCase()))) return 1;
+      return 2;
+    }
+    filtered.sort((a, b) => priority(a).compareTo(priority(b)));
+    return filtered;
   }
 
   Widget _communityStream() {
