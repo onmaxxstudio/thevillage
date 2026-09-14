@@ -4,6 +4,8 @@ import '../screens/ask_village_screen.dart';
 import '../screens/circle_screen.dart';
 import '../screens/community_hub_managed_screen.dart';
 import '../screens/home_screen.dart';
+import '../screens/personalization_screen.dart';
+import '../services/personalization_service.dart';
 import '../screens/village_feed_screen.dart';
 import 'village_navigation_scope.dart';
 
@@ -20,6 +22,24 @@ class _VillageAppShellState extends State<VillageAppShell> {
   static const ink = Color(0xFF172019);
 
   int selectedIndex = 0;
+  final personalizationService = PersonalizationService();
+  bool checkingPersonalization = true;
+  bool personalizationComplete = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPersonalization();
+  }
+
+  Future<void> _loadPersonalization() async {
+    final value = await personalizationService.load();
+    if (!mounted) return;
+    setState(() {
+      personalizationComplete = value.completed;
+      checkingPersonalization = false;
+    });
+  }
 
   final navigatorKeys = List.generate(5, (_) => GlobalKey<NavigatorState>());
 
@@ -65,6 +85,17 @@ class _VillageAppShellState extends State<VillageAppShell> {
 
   @override
   Widget build(BuildContext context) {
+    if (checkingPersonalization) {
+      return const Scaffold(
+        backgroundColor: cream,
+        body: Center(child: CircularProgressIndicator(color: sage)),
+      );
+    }
+    if (!personalizationComplete) {
+      return PersonalizationScreen(
+        onComplete: () => setState(() => personalizationComplete = true),
+      );
+    }
     return VillageNavigationScope(
       selectedIndex: selectedIndex,
       onSelect: selectTab,
