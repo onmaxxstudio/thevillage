@@ -36,8 +36,8 @@ class _CommunityHubPremiumScreenState extends State<CommunityHubPremiumScreen> {
   bool loading = true;
 
   static const communities = <_Community>[
-    _Community('relationships', 'Relationships', 'For the conversations you cannot always have with people you know.', 'Relationships', 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85'),
     _Community('men', 'Men', 'Honest conversation about relationships, fatherhood, purpose, friendship, pressure, and emotional wellbeing.', 'Men', 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1200&q=85'),
+    _Community('relationships', 'Relationships', 'For the conversations you cannot always have with people you know.', 'Relationships', 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85'),
     _Community('women', 'Women', 'Support, perspective, and connection through every season of womanhood.', 'Life & Growth', 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'),
     _Community('moms', 'Moms', 'Real talk and practical support for motherhood.', 'Parenting', 'https://images.unsplash.com/photo-1543342386-1f1350e27861?auto=format&fit=crop&w=1200&q=85'),
     _Community('friendship', 'Friendship', 'Navigate closeness, change, conflict, and connection.', 'Friendship', 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'),
@@ -145,7 +145,9 @@ class _CommunityHubPremiumScreenState extends State<CommunityHubPremiumScreen> {
     final trending = [...posts]..sort((a, b) => (b.replies.length * 3 + b.supportCount).compareTo(a.replies.length * 3 + a.supportCount));
     return ListView(padding: const EdgeInsets.fromLTRB(20, 12, 20, 32), children: [
       TextField(readOnly: true, onTap: _showJourneyPicker, decoration: InputDecoration(prefixIcon: const Icon(Icons.search_rounded, color: sage), hintText: 'What are you going through?', suffixIcon: const Icon(Icons.tune_rounded), filled: true, fillColor: Colors.white.withValues(alpha: .72), border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: line)))),
-      const SizedBox(height: 20), _sectionTitle('Explore communities', 'Real spaces for real life'), const SizedBox(height: 12),
+      const SizedBox(height: 14),
+      Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFFE9EEE4), borderRadius: BorderRadius.circular(20), border: Border.all(color: line)), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.diversity_3_outlined, color: sage), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('One Village. Every voice belongs.', style: GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w700, color: ink)), const SizedBox(height: 4), Text('A shared community for women, men, parents, partners, friends, and anyone who needs real support.', style: GoogleFonts.inter(fontSize: 12.5, height: 1.4, color: ink))]))])),
+      const SizedBox(height: 20), _sectionTitle('Explore communities', 'Men, women, and every season of life'), const SizedBox(height: 12),
       _exploreCommunities(),
       const SizedBox(height: 24), _sectionTitle('Happening in the Village', 'Join the conversation'), const SizedBox(height: 10),
       if (trending.isEmpty) _softCard('The first brave question starts the conversation.', 'As people post, the most active discussions will surface here.') else _conversationCard(trending.first),
