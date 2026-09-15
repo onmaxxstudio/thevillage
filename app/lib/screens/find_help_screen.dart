@@ -111,6 +111,81 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       verified: 'September 2026',
     ),
     HelpResource(
+      id: 'state-social-services',
+      title: 'State Benefits & Social Services',
+      description: 'Find your state social service agency for SNAP, cash assistance, Medicaid, childcare help, and other state-run programs.',
+      needs: ['Food','Rent & Housing','Utilities','Healthcare','Childcare','Employment'],
+      url: 'https://www.usa.gov/state-social-services',
+      label: 'Official government directory',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'emergency-food',
+      title: 'Emergency Food Assistance',
+      description: 'Find emergency food options, including food pantries, hunger hotlines, disaster food assistance, and local help.',
+      needs: ['Food'],
+      url: 'https://www.usa.gov/emergency-food-assistance',
+      phone: '1-866-348-6479',
+      label: 'Official • Nationwide',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'health-center',
+      title: 'Find a Community Health Center',
+      description: 'Search nearby health centers for medical, dental, behavioral-health, vision, and other care.',
+      needs: ['Healthcare'],
+      url: 'https://findahealthcenter.hrsa.gov/',
+      label: 'Official • Local locator',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'childcare-referral',
+      title: 'Child Care Resource & Referral Search',
+      description: 'Find the local organization that helps families locate childcare, financial assistance, and family services.',
+      needs: ['Childcare'],
+      url: 'https://www.childcareaware.org/resources/ccrr-search/',
+      label: 'Nationwide local locator',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'jobs-local',
+      title: 'American Job Center Finder',
+      description: 'Find nearby no-cost help with job searches, training, résumé support, workshops, computers, and employment services.',
+      needs: ['Employment'],
+      url: 'https://www.careeronestop.org/LocalHelp/AmericanJobCenters/find-american-job-centers.aspx',
+      phone: '1-877-872-5627',
+      label: 'Official • Local locator',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'legal-aid',
+      title: 'Free Civil Legal Aid Finder',
+      description: 'Search by address or city for nonprofit legal aid for housing, family, benefits, safety, consumer, and other civil matters.',
+      needs: ['Legal Help'],
+      url: 'https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help',
+      label: 'Nationwide nonprofit network',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: '988',
+      title: '988 Suicide & Crisis Lifeline',
+      description: 'Free, confidential support for mental-health struggles, emotional distress, substance-use concerns, or a crisis. Call, text, or chat.',
+      needs: ['Crisis & Safety','Healthcare'],
+      url: 'https://988lifeline.org/get-help/',
+      phone: '988',
+      label: 'Free • 24/7',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'local-programs',
+      title: 'Search Local Programs & Nonprofits',
+      description: 'Enter your ZIP code below to search food pantries, rent help, bills, health care, transportation, job help, and other programs near you.',
+      needs: ['Food','Rent & Housing','Utilities','Healthcare','Childcare','Transportation','Employment','Legal Help','Crisis & Safety'],
+      url: 'https://www.findhelp.org/',
+      label: 'Local nonprofit directory',
+      verified: 'September 2026',
+    ),
+    HelpResource(
       id: 'fl-benefits',
       title: 'Florida Public Assistance',
       description: 'Apply for Florida food assistance, temporary cash assistance, Medicaid, and refugee assistance.',
@@ -571,29 +646,129 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ]),
       );
 
-  Widget _zipSearch() => TextField(
-        controller: zipController,
-        keyboardType: TextInputType.number,
-        maxLength: 5,
-        decoration: InputDecoration(
-          counterText: '',
-          prefixIcon: const Icon(Icons.location_on_outlined, color: sage),
-          hintText: 'Enter ZIP code for local help',
-          suffixIcon: TextButton(
-            onPressed: () {
-              if (zipController.text.trim().length != 5) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a 5-digit ZIP code.')));
-                return;
-              }
-              _open('https://www.211.org/');
-            },
-            child: const Text('Search'),
+  Widget _zipSearch() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Find programs in your county', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
+          const SizedBox(height: 4),
+          const Text('Search current local nonprofits and assistance programs by ZIP code.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+          const SizedBox(height: 9),
+          TextField(
+            controller: zipController,
+            keyboardType: TextInputType.number,
+            maxLength: 5,
+            decoration: InputDecoration(
+              counterText: '',
+              prefixIcon: const Icon(Icons.location_on_outlined, color: sage),
+              hintText: 'Enter ZIP code',
+              suffixIcon: TextButton(
+                onPressed: () {
+                  final zip = zipController.text.trim();
+                  if (!RegExp(r'^\\d{5}
+  String _resultsTitle() {
+    if (view == 2) return 'Saved resources';
+    if (selectedNeed != null) return selectedNeed!;
+    if (selectedState != null) return 'Help in ${stateNames[selectedState]}';
+    return 'Trusted nationwide help';
+  }
+
+  Widget _empty() => Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: line)),
+        child: Column(children: [
+          const Icon(Icons.search_off_rounded, color: sage, size: 32),
+          const SizedBox(height: 7),
+          Text(view == 2 ? 'No saved resources yet.' : 'No matching resources yet.', style: const TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          const Text('Try another need or use 211 to find local help.', textAlign: TextAlign.center),
+        ]),
+      );
+
+  Widget _resourceCard(HelpResource resource) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(width: 43, height: 43, decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.volunteer_activism_outlined, color: sage)),
+            const SizedBox(width: 11),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(resource.title, style: GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w700, color: ink)),
+              const SizedBox(height: 3),
+              Text(resource.label, style: const TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w900)),
+            ])),
+            IconButton(onPressed: () => _toggleSaved(resource.id), icon: Icon(saved.contains(resource.id) ? Icons.bookmark_rounded : Icons.bookmark_border_rounded, color: sage), tooltip: 'Save resource'),
+          ]),
+          const SizedBox(height: 9),
+          Text(resource.description, style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: ink)),
+          const SizedBox(height: 10),
+          Wrap(spacing: 6, runSpacing: 5, children: [
+            for (final need in resource.needs.take(3))
+              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(12)), child: Text(need, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700))),
+          ]),
+          const SizedBox(height: 11),
+          Row(children: [
+            Expanded(child: Text('Verified: ${resource.verified}', style: const TextStyle(fontSize: 10.5, color: Color(0xFF697069)))),
+            if (resource.phone.isNotEmpty) TextButton.icon(onPressed: () => _call(resource.phone), icon: const Icon(Icons.call_outlined, size: 17), label: const Text('Call')),
+            if (resource.url.isNotEmpty) FilledButton(onPressed: () => _open(resource.url), style: FilledButton.styleFrom(backgroundColor: sage, visualDensity: VisualDensity.compact), child: const Text('Visit')),
+          ]),
+        ]),
+      );
+}
+
+class SupportCourse {
+  const SupportCourse({
+    required this.title,
+    required this.description,
+    required this.community,
+    required this.length,
+    this.url = '',
+  });
+
+  final String title;
+  final String description;
+  final String community;
+  final String length;
+  final String url;
+}
+
+class HelpResource {
+  const HelpResource({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.needs,
+    required this.url,
+    required this.label,
+    required this.verified,
+    this.states = const <String>[],
+    this.phone = '',
+  });
+
+  final String id;
+  final String title;
+  final String description;
+  final List<String> needs;
+  final List<String> states;
+  final String url;
+  final String phone;
+  final String label;
+  final String verified;
+}
+).hasMatch(zip)) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a 5-digit ZIP code.')));
+                    return;
+                  }
+                  _open('https://www.findhelp.org/search/text?postal=$zip&term=individuals');
+                },
+                child: const Text('Find help'),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
+            ),
           ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
-        ),
+        ],
       );
 
   String _resultsTitle() {
