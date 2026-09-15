@@ -1211,7 +1211,9 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                 const Color(0xFFFFF4DD),
               ),
               if (post.needsSupport) _label('Needs support', blush),
-              _label('Looking for ${post.supportIntent.toLowerCase()}', const Color(0xFFF1EEE4)),
+              if (post.welcomesPrayer)
+                _label('Prayer welcome', const Color(0xFFF5EAF7)),
+              _label('Looking for ' + post.supportIntent.toLowerCase(), const Color(0xFFF1EEE4)),
               if (post.followUpStatus != 'Open')
                 _label(post.followUpStatus, const Color(0xFFDDE9DA)),
             ],

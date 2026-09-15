@@ -45,8 +45,9 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   final preferences = SharedPreferencesAsync();
   bool anonymous = false;
   bool needsSupport = false;
+  bool welcomesPrayer = false;
   String audience = 'The Village';
-  String category = 'Relationships';
+  String category = 'Relationship & dating';
   String supportIntent = 'Advice';
   String currentUsername = 'VillageMember';
 
@@ -58,21 +59,20 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
 
   static const supportIntents = [
     ('Advice', Icons.lightbulb_outline_rounded),
-    ('Just listen', Icons.hearing_rounded),
+    ('A listening ear', Icons.hearing_rounded),
     ('Encouragement', Icons.favorite_border_rounded),
-    ('Prayer', Icons.auto_awesome_outlined),
-    ('Practical help', Icons.handshake_outlined),
+    ('Resources or practical help', Icons.handshake_outlined),
   ];
 
   static const categories = [
-    'Relationships',
-    'Men',
-    'Mental Health',
-    'Parenting',
-    'Life & Growth',
-    'Friendship',
-    'Work & School',
-    'Other',
+    'Relationship & dating',
+    'Family & parenting',
+    'Mental wellbeing',
+    'Friendship & social life',
+    'Work & money',
+    'Life changes',
+    'Health & self-care',
+    'Something else',
   ];
 
   @override
@@ -155,6 +155,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
             needsSupport: needsSupport,
             supportIntent: supportIntent,
             username: currentUsername,
+            welcomesPrayer: welcomesPrayer,
             communityId: widget.initialCommunityId,
             communityName: widget.initialCommunityName,
           ),
@@ -212,6 +213,123 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                   const SizedBox(height: 14),
                 ],
                 _section(
+                  title: 'What’s on your mind?',
+                  subtitle: 'There’s no perfect way to ask. Just start where you are.',
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: questionController,
+                        maxLength: 1500,
+                        minLines: 6,
+                        maxLines: 10,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          hintText: 'Write your question or share what’s going on…',
+                          filled: true,
+                          fillColor: cream,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: line),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: sage, width: 1.5),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _helper(
+                            Icons.auto_awesome_outlined,
+                            'Help me find\nthe words',
+                            () => _writingHelp('starter'),
+                          ),
+                          _helper(
+                            Icons.lightbulb_outline_rounded,
+                            'Tips for a\ngreat post',
+                            () => _writingHelp('tips'),
+                          ),
+                          _helper(
+                            Icons.content_copy_outlined,
+                            'Example\nquestion',
+                            () => _writingHelp('example'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _section(
+                  title: 'What’s this about?',
+                  subtitle: 'Choose the topic that fits best.',
+                  child: Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: [
+                      for (final item in categories)
+                        ChoiceChip(
+                          label: Text(item),
+                          selected: category == item,
+                          selectedColor: const Color(0xFFE8EBDD),
+                          side: BorderSide(color: category == item ? sage : line),
+                          onSelected: (_) => setState(() => category = item),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _section(
+                  title: 'What would help most right now?',
+                  subtitle: 'Choose the kind of response that would feel helpful.',
+                  child: Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: [
+                      for (final intent in supportIntents)
+                        ChoiceChip(
+                          avatar: Icon(intent.$2, size: 17),
+                          label: Text(intent.$1),
+                          selected: supportIntent == intent.$1,
+                          selectedColor: const Color(0xFFE8EBDD),
+                          side: BorderSide(
+                            color: supportIntent == intent.$1 ? sage : line,
+                          ),
+                          onSelected: (_) =>
+                              setState(() => supportIntent = intent.$1),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF7F0F8),
+                    border: Border.all(color: const Color(0xFFE5D4E8)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'I’d welcome prayer too',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: const Text(
+                      'Optional — this lets neighbors know prayer is welcome.',
+                    ),
+                    secondary: const Icon(
+                      Icons.auto_awesome_outlined,
+                      color: Color(0xFF8B5B91),
+                    ),
+                    value: welcomesPrayer,
+                    onChanged: (value) =>
+                        setState(() => welcomesPrayer = value),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _section(
                   title: 'How would you like to ask?',
                   subtitle: 'You’re in control. Choose how you show up.',
                   child: Row(
@@ -235,29 +353,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                           onTap: () => setState(() => anonymous = true),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _section(
-                  title: 'What kind of support do you want?',
-                  subtitle: 'This helps people respond in the way you need.',
-                  child: Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
-                    children: [
-                      for (final intent in supportIntents)
-                        ChoiceChip(
-                          avatar: Icon(intent.$2, size: 17),
-                          label: Text(intent.$1),
-                          selected: supportIntent == intent.$1,
-                          selectedColor: const Color(0xFFE8EBDD),
-                          side: BorderSide(
-                            color: supportIntent == intent.$1 ? sage : line,
-                          ),
-                          onSelected: (_) =>
-                              setState(() => supportIntent = intent.$1),
-                        ),
                     ],
                   ),
                 ),
@@ -312,74 +407,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                           value: needsSupport,
                           onChanged: (value) => setState(() => needsSupport = value),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _section(
-                  title: 'What’s your post about?',
-                  subtitle: 'Choose the category that fits best.',
-                  child: Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
-                    children: [
-                      for (final item in categories)
-                        ChoiceChip(
-                          label: Text(item),
-                          selected: category == item,
-                          selectedColor: const Color(0xFFE8EBDD),
-                          side: BorderSide(color: category == item ? sage : line),
-                          onSelected: (_) => setState(() => category = item),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _section(
-                  title: 'What’s on your mind?',
-                  subtitle: 'There’s no perfect way to ask. Just start where you are.',
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: questionController,
-                        maxLength: 1500,
-                        minLines: 6,
-                        maxLines: 10,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                          hintText: 'Write your question or share what’s going on…',
-                          filled: true,
-                          fillColor: cream,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: line),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: sage, width: 1.5),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          _helper(
-                            Icons.auto_awesome_outlined,
-                            'Help me find\nthe words',
-                            () => _writingHelp('starter'),
-                          ),
-                          _helper(
-                            Icons.lightbulb_outline_rounded,
-                            'Tips for a\ngreat post',
-                            () => _writingHelp('tips'),
-                          ),
-                          _helper(
-                            Icons.content_copy_outlined,
-                            'Example\nquestion',
-                            () => _writingHelp('example'),
-                          ),
-                        ],
                       ),
                     ],
                   ),
@@ -544,6 +571,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         'audience': audience,
         'anonymous': anonymous,
         'needsSupport': needsSupport,
+        'welcomesPrayer': welcomesPrayer,
         'supportIntent': supportIntent,
       }),
     );
@@ -570,6 +598,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         audience = 'The Village';
         anonymous = draft['anonymous'] as bool? ?? anonymous;
         needsSupport = draft['needsSupport'] as bool? ?? needsSupport;
+        welcomesPrayer = draft['welcomesPrayer'] as bool? ?? welcomesPrayer;
         supportIntent = draft['supportIntent'] as String? ?? supportIntent;
       });
       ScaffoldMessenger.of(context).showSnackBar(
