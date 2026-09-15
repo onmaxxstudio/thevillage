@@ -114,7 +114,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _tabs() {
-    const labels = [('Communities', Icons.groups_2_outlined), ('Resources', Icons.menu_book_outlined), ('Events', Icons.calendar_month_outlined)];
+    const labels = [('Communities', Icons.groups_2_outlined), ('Support', Icons.volunteer_activism_outlined), ('Events', Icons.calendar_month_outlined)];
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(color: const Color(0xFFE9EEE4), borderRadius: BorderRadius.circular(18), border: Border.all(color: line)),
