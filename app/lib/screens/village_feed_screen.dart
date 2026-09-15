@@ -1201,10 +1201,15 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
             spacing: 7,
             runSpacing: 6,
             children: [
+              if (post.communityName?.trim().isNotEmpty ?? false)
+                _label(
+                  'From ' + post.communityName! + ' Community',
+                  const Color(0xFFFFE8BE),
+                ),
               _label(post.category, paleSage),
               _label(
                 post.audience == 'My Circle' ? 'Circle only' : 'Village',
-                const Color(0xFFFFE8BE),
+                const Color(0xFFFFF4DD),
               ),
               if (post.needsSupport) _label('Needs support', blush),
               _label('Looking for ${post.supportIntent.toLowerCase()}', const Color(0xFFF1EEE4)),
