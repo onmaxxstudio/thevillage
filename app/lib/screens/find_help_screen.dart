@@ -273,6 +273,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         final nationwideResults = selectedState == null || view == 2
             ? visible
             : visible.where((resource) => resource.states.isEmpty).toList();
+        if (view == 1) return _courses(snapshot.data ?? const <ManagedContentItem>[]);
         return ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           children: [
@@ -284,8 +285,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             const SizedBox(height: 14),
             SegmentedButton<int>(
               segments: const [
-                ButtonSegment(value: 0, label: Text('Map'), icon: Icon(Icons.map_outlined)),
-                ButtonSegment(value: 1, label: Text('By Need'), icon: Icon(Icons.grid_view_rounded)),
+                ButtonSegment(value: 0, label: Text('Find Help'), icon: Icon(Icons.map_outlined)),
+                ButtonSegment(value: 1, label: Text('Courses'), icon: Icon(Icons.auto_stories_outlined)),
                 ButtonSegment(value: 2, label: Text('Saved'), icon: Icon(Icons.bookmark_border_rounded)),
               ],
               selected: {view},
@@ -297,7 +298,6 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ),
             const SizedBox(height: 15),
             if (view == 0) _map(),
-            if (view == 1) _needs(),
             if (view == 2) _savedHeader(),
             const SizedBox(height: 15),
             _zipSearch(),
@@ -461,6 +461,79 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ),
       );
 
+  Widget _courses(List<ManagedContentItem> managed) {
+    final custom = managed
+        .where((item) => item.data['course'] == true)
+        .map((item) => SupportCourse(
+              title: item.text('title', 'Village course'),
+              description: item.text('description', item.text('body')),
+              community: item.text('community', 'Village'),
+              length: item.text('courseLength', 'Self-paced'),
+              url: item.text('courseUrl', item.text('url')),
+            ))
+        .toList();
+    const starter = <SupportCourse>[
+      SupportCourse(title: 'Building a Stronger Relationship', description: 'A practical starting place for communicating better, reconnecting, and handling hard moments as a team.', community: 'Relationships', length: '4 short lessons'),
+      SupportCourse(title: 'The Men’s Wellbeing Room', description: 'Guided conversations around pressure, emotional health, fatherhood, friendship, and purpose.', community: 'Men', length: '5 short lessons'),
+      SupportCourse(title: 'Motherhood Without Losing Yourself', description: 'Support for identity, routines, asking for help, and caring for yourself while caring for everyone else.', community: 'Moms', length: '4 short lessons'),
+      SupportCourse(title: 'Boundaries That Feel Like Care', description: 'Learn how to name your needs, hold healthy limits, and protect your peace without guilt.', community: 'Women', length: '3 short lessons'),
+    ];
+    final courses = [...custom, ...starter];
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
+      children: [
+        Text('Learn & grow', style: GoogleFonts.playfairDisplay(fontSize: 30, fontWeight: FontWeight.w700, color: ink)),
+        const SizedBox(height: 4),
+        Text('Short, supportive courses made for the conversations happening in the Village.', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF626A63))),
+        const SizedBox(height: 15),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(18)),
+          child: const Row(children: [
+            Icon(Icons.auto_stories_outlined, color: sage),
+            SizedBox(width: 10),
+            Expanded(child: Text('Choose a topic that meets you where you are. New courses are added by the Village.', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700))),
+          ]),
+        ),
+        const SizedBox(height: 18),
+        Text('Courses for your season', style: GoogleFonts.playfairDisplay(fontSize: 23, fontWeight: FontWeight.w700, color: ink)),
+        const SizedBox(height: 10),
+        for (final course in courses) ...[
+          _courseCard(course),
+          const SizedBox(height: 11),
+        ],
+      ],
+    );
+  }
+
+  Widget _courseCard(SupportCourse course) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(width: 43, height: 43, decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.play_lesson_outlined, color: sage)),
+            const SizedBox(width: 11),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(course.community, style: const TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 2),
+              Text(course.title, style: GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w700, color: ink)),
+            ])),
+          ]),
+          const SizedBox(height: 10),
+          Text(course.description, style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: ink)),
+          const SizedBox(height: 12),
+          Row(children: [
+            Icon(Icons.schedule_outlined, size: 16, color: sage),
+            const SizedBox(width: 5),
+            Expanded(child: Text(course.length, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: sage))),
+            if (course.url.isNotEmpty)
+              FilledButton(onPressed: () => _open(course.url), style: FilledButton.styleFrom(backgroundColor: sage, visualDensity: VisualDensity.compact), child: const Text('Start'))
+            else
+              OutlinedButton(onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('This course is coming soon.'))), style: OutlinedButton.styleFrom(foregroundColor: sage), child: const Text('Coming soon')),
+          ]),
+        ]),
+      );
+
   Widget _needs() => Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -560,6 +633,22 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           ]),
         ]),
       );
+}
+
+class SupportCourse {
+  const SupportCourse({
+    required this.title,
+    required this.description,
+    required this.community,
+    required this.length,
+    this.url = '',
+  });
+
+  final String title;
+  final String description;
+  final String community;
+  final String length;
+  final String url;
 }
 
 class HelpResource {
