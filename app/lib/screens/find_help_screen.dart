@@ -646,6 +646,88 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ]),
       );
 
+  Future<void> _showZipResults() async {
+    final zip = zipController.text.trim();
+    if (!RegExp(r'^\d{5}').hasMatch(zip)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a 5-digit ZIP code.')));
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Help near ' + zip, style: GoogleFonts.playfairDisplay(fontSize: 27, fontWeight: FontWeight.w700, color: ink)),
+              const SizedBox(height: 5),
+              const Text('Choose the type of local support you want to search.', textAlign: TextAlign.center),
+              const SizedBox(height: 14),
+              _localSearchOption(
+                sheetContext,
+                icon: Icons.volunteer_activism_outlined,
+                title: 'Programs & nonprofits',
+                detail: 'Food, rent, bills, transportation, jobs, and more',
+                onTap: () => _open('https://www.findhelp.org/search/text?postal=' + zip + '&term=individuals'),
+              ),
+              _localSearchOption(
+                sheetContext,
+                icon: Icons.support_agent_rounded,
+                title: 'Talk to 211',
+                detail: 'Speak with a local specialist about your situation',
+                onTap: () => _call('211'),
+              ),
+              _localSearchOption(
+                sheetContext,
+                icon: Icons.local_hospital_outlined,
+                title: 'Low-cost health care',
+                detail: 'Find community health centers near ' + zip,
+                onTap: () => _open('https://findahealthcenter.hrsa.gov/?incrementalsearch=true&radius=10&zip=' + zip),
+              ),
+              _localSearchOption(
+                sheetContext,
+                icon: Icons.gavel_outlined,
+                title: 'Free legal aid',
+                detail: 'Find nonprofit civil legal assistance',
+                onTap: () => _open('https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _localSearchOption(
+    BuildContext sheetContext, {
+    required IconData icon,
+    required String title,
+    required String detail,
+    required VoidCallback onTap,
+  }) =>
+      Container(
+        margin: const EdgeInsets.only(bottom: 9),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: line)),
+        child: ListTile(
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: sage),
+          ),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+          subtitle: Text(detail, style: const TextStyle(fontSize: 12)),
+          trailing: const Icon(Icons.arrow_forward_rounded, color: sage),
+          onTap: () {
+            Navigator.pop(sheetContext);
+            onTap();
+          },
+        ),
+      );
+
   Widget _zipSearch() => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -662,14 +744,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               prefixIcon: const Icon(Icons.location_on_outlined, color: sage),
               hintText: 'Enter ZIP code',
               suffixIcon: TextButton(
-                onPressed: () {
-                  final zip = zipController.text.trim();
-                  if (!RegExp(r'^\d{5}$').hasMatch(zip)) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a 5-digit ZIP code.')));
-                    return;
-                  }
-                  _open('https://www.findhelp.org/search/text?postal=$zip&term=individuals');
-                },
+                onPressed: _showZipResults,
                 child: const Text('Find help'),
               ),
               filled: true,
