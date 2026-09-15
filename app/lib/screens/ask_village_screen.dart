@@ -207,6 +207,10 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
               children: [
+                if (widget.initialCommunityName?.trim().isNotEmpty ?? false) ...[
+                  _communityDestinationBanner(),
+                  const SizedBox(height: 14),
+                ],
                 _section(
                   title: 'How would you like to ask?',
                   subtitle: 'You’re in control. Choose how you show up.',
@@ -422,6 +426,46 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _communityDestinationBanner() {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F3E9),
+        border: Border.all(color: sage),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            backgroundColor: sage,
+            child: Icon(Icons.forum_outlined, color: Colors.white),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Posting in ' + widget.initialCommunityName!,
+                  style: const TextStyle(
+                    color: sage,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Your post will be clearly marked as a community conversation.',
+                  style: TextStyle(fontSize: 11.5, height: 1.3),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

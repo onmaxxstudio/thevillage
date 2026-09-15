@@ -1109,6 +1109,10 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (post.communityName?.trim().isNotEmpty ?? false) ...[
+            _communityOrigin(post),
+            const SizedBox(height: 12),
+          ],
           Row(
             children: [
               CircleAvatar(
@@ -1201,11 +1205,6 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
             spacing: 7,
             runSpacing: 6,
             children: [
-              if (post.communityName?.trim().isNotEmpty ?? false)
-                _label(
-                  'From ' + post.communityName! + ' Community',
-                  const Color(0xFFFFE8BE),
-                ),
               _label(post.category, paleSage),
               _label(
                 post.audience == 'My Circle' ? 'Circle only' : 'Village',
@@ -1326,6 +1325,52 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
               ),
             ],
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _communityOrigin(VillagePost post) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F3E9),
+        border: Border.all(color: const Color(0xFFC9D8C4)),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 17,
+            backgroundColor: sage,
+            child: Icon(
+              Icons.forum_outlined,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  post.communityName! + ' Community',
+                  style: const TextStyle(
+                    color: sage,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const Text(
+                  'Community conversation',
+                  style: TextStyle(fontSize: 10.5, color: Color(0xFF647166)),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.groups_2_outlined, color: sage, size: 20),
         ],
       ),
     );
