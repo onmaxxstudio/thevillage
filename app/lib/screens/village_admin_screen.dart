@@ -230,7 +230,10 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
     final helpPhone=TextEditingController(text:(existing?['phone']??'').toString());
     final helpLabel=TextEditingController(text:(existing?['freeLabel']??'Free resource').toString());
     final helpVerified=TextEditingController(text:(existing?['verifiedAt']??'').toString());
+    final courseLength=TextEditingController(text:(existing?['courseLength']??'').toString());
+    final courseUrl=TextEditingController(text:(existing?['courseUrl']??'').toString());
     bool helpResource=existing?['helpResource']==true;
+    bool course=existing?['course']==true;
     bool published=isBuiltIn ? true : existing?['published']==true;
     await showModalBottomSheet<void>(
       context:context,
@@ -250,6 +253,17 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
           if(tab!=0)_field(community,'Community / category'),
           if(tab==1)...[
             _field(body,'Resource content',lines:8),
+            SwitchListTile(
+              contentPadding:EdgeInsets.zero,
+              title:const Text('Show in Learn & Grow courses'),
+              subtitle:const Text('Use this for a course connected to a community topic.'),
+              value:course,
+              onChanged:(value)=>setSheetState(()=>course=value),
+            ),
+            if(course)...[
+              _field(courseLength,'Course length (example: 4 short lessons)'),
+              _field(courseUrl,'Course link (optional)'),
+            ],
             SwitchListTile(
               contentPadding:EdgeInsets.zero,
               title:const Text('Show in Find Help directory'),
@@ -303,6 +317,9 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
                 if(tab!=0)'community':community.text.trim(),
                 if(tab==1)'body':body.text.trim(),
                 if(tab==1)'helpResource':helpResource,
+                if(tab==1)'course':course,
+                if(tab==1&&course)'courseLength':courseLength.text.trim(),
+                if(tab==1&&course)'courseUrl':courseUrl.text.trim(),
                 if(tab==1&&helpResource)'state':helpState.text.trim(),
                 if(tab==1&&helpResource)'need':helpNeed.text.trim(),
                 if(tab==1&&helpResource)'url':helpUrl.text.trim(),
