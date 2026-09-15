@@ -89,6 +89,7 @@ class VillagePost {
     required this.createdAt,
     required this.needsSupport,
     this.supportIntent = 'Advice',
+    this.welcomesPrayer = false,
     this.followUpStatus = 'Open',
     this.resolvedAt,
     this.supportCount = 0,
@@ -112,6 +113,7 @@ class VillagePost {
   final DateTime createdAt;
   final bool needsSupport;
   final String supportIntent;
+  final bool welcomesPrayer;
   final String followUpStatus;
   final DateTime? resolvedAt;
   final int supportCount;
@@ -132,6 +134,7 @@ class VillagePost {
         'createdAt': createdAt.toIso8601String(),
         'needsSupport': needsSupport,
         'supportIntent': supportIntent,
+        'welcomesPrayer': welcomesPrayer,
         'followUpStatus': followUpStatus,
         if (resolvedAt != null) 'resolvedAt': resolvedAt!.toIso8601String(),
         'supportCount': supportCount,
@@ -152,6 +155,7 @@ class VillagePost {
         'createdAt': Timestamp.fromDate(createdAt),
         'needsSupport': needsSupport,
         'supportIntent': supportIntent,
+        'welcomesPrayer': welcomesPrayer,
         'followUpStatus': followUpStatus,
         if (resolvedAt != null) 'resolvedAt': Timestamp.fromDate(resolvedAt!),
         'supportCount': supportCount,
@@ -183,6 +187,7 @@ class VillagePost {
       createdAt: createdAt,
       needsSupport: json['needsSupport'] as bool? ?? false,
       supportIntent: json['supportIntent'] as String? ?? 'Advice',
+      welcomesPrayer: json['welcomesPrayer'] as bool? ?? false,
       followUpStatus: json['followUpStatus'] as String? ?? 'Open',
       resolvedAt: resolvedAt,
       supportCount: json['supportCount'] as int? ?? 0,
@@ -218,6 +223,7 @@ class VillagePost {
     String? question,
     String? category,
     String? supportIntent,
+    bool? welcomesPrayer,
     int? supportCount,
     bool? saved,
     bool? supportedByMe,
@@ -239,6 +245,7 @@ class VillagePost {
       createdAt: createdAt,
       needsSupport: needsSupport ?? this.needsSupport,
       supportIntent: supportIntent ?? this.supportIntent,
+      welcomesPrayer: welcomesPrayer ?? this.welcomesPrayer,
       followUpStatus: followUpStatus ?? this.followUpStatus,
       resolvedAt: resolvedAt ?? this.resolvedAt,
       supportCount: supportCount ?? this.supportCount,
@@ -340,6 +347,7 @@ class VillagePostService {
     required bool anonymous,
     required bool needsSupport,
     required String supportIntent,
+    required bool welcomesPrayer,
     String? communityId,
     String? communityName,
   }) async {
@@ -371,6 +379,7 @@ class VillagePostService {
           createdAt: now,
           needsSupport: needsSupport,
           supportIntent: supportIntent,
+          welcomesPrayer: welcomesPrayer,
         );
         Future<void> commit(Map<String, Object> postData) async {
           final batch = FirebaseFirestore.instance.batch();
@@ -417,6 +426,7 @@ class VillagePostService {
       createdAt: now,
       needsSupport: needsSupport,
       supportIntent: supportIntent,
+      welcomesPrayer: welcomesPrayer,
     );
     await _saveLocal([post, ...local]);
     await _recordAction('post', now);
