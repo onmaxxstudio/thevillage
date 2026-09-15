@@ -273,7 +273,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         final nationwideResults = selectedState == null || view == 2
             ? visible
             : visible.where((resource) => resource.states.isEmpty).toList();
-        if (view == 1) return _courses(managed);
+        if (view == 1) return _courses(snapshot.data ?? const <ManagedContentItem>[]);
         return ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           children: [
