@@ -189,18 +189,75 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         .toList();
   }
 
+  List<HelpResource> _stateStartingPoints() {
+    final state = selectedState;
+    if (state == null) return const <HelpResource>[];
+    final name = stateNames[state]!;
+    return [
+      HelpResource(
+        id: 'local_food_$state',
+        title: '$name food and grocery help',
+        description: 'Find local food banks, groceries, SNAP guidance, meal programs, and other food support near you through 211.',
+        needs: const ['Food'],
+        states: [state],
+        url: 'https://www.211.org/get-help/food-programs-food-benefits',
+        phone: '211',
+        label: 'Local help in $name',
+        verified: 'September 2026',
+      ),
+      HelpResource(
+        id: 'local_housing_$state',
+        title: '$name rent, housing and utility help',
+        description: 'Find local rent assistance, shelter, mortgage, utility-bill help, and housing-stability programs through 211.',
+        needs: const ['Rent & Housing', 'Utilities'],
+        states: [state],
+        url: 'https://www.211.org/get-help/housing-expenses',
+        phone: '211',
+        label: 'Local help in $name',
+        verified: 'September 2026',
+      ),
+      HelpResource(
+        id: 'local_health_$state',
+        title: '$name health, childcare and transportation help',
+        description: 'Get connected with local medical-cost, medication, appointment transportation, childcare, and family-support options.',
+        needs: const ['Healthcare', 'Childcare', 'Transportation'],
+        states: [state],
+        url: 'https://www.211.org/get-help/healthcare-expenses',
+        phone: '211',
+        label: 'Local help in $name',
+        verified: 'September 2026',
+      ),
+      HelpResource(
+        id: 'local_work_$state',
+        title: '$name job, legal and crisis support',
+        description: 'Talk with a local 211 specialist about employment, legal help, safety planning, and other urgent support.',
+        needs: const ['Employment', 'Legal Help', 'Crisis & Safety'],
+        states: [state],
+        url: 'https://www.211.org/',
+        phone: '211',
+        label: 'Local help in $name',
+        verified: 'September 2026',
+      ),
+    ];
+  }
+
+  List<HelpResource> _applyNeed(List<HelpResource> items) {
+    if (selectedNeed == null) return items;
+    return items.where((resource) => resource.needs.contains(selectedNeed)).toList();
+  }
+
   List<HelpResource> _visible(List<HelpResource> managed) {
-    var items = [...builtIns, ...managed];
-    if (view == 2) {
-      return items.where((resource) => saved.contains(resource.id)).toList();
-    }
+    final all = [...builtIns, ...managed];
+    if (view == 2) return all.where((resource) => saved.contains(resource.id)).toList();
+
     if (selectedState != null) {
-      items = items.where((resource) => resource.states.isEmpty || resource.states.contains(selectedState)).toList();
+      final stateSpecific = all.where((resource) => resource.states.contains(selectedState)).toList();
+      final local = _applyNeed([...stateSpecific, ..._stateStartingPoints()]);
+      final nationwide = _applyNeed(all.where((resource) => resource.states.isEmpty).toList());
+      return [...local, ...nationwide];
     }
-    if (selectedNeed != null) {
-      items = items.where((resource) => resource.needs.contains(selectedNeed)).toList();
-    }
-    return items;
+
+    return _applyNeed(all);
   }
 
   @override
@@ -210,6 +267,12 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       builder: (context, snapshot) {
         final managed = _managed(snapshot.data ?? const <ManagedContentItem>[]);
         final visible = _visible(managed);
+        final localResults = selectedState == null || view == 2
+            ? const <HelpResource>[]
+            : visible.where((resource) => resource.states.contains(selectedState)).toList();
+        final nationwideResults = selectedState == null || view == 2
+            ? visible
+            : visible.where((resource) => resource.states.isEmpty).toList();
         return ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           children: [
@@ -248,7 +311,27 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             const SizedBox(height: 10),
             if (visible.isEmpty)
               _empty()
-            else
+            else if (selectedState != null && view != 2) ...[
+              Text('Help in ${stateNames[selectedState]}', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
+              const SizedBox(height: 4),
+              const Text('Local and state-specific options come first.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+              const SizedBox(height: 10),
+              for (final resource in localResults) ...[
+                _resourceCard(resource),
+                const SizedBox(height: 11),
+              ],
+              if (nationwideResults.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text('Nationwide programs', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
+                const SizedBox(height: 4),
+                const Text('More trusted options available across the country.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+                const SizedBox(height: 10),
+                for (final resource in nationwideResults) ...[
+                  _resourceCard(resource),
+                  const SizedBox(height: 11),
+                ],
+              ],
+            ] else
               for (final resource in visible) ...[
                 _resourceCard(resource),
                 const SizedBox(height: 11),
