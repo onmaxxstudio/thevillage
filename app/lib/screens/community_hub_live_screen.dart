@@ -309,7 +309,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   Widget _pagerDots(int count) => Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(
-          count.clamp(0, 5),
+          count.clamp(0, 5).toInt(),
           (index) => AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             width: index == featuredIndex ? 8 : 7,
