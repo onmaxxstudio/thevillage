@@ -151,36 +151,21 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     final explore =
         communities.where((community) => !joined.contains(community.id)).toList();
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       children: [
+        if (yourSpaces.isNotEmpty) ...[
+          _sectionHeading('Your spaces', 'Your communities, all in one place.'),
+          const SizedBox(height: 11),
+          _yourSpaces(yourSpaces),
+          const SizedBox(height: 22),
+        ],
         Text(
-          'A place to be understood.',
+          yourSpaces.isEmpty ? 'Explore communities' : 'More communities',
           style: GoogleFonts.playfairDisplay(
-            fontSize: 25,
+            fontSize: 22,
             fontWeight: FontWeight.w700,
             color: ink,
           ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Join the conversations that fit your life right now.',
-          style: TextStyle(fontSize: 12.5, color: Color(0xFF626A63)),
-        ),
-        const SizedBox(height: 24),
-        if (yourSpaces.isNotEmpty) ...[
-          _sectionHeading(
-            'Your spaces',
-            'The rooms you have chosen to be part of.',
-          ),
-          const SizedBox(height: 11),
-          _yourSpaces(yourSpaces),
-          const SizedBox(height: 26),
-        ],
-        _sectionHeading(
-          yourSpaces.isEmpty ? 'Find your space' : 'Explore more spaces',
-          yourSpaces.isEmpty
-              ? 'Choose a room for the season you are in.'
-              : 'There is always room for another conversation.',
         ),
         const SizedBox(height: 11),
         for (final community in explore) ...[
