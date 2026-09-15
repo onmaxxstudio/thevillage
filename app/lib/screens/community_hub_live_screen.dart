@@ -138,23 +138,184 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _communities() {
+    if (!admin.cloudReady) return _communityHome(_filter(builtIns));
+    return StreamBuilder<List<ManagedContentItem>>(
+      stream: admin.watchPublished('communities'),
+      builder: (context, snapshot) => _communityHome(_filter(_merge(snapshot.data ?? const <ManagedContentItem>[]))),
+    );
+  }
+
+  Widget _communityHome(List<_Community> communities) {
+    final yourSpaces = communities.where((community) => joined.contains(community.id)).toList();
+    final explore = communities.where((community) => !joined.contains(community.id)).toList();
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       children: [
-        Row(children: [Expanded(child: Text('Explore communities', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: ink))), TextButton(onPressed: _showAll, child: const Text('See All →'))]),
-        const SizedBox(height: 8),
+        Text('A place to be understood.', style: GoogleFonts.playfairDisplay(fontSize: 25, fontWeight: FontWeight.w700, color: ink)),
+        const SizedBox(height: 4),
+        const Text('Join the conversations that fit your life right now.', style: TextStyle(fontSize: 12.5, color: Color(0xFF626A63))),
+        const SizedBox(height: 15),
         TextField(
           controller: searchController,
           onChanged: (value) => setState(() => query = value.trim().toLowerCase()),
-          decoration: InputDecoration(prefixIcon: const Icon(Icons.search_rounded, color: sage), hintText: 'Search communities', suffixIcon: query.isEmpty ? null : IconButton(onPressed: () { searchController.clear(); setState(() => query = ''); }, icon: const Icon(Icons.close_rounded)), filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line))),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search_rounded, color: sage),
+            hintText: 'Search communities',
+            suffixIcon: query.isEmpty ? null : IconButton(onPressed: () { searchController.clear(); setState(() => query = ''); }, icon: const Icon(Icons.close_rounded)),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
+          ),
         ),
-        const SizedBox(height: 14),
-        _communityStream(),
-        const SizedBox(height: 20),
-        Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Happening in the Village', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)), const SizedBox(height: 5), Text('Join a community to ask questions, share support, and find resources made for what you are going through.', style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: const Color(0xFF666C66)))])),
+        const SizedBox(height: 22),
+        if (query.isEmpty) ...[
+          _sectionHeading('Your spaces', 'The rooms you have chosen to be part of.'),
+          const SizedBox(height: 11),
+          if (yourSpaces.isEmpty) _joinFirstCard() else _yourSpaces(yourSpaces),
+          const SizedBox(height: 25),
+        ],
+        _sectionHeading(query.isEmpty ? 'Explore by life season' : 'Matching communities', 'Find a space that feels like a fit.'),
+        const SizedBox(height: 11),
+        if (explore.isEmpty && query.isEmpty)
+          const SizedBox.shrink()
+        else if (query.isNotEmpty && communities.isEmpty)
+          const Padding(padding: EdgeInsets.all(20), child: Text('No communities found. Try another search.'))
+        else
+          for (final community in query.isEmpty ? explore : communities) ...[
+            _exploreCard(community),
+            const SizedBox(height: 10),
+          ],
+        if (query.isEmpty) ...[
+          const SizedBox(height: 22),
+          _upcomingStrip(),
+        ],
       ],
     );
   }
+
+  Widget _sectionHeading(String title, String subtitle) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: GoogleFonts.playfairDisplay(fontSize: 22, fontWeight: FontWeight.w700, color: ink)),
+          const SizedBox(height: 3),
+          Text(subtitle, style: const TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+        ],
+      );
+
+  Widget _joinFirstCard() => Container(
+        padding: const EdgeInsets.all(17),
+        decoration: BoxDecoration(color: const Color(0xFFE8EBDD), borderRadius: BorderRadius.circular(20)),
+        child: Row(children: [
+          Container(width: 43, height: 43, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.groups_2_outlined, color: sage)),
+          const SizedBox(width: 12),
+          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Your spaces will live here.', style: TextStyle(fontWeight: FontWeight.w900)),
+            SizedBox(height: 3),
+            Text('Join a community below to make this feel like home.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+          ])),
+        ]),
+      );
+
+  Widget _yourSpaces(List<_Community> items) => SizedBox(
+        height: 170,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: items.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 11),
+          itemBuilder: (context, index) => _yourSpaceCard(items[index]),
+        ),
+      );
+
+  Widget _yourSpaceCard(_Community community) {
+    final count = memberCounts[community.id] ?? 0;
+    return InkWell(
+      onTap: () => _open(community),
+      borderRadius: BorderRadius.circular(20),
+      child: SizedBox(
+        width: 232,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(fit: StackFit.expand, children: [
+            community.imageUrl.isEmpty ? _fallback() : Image.network(community.imageUrl, fit: BoxFit.cover, errorBuilder: (context, error, stack) => _fallback()),
+            const DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x12000000), Color(0xE7000000)]))),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(99)), child: const Text('Your space', style: TextStyle(color: sage, fontSize: 10, fontWeight: FontWeight.w900))),
+                const Spacer(),
+                Text(community.name, style: GoogleFonts.playfairDisplay(fontSize: 23, fontWeight: FontWeight.w700, color: Colors.white)),
+                const SizedBox(height: 2),
+                Text(count == 0 ? 'Start the conversation' : count.toString() + ' members', style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700)),
+              ]),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _exploreCard(_Community community) {
+    final joinedAlready = joined.contains(community.id);
+    final count = memberCounts[community.id] ?? 0;
+    return InkWell(
+      onTap: () => _open(community),
+      borderRadius: BorderRadius.circular(19),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(19), border: Border.all(color: line)),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            width: 46,
+            height: 46,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: paleColor(community.category), borderRadius: BorderRadius.circular(15)),
+            child: Text(community.name.substring(0, 1).toUpperCase(), style: GoogleFonts.playfairDisplay(color: sage, fontSize: 22, fontWeight: FontWeight.w700)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(community.name, style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w700, color: ink)),
+            const SizedBox(height: 2),
+            Text(community.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, height: 1.35, color: Color(0xFF626A63))),
+            const SizedBox(height: 7),
+            Text(count == 0 ? 'New community' : count.toString() + ' members', style: const TextStyle(fontSize: 10.5, color: sage, fontWeight: FontWeight.w800)),
+          ])),
+          const SizedBox(width: 5),
+          TextButton(
+            onPressed: () => _toggleJoin(community),
+            child: Text(joinedAlready ? 'Joined' : 'Join'),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Color paleColor(String category) {
+    if (category == 'Men') return const Color(0xFFE4EDF1);
+    if (category == 'Parenting') return const Color(0xFFFFEBD8);
+    if (category == 'Mental Health') return const Color(0xFFE9EEE4);
+    if (category == 'Grief') return const Color(0xFFEFE8EE);
+    return const Color(0xFFF5EAD6);
+  }
+
+  Widget _upcomingStrip() => InkWell(
+        onTap: () => setState(() => selected = 2),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(17),
+          decoration: BoxDecoration(color: sage, borderRadius: BorderRadius.circular(20)),
+          child: Row(children: [
+            const Icon(Icons.calendar_month_outlined, color: Color(0xFFFFE4B4), size: 28),
+            const SizedBox(width: 12),
+            const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Upcoming in the Village', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+              SizedBox(height: 3),
+              Text('See conversations and events happening in your community.', style: TextStyle(color: Color(0xFFE8F0E5), fontSize: 12)),
+            ])),
+            const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+          ]),
+        ),
+      );
 
   List<_Community> _merge(List<ManagedContentItem> managed) {
     final overrides = <String, ManagedContentItem>{};
