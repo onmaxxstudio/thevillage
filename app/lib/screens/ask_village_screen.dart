@@ -47,7 +47,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   bool needsSupport = false;
   bool welcomesPrayer = false;
   String audience = 'The Village';
-  String category = 'Relationships';
+  String category = 'Relationship & dating';
   String supportIntent = 'Advice';
   String currentUsername = 'VillageMember';
 
