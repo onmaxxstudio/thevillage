@@ -146,50 +146,49 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _communityHome(List<_Community> communities) {
-    final yourSpaces = communities.where((community) => joined.contains(community.id)).toList();
-    final explore = communities.where((community) => !joined.contains(community.id)).toList();
+    final yourSpaces =
+        communities.where((community) => joined.contains(community.id)).toList();
+    final explore =
+        communities.where((community) => !joined.contains(community.id)).toList();
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       children: [
-        Text('A place to be understood.', style: GoogleFonts.playfairDisplay(fontSize: 25, fontWeight: FontWeight.w700, color: ink)),
-        const SizedBox(height: 4),
-        const Text('Join the conversations that fit your life right now.', style: TextStyle(fontSize: 12.5, color: Color(0xFF626A63))),
-        const SizedBox(height: 15),
-        TextField(
-          controller: searchController,
-          onChanged: (value) => setState(() => query = value.trim().toLowerCase()),
-          decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search_rounded, color: sage),
-            hintText: 'Search communities',
-            suffixIcon: query.isEmpty ? null : IconButton(onPressed: () { searchController.clear(); setState(() => query = ''); }, icon: const Icon(Icons.close_rounded)),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
+        Text(
+          'A place to be understood.',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 25,
+            fontWeight: FontWeight.w700,
+            color: ink,
           ),
         ),
-        const SizedBox(height: 22),
-        if (query.isEmpty) ...[
-          _sectionHeading('Your spaces', 'The rooms you have chosen to be part of.'),
+        const SizedBox(height: 4),
+        const Text(
+          'Join the conversations that fit your life right now.',
+          style: TextStyle(fontSize: 12.5, color: Color(0xFF626A63)),
+        ),
+        const SizedBox(height: 24),
+        if (yourSpaces.isNotEmpty) ...[
+          _sectionHeading(
+            'Your spaces',
+            'The rooms you have chosen to be part of.',
+          ),
           const SizedBox(height: 11),
-          if (yourSpaces.isEmpty) _joinFirstCard() else _yourSpaces(yourSpaces),
-          const SizedBox(height: 25),
+          _yourSpaces(yourSpaces),
+          const SizedBox(height: 26),
         ],
-        _sectionHeading(query.isEmpty ? 'Explore by life season' : 'Matching communities', 'Find a space that feels like a fit.'),
+        _sectionHeading(
+          yourSpaces.isEmpty ? 'Find your space' : 'Explore more spaces',
+          yourSpaces.isEmpty
+              ? 'Choose a room for the season you are in.'
+              : 'There is always room for another conversation.',
+        ),
         const SizedBox(height: 11),
-        if (explore.isEmpty && query.isEmpty)
-          const SizedBox.shrink()
-        else if (query.isNotEmpty && communities.isEmpty)
-          const Padding(padding: EdgeInsets.all(20), child: Text('No communities found. Try another search.'))
-        else
-          for (final community in query.isEmpty ? explore : communities) ...[
-            _exploreCard(community),
-            const SizedBox(height: 10),
-          ],
-        if (query.isEmpty) ...[
-          const SizedBox(height: 22),
-          _upcomingStrip(),
+        for (final community in explore) ...[
+          _exploreCard(community),
+          const SizedBox(height: 10),
         ],
+        const SizedBox(height: 12),
+        _upcomingStrip(),
       ],
     );
   }
