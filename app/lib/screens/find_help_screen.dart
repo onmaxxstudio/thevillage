@@ -664,7 +664,23 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               suffixIcon: TextButton(
                 onPressed: () {
                   final zip = zipController.text.trim();
-                  if (!RegExp(r'^\\d{5}
+                  if (!RegExp(r'^\d{5}$').hasMatch(zip)) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a 5-digit ZIP code.')));
+                    return;
+                  }
+                  _open('https://www.findhelp.org/search/text?postal=$zip&term=individuals');
+                },
+                child: const Text('Find help'),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
+            ),
+          ),
+        ],
+      );
+
   String _resultsTitle() {
     if (view == 2) return 'Saved resources';
     if (selectedNeed != null) return selectedNeed!;
