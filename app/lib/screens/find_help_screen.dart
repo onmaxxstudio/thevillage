@@ -27,6 +27,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   String? selectedState;
   String? selectedNeed;
   Set<String> saved = {};
+  bool showMap = false;
+  bool showAllResources = false;
 
   static const stateNames = <String, String>{
     'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California',
@@ -372,10 +374,14 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               style: ButtonStyle(visualDensity: VisualDensity.compact),
             ),
             const SizedBox(height: 15),
-            if (view == 0) _map(),
+            if (view == 0) ...[
+              _zipSearch(),
+              const SizedBox(height: 15),
+              _needExplorer(),
+              const SizedBox(height: 15),
+              _stateBrowser(),
+            ],
             if (view == 2) _savedHeader(),
-            const SizedBox(height: 15),
-            _zipSearch(),
             const SizedBox(height: 18),
             Row(
               children: [
@@ -406,11 +412,22 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                   const SizedBox(height: 11),
                 ],
               ],
-            ] else
-              for (final resource in visible) ...[
+            ] else ...[
+              for (final resource in (showAllResources ? visible : visible.take(6))) ...[
                 _resourceCard(resource),
                 const SizedBox(height: 11),
               ],
+              if (!showAllResources && visible.length > 6)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: OutlinedButton.icon(
+                    onPressed: () => setState(() => showAllResources = true),
+                    icon: const Icon(Icons.add_circle_outline),
+                    label: Text('See all ' + visible.length.toString() + ' resources'),
+                    style: OutlinedButton.styleFrom(foregroundColor: sage, minimumSize: const Size.fromHeight(46)),
+                  ),
+                ),
+            ],
             const SizedBox(height: 8),
             const Text(
               'Program availability and eligibility can change. Confirm details directly with the provider before relying on assistance.',
@@ -728,33 +745,104 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ),
       );
 
-  Widget _zipSearch() => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Find programs in your county', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
-          const SizedBox(height: 4),
-          const Text('Search current local nonprofits and assistance programs by ZIP code.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
-          const SizedBox(height: 9),
-          TextField(
-            controller: zipController,
-            keyboardType: TextInputType.number,
-            maxLength: 5,
-            decoration: InputDecoration(
-              counterText: '',
-              prefixIcon: const Icon(Icons.location_on_outlined, color: sage),
-              hintText: 'Enter ZIP code',
-              suffixIcon: TextButton(
-                onPressed: _showZipResults,
-                child: const Text('Find help'),
+  Widget _zipSearch() => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: sage,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(children: [
+              Icon(Icons.location_searching_rounded, color: Color(0xFFFFE4B4)),
+              SizedBox(width: 8),
+              Text('Start with where you live', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+            ]),
+            const SizedBox(height: 5),
+            const Text('Enter a ZIP code to see real programs and nonprofits serving your area.', style: TextStyle(color: Color(0xFFE7EFE1), fontSize: 12, height: 1.35)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: zipController,
+              keyboardType: TextInputType.number,
+              maxLength: 5,
+              decoration: InputDecoration(
+                counterText: '',
+                prefixIcon: const Icon(Icons.location_on_outlined, color: sage),
+                hintText: 'Enter ZIP code',
+                suffixIcon: TextButton(
+                  onPressed: _showZipResults,
+                  child: const Text('Search'),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
               ),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
             ),
-          ),
-        ],
+          ],
+        ),
       );
+
+  Widget _needExplorer() => Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Expanded(child: Text('What do you need help with?', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink))),
+              if (selectedNeed != null)
+                TextButton(onPressed: () => setState(() => selectedNeed = null), child: const Text('Clear')),
+            ]),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: [
+                for (final need in needs)
+                  ChoiceChip(
+                    avatar: Icon(need.$2, size: 16, color: selectedNeed == need.$1 ? Colors.white : sage),
+                    label: Text(need.$1),
+                    selected: selectedNeed == need.$1,
+                    onSelected: (_) => setState(() {
+                      selectedNeed = selectedNeed == need.$1 ? null : need.$1;
+                      showAllResources = false;
+                    }),
+                    selectedColor: sage,
+                    labelStyle: TextStyle(color: selectedNeed == need.$1 ? Colors.white : ink, fontSize: 11, fontWeight: FontWeight.w700),
+                    side: BorderSide(color: selectedNeed == need.$1 ? sage : line),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+  Widget _stateBrowser() => Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(color: const Color(0xFFF4F0E8), borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+        child: Column(
+          children: [
+            Row(children: [
+              const Icon(Icons.map_outlined, color: gold),
+              const SizedBox(width: 9),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Browse help by state', style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w700, color: ink)),
+                const Text('State benefits and programs come first.', style: TextStyle(fontSize: 11.5, color: Color(0xFF626A63))),
+              ])),
+              TextButton(
+                onPressed: () => setState(() => showMap = !showMap),
+                child: Text(showMap ? 'Hide map' : 'Open map'),
+              ),
+            ]),
+            if (showMap) ...[
+              const SizedBox(height: 12),
+              _map(),
+            ],
+          ],
+        ),
+      );
+
 
   String _resultsTitle() {
     if (view == 2) return 'Saved resources';
