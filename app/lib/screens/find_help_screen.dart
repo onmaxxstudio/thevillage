@@ -441,29 +441,6 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                         ),
                       ),
                     ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 13,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: .95),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 7)],
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.touch_app_outlined, color: sage, size: 17),
-                              SizedBox(width: 6),
-                              Text('Choose your state', style: TextStyle(color: sage, fontWeight: FontWeight.w800, fontSize: 12)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
