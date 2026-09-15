@@ -13,6 +13,7 @@ class VillagePostDraft {
     required this.needsSupport,
     required this.supportIntent,
     required this.username,
+    this.welcomesPrayer = false,
     this.communityId,
     this.communityName,
   });
@@ -24,6 +25,7 @@ class VillagePostDraft {
   final bool needsSupport;
   final String supportIntent;
   final String username;
+  final bool welcomesPrayer;
   final String? communityId;
   final String? communityName;
 }
@@ -111,6 +113,15 @@ class PostPreviewScreen extends StatelessWidget {
                                 backgroundColor: const Color(0xFFFFF1DE),
                               ),
                             ],
+                            if (post.welcomesPrayer) ...[
+                              const SizedBox(height: 7),
+                              const Chip(
+                                avatar: Icon(Icons.auto_awesome_outlined, size: 17),
+                                label: Text('Prayer welcome'),
+                                side: BorderSide.none,
+                                backgroundColor: Color(0xFFF5EAF7),
+                              ),
+                            ],
                             const SizedBox(height: 7),
                             Chip(
                               avatar: const Icon(
@@ -167,6 +178,7 @@ class PostPreviewScreen extends StatelessWidget {
                       anonymous: post.anonymous,
                       needsSupport: post.needsSupport,
                       supportIntent: post.supportIntent,
+                      welcomesPrayer: post.welcomesPrayer,
                       communityId: post.communityId,
                       communityName: post.communityName,
                     );
@@ -252,7 +264,9 @@ class PostSubmittedScreen extends StatelessWidget {
                         Text(post.category, style: const TextStyle(color: PostPreviewScreen.sage, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 5),
                         Text(
-                          'Looking for ${post.supportIntent.toLowerCase()}',
+                          post.welcomesPrayer
+                              ? 'Looking for ' + post.supportIntent.toLowerCase() + ' • Prayer welcome'
+                              : 'Looking for ' + post.supportIntent.toLowerCase(),
                           style: const TextStyle(fontSize: 12),
                         ),
                         const SizedBox(height: 9),
