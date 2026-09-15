@@ -373,7 +373,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           height: MediaQuery.sizeOf(context).height * .72,
           child: Column(
             children: [
-              Text('Choose your state', style: GoogleFonts.playfairDisplay(fontSize: 27, fontWeight: FontWeight.w700, color: ink)),
+              Text('States', style: GoogleFonts.playfairDisplay(fontSize: 27, fontWeight: FontWeight.w700, color: ink)),
               const SizedBox(height: 5),
               const Text('We will show statewide and nationwide help.'),
               const SizedBox(height: 12),
