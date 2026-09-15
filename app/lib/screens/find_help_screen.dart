@@ -22,7 +22,6 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   static const line = Color(0xFFE3D8C9);
 
   final admin = AdminContentService();
-  final zipController = TextEditingController();
   int view = 0;
   String? selectedState;
   String? selectedNeed;
@@ -138,12 +137,6 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   void initState() {
     super.initState();
     _loadSaved();
-  }
-
-  @override
-  void dispose() {
-    zipController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadSaved() async {
@@ -299,8 +292,6 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             const SizedBox(height: 15),
             if (view == 0) _map(),
             if (view == 2) _savedHeader(),
-            const SizedBox(height: 15),
-            _zipSearch(),
             const SizedBox(height: 18),
             Row(
               children: [
@@ -571,30 +562,6 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ]),
       );
 
-  Widget _zipSearch() => TextField(
-        controller: zipController,
-        keyboardType: TextInputType.number,
-        maxLength: 5,
-        decoration: InputDecoration(
-          counterText: '',
-          prefixIcon: const Icon(Icons.location_on_outlined, color: sage),
-          hintText: 'Enter ZIP code for local help',
-          suffixIcon: TextButton(
-            onPressed: () {
-              if (zipController.text.trim().length != 5) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a 5-digit ZIP code.')));
-                return;
-              }
-              _open('https://www.211.org/');
-            },
-            child: const Text('Search'),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
-        ),
-      );
 
   String _resultsTitle() {
     if (view == 2) return 'Saved resources';
