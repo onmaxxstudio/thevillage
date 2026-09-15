@@ -24,8 +24,10 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   final admin = AdminContentService();
   final hub = CommunityHubService();
   final searchController = TextEditingController();
+  late final PageController featurePager;
 
   int selected = 0;
+  int featuredIndex = 1;
   String query = '';
   Set<String> joined = {};
   Map<String, int> memberCounts = {};
@@ -47,11 +49,13 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   @override
   void initState() {
     super.initState();
+    featurePager = PageController(initialPage: 1, viewportFraction: .76);
     _loadMemberships();
   }
 
   @override
   void dispose() {
+    featurePager.dispose();
     searchController.dispose();
     super.dispose();
   }
@@ -83,30 +87,53 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+              padding: const EdgeInsets.fromLTRB(20, 15, 20, 8),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('COMMUNITY HUB', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.6, color: gold)),
-                            const SizedBox(height: 4),
-                            Text('Find your people.', style: GoogleFonts.playfairDisplay(fontSize: 32, fontWeight: FontWeight.w700, color: ink)),
-                          ],
+                      Text(
+                        'Community Hub',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                          color: ink,
                         ),
                       ),
-                      Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFE9EEE4), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.diversity_3_outlined, color: sage)),
+                      const Spacer(),
+                      Container(
+                        width: 43,
+                        height: 43,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE9EEE4),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.diversity_3_outlined,
+                          color: sage,
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 13),
                   _tabs(),
                 ],
               ),
             ),
-            Expanded(child: IndexedStack(index: selected, children: [_communities(), const FindHelpScreen(), _managedList('events', 'Happening in the Village', Icons.calendar_month_outlined)])),
+            Expanded(
+              child: IndexedStack(
+                index: selected,
+                children: [
+                  _communities(),
+                  const FindHelpScreen(),
+                  _managedList(
+                    'events',
+                    'Happening in the Village',
+                    Icons.calendar_month_outlined,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -146,172 +173,177 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _communityHome(List<_Community> communities) {
-    final yourSpaces =
-        communities.where((community) => joined.contains(community.id)).toList();
-    final featured = yourSpaces.isEmpty
-        ? communities
-        : communities.where((community) => !joined.contains(community.id)).toList();
-    final visibleFeatured = featured.isEmpty ? communities : featured;
+    final order = <String>['men', 'women', 'relationships'];
+    final featured = <_Community>[
+      for (final id in order)
+        ...communities.where((community) => community.id == id),
+      ...communities.where((community) => !order.contains(community.id)),
+    ];
+    final visible = featured.isEmpty ? communities : featured;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+      padding: const EdgeInsets.fromLTRB(0, 10, 0, 30),
       children: [
-        if (yourSpaces.isNotEmpty) ...[
-          _sectionHeading('Your spaces', 'The communities you have joined.'),
-          const SizedBox(height: 11),
-          _yourSpaces(yourSpaces),
-          const SizedBox(height: 22),
-        ],
-        Text(
-          yourSpaces.isEmpty ? 'Featured spaces' : 'Find another space',
-          style: GoogleFonts.playfairDisplay(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            color: ink,
-          ),
-        ),
-        const SizedBox(height: 10),
-        _featureCarousel(visibleFeatured),
-        const SizedBox(height: 20),
-        Text(
-          'Explore all spaces',
-          style: GoogleFonts.playfairDisplay(
-            fontSize: 19,
-            fontWeight: FontWeight.w700,
-            color: ink,
-          ),
-        ),
-        const SizedBox(height: 11),
-        _quickSpaces(communities),
+        _clubhousePager(visible),
+        const SizedBox(height: 12),
+        _pagerDots(visible.length),
+        const SizedBox(height: 23),
+        _quickSpaces(visible),
         const SizedBox(height: 24),
-        _upcomingStrip(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: _upcomingStrip(),
+        ),
       ],
     );
   }
 
-  Widget _featureCarousel(List<_Community> items) => SizedBox(
-        height: 330,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          clipBehavior: Clip.none,
+  Widget _clubhousePager(List<_Community> items) => SizedBox(
+        height: 382,
+        child: PageView.builder(
+          controller: featurePager,
           itemCount: items.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 13),
-          itemBuilder: (_, index) => _featureCard(items[index]),
+          onPageChanged: (index) => setState(() => featuredIndex = index),
+          itemBuilder: (_, index) => AnimatedBuilder(
+            animation: featurePager,
+            builder: (_, child) {
+              final page = featurePager.hasClients
+                  ? featurePager.page ?? featurePager.initialPage.toDouble()
+                  : featurePager.initialPage.toDouble();
+              final distance = (page - index).abs().clamp(0.0, 1.0);
+              return Transform.scale(
+                scale: 1 - (.075 * distance),
+                child: Opacity(opacity: 1 - (.28 * distance), child: child),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 7),
+              child: _clubhouseCard(items[index]),
+            ),
+          ),
         ),
       );
 
-  Widget _featureCard(_Community community) {
+  Widget _clubhouseCard(_Community community) {
     final joinedAlready = joined.contains(community.id);
     return InkWell(
       onTap: () => _open(community),
-      borderRadius: BorderRadius.circular(25),
-      child: SizedBox(
-        width: 286,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(25),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              community.imageUrl.isEmpty
-                  ? _fallback()
-                  : Image.network(
-                      community.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _fallback(),
-                    ),
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0x08000000), Color(0xE9000000)],
-                    stops: [.28, 1],
+      borderRadius: BorderRadius.circular(27),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(27),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            community.imageUrl.isEmpty
+                ? _fallback()
+                : Image.network(
+                    community.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _fallback(),
                   ),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x08000000), Color(0xEC000000)],
+                  stops: [.28, 1],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(17),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(19, 18, 19, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Spacer(),
+                  Text(
+                    _clubhouseLine(community),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFFFFE4B4),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 2.2,
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  Text(
+                    community.name,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.playfairDisplay(
+                      color: Colors.white,
+                      fontSize: 35,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 13),
+                  FilledButton(
+                    onPressed: () => _toggleJoin(community),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFD0A456),
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
+                        horizontal: 39,
+                        vertical: 13,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .92),
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: const Text(
-                        'COMMUNITY',
-                        style: TextStyle(
-                          color: sage,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.1,
-                        ),
-                      ),
+                      shape: const StadiumBorder(),
                     ),
-                    const Spacer(),
-                    Text(
-                      community.name,
-                      style: GoogleFonts.playfairDisplay(
-                        color: Colors.white,
-                        fontSize: 31,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      community.description,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFFF7F4EC),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: FilledButton(
-                        onPressed: () => _toggleJoin(community),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFD0A456),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 11,
-                          ),
-                          shape: const StadiumBorder(),
-                        ),
-                        child: Text(joinedAlready ? 'Joined' : 'Join'),
-                      ),
-                    ),
-                  ],
-                ),
+                    child: Text(joinedAlready ? 'Joined' : 'Join'),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  String _clubhouseLine(_Community community) {
+    if (community.id == 'women') return 'A STRONGER YOU TOGETHER';
+    if (community.id == 'men') return 'HONEST TALK. REAL SUPPORT.';
+    if (community.id == 'relationships') return 'GROW TOGETHER';
+    return 'A PLACE TO BELONG';
+  }
+
+  Widget _pagerDots(int count) => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(
+          count.clamp(0, 5),
+          (index) => AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: index == featuredIndex ? 8 : 7,
+            height: index == featuredIndex ? 8 : 7,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: index == featuredIndex ? gold : const Color(0xFFE1DDD2),
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      );
+
   Widget _quickSpaces(List<_Community> items) => SizedBox(
         height: 91,
         child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 19),
           scrollDirection: Axis.horizontal,
           itemCount: items.length,
           separatorBuilder: (_, __) => const SizedBox(width: 12),
           itemBuilder: (_, index) {
             final community = items[index];
+            final active = index == featuredIndex;
             return InkWell(
-              onTap: () => _open(community),
+              onTap: () {
+                featurePager.animateToPage(
+                  index,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              },
               borderRadius: BorderRadius.circular(40),
               child: SizedBox(
-                width: 67,
+                width: 66,
                 child: Column(
                   children: [
                     Container(
@@ -319,16 +351,13 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                       height: 54,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: paleColor(community.category),
+                        color: active ? sage : paleColor(community.category),
                         shape: BoxShape.circle,
                       ),
-                      child: Text(
-                        community.name.substring(0, 1).toUpperCase(),
-                        style: GoogleFonts.playfairDisplay(
-                          color: sage,
-                          fontSize: 23,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      child: Icon(
+                        _spaceIcon(community.id),
+                        color: active ? Colors.white : sage,
+                        size: 25,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -337,9 +366,9 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: active ? FontWeight.w800 : FontWeight.w700,
                         color: ink,
                       ),
                     ),
@@ -350,6 +379,18 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
           },
         ),
       );
+
+  IconData _spaceIcon(String id) {
+    return switch (id) {
+      'women' => Icons.face_3_outlined,
+      'men' => Icons.person_outline_rounded,
+      'relationships' => Icons.favorite_border_rounded,
+      'moms' => Icons.family_restroom_outlined,
+      'wellness' => Icons.spa_outlined,
+      'new_beginnings' => Icons.auto_awesome_outlined,
+      _ => Icons.groups_2_outlined,
+    };
+  }
 
   Widget _sectionHeading(String title, String subtitle) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
