@@ -29,6 +29,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   Set<String> saved = {};
   bool showMap = false;
   bool showAllResources = false;
+  String? selectedPathId;
 
   static const stateNames = <String, String>{
     'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California',
@@ -54,6 +55,13 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     ('Employment', Icons.work_outline_rounded),
     ('Legal Help', Icons.gavel_outlined),
     ('Crisis & Safety', Icons.health_and_safety_outlined),
+  ];
+
+  static const helpPaths = <HelpPath>[
+    HelpPath('food', 'Food or groceries', 'Find food pantries, meals, SNAP and grocery support.', Icons.restaurant_outlined, ['Food']),
+    HelpPath('housing', 'Rent, bills or housing', 'Get help with rent, shelter, utilities and keeping your home.', Icons.home_outlined, ['Rent & Housing', 'Utilities']),
+    HelpPath('family', 'Health, family or childcare', 'Find healthcare, childcare, transportation and family support.', Icons.favorite_border_rounded, ['Healthcare', 'Childcare', 'Transportation']),
+    HelpPath('work', 'Work, legal or other support', 'Get connected to jobs, legal aid, safety planning and someone who can help.', Icons.handshake_outlined, ['Employment', 'Legal Help', 'Crisis & Safety']),
   ];
 
   static const builtIns = <HelpResource>[
@@ -318,7 +326,16 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     ];
   }
 
+  HelpPath? get _selectedPath {
+    for (final path in helpPaths) {
+      if (path.id == selectedPathId) return path;
+    }
+    return null;
+  }
+
   List<HelpResource> _applyNeed(List<HelpResource> items) {
+    final path = _selectedPath;
+    if (path != null) return items.where((resource) => resource.needs.any(path.needs.contains)).toList();
     if (selectedNeed == null) return items;
     return items.where((resource) => resource.needs.contains(selectedNeed)).toList();
   }
@@ -351,6 +368,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ? visible
             : visible.where((resource) => resource.states.isEmpty).toList();
         if (view == 1) return _courses(snapshot.data ?? const <ManagedContentItem>[]);
+        if (view == 0 && selectedPathId == null) return _helpStart();
         return ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           children: [
@@ -375,9 +393,9 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ),
             const SizedBox(height: 15),
             if (view == 0) ...[
+              _selectedHelpHeader(),
+              const SizedBox(height: 12),
               _zipSearch(),
-              const SizedBox(height: 15),
-              _needExplorer(),
               const SizedBox(height: 15),
               _stateBrowser(),
             ],
@@ -818,6 +836,88 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ),
       );
 
+  Widget _helpStart() => ListView(
+        padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
+        children: [
+          Text('Get help, your way.', style: GoogleFonts.playfairDisplay(fontSize: 30, fontWeight: FontWeight.w700, color: ink)),
+          const SizedBox(height: 4),
+          Text('Start with what feels hardest right now. We will help you find the next step.', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF626A63))),
+          const SizedBox(height: 14),
+          _urgentBanner(),
+          const SizedBox(height: 14),
+          SegmentedButton<int>(
+            segments: const [
+              ButtonSegment(value: 0, label: Text('Find Help'), icon: Icon(Icons.map_outlined)),
+              ButtonSegment(value: 1, label: Text('Courses'), icon: Icon(Icons.auto_stories_outlined)),
+              ButtonSegment(value: 2, label: Text('Saved'), icon: Icon(Icons.bookmark_border_rounded)),
+            ],
+            selected: {view},
+            onSelectionChanged: (value) => setState(() => view = value.first),
+            style: ButtonStyle(visualDensity: VisualDensity.compact),
+          ),
+          const SizedBox(height: 20),
+          Text('What do you need help with?', style: GoogleFonts.playfairDisplay(fontSize: 23, fontWeight: FontWeight.w700, color: ink)),
+          const SizedBox(height: 5),
+          const Text('You do not have to figure it all out alone.', style: TextStyle(fontSize: 12.5, color: Color(0xFF626A63))),
+          const SizedBox(height: 12),
+          for (final path in helpPaths) ...[
+            _helpPathCard(path),
+            const SizedBox(height: 10),
+          ],
+          const SizedBox(height: 4),
+          TextButton.icon(
+            onPressed: _chooseState,
+            icon: const Icon(Icons.map_outlined),
+            label: const Text('Browse state programs instead'),
+            style: TextButton.styleFrom(foregroundColor: sage),
+          ),
+        ],
+      );
+
+  Widget _helpPathCard(HelpPath path) => InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => setState(() {
+          selectedPathId = path.id;
+          selectedState = null;
+          showAllResources = false;
+        }),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+          child: Row(children: [
+            Container(width: 48, height: 48, decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(15)), child: Icon(path.icon, color: sage)),
+            const SizedBox(width: 13),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(path.title, style: GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w700, color: ink)),
+              const SizedBox(height: 3),
+              Text(path.detail, style: const TextStyle(fontSize: 12, height: 1.35, color: Color(0xFF626A63))),
+            ])),
+            const Icon(Icons.arrow_forward_rounded, color: sage),
+          ]),
+        ),
+      );
+
+  Widget _selectedHelpHeader() {
+    final path = _selectedPath!;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(18)),
+      child: Row(children: [
+        Icon(path.icon, color: sage),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Looking for help with', style: TextStyle(fontSize: 11.5, color: Color(0xFF626A63))),
+          Text(path.title, style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w700, color: ink)),
+        ])),
+        TextButton(onPressed: () => setState(() {
+          selectedPathId = null;
+          selectedState = null;
+          showAllResources = false;
+        }), child: const Text('Change')),
+      ]),
+    );
+  }
+
   Widget _stateBrowser() => Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(color: const Color(0xFFF4F0E8), borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
@@ -846,8 +946,10 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
 
   String _resultsTitle() {
     if (view == 2) return 'Saved resources';
+    final path = _selectedPath;
+    if (path != null) return 'Support for ' + path.title;
     if (selectedNeed != null) return selectedNeed!;
-    if (selectedState != null) return 'Help in ${stateNames[selectedState]}';
+    if (selectedState != null) return 'Help in ' + (stateNames[selectedState] ?? '');
     return 'Trusted nationwide help';
   }
 
@@ -892,6 +994,15 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           ]),
         ]),
       );
+}
+
+class HelpPath {
+  const HelpPath(this.id, this.title, this.detail, this.icon, this.needs);
+  final String id;
+  final String title;
+  final String detail;
+  final IconData icon;
+  final List<String> needs;
 }
 
 class SupportCourse {
