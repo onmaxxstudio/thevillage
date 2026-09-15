@@ -30,6 +30,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   bool showMap = false;
   bool showAllResources = false;
   String? selectedPathId;
+  String? localZip;
 
   static const stateNames = <String, String>{
     'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California',
@@ -396,6 +397,10 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               _selectedHelpHeader(),
               const SizedBox(height: 12),
               _zipSearch(),
+              if (localZip != null) ...[
+                const SizedBox(height: 15),
+                _localResultsPanel(),
+              ],
               const SizedBox(height: 15),
               _stateBrowser(),
             ],
@@ -681,87 +686,86 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ]),
       );
 
-  Future<void> _showZipResults() async {
+  void _showZipResults() {
     final zip = zipController.text.trim();
     if (!RegExp(r'^\d{5}').hasMatch(zip)) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a 5-digit ZIP code.')));
       return;
     }
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: cream,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Help near ' + zip, style: GoogleFonts.playfairDisplay(fontSize: 27, fontWeight: FontWeight.w700, color: ink)),
-              const SizedBox(height: 5),
-              const Text('Choose the type of local support you want to search.', textAlign: TextAlign.center),
-              const SizedBox(height: 14),
-              _localSearchOption(
-                sheetContext,
-                icon: Icons.volunteer_activism_outlined,
-                title: 'Programs & nonprofits',
-                detail: 'Food, rent, bills, transportation, jobs, and more',
-                onTap: () => _open('https://www.findhelp.org/search/text?postal=' + zip + '&term=individuals'),
-              ),
-              _localSearchOption(
-                sheetContext,
-                icon: Icons.support_agent_rounded,
-                title: 'Talk to 211',
-                detail: 'Speak with a local specialist about your situation',
-                onTap: () => _call('211'),
-              ),
-              _localSearchOption(
-                sheetContext,
-                icon: Icons.local_hospital_outlined,
-                title: 'Low-cost health care',
-                detail: 'Find community health centers near ' + zip,
-                onTap: () => _open('https://findahealthcenter.hrsa.gov/?incrementalsearch=true&radius=10&zip=' + zip),
-              ),
-              _localSearchOption(
-                sheetContext,
-                icon: Icons.gavel_outlined,
-                title: 'Free legal aid',
-                detail: 'Find nonprofit civil legal assistance',
-                onTap: () => _open('https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help'),
-              ),
-            ],
-          ),
+    setState(() => localZip = zip);
+  }
+
+  Widget _localResultsPanel() {
+    final zip = localZip!;
+    final path = _selectedPath!;
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Local results for ' + zip, style: GoogleFonts.playfairDisplay(fontSize: 21, fontWeight: FontWeight.w700, color: ink)),
+            Text('Focused on ' + path.title.toLowerCase(), style: const TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+          ])),
+          TextButton(onPressed: () => setState(() => localZip = null), child: const Text('Edit ZIP')),
+        ]),
+        const SizedBox(height: 10),
+        _inlineResult(
+          icon: Icons.volunteer_activism_outlined,
+          title: 'Programs and nonprofits near you',
+          detail: 'Search current local organizations serving your ZIP.',
+          onTap: () => _open('https://www.findhelp.org/search/text?postal=' + zip + '&term=individuals'),
         ),
-      ),
+        _inlineResult(
+          icon: Icons.support_agent_rounded,
+          title: 'Talk to a local 211 specialist',
+          detail: 'Get help explaining your situation and finding options.',
+          onTap: () => _call('211'),
+        ),
+        if (path.id == 'family')
+          _inlineResult(
+            icon: Icons.local_hospital_outlined,
+            title: 'Community health centers near you',
+            detail: 'Find low-cost medical, dental, behavioral and family care.',
+            onTap: () => _open('https://findahealthcenter.hrsa.gov/?incrementalsearch=true&radius=10&zip=' + zip),
+          ),
+        if (path.id == 'work')
+          _inlineResult(
+            icon: Icons.gavel_outlined,
+            title: 'Free legal aid',
+            detail: 'Find nonprofit civil legal assistance in your area.',
+            onTap: () => _open('https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help'),
+          ),
+      ]),
     );
   }
 
-  Widget _localSearchOption(
-    BuildContext sheetContext, {
+  Widget _inlineResult({
     required IconData icon,
     required String title,
     required String detail,
     required VoidCallback onTap,
   }) =>
-      Container(
-        margin: const EdgeInsets.only(bottom: 9),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: line)),
-        child: ListTile(
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: sage),
-          ),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-          subtitle: Text(detail, style: const TextStyle(fontSize: 12)),
-          trailing: const Icon(Icons.arrow_forward_rounded, color: sage),
-          onTap: () {
-            Navigator.pop(sheetContext);
-            onTap();
-          },
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(15)),
+          child: Row(children: [
+            Icon(icon, color: sage),
+            const SizedBox(width: 10),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+              const SizedBox(height: 2),
+              Text(detail, style: const TextStyle(fontSize: 11.5, color: Color(0xFF626A63))),
+            ])),
+            const Icon(Icons.arrow_forward_rounded, color: sage, size: 19),
+          ]),
         ),
       );
+
 
   Widget _zipSearch() => Container(
         padding: const EdgeInsets.all(16),
