@@ -482,6 +482,17 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
       children: [
+        SegmentedButton<int>(
+          segments: const [
+            ButtonSegment(value: 0, label: Text('Find Help'), icon: Icon(Icons.map_outlined)),
+            ButtonSegment(value: 1, label: Text('Courses'), icon: Icon(Icons.auto_stories_outlined)),
+            ButtonSegment(value: 2, label: Text('Saved'), icon: Icon(Icons.bookmark_border_rounded)),
+          ],
+          selected: {view},
+          onSelectionChanged: (value) => setState(() => view = value.first),
+          style: ButtonStyle(visualDensity: VisualDensity.compact),
+        ),
+        const SizedBox(height: 15),
         Text('Learn & grow', style: GoogleFonts.playfairDisplay(fontSize: 30, fontWeight: FontWeight.w700, color: ink)),
         const SizedBox(height: 4),
         Text('Short, supportive courses made for the conversations happening in the Village.', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF626A63))),
