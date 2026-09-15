@@ -111,6 +111,81 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       verified: 'September 2026',
     ),
     HelpResource(
+      id: 'state-social-services',
+      title: 'State Benefits & Social Services',
+      description: 'Find your state social service agency for SNAP, cash assistance, Medicaid, childcare help, and other state-run programs.',
+      needs: ['Food','Rent & Housing','Utilities','Healthcare','Childcare','Employment'],
+      url: 'https://www.usa.gov/state-social-services',
+      label: 'Official government directory',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'emergency-food',
+      title: 'Emergency Food Assistance',
+      description: 'Find emergency food options, including food pantries, hunger hotlines, disaster food assistance, and local help.',
+      needs: ['Food'],
+      url: 'https://www.usa.gov/emergency-food-assistance',
+      phone: '1-866-348-6479',
+      label: 'Official • Nationwide',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'health-center',
+      title: 'Find a Community Health Center',
+      description: 'Search nearby health centers for medical, dental, behavioral-health, vision, and other care.',
+      needs: ['Healthcare'],
+      url: 'https://findahealthcenter.hrsa.gov/',
+      label: 'Official • Local locator',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'childcare-referral',
+      title: 'Child Care Resource & Referral Search',
+      description: 'Find the local organization that helps families locate childcare, financial assistance, and family services.',
+      needs: ['Childcare'],
+      url: 'https://www.childcareaware.org/resources/ccrr-search/',
+      label: 'Nationwide local locator',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'jobs-local',
+      title: 'American Job Center Finder',
+      description: 'Find nearby no-cost help with job searches, training, résumé support, workshops, computers, and employment services.',
+      needs: ['Employment'],
+      url: 'https://www.careeronestop.org/LocalHelp/AmericanJobCenters/find-american-job-centers.aspx',
+      phone: '1-877-872-5627',
+      label: 'Official • Local locator',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'legal-aid',
+      title: 'Free Civil Legal Aid Finder',
+      description: 'Search by address or city for nonprofit legal aid for housing, family, benefits, safety, consumer, and other civil matters.',
+      needs: ['Legal Help'],
+      url: 'https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help',
+      label: 'Nationwide nonprofit network',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: '988',
+      title: '988 Suicide & Crisis Lifeline',
+      description: 'Free, confidential support for mental-health struggles, emotional distress, substance-use concerns, or a crisis. Call, text, or chat.',
+      needs: ['Crisis & Safety','Healthcare'],
+      url: 'https://988lifeline.org/get-help/',
+      phone: '988',
+      label: 'Free • 24/7',
+      verified: 'September 2026',
+    ),
+    HelpResource(
+      id: 'local-programs',
+      title: 'Search Local Programs & Nonprofits',
+      description: 'Enter your ZIP code below to search food pantries, rent help, bills, health care, transportation, job help, and other programs near you.',
+      needs: ['Food','Rent & Housing','Utilities','Healthcare','Childcare','Transportation','Employment','Legal Help','Crisis & Safety'],
+      url: 'https://www.findhelp.org/',
+      label: 'Local nonprofit directory',
+      verified: 'September 2026',
+    ),
+    HelpResource(
       id: 'fl-benefits',
       title: 'Florida Public Assistance',
       description: 'Apply for Florida food assistance, temporary cash assistance, Medicaid, and refugee assistance.',
@@ -571,29 +646,39 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ]),
       );
 
-  Widget _zipSearch() => TextField(
-        controller: zipController,
-        keyboardType: TextInputType.number,
-        maxLength: 5,
-        decoration: InputDecoration(
-          counterText: '',
-          prefixIcon: const Icon(Icons.location_on_outlined, color: sage),
-          hintText: 'Enter ZIP code for local help',
-          suffixIcon: TextButton(
-            onPressed: () {
-              if (zipController.text.trim().length != 5) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a 5-digit ZIP code.')));
-                return;
-              }
-              _open('https://www.211.org/');
-            },
-            child: const Text('Search'),
+  Widget _zipSearch() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Find programs in your county', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
+          const SizedBox(height: 4),
+          const Text('Search current local nonprofits and assistance programs by ZIP code.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+          const SizedBox(height: 9),
+          TextField(
+            controller: zipController,
+            keyboardType: TextInputType.number,
+            maxLength: 5,
+            decoration: InputDecoration(
+              counterText: '',
+              prefixIcon: const Icon(Icons.location_on_outlined, color: sage),
+              hintText: 'Enter ZIP code',
+              suffixIcon: TextButton(
+                onPressed: () {
+                  final zip = zipController.text.trim();
+                  if (!RegExp(r'^\d{5}$').hasMatch(zip)) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a 5-digit ZIP code.')));
+                    return;
+                  }
+                  _open('https://www.findhelp.org/search/text?postal=$zip&term=individuals');
+                },
+                child: const Text('Find help'),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
+            ),
           ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
-        ),
+        ],
       );
 
   String _resultsTitle() {
