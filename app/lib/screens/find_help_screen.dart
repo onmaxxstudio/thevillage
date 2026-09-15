@@ -646,6 +646,205 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ]),
       );
 
+  Future<void> _showZipResults() async {
+    final zip = zipController.text.trim();
+    if (!RegExp(r'^\\d{5}
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Find programs in your county', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
+          const SizedBox(height: 4),
+          const Text('Search current local nonprofits and assistance programs by ZIP code.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+          const SizedBox(height: 9),
+          TextField(
+            controller: zipController,
+            keyboardType: TextInputType.number,
+            maxLength: 5,
+            decoration: InputDecoration(
+              counterText: '',
+              prefixIcon: const Icon(Icons.location_on_outlined, color: sage),
+              hintText: 'Enter ZIP code',
+              suffixIcon: TextButton(
+                onPressed: _showZipResults,
+                child: const Text('Find help'),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
+            ),
+          ),
+        ],
+      );
+
+  String _resultsTitle() {
+    if (view == 2) return 'Saved resources';
+    if (selectedNeed != null) return selectedNeed!;
+    if (selectedState != null) return 'Help in ${stateNames[selectedState]}';
+    return 'Trusted nationwide help';
+  }
+
+  Widget _empty() => Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: line)),
+        child: Column(children: [
+          const Icon(Icons.search_off_rounded, color: sage, size: 32),
+          const SizedBox(height: 7),
+          Text(view == 2 ? 'No saved resources yet.' : 'No matching resources yet.', style: const TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          const Text('Try another need or use 211 to find local help.', textAlign: TextAlign.center),
+        ]),
+      );
+
+  Widget _resourceCard(HelpResource resource) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(width: 43, height: 43, decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.volunteer_activism_outlined, color: sage)),
+            const SizedBox(width: 11),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(resource.title, style: GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w700, color: ink)),
+              const SizedBox(height: 3),
+              Text(resource.label, style: const TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w900)),
+            ])),
+            IconButton(onPressed: () => _toggleSaved(resource.id), icon: Icon(saved.contains(resource.id) ? Icons.bookmark_rounded : Icons.bookmark_border_rounded, color: sage), tooltip: 'Save resource'),
+          ]),
+          const SizedBox(height: 9),
+          Text(resource.description, style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: ink)),
+          const SizedBox(height: 10),
+          Wrap(spacing: 6, runSpacing: 5, children: [
+            for (final need in resource.needs.take(3))
+              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(12)), child: Text(need, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700))),
+          ]),
+          const SizedBox(height: 11),
+          Row(children: [
+            Expanded(child: Text('Verified: ${resource.verified}', style: const TextStyle(fontSize: 10.5, color: Color(0xFF697069)))),
+            if (resource.phone.isNotEmpty) TextButton.icon(onPressed: () => _call(resource.phone), icon: const Icon(Icons.call_outlined, size: 17), label: const Text('Call')),
+            if (resource.url.isNotEmpty) FilledButton(onPressed: () => _open(resource.url), style: FilledButton.styleFrom(backgroundColor: sage, visualDensity: VisualDensity.compact), child: const Text('Visit')),
+          ]),
+        ]),
+      );
+}
+
+class SupportCourse {
+  const SupportCourse({
+    required this.title,
+    required this.description,
+    required this.community,
+    required this.length,
+    this.url = '',
+  });
+
+  final String title;
+  final String description;
+  final String community;
+  final String length;
+  final String url;
+}
+
+class HelpResource {
+  const HelpResource({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.needs,
+    required this.url,
+    required this.label,
+    required this.verified,
+    this.states = const <String>[],
+    this.phone = '',
+  });
+
+  final String id;
+  final String title;
+  final String description;
+  final List<String> needs;
+  final List<String> states;
+  final String url;
+  final String phone;
+  final String label;
+  final String verified;
+}
+).hasMatch(zip)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a 5-digit ZIP code.')));
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Help near $zip', style: GoogleFonts.playfairDisplay(fontSize: 27, fontWeight: FontWeight.w700, color: ink)),
+              const SizedBox(height: 5),
+              const Text('Choose the type of local support you want to search.', textAlign: TextAlign.center),
+              const SizedBox(height: 14),
+              _localSearchOption(
+                sheetContext,
+                icon: Icons.volunteer_activism_outlined,
+                title: 'Programs & nonprofits',
+                detail: 'Food, rent, bills, transportation, jobs, and more',
+                onTap: () => _open('https://www.findhelp.org/search/text?postal=$zip&term=individuals'),
+              ),
+              _localSearchOption(
+                sheetContext,
+                icon: Icons.support_agent_rounded,
+                title: 'Talk to 211',
+                detail: 'Speak with a local specialist about your situation',
+                onTap: () => _call('211'),
+              ),
+              _localSearchOption(
+                sheetContext,
+                icon: Icons.local_hospital_outlined,
+                title: 'Low-cost health care',
+                detail: 'Find community health centers near $zip',
+                onTap: () => _open('https://findahealthcenter.hrsa.gov/?incrementalsearch=true&radius=10&zip=$zip'),
+              ),
+              _localSearchOption(
+                sheetContext,
+                icon: Icons.gavel_outlined,
+                title: 'Free legal aid',
+                detail: 'Find nonprofit civil legal assistance',
+                onTap: () => _open('https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _localSearchOption(
+    BuildContext sheetContext, {
+    required IconData icon,
+    required String title,
+    required String detail,
+    required VoidCallback onTap,
+  }) =>
+      Container(
+        margin: const EdgeInsets.only(bottom: 9),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: line)),
+        child: ListTile(
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: sage),
+          ),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+          subtitle: Text(detail, style: const TextStyle(fontSize: 12)),
+          trailing: const Icon(Icons.arrow_forward_rounded, color: sage),
+          onTap: () {
+            Navigator.pop(sheetContext);
+            onTap();
+          },
+        ),
+      );
+
   Widget _zipSearch() => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
