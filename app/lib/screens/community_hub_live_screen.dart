@@ -102,7 +102,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                     ],
                   ),
                   const SizedBox(height: 9),
-                  Align(alignment: Alignment.centerLeft, child: Text('Community Hub', style: GoogleFonts.playfairDisplay(fontSize: 29, fontWeight: FontWeight.w700, color: ink))),
+                  Align(alignment: Alignment.center, child: Text('Community Hub', style: GoogleFonts.playfairDisplay(fontSize: 29, fontWeight: FontWeight.w700, color: ink))),
                   const SizedBox(height: 8),
                   _tabs(),
                 ],
@@ -119,8 +119,8 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _topTab('Communities', 0),
+          _topTab('Resources', 1),
           _topTab('Events', 2),
-          _topTab('Guides', 1),
         ],
       );
 
@@ -129,8 +129,8 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         onTap: () => setState(() => selected = index),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(color: label == 'Communities' && selected == 0 ? sage : Colors.transparent, borderRadius: BorderRadius.circular(24)),
-          child: Text(label, style: TextStyle(color: label == 'Communities' && selected == 0 ? Colors.white : ink, fontWeight: label == 'Communities' && selected == 0 ? FontWeight.w800 : FontWeight.w500, fontSize: 12.5)),
+          decoration: BoxDecoration(color: selected == index ? sage : Colors.transparent, borderRadius: BorderRadius.circular(24)),
+          child: Text(label, style: TextStyle(color: selected == index ? Colors.white : ink, fontWeight: selected == index ? FontWeight.w800 : FontWeight.w500, fontSize: 12.5)),
         ),
       );
 
