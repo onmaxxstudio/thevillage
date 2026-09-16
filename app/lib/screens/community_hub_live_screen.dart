@@ -94,7 +94,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.energy_savings_outlined,
                         color: gold,
                         size: 35,
@@ -252,7 +252,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         const SizedBox(height: 24),
         _quickSpaces(quickItems.isEmpty ? visible : quickItems),
         const SizedBox(height: 20),
-        const Center(
+        Center(
           child: Column(
             children: [
               SizedBox(
