@@ -18,6 +18,7 @@ class AskVillageScreen extends StatefulWidget {
     this.initialSupportIntent,
     this.initialCommunityId,
     this.initialCommunityName,
+    this.firstQuestionFlow = false,
     this.suggestionId,
     this.onSuggestedQuestionPosted,
   });
@@ -27,6 +28,7 @@ class AskVillageScreen extends StatefulWidget {
   final String? initialSupportIntent;
   final String? initialCommunityId;
   final String? initialCommunityName;
+  final bool firstQuestionFlow;
   final String? suggestionId;
   final Future<void> Function(String suggestionId)? onSuggestedQuestionPosted;
 
@@ -81,6 +83,17 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     questionController.text = widget.initialQuestion ?? '';
     if (categories.contains(widget.initialCategory)) {
       category = widget.initialCategory!;
+    }
+    if (widget.firstQuestionFlow) {
+      anonymous = true;
+      category = switch (widget.initialCommunityId) {
+        'relationships' => 'Relationship & dating',
+        'moms' || 'caregivers' => 'Family & parenting',
+        'wellness' || 'grief' => 'Mental wellbeing',
+        'career' => 'Work & money',
+        'friendship' => 'Friendship & social life',
+        _ => 'Something else',
+      };
     }
     if (supportIntents.any((item) => item.$1 == widget.initialSupportIntent)) {
       supportIntent = widget.initialSupportIntent!;
@@ -170,6 +183,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.firstQuestionFlow) return _firstQuestionScreen();
     return Scaffold(
       backgroundColor: cream,
       appBar: AppBar(
@@ -456,6 +470,22 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       ),
     );
   }
+
+  Widget _firstQuestionScreen() => Scaffold(
+    backgroundColor: cream,
+    appBar: AppBar(backgroundColor: cream, leading: IconButton(onPressed: () => VillageNavigationScope.of(context).onSelect(4), icon: const Icon(Icons.arrow_back_rounded)), title: Text('Your first question', style: GoogleFonts.playfairDisplay(color: sage, fontWeight: FontWeight.w700)), centerTitle: true),
+    body: SafeArea(child: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 620), child: ListView(padding: const EdgeInsets.fromLTRB(18, 18, 18, 28), children: [
+      _communityDestinationBanner(),
+      const SizedBox(height: 14),
+      _section(title: 'What’s been on your mind lately?', subtitle: 'You do not need the perfect words. Start where you are.', child: TextField(controller: questionController, autofocus: true, minLines: 7, maxLines: 10, maxLength: 1500, decoration: InputDecoration(hintText: 'Share your question or what is going on…', filled: true, fillColor: cream, border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: line))))),
+      const SizedBox(height: 14),
+      SwitchListTile.adaptive(value: anonymous, onChanged: (value) => setState(() => anonymous = value), secondary: const Icon(Icons.visibility_off_outlined, color: sage), title: const Text('Post anonymously', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('Your name will not be shown.')),
+      const SizedBox(height: 16),
+      FilledButton.icon(onPressed: preview, style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.all(16)), icon: const Icon(Icons.arrow_forward_rounded), label: const Text('Preview my question')),
+      const SizedBox(height: 14),
+      const Text('You can add more details after you get started.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Color(0xFF666C66))),
+    ])))),
+  );
 
   Widget _communityDestinationBanner() {
     return Container(

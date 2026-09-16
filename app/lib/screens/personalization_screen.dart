@@ -7,10 +7,18 @@ import '../services/personalization_service.dart';
 class PersonalizationScreen extends StatefulWidget {
   const PersonalizationScreen({super.key, this.onComplete});
 
-  final ValueChanged<bool>? onComplete;
+  final ValueChanged<OnboardingDestination>? onComplete;
 
   @override
   State<PersonalizationScreen> createState() => _PersonalizationScreenState();
+}
+
+class OnboardingDestination {
+  const OnboardingDestination.ask(this.communityId, this.communityName) : startAsking = true;
+  const OnboardingDestination.explore() : startAsking = false, communityId = null, communityName = null;
+  final bool startAsking;
+  final String? communityId;
+  final String? communityName;
 }
 
 class _RecommendedSpace {
@@ -261,9 +269,9 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                     ),
                   ],
                   const SizedBox(height: 15),
-                  SizedBox(height: 55, child: FilledButton.icon(onPressed: () => widget.onComplete!(true), style: FilledButton.styleFrom(backgroundColor: sage, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), icon: const Icon(Icons.edit_note_rounded), label: const Text('Ask your first question', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)))),
+                  SizedBox(height: 55, child: FilledButton.icon(onPressed: () => widget.onComplete!(OnboardingDestination.ask(spaces.first.id, spaces.first.name)), style: FilledButton.styleFrom(backgroundColor: sage, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), icon: const Icon(Icons.edit_note_rounded), label: const Text('Ask your first question', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)))),
                   const SizedBox(height: 9),
-                  TextButton(onPressed: () => widget.onComplete!(false), child: const Text('Explore my spaces', style: TextStyle(color: sage, fontWeight: FontWeight.w800))),
+                  TextButton(onPressed: () => widget.onComplete!(const OnboardingDestination.explore()), child: const Text('Explore my spaces', style: TextStyle(color: sage, fontWeight: FontWeight.w800))),
                   const Spacer(),
                 ],
               ),
