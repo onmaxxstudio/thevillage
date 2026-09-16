@@ -25,6 +25,8 @@ class _VillageAppShellState extends State<VillageAppShell> {
   final personalizationService = PersonalizationService();
   bool checkingPersonalization = true;
   bool personalizationComplete = false;
+  String? firstCommunityId;
+  String? firstCommunityName;
 
   @override
   void initState() {
@@ -43,12 +45,12 @@ class _VillageAppShellState extends State<VillageAppShell> {
 
   final navigatorKeys = List.generate(5, (_) => GlobalKey<NavigatorState>());
 
-  static const rootPages = <Widget>[
-    HomeScreen(),
-    CircleScreen(),
-    AskVillageScreen(),
-    VillageFeedScreen(),
-    CommunityHubManagedScreen(),
+  List<Widget> get rootPages => <Widget>[
+    const HomeScreen(),
+    const CircleScreen(),
+    AskVillageScreen(initialCommunityId: firstCommunityId, initialCommunityName: firstCommunityName, firstQuestionFlow: firstCommunityId != null),
+    const VillageFeedScreen(),
+    const CommunityHubManagedScreen(),
   ];
 
   void selectTab(int index) {
@@ -93,9 +95,11 @@ class _VillageAppShellState extends State<VillageAppShell> {
     }
     if (!personalizationComplete) {
       return PersonalizationScreen(
-        onComplete: (startAsking) => setState(() {
+        onComplete: (destination) => setState(() {
         personalizationComplete = true;
-        selectedIndex = startAsking ? 2 : 4;
+        firstCommunityId = destination.communityId;
+        firstCommunityName = destination.communityName;
+        selectedIndex = destination.startAsking ? 2 : 4;
       }),
       );
     }
