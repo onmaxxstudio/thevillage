@@ -39,6 +39,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     _CommunityGroup('parenting', 'Parenting', ['moms', 'caregivers', 'relationships']),
     _CommunityGroup('wellness', 'Wellness', ['wellness', 'grief', 'friendship']),
     _CommunityGroup('new_start', 'New Start', ['new_beginnings', 'career', 'caregivers']),
+    _CommunityGroup('faith', 'Faith', ['faith', 'grief', 'new_beginnings']),
   ];
 
   static const builtIns = <_Community>[
@@ -47,6 +48,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     _Community('women', 'Women', 'Support, perspective, and connection through every season of womanhood.', 'Life & Growth', 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'),
     _Community('moms', 'Moms', 'Real talk and practical support for motherhood.', 'Parenting', 'https://images.unsplash.com/photo-1543342386-1f1350e27861?auto=format&fit=crop&w=1200&q=85'),
     _Community('friendship', 'Friendship', 'Navigate closeness, change, conflict, and connection.', 'Friendship', 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85'),
+    _Community('faith', 'Faith', 'A welcoming space for prayer, encouragement, spiritual growth, and walking through life together.', 'Faith', 'https://images.unsplash.com/photo-1447069387593-a5de0862481e?auto=format&fit=crop&w=1200&q=85'),
     _Community('wellness', 'Wellness', 'Gentle support for emotional and everyday wellbeing.', 'Mental Health', 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=85'),
     _Community('career', 'Career & Purpose', 'Work, confidence, growth, and your next move.', 'Work & School', 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=85'),
     _Community('grief', 'Grief & Healing', 'A softer place for loss, remembrance, and healing.', 'Grief', 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85'),
@@ -296,6 +298,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     if (community.id == 'women') return 'A STRONGER YOU TOGETHER';
     if (community.id == 'men') return 'HONEST TALK. REAL SUPPORT.';
     if (community.id == 'relationships') return 'GROW TOGETHER';
+    if (community.id == 'faith') return 'GROW IN FAITH. TOGETHER.';
     return 'A PLACE TO BELONG';
   }
 
@@ -373,6 +376,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
       'parenting' => Icons.family_restroom_outlined,
       'wellness' => Icons.spa_outlined,
       'new_start' => Icons.auto_awesome_outlined,
+      'faith' => Icons.volunteer_activism_outlined,
       _ => Icons.groups_2_outlined,
     };
   }
@@ -444,6 +448,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
       'moms' => Icons.family_restroom_outlined,
       'wellness' => Icons.spa_outlined,
       'new_beginnings' => Icons.auto_awesome_outlined,
+      'faith' => Icons.volunteer_activism_outlined,
       _ => Icons.groups_2_outlined,
     };
   }
@@ -549,6 +554,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     if (category == 'Parenting') return const Color(0xFFFFEBD8);
     if (category == 'Mental Health') return const Color(0xFFE9EEE4);
     if (category == 'Grief') return const Color(0xFFEFE8EE);
+    if (category == 'Faith') return const Color(0xFFF0E8D5);
     return const Color(0xFFF5EAD6);
   }
 
