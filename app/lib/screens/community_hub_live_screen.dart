@@ -116,12 +116,11 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _tabs() => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _topTab('Communities', 0),
           _topTab('Events', 2),
           _topTab('Guides', 1),
-          const Spacer(),
-          const Icon(Icons.search_rounded, color: ink, size: 27),
         ],
       );
 
