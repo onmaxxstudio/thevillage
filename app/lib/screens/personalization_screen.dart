@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/community_hub_service.dart';
 import '../services/personalization_service.dart';
 
 class PersonalizationScreen extends StatefulWidget {
   const PersonalizationScreen({super.key, this.onComplete});
 
-  final VoidCallback? onComplete;
+  final ValueChanged<bool>? onComplete;
 
   @override
   State<PersonalizationScreen> createState() => _PersonalizationScreenState();
+}
+
+class _RecommendedSpace {
+  const _RecommendedSpace(this.id, this.name, this.detail, this.icon);
+  final String id;
+  final String name;
+  final String detail;
+  final IconData icon;
 }
 
 class _PersonalizationScreenState extends State<PersonalizationScreen> {
@@ -26,6 +35,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
   Set<String> interests = {};
   bool loading = true;
   bool saving = false;
+  bool showingNextStep = false;
 
   static const identityOptions = <(String, String, IconData)>[
     ('woman', 'Woman', Icons.female_rounded),
@@ -79,7 +89,9 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
     ));
     if (!mounted) return;
     if (widget.onComplete != null) {
-      widget.onComplete!();
+      await _joinRecommendedSpaces();
+      if (!mounted) return;
+      setState(() => showingNextStep = true);
     } else {
       Navigator.of(context).pop(true);
     }
@@ -93,6 +105,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
         body: Center(child: CircularProgressIndicator(color: sage)),
       );
     }
+    if (showingNextStep) return _nextStep();
     return Scaffold(
       backgroundColor: cream,
       appBar: widget.onComplete == null
@@ -206,6 +219,89 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                   style: TextStyle(fontSize: 11.5, color: Color(0xFF666C66)),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<_RecommendedSpace> get _recommendedSpaces {
+    final spaces = <_RecommendedSpace>[];
+    void add(String id, String name, String detail, IconData icon) {
+      if (spaces.every((space) => space.id != id) && spaces.length < 2) {
+        spaces.add(_RecommendedSpace(id, name, detail, icon));
+      }
+    }
+    if (identity == 'woman') add('women', 'Women', 'Support and perspective through every season.', Icons.woman_rounded);
+    if (identity == 'man') add('men', 'Men', 'Honest support for purpose, relationships, and wellbeing.', Icons.man_rounded);
+    for (final interest in interests) {
+      switch (interest) {
+        case 'Motherhood': add('moms', 'Moms', 'Real talk and practical support for motherhood.', Icons.child_care_rounded); break;
+        case 'Fatherhood': add('men', 'Men', 'Honest support for purpose, relationships, and wellbeing.', Icons.man_rounded); break;
+        case 'Relationships': add('relationships', 'Relationships', 'For the conversations you cannot always have with people you know.', Icons.favorite_border_rounded); break;
+        case 'Mental wellness': add('wellness', 'Wellness', 'Gentle support for your emotional wellbeing.', Icons.spa_outlined); break;
+        case 'Career & purpose': add('career', 'Career & Purpose', 'Work, confidence, growth, and your next move.', Icons.work_outline_rounded); break;
+        case 'Friendship': add('friendship', 'Friendship', 'Navigate closeness, change, conflict, and connection.', Icons.people_outline_rounded); break;
+        case 'Family': add('caregivers', 'Caregivers', 'Care and understanding for people who care for others.', Icons.home_outlined); break;
+        case 'Grief & healing': add('grief', 'Grief & Healing', 'A softer place for loss, remembrance, and healing.', Icons.healing_outlined); break;
+      }
+    }
+    add('relationships', 'Relationships', 'For the conversations you cannot always have with people you know.', Icons.favorite_border_rounded);
+    add('wellness', 'Wellness', 'Gentle support for your emotional wellbeing.', Icons.spa_outlined);
+    return spaces;
+  }
+
+  Future<void> _joinRecommendedSpaces() async {
+    final hub = CommunityHubService();
+    final joined = await hub.joinedCommunities();
+    joined.addAll(_recommendedSpaces.map((space) => space.id));
+    await hub.saveJoinedCommunities(joined);
+    for (final space in _recommendedSpaces) {
+      await hub.setCommunityMembership(space.id, true);
+    }
+  }
+
+  Widget _nextStep() {
+    final spaces = _recommendedSpaces;
+    return Scaffold(
+      backgroundColor: cream,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 34, 24, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Spacer(),
+                  const Icon(Icons.favorite_rounded, color: gold, size: 34),
+                  const SizedBox(height: 13),
+                  Text('You belong here.', textAlign: TextAlign.center, style: GoogleFonts.playfairDisplay(color: sage, fontSize: 35, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  const Text('We saved two spaces to help you begin. You can change them anytime.', textAlign: TextAlign.center, style: TextStyle(color: ink, fontSize: 15, height: 1.45)),
+                  const SizedBox(height: 24),
+                  for (final space in spaces) ...[
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: .72), border: Border.all(color: line), borderRadius: BorderRadius.circular(18)),
+                      child: Row(children: [
+                        CircleAvatar(backgroundColor: paleSage, child: Icon(space.icon, color: sage)),
+                        const SizedBox(width: 12),
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(space.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: ink)), const SizedBox(height: 2), Text(space.detail, style: const TextStyle(fontSize: 12.5, height: 1.32))])),
+                        const Icon(Icons.check_circle_rounded, color: sage),
+                      ]),
+                    ),
+                  ],
+                  const SizedBox(height: 15),
+                  SizedBox(height: 55, child: FilledButton.icon(onPressed: () => widget.onComplete!(true), style: FilledButton.styleFrom(backgroundColor: sage, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), icon: const Icon(Icons.edit_note_rounded), label: const Text('Ask your first question', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)))),
+                  const SizedBox(height: 9),
+                  TextButton(onPressed: () => widget.onComplete!(false), child: const Text('Explore my spaces', style: TextStyle(color: sage, fontWeight: FontWeight.w800))),
+                  const Spacer(),
+                ],
+              ),
             ),
           ),
         ),
