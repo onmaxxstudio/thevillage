@@ -37,12 +37,6 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
   bool saving = false;
   bool showingNextStep = false;
 
-  static const identityOptions = <(String, String, IconData)>[
-    ('woman', 'Woman', Icons.female_rounded),
-    ('man', 'Man', Icons.male_rounded),
-    ('prefer_not_to_say', 'Prefer not to say', Icons.person_outline_rounded),
-  ];
-
   static const interestOptions = <(String, String, IconData)>[
     ('Relationships', 'Relationships', Icons.favorite_border_rounded),
     ('Fatherhood', 'Fatherhood', Icons.family_restroom_rounded),
@@ -74,17 +68,17 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
   }
 
   Future<void> _save() async {
-    if (identity == null || interests.isEmpty || periodTracking == null || saving) {
+    if (interests.isEmpty || saving) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Choose an identity, at least one topic, and a period-tracking preference.')),
+        const SnackBar(content: Text('Choose at least one topic so we can point you to the right spaces.')),
       );
       return;
     }
     setState(() => saving = true);
     await service.save(VillagePersonalization(
-      identity: identity!,
+      identity: '',
       interests: interests.toList(),
-      periodTracking: periodTracking!,
+      periodTracking: false,
       completed: true,
     ));
     if (!mounted) return;
@@ -121,7 +115,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                 const Icon(Icons.diversity_3_outlined, color: gold, size: 34),
                 const SizedBox(height: 8),
                 Text(
-                  'Make the Village yours.',
+                  'Find your place in the Village.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.playfairDisplay(
                     color: sage,
@@ -131,39 +125,15 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                 ),
                 const SizedBox(height: 7),
                 Text(
-                  'Your answers shape what we recommend. Every shared community will still be open to you.',
+                  'Start with what feels most important right now. You can change this anytime.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(color: ink, fontSize: 14, height: 1.45),
                 ),
                 const SizedBox(height: 26),
                 _question(
                   number: '1',
-                  title: 'How do you identify?',
-                  subtitle: 'This helps us recommend spaces that feel relevant.',
-                  child: Wrap(
-                    spacing: 9,
-                    runSpacing: 9,
-                    children: [
-                      for (final option in identityOptions)
-                        ChoiceChip(
-                          avatar: Icon(option.$3, size: 18, color: identity == option.$1 ? Colors.white : sage),
-                          label: Text(option.$2),
-                          selected: identity == option.$1,
-                          onSelected: (_) => setState(() => identity = option.$1),
-                          selectedColor: sage,
-                          labelStyle: TextStyle(
-                            color: identity == option.$1 ? Colors.white : ink,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _question(
-                  number: '2',
-                  title: 'What would you like support with?',
-                  subtitle: 'Choose as many as you want.',
+                  title: 'What brings you here right now?',
+                  subtitle: 'Choose up to two things that feel most important today.',
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -174,7 +144,11 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                           label: Text(option.$2),
                           selected: interests.contains(option.$1),
                           onSelected: (selected) => setState(() {
-                            selected ? interests.add(option.$1) : interests.remove(option.$1);
+                            if (selected && (interests.length < 2 || interests.contains(option.$1))) {
+                              interests.add(option.$1);
+                            } else if (!selected) {
+                              interests.remove(option.$1);
+                            }
                           }),
                           selectedColor: sage,
                           labelStyle: TextStyle(
@@ -182,19 +156,6 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _question(
-                  number: '3',
-                  title: 'Would you like period tracking?',
-                  subtitle: 'This is separate from identity and can be changed anytime.',
-                  child: Row(
-                    children: [
-                      Expanded(child: _periodChoice('Yes', true)),
-                      const SizedBox(width: 10),
-                      Expanded(child: _periodChoice('No', false)),
                     ],
                   ),
                 ),
@@ -214,7 +175,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'These preferences are private and can be updated in Settings.',
+                  'You can update your spaces anytime.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 11.5, color: Color(0xFF666C66)),
                 ),
