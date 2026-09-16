@@ -162,7 +162,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         const SizedBox(height: 12),
         _pagerDots(visible.length),
         const SizedBox(height: 18),
-        _quickSpaces(quickItems.isEmpty ? visible : quickItems),
+        _quickSpaces(quickItems.isEmpty ? visible : quickItems, visible),
         const SizedBox(height: 10),
         Center(
           child: Column(
@@ -313,7 +313,11 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         ),
       );
 
-  Widget _quickSpaces(List<_Community> items) => SizedBox(
+  Widget _quickSpaces(
+    List<_Community> items,
+    List<_Community> featuredItems,
+  ) =>
+      SizedBox(
         height: 78,
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 19),
@@ -322,15 +326,23 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
           separatorBuilder: (_, __) => const SizedBox(width: 12),
           itemBuilder: (_, index) {
             final community = items[index];
-            final active = index == featuredIndex;
+            final pageIndex = featuredItems.indexWhere(
+              (item) => item.id == community.id,
+            );
+            final active = pageIndex == featuredIndex;
+            final shortcutName = community.id == 'new_beginnings'
+                ? 'New Start'
+                : community.name;
             return InkWell(
-              onTap: () {
-                featurePager.animateToPage(
-                  index,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                );
-              },
+              onTap: pageIndex < 0
+                  ? null
+                  : () {
+                      featurePager.animateToPage(
+                        pageIndex,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                    },
               borderRadius: BorderRadius.circular(40),
               child: SizedBox(
                 width: 60,
@@ -352,13 +364,15 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      community.name,
+                      shortcutName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 10,
-                        fontWeight: active ? FontWeight.w800 : FontWeight.w700,
+                        fontWeight: active
+                            ? FontWeight.w800
+                            : FontWeight.w700,
                         color: ink,
                       ),
                     ),
@@ -372,8 +386,8 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
 
   IconData _spaceIcon(String id) {
     return switch (id) {
-      'women' => Icons.face_3_outlined,
-      'men' => Icons.person_outline_rounded,
+      'women' => Icons.groups_2_outlined,
+      'men' => Icons.people_alt_outlined,
       'relationships' => Icons.favorite_border_rounded,
       'moms' => Icons.family_restroom_outlined,
       'wellness' => Icons.spa_outlined,
