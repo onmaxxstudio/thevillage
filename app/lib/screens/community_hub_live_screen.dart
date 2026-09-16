@@ -87,82 +87,54 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 15, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
               child: Column(
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Community Hub',
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w700,
-                          color: ink,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        width: 43,
-                        height: 43,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE9EEE4),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(
-                          Icons.diversity_3_outlined,
-                          color: sage,
-                        ),
-                      ),
+                      Icon(Icons.energy_savings_leaf_outlined, color: gold, size: 35),
+                      const SizedBox(width: 6),
+                      Expanded(child: Text('Ask the\nVillage', style: GoogleFonts.playfairDisplay(fontSize: 22, height: .93, fontWeight: FontWeight.w700, color: sage))),
+                      Padding(padding: const EdgeInsets.only(top: 5), child: Text('REAL PEOPLE\nBRIGHTER TOMORROWS', textAlign: TextAlign.right, style: TextStyle(color: gold, fontSize: 8, fontWeight: FontWeight.w800, letterSpacing: 1.7, height: 1.55))),
+                      const SizedBox(width: 12),
+                      const CircleAvatar(radius: 18, backgroundColor: sage, child: Icon(Icons.person_rounded, color: Colors.white)),
                     ],
                   ),
+                  const SizedBox(height: 19),
+                  Align(alignment: Alignment.centerLeft, child: Text('Community Hub', style: GoogleFonts.playfairDisplay(fontSize: 33, fontWeight: FontWeight.w700, color: ink))),
                   const SizedBox(height: 13),
                   _tabs(),
                 ],
               ),
             ),
-            Expanded(
-              child: IndexedStack(
-                index: selected,
-                children: [
-                  _communities(),
-                  const FindHelpScreen(),
-                  _managedList(
-                    'events',
-                    'Happening in the Village',
-                    Icons.calendar_month_outlined,
-                  ),
-                ],
-              ),
-            ),
+            Expanded(child: IndexedStack(index: selected, children: [_communities(), const FindHelpScreen(), _managedList('events', 'Happening in the Village', Icons.calendar_month_outlined)])),
           ],
         ),
       ),
     );
   }
 
-  Widget _tabs() {
-    const labels = [('Communities', Icons.groups_2_outlined), ('Support', Icons.volunteer_activism_outlined), ('Events', Icons.calendar_month_outlined)];
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: const Color(0xFFE9EEE4), borderRadius: BorderRadius.circular(18), border: Border.all(color: line)),
-      child: Row(
-        children: List.generate(labels.length, (index) {
-          final active = selected == index;
-          return Expanded(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: () => setState(() => selected = index),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(color: active ? Colors.white : Colors.transparent, borderRadius: BorderRadius.circular(14)),
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(labels[index].$2, size: 18, color: active ? sage : ink), const SizedBox(width: 6), Text(labels[index].$1, style: GoogleFonts.inter(fontSize: 12, fontWeight: active ? FontWeight.w800 : FontWeight.w600, color: active ? sage : ink))]),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
+  Widget _tabs() => Row(
+        children: [
+          _topTab('Communities', 0),
+          _topTab('Events', 2),
+          _topTab('Guides', 1),
+          _topTab('For You', 0),
+          const Spacer(),
+          const Icon(Icons.search_rounded, color: ink, size: 27),
+        ],
+      );
+
+  Widget _topTab(String label, int index) => InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => setState(() => selected = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+          decoration: BoxDecoration(color: label == 'Communities' && selected == 0 ? sage : Colors.transparent, borderRadius: BorderRadius.circular(24)),
+          child: Text(label, style: TextStyle(color: label == 'Communities' && selected == 0 ? Colors.white : ink, fontWeight: label == 'Communities' && selected == 0 ? FontWeight.w800 : FontWeight.w500, fontSize: 13)),
+        ),
+      );
 
   Widget _communities() {
     if (!admin.cloudReady) return _communityHome(_filter(builtIns));
@@ -173,25 +145,45 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _communityHome(List<_Community> communities) {
-    final order = <String>['men', 'women', 'relationships'];
-    final featured = <_Community>[
-      for (final id in order)
+    final carouselOrder = <String>['men', 'women', 'relationships'];
+    final carouselItems = <_Community>[
+      for (final id in carouselOrder)
         ...communities.where((community) => community.id == id),
-      ...communities.where((community) => !order.contains(community.id)),
+      ...communities.where((community) => !carouselOrder.contains(community.id)),
     ];
-    final visible = featured.isEmpty ? communities : featured;
+    final quickOrder = <String>['women', 'men', 'moms', 'wellness', 'new_beginnings'];
+    final quickItems = <_Community>[
+      for (final id in quickOrder)
+        ...communities.where((community) => community.id == id),
+    ];
+    final visible = carouselItems.isEmpty ? communities : carouselItems;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 10, 0, 30),
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 25),
       children: [
         _clubhousePager(visible),
         const SizedBox(height: 12),
         _pagerDots(visible.length),
-        const SizedBox(height: 23),
-        _quickSpaces(visible),
         const SizedBox(height: 24),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _upcomingStrip(),
+        _quickSpaces(quickItems.isEmpty ? visible : quickItems),
+        const SizedBox(height: 20),
+        Center(
+          child: Column(
+            children: [
+              SizedBox(width: 34, child: Divider(color: gold, thickness: 1.4)),
+              const SizedBox(height: 10),
+              Text(
+                'GOOD PEOPLE\nBRIGHTER DAYS',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: gold,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 2.1,
+                  height: 1.55,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
