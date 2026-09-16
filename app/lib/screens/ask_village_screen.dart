@@ -224,7 +224,15 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
               children: [
                 if (widget.initialCommunityName?.trim().isNotEmpty ?? false) ...[
                   _communityDestinationBanner(),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
+                  SwitchListTile.adaptive(
+                    value: anonymous,
+                    onChanged: (value) => setState(() => anonymous = value),
+                    secondary: const Icon(Icons.visibility_off_outlined, color: sage),
+                    title: const Text('Post anonymously', style: TextStyle(fontWeight: FontWeight.w800)),
+                    subtitle: const Text('Your name will not be shown.'),
+                  ),
+                  const SizedBox(height: 10),
                 ],
                 _section(
                   title: 'What’s on your mind?',
@@ -342,34 +350,36 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                         setState(() => welcomesPrayer = value),
                   ),
                 ),
-                const SizedBox(height: 14),
-                _section(
-                  title: 'How would you like to ask?',
-                  subtitle: 'You’re in control. Choose how you show up.',
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _choiceCard(
-                          selected: !anonymous,
-                          icon: Icons.person_rounded,
-                          title: 'Use my username',
-                          subtitle: '@$currentUsername',
-                          onTap: () => setState(() => anonymous = false),
+                if (!(widget.initialCommunityName?.trim().isNotEmpty ?? false)) ...[
+                  const SizedBox(height: 14),
+                  _section(
+                    title: 'How would you like to ask?',
+                    subtitle: 'You’re in control. Choose how you show up.',
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _choiceCard(
+                            selected: !anonymous,
+                            icon: Icons.person_rounded,
+                            title: 'Use my username',
+                            subtitle: '@$currentUsername',
+                            onTap: () => setState(() => anonymous = false),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _choiceCard(
-                          selected: anonymous,
-                          icon: Icons.visibility_off_outlined,
-                          title: 'Anonymous Neighbor',
-                          subtitle: 'Share anonymously',
-                          onTap: () => setState(() => anonymous = true),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _choiceCard(
+                            selected: anonymous,
+                            icon: Icons.visibility_off_outlined,
+                            title: 'Anonymous Neighbor',
+                            subtitle: 'Share anonymously',
+                            onTap: () => setState(() => anonymous = true),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                ],
                 const SizedBox(height: 14),
                 _section(
                   title: 'Who can see your post?',
