@@ -27,7 +27,6 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   late final PageController featurePager;
 
   int selected = 0;
-  String selectedTopTab = 'Communities';
   int featuredIndex = 1;
   String query = '';
   Set<String> joined = {};
@@ -96,106 +95,46 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                     children: [
                       Icon(Icons.energy_savings_outlined, color: gold, size: 35),
                       const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'Ask the\nVillage',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 22,
-                            height: .93,
-                            fontWeight: FontWeight.w700,
-                            color: sage,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 5),
-                        child: Text(
-                          'REAL PEOPLE\nBRIGHTER TOMORROWS',
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            color: gold,
-                            fontSize: 8,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.7,
-                            height: 1.55,
-                          ),
-                        ),
-                      ),
+                      Expanded(child: Text('Ask the\nVillage', style: GoogleFonts.playfairDisplay(fontSize: 22, height: .93, fontWeight: FontWeight.w700, color: sage))),
+                      Padding(padding: const EdgeInsets.only(top: 5), child: Text('REAL PEOPLE\nBRIGHTER TOMORROWS', textAlign: TextAlign.right, style: TextStyle(color: gold, fontSize: 8, fontWeight: FontWeight.w800, letterSpacing: 1.7, height: 1.55))),
                       const SizedBox(width: 12),
-                      const CircleAvatar(
-                        radius: 18,
-                        backgroundColor: sage,
-                        child: Icon(Icons.person_rounded, color: Colors.white),
-                      ),
+                      const CircleAvatar(radius: 18, backgroundColor: sage, child: Icon(Icons.person_rounded, color: Colors.white)),
                     ],
                   ),
                   const SizedBox(height: 19),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Community Hub',
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 33,
-                        fontWeight: FontWeight.w700,
-                        color: ink,
-                      ),
-                    ),
-                  ),
+                  Align(alignment: Alignment.centerLeft, child: Text('Community Hub', style: GoogleFonts.playfairDisplay(fontSize: 33, fontWeight: FontWeight.w700, color: ink))),
                   const SizedBox(height: 13),
                   _tabs(),
                 ],
               ),
             ),
-            Expanded(
-              child: IndexedStack(
-                index: selected,
-                children: [
-                  _communities(),
-                  const FindHelpScreen(),
-                  _managedList('events', 'Happening in the Village', Icons.calendar_month_outlined),
-                ],
-              ),
-            ),
+            Expanded(child: IndexedStack(index: selected, children: [_communities(), const FindHelpScreen(), _managedList('events', 'Happening in the Village', Icons.calendar_month_outlined)])),
           ],
         ),
       ),
     );
   }
 
-  Widget _tabs() {
-    const labels = [('Communities', 0), ('Events', 2), ('Guides', 1), ('For You', 0)];
-    return Row(
-      children: [
-        for (final item in labels) ...[
-          InkWell(
-            borderRadius: BorderRadius.circular(24),
-            onTap: () => setState(() {
-              selectedTopTab = item.$1;
-              selected = item.$2;
-            }),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              decoration: BoxDecoration(
-                color: selectedTopTab == item.$1 ? sage : Colors.transparent,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Text(
-                item.$1,
-                style: TextStyle(
-                  color: selectedTopTab == item.$1 ? Colors.white : ink,
-                  fontWeight: selectedTopTab == item.$1 ? FontWeight.w800 : FontWeight.w500,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
+  Widget _tabs() => Row(
+        children: [
+          _topTab('Communities', 0),
+          _topTab('Events', 2),
+          _topTab('Guides', 1),
+          _topTab('For You', 0),
+          const Spacer(),
+          const Icon(Icons.search_rounded, color: ink, size: 27),
         ],
-        const Spacer(),
-        const Icon(Icons.search_rounded, color: ink, size: 27),
-      ],
-    );
-  }
+      );
+
+  Widget _topTab(String label, int index) => InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => setState(() => selected = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+          decoration: BoxDecoration(color: label == 'Communities' && selected == 0 ? sage : Colors.transparent, borderRadius: BorderRadius.circular(24)),
+          child: Text(label, style: TextStyle(color: label == 'Communities' && selected == 0 ? Colors.white : ink, fontWeight: label == 'Communities' && selected == 0 ? FontWeight.w800 : FontWeight.w500, fontSize: 13)),
+        ),
+      );
 
   Widget _communities() {
     if (!admin.cloudReady) return _communityHome(_filter(builtIns));
@@ -206,45 +145,25 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _communityHome(List<_Community> communities) {
-    final carouselOrder = <String>['men', 'women', 'relationships'];
-    final carouselItems = <_Community>[
-      for (final id in carouselOrder)
+    final order = <String>['men', 'women', 'relationships'];
+    final featured = <_Community>[
+      for (final id in order)
         ...communities.where((community) => community.id == id),
-      ...communities.where((community) => !carouselOrder.contains(community.id)),
+      ...communities.where((community) => !order.contains(community.id)),
     ];
-    final quickOrder = <String>['women', 'men', 'moms', 'wellness', 'new_beginnings'];
-    final quickItems = <_Community>[
-      for (final id in quickOrder)
-        ...communities.where((community) => community.id == id),
-    ];
-    final visible = carouselItems.isEmpty ? communities : carouselItems;
+    final visible = featured.isEmpty ? communities : featured;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 25),
+      padding: const EdgeInsets.fromLTRB(0, 10, 0, 30),
       children: [
         _clubhousePager(visible),
         const SizedBox(height: 12),
         _pagerDots(visible.length),
+        const SizedBox(height: 23),
+        _quickSpaces(visible),
         const SizedBox(height: 24),
-        _quickSpaces(quickItems.isEmpty ? visible : quickItems),
-        const SizedBox(height: 20),
-        Center(
-          child: Column(
-            children: [
-              SizedBox(width: 34, child: Divider(color: gold, thickness: 1.4)),
-              const SizedBox(height: 10),
-              Text(
-                'GOOD PEOPLE\nBRIGHTER DAYS',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: gold,
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 2.1,
-                  height: 1.55,
-                ),
-              ),
-            ],
-          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: _upcomingStrip(),
         ),
       ],
     );
