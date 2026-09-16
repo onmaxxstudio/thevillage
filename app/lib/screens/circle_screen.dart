@@ -1225,7 +1225,6 @@ class _CircleScreenState extends State<CircleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasCircle = circleMembers.isNotEmpty;
     return Scaffold(
       backgroundColor: cream,
       appBar: AppBar(
@@ -1285,9 +1284,7 @@ class _CircleScreenState extends State<CircleScreen> {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  hasCircle
-                      ? 'How are you showing up today?'
-                      : 'A private place for your trusted people.',
+                  'How are you showing up today?',
                   style: GoogleFonts.playfairDisplay(
                     color: ink,
                     fontSize: 21,
@@ -1295,7 +1292,7 @@ class _CircleScreenState extends State<CircleScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                if (hasCircle) _activeCircleLayout() else _newCircleLayout(),
+                _activeCircleLayout(),
               ],
             ),
           ),
@@ -1553,15 +1550,51 @@ class _CircleScreenState extends State<CircleScreen> {
             ],
           ),
           const SizedBox(height: 13),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              for (final person in people)
-                Expanded(child: _trustedPerson(person)),
-              if (people.length < 4)
-                Expanded(child: _addTrustedPerson()),
-            ],
-          ),
+          if (people.isEmpty)
+            InkWell(
+              onTap: _findPeople,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 13),
+                decoration: BoxDecoration(
+                  color: paleSage.withValues(alpha: .62),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: Icon(Icons.person_add_alt_1_rounded, color: sage),
+                    ),
+                    SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Add your first person',
+                              style: TextStyle(fontWeight: FontWeight.w800)),
+                          SizedBox(height: 2),
+                          Text('Find someone you trust by username.',
+                              style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right_rounded, color: sage),
+                  ],
+                ),
+              ),
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                for (final person in people)
+                  Expanded(child: _trustedPerson(person)),
+                if (people.length < 4)
+                  Expanded(child: _addTrustedPerson()),
+              ],
+            ),
         ],
       ),
     );
