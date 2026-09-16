@@ -93,7 +93,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.energy_savings_outlined, color: gold, size: 35),
+                      Icon(Icons.energy_savings_leaf_outlined, color: gold, size: 35),
                       const SizedBox(width: 6),
                       Expanded(child: Text('Ask the\nVillage', style: GoogleFonts.playfairDisplay(fontSize: 22, height: .93, fontWeight: FontWeight.w700, color: sage))),
                       Padding(padding: const EdgeInsets.only(top: 5), child: Text('REAL PEOPLE\nBRIGHTER TOMORROWS', textAlign: TextAlign.right, style: TextStyle(color: gold, fontSize: 8, fontWeight: FontWeight.w800, letterSpacing: 1.7, height: 1.55))),
