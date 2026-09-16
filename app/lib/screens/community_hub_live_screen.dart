@@ -190,7 +190,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _clubhousePager(List<_Community> items) => SizedBox(
-        height: 382,
+        height: 338,
         child: PageView.builder(
           controller: featurePager,
           itemCount: items.length,
