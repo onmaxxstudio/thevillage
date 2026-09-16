@@ -38,6 +38,8 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
   bool showingNextStep = false;
 
   static const interestOptions = <(String, String, IconData)>[
+    ('Women’s support', 'Women', Icons.woman_rounded),
+    ('Men’s support', 'Men', Icons.man_rounded),
     ('Relationships', 'Relationships', Icons.favorite_border_rounded),
     ('Fatherhood', 'Fatherhood', Icons.family_restroom_rounded),
     ('Motherhood', 'Motherhood', Icons.child_care_rounded),
@@ -198,6 +200,8 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
     if (identity == 'man') add('men', 'Men', 'Honest support for purpose, relationships, and wellbeing.', Icons.man_rounded);
     for (final interest in interests) {
       switch (interest) {
+        case 'Women’s support': add('women', 'Women', 'Support and perspective through every season.', Icons.woman_rounded); break;
+        case 'Men’s support': add('men', 'Men', 'Honest support for purpose, relationships, and wellbeing.', Icons.man_rounded); break;
         case 'Motherhood': add('moms', 'Moms', 'Real talk and practical support for motherhood.', Icons.child_care_rounded); break;
         case 'Fatherhood': add('men', 'Men', 'Honest support for purpose, relationships, and wellbeing.', Icons.man_rounded); break;
         case 'Relationships': add('relationships', 'Relationships', 'For the conversations you cannot always have with people you know.', Icons.favorite_border_rounded); break;
