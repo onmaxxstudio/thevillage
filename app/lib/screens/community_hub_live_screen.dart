@@ -163,9 +163,9 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         _clubhousePager(visible),
         const SizedBox(height: 12),
         _pagerDots(visible.length),
-        const SizedBox(height: 24),
+        const SizedBox(height: 18),
         _quickSpaces(quickItems.isEmpty ? visible : quickItems),
-        const SizedBox(height: 20),
+        const SizedBox(height: 10),
         Center(
           child: Column(
             children: [
@@ -316,7 +316,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
       );
 
   Widget _quickSpaces(List<_Community> items) => SizedBox(
-        height: 91,
+        height: 78,
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 19),
           scrollDirection: Axis.horizontal,
@@ -335,12 +335,12 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
               },
               borderRadius: BorderRadius.circular(40),
               child: SizedBox(
-                width: 66,
+                width: 60,
                 child: Column(
                   children: [
                     Container(
-                      width: 54,
-                      height: 54,
+                      width: 46,
+                      height: 46,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: active ? sage : paleColor(community.category),
@@ -349,17 +349,17 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                       child: Icon(
                         _spaceIcon(community.id),
                         color: active ? Colors.white : sage,
-                        size: 25,
+                        size: 22,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
                       community.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 10.5,
+                        fontSize: 10,
                         fontWeight: active ? FontWeight.w800 : FontWeight.w700,
                         color: ink,
                       ),
