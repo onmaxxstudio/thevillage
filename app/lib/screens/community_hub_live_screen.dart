@@ -87,23 +87,23 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 2),
               child: Column(
                 children: [
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.energy_savings_leaf_outlined, color: gold, size: 35),
+                      Icon(Icons.energy_savings_leaf_outlined, color: gold, size: 29),
                       const SizedBox(width: 6),
-                      Expanded(child: Text('Ask the\nVillage', style: GoogleFonts.playfairDisplay(fontSize: 22, height: .93, fontWeight: FontWeight.w700, color: sage))),
-                      Padding(padding: const EdgeInsets.only(top: 5), child: Text('REAL PEOPLE\nBRIGHTER TOMORROWS', textAlign: TextAlign.right, style: TextStyle(color: gold, fontSize: 8, fontWeight: FontWeight.w800, letterSpacing: 1.7, height: 1.55))),
-                      const SizedBox(width: 12),
-                      const CircleAvatar(radius: 18, backgroundColor: sage, child: Icon(Icons.person_rounded, color: Colors.white)),
+                      Expanded(child: Text('Ask the\nVillage', style: GoogleFonts.playfairDisplay(fontSize: 20, height: .93, fontWeight: FontWeight.w700, color: sage))),
+                      Padding(padding: const EdgeInsets.only(top: 5), child: Text('REAL PEOPLE\nBRIGHTER TOMORROWS', textAlign: TextAlign.right, style: TextStyle(color: gold, fontSize: 7.2, fontWeight: FontWeight.w800, letterSpacing: 1.7, height: 1.55))),
+                      const SizedBox(width: 10),
+                      const CircleAvatar(radius: 15, backgroundColor: sage, child: Icon(Icons.person_rounded, color: Colors.white)),
                     ],
                   ),
-                  const SizedBox(height: 19),
-                  Align(alignment: Alignment.centerLeft, child: Text('Community Hub', style: GoogleFonts.playfairDisplay(fontSize: 33, fontWeight: FontWeight.w700, color: ink))),
-                  const SizedBox(height: 13),
+                  const SizedBox(height: 9),
+                  Align(alignment: Alignment.centerLeft, child: Text('Community Hub', style: GoogleFonts.playfairDisplay(fontSize: 29, fontWeight: FontWeight.w700, color: ink))),
+                  const SizedBox(height: 8),
                   _tabs(),
                 ],
               ),
@@ -130,9 +130,9 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         borderRadius: BorderRadius.circular(24),
         onTap: () => setState(() => selected = index),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(color: label == 'Communities' && selected == 0 ? sage : Colors.transparent, borderRadius: BorderRadius.circular(24)),
-          child: Text(label, style: TextStyle(color: label == 'Communities' && selected == 0 ? Colors.white : ink, fontWeight: label == 'Communities' && selected == 0 ? FontWeight.w800 : FontWeight.w500, fontSize: 13)),
+          child: Text(label, style: TextStyle(color: label == 'Communities' && selected == 0 ? Colors.white : ink, fontWeight: label == 'Communities' && selected == 0 ? FontWeight.w800 : FontWeight.w500, fontSize: 12.5)),
         ),
       );
 
