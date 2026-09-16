@@ -490,7 +490,15 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
             children: [
               _communityDestinationBanner(),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
+              SwitchListTile.adaptive(
+                value: anonymous,
+                onChanged: (value) => setState(() => anonymous = value),
+                secondary: const Icon(Icons.visibility_off_outlined, color: sage),
+                title: const Text('Post anonymously', style: TextStyle(fontWeight: FontWeight.w800)),
+                subtitle: const Text('Your name will not be shown.'),
+              ),
+              const SizedBox(height: 8),
               _section(
                 title: 'What’s been on your mind lately?',
                 subtitle: 'You do not need the perfect words. Start where you are.',
@@ -535,13 +543,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                 secondary: const Icon(Icons.volunteer_activism_outlined, color: gold),
                 title: const Text('I need extra support today', style: TextStyle(fontWeight: FontWeight.w800)),
                 subtitle: const Text('Let neighbors know this feels especially important.'),
-              ),
-              SwitchListTile.adaptive(
-                value: anonymous,
-                onChanged: (value) => setState(() => anonymous = value),
-                secondary: const Icon(Icons.visibility_off_outlined, color: sage),
-                title: const Text('Post anonymously', style: TextStyle(fontWeight: FontWeight.w800)),
-                subtitle: const Text('Your name will not be shown.'),
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
