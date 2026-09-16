@@ -93,7 +93,10 @@ class _VillageAppShellState extends State<VillageAppShell> {
     }
     if (!personalizationComplete) {
       return PersonalizationScreen(
-        onComplete: () => setState(() => personalizationComplete = true),
+        onComplete: (startAsking) => setState(() {
+        personalizationComplete = true;
+        selectedIndex = startAsking ? 2 : 4;
+      }),
       );
     }
     return VillageNavigationScope(
