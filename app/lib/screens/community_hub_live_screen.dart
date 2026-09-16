@@ -33,6 +33,14 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   Map<String, int> memberCounts = {};
   VillagePersonalization personalization = const VillagePersonalization.empty();
 
+  static const categoryGroups = <_CommunityGroup>[
+    _CommunityGroup('women', 'Women', ['women', 'relationships', 'friendship']),
+    _CommunityGroup('men', 'Men', ['men', 'career', 'friendship']),
+    _CommunityGroup('parenting', 'Parenting', ['moms', 'caregivers', 'relationships']),
+    _CommunityGroup('wellness', 'Wellness', ['wellness', 'grief', 'friendship']),
+    _CommunityGroup('new_start', 'New Start', ['new_beginnings', 'career', 'caregivers']),
+  ];
+
   static const builtIns = <_Community>[
     _Community('men', 'Men', 'Honest advice about relationships, fatherhood, purpose, friendship, pressure, and emotional wellbeing.', 'Men', 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1200&q=85'),
     _Community('relationships', 'Relationships', 'For the conversations you cannot always have with people you know.', 'Relationships', 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85'),
@@ -149,11 +157,6 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         ...communities.where((community) => community.id == id),
       ...communities.where((community) => !carouselOrder.contains(community.id)),
     ];
-    final quickOrder = <String>['women', 'men', 'moms', 'wellness', 'new_beginnings'];
-    final quickItems = <_Community>[
-      for (final id in quickOrder)
-        ...communities.where((community) => community.id == id),
-    ];
     final visible = carouselItems.isEmpty ? communities : carouselItems;
     return ListView(
       padding: const EdgeInsets.fromLTRB(0, 8, 0, 25),
@@ -162,7 +165,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         const SizedBox(height: 12),
         _pagerDots(visible.length),
         const SizedBox(height: 18),
-        _quickSpaces(quickItems.isEmpty ? visible : quickItems, visible),
+        _quickSpaces(communities),
         const SizedBox(height: 10),
         Center(
           child: Column(
@@ -313,36 +316,17 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         ),
       );
 
-  Widget _quickSpaces(
-    List<_Community> items,
-    List<_Community> featuredItems,
-  ) =>
-      SizedBox(
+  Widget _quickSpaces(List<_Community> communities) => SizedBox(
         height: 78,
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 19),
           scrollDirection: Axis.horizontal,
-          itemCount: items.length,
+          itemCount: categoryGroups.length,
           separatorBuilder: (_, __) => const SizedBox(width: 12),
           itemBuilder: (_, index) {
-            final community = items[index];
-            final pageIndex = featuredItems.indexWhere(
-              (item) => item.id == community.id,
-            );
-            final active = pageIndex == featuredIndex;
-            final shortcutName = community.id == 'new_beginnings'
-                ? 'New Start'
-                : community.name;
+            final group = categoryGroups[index];
             return InkWell(
-              onTap: pageIndex < 0
-                  ? null
-                  : () {
-                      featurePager.animateToPage(
-                        pageIndex,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOut,
-                      );
-                    },
+              onTap: () => _showCategory(group, communities),
               borderRadius: BorderRadius.circular(40),
               child: SizedBox(
                 width: 60,
@@ -353,26 +337,24 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                       height: 46,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: active ? sage : paleColor(community.category),
+                        color: paleColor(group.name),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        _spaceIcon(community.id),
-                        color: active ? Colors.white : sage,
+                        _groupIcon(group.id),
+                        color: sage,
                         size: 22,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      shortcutName,
+                      group.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 10,
-                        fontWeight: active
-                            ? FontWeight.w800
-                            : FontWeight.w700,
+                        fontWeight: FontWeight.w700,
                         color: ink,
                       ),
                     ),
@@ -383,6 +365,76 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
           },
         ),
       );
+
+  IconData _groupIcon(String id) {
+    return switch (id) {
+      'women' => Icons.groups_2_outlined,
+      'men' => Icons.people_alt_outlined,
+      'parenting' => Icons.family_restroom_outlined,
+      'wellness' => Icons.spa_outlined,
+      'new_start' => Icons.auto_awesome_outlined,
+      _ => Icons.groups_2_outlined,
+    };
+  }
+
+  void _showCategory(_CommunityGroup group, List<_Community> all) {
+    final spaces = <_Community>[
+      for (final id in group.communityIds)
+        ...all.where((community) => community.id == id),
+    ];
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                group.name,
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: ink,
+                ),
+              ),
+              const SizedBox(height: 3),
+              const Text(
+                'Choose a community that fits what you need today.',
+                style: TextStyle(color: Color(0xFF626A63)),
+              ),
+              const SizedBox(height: 12),
+              for (final community in spaces)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: paleColor(community.category),
+                    child: Icon(_spaceIcon(community.id), color: sage),
+                  ),
+                  title: Text(
+                    community.name,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  subtitle: Text(
+                    community.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: sage),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _open(community);
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   IconData _spaceIcon(String id) {
     return switch (id) {
@@ -648,6 +700,13 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _fallback() => Container(color: sage, child: const Center(child: Icon(Icons.groups_2_outlined, color: Colors.white, size: 34)));
+}
+
+class _CommunityGroup {
+  const _CommunityGroup(this.id, this.name, this.communityIds);
+  final String id;
+  final String name;
+  final List<String> communityIds;
 }
 
 class _Community {
