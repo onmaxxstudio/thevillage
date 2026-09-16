@@ -145,25 +145,45 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _communityHome(List<_Community> communities) {
-    final order = <String>['men', 'women', 'relationships'];
-    final featured = <_Community>[
-      for (final id in order)
+    final carouselOrder = <String>['men', 'women', 'relationships'];
+    final carouselItems = <_Community>[
+      for (final id in carouselOrder)
         ...communities.where((community) => community.id == id),
-      ...communities.where((community) => !order.contains(community.id)),
+      ...communities.where((community) => !carouselOrder.contains(community.id)),
     ];
-    final visible = featured.isEmpty ? communities : featured;
+    final quickOrder = <String>['women', 'men', 'moms', 'wellness', 'new_beginnings'];
+    final quickItems = <_Community>[
+      for (final id in quickOrder)
+        ...communities.where((community) => community.id == id),
+    ];
+    final visible = carouselItems.isEmpty ? communities : carouselItems;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 10, 0, 30),
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 25),
       children: [
         _clubhousePager(visible),
         const SizedBox(height: 12),
         _pagerDots(visible.length),
-        const SizedBox(height: 23),
-        _quickSpaces(visible),
         const SizedBox(height: 24),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _upcomingStrip(),
+        _quickSpaces(quickItems.isEmpty ? visible : quickItems),
+        const SizedBox(height: 20),
+        Center(
+          child: Column(
+            children: [
+              SizedBox(width: 34, child: Divider(color: gold, thickness: 1.4)),
+              const SizedBox(height: 10),
+              Text(
+                'GOOD PEOPLE\nBRIGHTER DAYS',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: gold,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 2.1,
+                  height: 1.55,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
