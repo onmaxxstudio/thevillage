@@ -111,8 +111,8 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                           ),
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(top: 5),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5),
                         child: Text(
                           'REAL PEOPLE\nBRIGHTER TOMORROWS',
                           textAlign: TextAlign.right,
