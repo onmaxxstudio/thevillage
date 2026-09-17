@@ -1568,7 +1568,7 @@ class _CircleScreenState extends State<CircleScreen> {
             Row(
               children: List.generate(
                 4,
-                (index) => const Expanded(child: _EmptyTrustedSpot()),
+                (index) => Expanded(child: _emptyTrustedSpot()),
               ),
             ),
             const SizedBox(height: 15),
@@ -1614,6 +1614,27 @@ class _CircleScreenState extends State<CircleScreen> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _emptyTrustedSpot() {
+    return const Column(
+      children: [
+        CircleAvatar(
+          radius: 24,
+          backgroundColor: Color(0xFFFFFAF1),
+          child: Icon(Icons.add_rounded, color: Color(0xFF667769), size: 25),
+        ),
+        SizedBox(height: 6),
+        Text(
+          'Add',
+          style: TextStyle(
+            color: Color(0xFF667769),
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
     );
   }
 
