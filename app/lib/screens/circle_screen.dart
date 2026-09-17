@@ -1294,19 +1294,7 @@ class _CircleScreenState extends State<CircleScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 5),
-                Center(
-                  child: Text(
-                    'How are you showing up today?',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.playfairDisplay(
-                    color: ink,
-                    fontSize: 21,
-                    fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 22),
                 _activeCircleLayout(),
               ],
             ),
@@ -1389,94 +1377,59 @@ class _CircleScreenState extends State<CircleScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: paleSage,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.lock_rounded, color: gold, size: 17),
-                SizedBox(width: 7),
-                Text(
-                  'Private by design',
-                  style: TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
+        Text(
+          'Start a connection',
+          style: GoogleFonts.playfairDisplay(
+            color: sage,
+            fontSize: 29,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Text(
-                'Start a connection',
-                style: GoogleFonts.playfairDisplay(
-                  color: sage,
-                  fontSize: 29,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            const Padding(
-              padding: EdgeInsets.only(bottom: 4),
-              child: Text(
-                'SMALL STEPS.\nBIG SUPPORT.',
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  color: Color(0xFF667769),
-                  fontSize: 8.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.3,
-                ),
-              ),
-            ),
-          ],
-        ),
         const SizedBox(height: 13),
-        Row(
-          children: [
-            Expanded(
-              child: _connectionAction(
-                color: sage,
-                icon: Icons.chat_bubble_outline_rounded,
-                title: 'Message\nsomeone',
-                detail: 'REACH OUT.\nIT MATTERS.',
-                onTap: _messageSomeone,
+        SizedBox(
+          height: 180,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            children: [
+              SizedBox(
+                width: 236,
+                child: _connectionAction(
+                  color: sage,
+                  icon: Icons.chat_bubble_outline_rounded,
+                  title: 'Message\nsomeone',
+                  detail: 'REACH OUT.\nIT MATTERS.',
+                  onTap: _messageSomeone,
+                ),
               ),
-            ),
-            const SizedBox(width: 9),
-            Expanded(
-              child: _connectionAction(
-                color: blush,
-                icon: Icons.favorite_rounded,
-                iconColor: const Color(0xFFC16C4A),
-                title: 'Check on\nsomeone',
-                detail: 'A LITTLE CARE\nGOES A LONG WAY.',
-                onTap: _openCheckOnSomeone,
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 236,
+                child: _connectionAction(
+                  color: blush,
+                  icon: Icons.favorite_rounded,
+                  iconColor: const Color(0xFFC16C4A),
+                  title: 'Check on\nsomeone',
+                  detail: 'A LITTLE CARE\nGOES A LONG WAY.',
+                  onTap: _openCheckOnSomeone,
+                ),
               ),
-            ),
-            const SizedBox(width: 9),
-            Expanded(
-              child: _connectionAction(
-                color: const Color(0xFFC9A55B),
-                icon: Icons.groups_2_outlined,
-                iconColor: const Color(0xFF9D7429),
-                title: 'Ask My\nCircle',
-                detail: 'DIFFERENT\nPERSPECTIVES.',
-                onTap: _startAskMyCircle,
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 236,
+                child: _connectionAction(
+                  color: const Color(0xFFC9A55B),
+                  icon: Icons.groups_2_outlined,
+                  iconColor: const Color(0xFF9D7429),
+                  title: 'Ask My Circle',
+                  detail: 'DIFFERENT PERSPECTIVES.\nREAL SUPPORT.',
+                  onTap: _startAskMyCircle,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        const SizedBox(height: 26),
+        const SizedBox(height: 25),
         _circlePeopleSection(),
         const SizedBox(height: 22),
         _privateConversations(),
