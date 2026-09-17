@@ -44,18 +44,22 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script>
-    // Remove older Flutter offline caches so published fixes show immediately.
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then((registrations) => {
-        for (const registration of registrations) registration.unregister();
-      });
-    }
-    if ('caches' in window) {
-      caches.keys().then((names) => {
-        for (const name of names) caches.delete(name);
-      });
-    }
+    // Clear any older Flutter offline cache before loading the app.
+    // This makes published fixes visible on the first reload.
+    (async () => {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+      }
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map((name) => caches.delete(name)));
+      }
+      const bootstrap = document.createElement('script');
+      bootstrap.src = 'flutter_bootstrap.js';
+      bootstrap.async = true;
+      document.body.appendChild(bootstrap);
+    })();
   </script>
-  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
