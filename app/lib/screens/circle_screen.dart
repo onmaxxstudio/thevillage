@@ -1514,16 +1514,16 @@ class _CircleScreenState extends State<CircleScreen> {
   }
 
   Widget _trustedPeoplePanel() {
-    final people = <_CircleMember>[
-      ...circleMembers.take(4),
-    ];
+    final people = <_CircleMember>[...circleMembers.take(4)];
+    final hasPeople = people.isNotEmpty;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(15, 16, 15, 14),
+      padding: const EdgeInsets.fromLTRB(16, 17, 16, 15),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .62),
+        color: Colors.white.withValues(alpha: .72),
         border: Border.all(color: line),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(23),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1534,58 +1534,75 @@ class _CircleScreenState extends State<CircleScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Your trusted people',
-                        style: GoogleFonts.playfairDisplay(
-                          color: ink, fontSize: 24, fontWeight: FontWeight.w700)),
-                    const Text('A small Circle. A big difference.',
-                        style: TextStyle(fontSize: 12.5)),
+                    Text(
+                      'Your trusted people',
+                      style: GoogleFonts.playfairDisplay(
+                        color: ink,
+                        fontSize: 25,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'A small Circle. A big difference.',
+                      style: TextStyle(fontSize: 12.5),
+                    ),
                   ],
                 ),
               ),
               TextButton(
                 onPressed: _findPeople,
-                child: const Text('Edit Circle ›',
-                    style: TextStyle(color: sage, fontWeight: FontWeight.w800)),
+                child: Text(
+                  hasPeople ? 'Manage ›' : 'Find people',
+                  style: const TextStyle(
+                    color: sage,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 13),
-          if (people.isEmpty)
-            InkWell(
-              onTap: _findPeople,
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 13),
-                decoration: BoxDecoration(
-                  color: paleSage.withValues(alpha: .62),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.white,
-                      child: Icon(Icons.person_add_alt_1_rounded, color: sage),
-                    ),
-                    SizedBox(width: 11),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Add your first person',
-                              style: TextStyle(fontWeight: FontWeight.w800)),
-                          SizedBox(height: 2),
-                          Text('Find someone you trust by username.',
-                              style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right_rounded, color: sage),
-                  ],
+          const SizedBox(height: 14),
+          if (!hasPeople) ...[
+            Row(
+              children: List.generate(
+                4,
+                (index) => const Expanded(child: _EmptyTrustedSpot()),
+              ),
+            ),
+            const SizedBox(height: 15),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _findPeople,
+                icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                label: const Text('Add your first person'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: sage,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-            )
-          else
+            ),
+            const SizedBox(height: 10),
+            const Center(
+              child: Text(
+                'Family. Friends. Neighbors. Anyone you trust.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF667769),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.05,
+                ),
+              ),
+            ),
+          ] else
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
