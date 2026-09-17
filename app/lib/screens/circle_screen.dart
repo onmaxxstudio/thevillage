@@ -1395,6 +1395,9 @@ class _CircleScreenState extends State<CircleScreen> {
           maxLength: 70,
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _shareStatus(),
+          onChanged: (value) {
+            setState(() => sharedStatusNote = value.trim());
+          },
           decoration: InputDecoration(
             hintText: 'Share a note with your Circle (optional)…',
             filled: true,
@@ -1613,6 +1616,8 @@ class _CircleScreenState extends State<CircleScreen> {
 
   Widget _myCircleProfile(String name) {
     final initial = name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase();
+    final profileStatus =
+        sharedStatusNote.trim().isEmpty ? _shortStatusLabel() : sharedStatusNote.trim();
     return InkWell(
       onTap: () => _chooseStatus(status),
       borderRadius: BorderRadius.circular(28),
@@ -1656,7 +1661,7 @@ class _CircleScreenState extends State<CircleScreen> {
             style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
           ),
           Text(
-            _shortStatusLabel(),
+            profileStatus,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 10.5, color: sage),
