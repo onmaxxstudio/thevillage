@@ -71,6 +71,7 @@ class _CircleScreenState extends State<CircleScreen> {
   final Map<String, CircleRequest> requestByUid = {};
   String status = 'Available to listen';
   String sharedStatusNote = '';
+  String myUsername = '';
   String? selectedNeed;
   final Set<int> completedReminders = {};
   final Set<int> dismissedReminders = {};
@@ -92,7 +93,15 @@ class _CircleScreenState extends State<CircleScreen> {
     circleMembers = <_CircleMember>[];
     _loadStatus();
     _connectCircleData();
-    ProfileService.currentUsername();
+    _loadMyProfile();
+  }
+
+  Future<void> _loadMyProfile() async {
+    final username = await ProfileService.currentUsername();
+    if (!mounted) return;
+    setState(() {
+      myUsername = username?.trim() ?? '';
+    });
   }
 
   void _connectCircleData() {
@@ -1273,22 +1282,28 @@ class _CircleScreenState extends State<CircleScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 28),
               children: [
-                Text(
-                  'My Circle',
-                  style: GoogleFonts.playfairDisplay(
+                Center(
+                  child: Text(
+                    'My Circle',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.playfairDisplay(
                     color: ink,
                     fontSize: 42,
                     height: 1,
                     fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 5),
-                Text(
-                  'How are you showing up today?',
-                  style: GoogleFonts.playfairDisplay(
+                Center(
+                  child: Text(
+                    'How are you showing up today?',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.playfairDisplay(
                     color: ink,
                     fontSize: 21,
                     fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -1516,8 +1531,9 @@ class _CircleScreenState extends State<CircleScreen> {
   }
 
   Widget _trustedPeoplePanel() {
-    final people = <_CircleMember>[...circleMembers.take(4)];
-    final hasPeople = people.isNotEmpty;
+    final people = <_CircleMember>[...circleMembers.take(3)];
+    final name = myUsername.isEmpty ? 'You' : myUsername;
+    final hasOtherPeople = people.isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -1530,68 +1546,52 @@ class _CircleScreenState extends State<CircleScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Your trusted people',
-                      style: GoogleFonts.playfairDisplay(
-                        color: ink,
-                        fontSize: 25,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'A small Circle. A big difference.',
-                      style: TextStyle(fontSize: 12.5),
-                    ),
-                  ],
-                ),
-              ),
-              if (hasPeople)
-                TextButton(
-                  onPressed: _findPeople,
-                  child: const Text(
-                    'Manage ›',
-                    style: TextStyle(
-                      color: sage,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-            ],
+          Text(
+            'Your trusted people',
+            style: GoogleFonts.playfairDisplay(
+              color: ink,
+              fontSize: 25,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 2),
+          const Text(
+            'A small Circle. A big difference.',
+            style: TextStyle(fontSize: 12.5),
           ),
           const SizedBox(height: 14),
-          if (!hasPeople) ...[
-            Row(
-              children: List.generate(
-                4,
+          Row(
+            children: [
+              Expanded(child: _myCircleProfile(name)),
+              for (final person in people)
+                Expanded(child: _trustedPerson(person)),
+              ...List.generate(
+                3 - people.length,
                 (index) => Expanded(child: _emptyTrustedSpot()),
               ),
-            ),
-            const SizedBox(height: 15),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _findPeople,
-                icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-                label: const Text('Add your first person'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: sage,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  textStyle: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _findPeople,
+              icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+              label: Text(
+                hasOtherPeople ? 'Add another person' : 'Add your first person',
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: sage,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
+          ),
+          if (!hasOtherPeople) ...[
             const SizedBox(height: 10),
             const Center(
               child: Text(
@@ -1605,19 +1605,73 @@ class _CircleScreenState extends State<CircleScreen> {
                 ),
               ),
             ),
-          ] else
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                for (final person in people)
-                  Expanded(child: _trustedPerson(person)),
-                if (people.length < 4)
-                  Expanded(child: _addTrustedPerson()),
-              ],
-            ),
+          ],
         ],
       ),
     );
+  }
+
+  Widget _myCircleProfile(String name) {
+    final initial = name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase();
+    return InkWell(
+      onTap: () => _chooseStatus(status),
+      borderRadius: BorderRadius.circular(28),
+      child: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              CircleAvatar(
+                radius: 27,
+                backgroundColor: sage,
+                child: Text(
+                  initial,
+                  style: GoogleFonts.playfairDisplay(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: -1,
+                bottom: -1,
+                child: Container(
+                  width: 13,
+                  height: 13,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5D8E62),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'You',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
+          ),
+          Text(
+            _shortStatusLabel(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 10.5, color: sage),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _shortStatusLabel() {
+    return switch (status) {
+      'Available to listen' => 'Available',
+      'Quiet today' => 'Quiet today',
+      _ => 'Needs support',
+    };
   }
 
   Widget _emptyTrustedSpot() {
