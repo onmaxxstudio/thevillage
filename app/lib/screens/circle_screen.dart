@@ -1294,7 +1294,19 @@ class _CircleScreenState extends State<CircleScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 5),
+                Center(
+                  child: Text(
+                    'How are you showing up today?',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.playfairDisplay(
+                    color: ink,
+                    fontSize: 21,
+                    fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 _activeCircleLayout(),
               ],
             ),
@@ -1375,424 +1387,87 @@ class _CircleScreenState extends State<CircleScreen> {
 
   Widget _activeCircleLayout() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Start a connection',
-          style: GoogleFonts.playfairDisplay(
-            color: sage,
-            fontSize: 29,
-            fontWeight: FontWeight.w700,
+        _statusChoices(),
+        const SizedBox(height: 14),
+        TextField(
+          controller: statusNoteController,
+          maxLength: 70,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _shareStatus(),
+          decoration: InputDecoration(
+            hintText: 'Share a note with your Circle (optional)…',
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: .72),
+            prefixIcon: const Icon(Icons.eco_outlined, color: sage),
+            suffixIcon: IconButton(
+              tooltip: 'Share status',
+              onPressed: _shareStatus,
+              icon: const CircleAvatar(
+                radius: 18,
+                backgroundColor: sage,
+                child: Icon(Icons.send_rounded, color: Colors.white, size: 18),
+              ),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(28),
+              borderSide: const BorderSide(color: line),
+            ),
           ),
         ),
-        const SizedBox(height: 13),
-        SizedBox(
-          height: 180,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            children: [
-              SizedBox(
-                width: 236,
-                child: _connectionAction(
-                  color: sage,
-                  icon: Icons.chat_bubble_outline_rounded,
-                  title: 'Message\nsomeone',
-                  detail: 'REACH OUT.\nIT MATTERS.',
-                  onTap: _messageSomeone,
-                ),
-              ),
-              const SizedBox(width: 12),
-              SizedBox(
-                width: 236,
-                child: _connectionAction(
-                  color: blush,
-                  icon: Icons.favorite_rounded,
-                  iconColor: const Color(0xFFC16C4A),
-                  title: 'Check on\nsomeone',
-                  detail: 'A LITTLE CARE\nGOES A LONG WAY.',
-                  onTap: _openCheckOnSomeone,
-                ),
-              ),
-              const SizedBox(width: 12),
-              SizedBox(
-                width: 236,
-                child: _connectionAction(
-                  color: const Color(0xFFC9A55B),
-                  icon: Icons.groups_2_outlined,
-                  iconColor: const Color(0xFF9D7429),
-                  title: 'Ask My Circle',
-                  detail: 'DIFFERENT PERSPECTIVES.\nREAL SUPPORT.',
-                  onTap: _startAskMyCircle,
-                ),
-              ),
-            ],
-          ),
+        const SizedBox(height: 2),
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.lock_outline_rounded, size: 14, color: sage),
+            SizedBox(width: 5),
+            Text(
+              'Only your Circle can see this. Your privacy matters.',
+              style: TextStyle(fontSize: 11.5),
+            ),
+          ],
         ),
-        const SizedBox(height: 25),
-        _circlePeopleSection(),
         const SizedBox(height: 22),
-        _privateConversations(),
+        _trustedPeoplePanel(),
+        const SizedBox(height: 16),
+        InkWell(
+          onTap: _openCheckOnSomeone,
+          borderRadius: BorderRadius.circular(19),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            decoration: BoxDecoration(
+              color: blush.withValues(alpha: .78),
+              border: Border.all(color: line),
+              borderRadius: BorderRadius.circular(19),
+            ),
+            child: const Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: Color(0xFFFFEEE8),
+                  child: Icon(Icons.favorite_border_rounded, color: sage),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Check on someone',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                      SizedBox(height: 2),
+                      Text('Send a quick check-in'),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: sage),
+              ],
+            ),
+          ),
+        ),
         if (circleMembers.isNotEmpty || incomingRequests.isNotEmpty) ...[
           const SizedBox(height: 18),
           _moreCircleTools(),
         ],
       ],
-    );
-  }
-
-  Widget _connectionAction({
-    required Color color,
-    required IconData icon,
-    required String title,
-    required String detail,
-    required VoidCallback onTap,
-    Color? iconColor,
-  }) {
-    final lightSurface = color != sage && color != const Color(0xFFC9A55B);
-    final foreground = lightSurface ? sage : Colors.white;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        height: 174,
-        padding: const EdgeInsets.all(13),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: Colors.white.withValues(alpha: .84),
-              child: Icon(icon, color: iconColor ?? sage, size: 22),
-            ),
-            const Spacer(),
-            Text(
-              title,
-              style: GoogleFonts.playfairDisplay(
-                color: foreground,
-                fontSize: 20,
-                height: .95,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Text(
-                    detail,
-                    style: TextStyle(
-                      color: foreground.withValues(alpha: .86),
-                      fontSize: 8.5,
-                      height: 1.45,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.15,
-                    ),
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_rounded,
-                  color: foreground,
-                  size: 21,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _messageSomeone() {
-    if (circleMembers.isEmpty) {
-      _findPeople();
-      return;
-    }
-    _messageMember(circleMembers.first);
-  }
-
-  Widget _circlePeopleSection() {
-    final name = myUsername.isEmpty ? 'You' : myUsername;
-    final people = circleMembers.take(6).toList();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Your people',
-                style: GoogleFonts.playfairDisplay(
-                  color: sage,
-                  fontSize: 29,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            OutlinedButton.icon(
-              onPressed: _findPeople,
-              icon: const Icon(Icons.person_add_alt_1_rounded, size: 17),
-              label: const Text('Invite someone'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: sage,
-                side: const BorderSide(color: sage),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        const Text(
-          'THE ONES WHO SHOW UP.',
-          style: TextStyle(
-            color: Color(0xFF667769),
-            fontSize: 9,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.65,
-          ),
-        ),
-        const SizedBox(height: 14),
-        SizedBox(
-          height: 91,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: [
-              _circlePersonBubble(
-                name: 'You',
-                initials: name.substring(0, 1).toUpperCase(),
-                color: sage,
-                isYou: true,
-                statusText: _shortStatusLabel(),
-              ),
-              for (final person in people)
-                _circlePersonBubble(
-                  name: person.name.replaceFirst('@', ''),
-                  initials: person.initials,
-                  color: person.color,
-                  onTap: () => _openMemberProfile(person),
-                ),
-              _circleAddBubble(),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _circlePersonBubble({
-    required String name,
-    required String initials,
-    required Color color,
-    bool isYou = false,
-    String? statusText,
-    VoidCallback? onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 15),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(36),
-        child: SizedBox(
-          width: 57,
-          child: Column(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: color,
-                    child: Text(
-                      initials,
-                      style: GoogleFonts.playfairDisplay(
-                        color: isYou ? Colors.white : ink,
-                        fontSize: 21,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  if (isYou)
-                    Positioned(
-                      right: -1,
-                      bottom: -1,
-                      child: Container(
-                        width: 14,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF5D8E62),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
-              ),
-              if (statusText != null)
-                Text(
-                  statusText,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 9, color: sage),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _circleAddBubble() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 4),
-      child: InkWell(
-        onTap: _findPeople,
-        borderRadius: BorderRadius.circular(32),
-        child: const SizedBox(
-          width: 57,
-          child: Column(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: Color(0xFFF2F1E9),
-                child: Icon(Icons.add_rounded, color: sage, size: 28),
-              ),
-              SizedBox(height: 6),
-              Text('Add', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _privateConversations() {
-    final messages = circleMessages.take(3).toList();
-    return Container(
-      padding: const EdgeInsets.only(top: 19),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: line)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Private conversations',
-            style: GoogleFonts.playfairDisplay(
-              color: sage,
-              fontSize: 29,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 2),
-          const Text(
-            'REAL CONVERSATIONS. A SAFER SPACE.',
-            style: TextStyle(
-              color: Color(0xFF667769),
-              fontSize: 9,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.45,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (messages.isEmpty)
-            InkWell(
-              onTap: _findPeople,
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .55),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: line),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.lock_outline_rounded, color: sage),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Your private conversations will live here.',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    Icon(Icons.chevron_right_rounded, color: sage),
-                  ],
-                ),
-              ),
-            )
-          else
-            for (final message in messages) _conversationRow(message),
-        ],
-      ),
-    );
-  }
-
-  Widget _conversationRow(_CircleMessage message) {
-    final member = circleMembers.where((person) =>
-        person.name.replaceFirst('@', '') == message.memberName.replaceFirst('@', '')).firstOrNull;
-    final initials = message.memberName.isEmpty
-        ? '?'
-        : message.memberName.replaceFirst('@', '').substring(0, 1).toUpperCase();
-    return InkWell(
-      onTap: member == null ? _findPeople : () => _messageMember(member),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: line)),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 23,
-              backgroundColor: member?.color ?? paleSage,
-              child: Text(initials, style: const TextStyle(color: ink, fontWeight: FontWeight.w800)),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message.memberName.replaceFirst('@', ''),
-                    style: GoogleFonts.playfairDisplay(
-                      color: ink,
-                      fontSize: 19,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    message.text,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Color(0xFF59635A)),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              _shortMessageDate(message.createdAt),
-              style: const TextStyle(color: Color(0xFF7B807A), fontSize: 11),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded, color: sage),
-          ],
-        ),
-      ),
     );
   }
 
