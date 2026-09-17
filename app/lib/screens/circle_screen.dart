@@ -1439,7 +1439,7 @@ class _CircleScreenState extends State<CircleScreen> {
                       Text('Check on someone',
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                       SizedBox(height: 2),
-                      Text('Send a quick check-in  •  Share a little care'),
+                      Text('Send a quick check-in'),
                     ],
                   ),
                 ),
@@ -1448,8 +1448,10 @@ class _CircleScreenState extends State<CircleScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 18),
-        _moreCircleTools(),
+        if (circleMembers.isNotEmpty || incomingRequests.isNotEmpty) ...[
+          const SizedBox(height: 18),
+          _moreCircleTools(),
+        ],
       ],
     );
   }
@@ -1550,17 +1552,18 @@ class _CircleScreenState extends State<CircleScreen> {
                   ],
                 ),
               ),
-              TextButton(
-                onPressed: _findPeople,
-                child: Text(
-                  hasPeople ? 'Manage ›' : 'Find people',
-                  style: const TextStyle(
-                    color: sage,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+              if (hasPeople)
+                TextButton(
+                  onPressed: _findPeople,
+                  child: const Text(
+                    'Manage ›',
+                    style: TextStyle(
+                      color: sage,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -1618,23 +1621,25 @@ class _CircleScreenState extends State<CircleScreen> {
   }
 
   Widget _emptyTrustedSpot() {
-    return const Column(
-      children: [
-        CircleAvatar(
-          radius: 24,
-          backgroundColor: Color(0xFFFFFAF1),
-          child: Icon(Icons.add_rounded, color: Color(0xFF667769), size: 25),
-        ),
-        SizedBox(height: 6),
-        Text(
-          'Add',
-          style: TextStyle(
-            color: Color(0xFF667769),
-            fontSize: 10.5,
-            fontWeight: FontWeight.w700,
+    return Semantics(
+      button: true,
+      label: 'Add a trusted person',
+      child: InkWell(
+        onTap: _findPeople,
+        borderRadius: BorderRadius.circular(28),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 2),
+          child: CircleAvatar(
+            radius: 24,
+            backgroundColor: Color(0xFFFFFAF1),
+            child: Icon(
+              Icons.add_rounded,
+              color: Color(0xFF667769),
+              size: 25,
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 
