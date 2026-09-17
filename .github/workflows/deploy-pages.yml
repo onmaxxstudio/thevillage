@@ -35,7 +35,11 @@ jobs:
 
       - name: Build website without stale PWA cache
         working-directory: app
-        run: flutter build web --release --base-href /thevillage/ --pwa-strategy=none
+        run: |
+          flutter build web --release --base-href /thevillage/ --pwa-strategy=none
+          release_id="${GITHUB_SHA:0:12}"
+          sed -i "s|flutter_bootstrap.js';|flutter_bootstrap.js?v=${release_id}';|" build/web/index.html
+          sed -i "s|main.dart.js|main.dart.js?v=${release_id}|g" build/web/flutter_bootstrap.js
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
