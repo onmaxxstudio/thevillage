@@ -235,7 +235,10 @@ class _CircleScreenState extends State<CircleScreen> {
       );
       return;
     }
-    setState(() => sharedStatusNote = note);
+    setState(() {
+      sharedStatusNote = note;
+      statusNoteController.clear();
+    });
     await _preferences.setString(_key(_statusKey), status);
     await _preferences.setString(_key(_statusNoteKey), note);
     try {
@@ -246,7 +249,7 @@ class _CircleScreenState extends State<CircleScreen> {
     if (!mounted) return;
     FocusScope.of(context).unfocus();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Your status was shared with your circle.')),
+      const SnackBar(content: Text('Shared with your Circle.')),
     );
   }
 
