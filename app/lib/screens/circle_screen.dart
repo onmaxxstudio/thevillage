@@ -1667,7 +1667,7 @@ class _CircleScreenState extends State<CircleScreen> {
     );
   }
 
-  Widget _trustedPeoplePanel( {
+  Widget _trustedPeoplePanel() {
     final people = <_CircleMember>[...circleMembers.take(3)];
     final name = myUsername.isEmpty ? 'You' : myUsername;
     final hasOtherPeople = people.isNotEmpty;
