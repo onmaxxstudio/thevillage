@@ -1386,25 +1386,34 @@ class _CircleScreenState extends State<CircleScreen> {
   }
 
   Widget _activeCircleLayout() {
+    final profileStatus = sharedStatusNote.trim().isEmpty
+        ? _shortStatusLabel()
+        : sharedStatusNote.trim();
+    final name = myUsername.isEmpty ? 'You' : myUsername;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _myStatusStrip(name, profileStatus),
+        const SizedBox(height: 25),
+        _peopleShelf(name),
+        const SizedBox(height: 24),
+        _sectionTitle('How are you today?', 'Choose what feels most true right now.'),
+        const SizedBox(height: 10),
         _statusChoices(),
-        const SizedBox(height: 14),
+        const SizedBox(height: 18),
         TextField(
           controller: statusNoteController,
           maxLength: 70,
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _shareStatus(),
-          onChanged: (value) {
-            setState(() => sharedStatusNote = value.trim());
-          },
+          onChanged: (value) => setState(() => sharedStatusNote = value.trim()),
           decoration: InputDecoration(
-            hintText: 'Share a note with your Circle (optional)…',
+            hintText: 'Share something with your Circle…',
             filled: true,
-            fillColor: Colors.white.withValues(alpha: .72),
+            fillColor: Colors.white.withValues(alpha: .56),
             prefixIcon: const Icon(Icons.eco_outlined, color: sage),
             suffixIcon: IconButton(
-              tooltip: 'Share status',
+              tooltip: 'Share with my Circle',
               onPressed: _shareStatus,
               icon: const CircleAvatar(
                 radius: 18,
@@ -1418,118 +1427,243 @@ class _CircleScreenState extends State<CircleScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 2),
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.lock_outline_rounded, size: 14, color: sage),
-            SizedBox(width: 5),
-            Text(
-              'Only your Circle can see this. Your privacy matters.',
-              style: TextStyle(fontSize: 11.5),
-            ),
-          ],
+        const SizedBox(height: 1),
+        const Center(
+          child: Text('Only your Circle can see this.',
+              style: TextStyle(fontSize: 11.5, color: Color(0xFF667769))),
         ),
-        const SizedBox(height: 22),
-        _trustedPeoplePanel(),
-        const SizedBox(height: 16),
-        InkWell(
-          onTap: _openCheckOnSomeone,
-          borderRadius: BorderRadius.circular(19),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-            decoration: BoxDecoration(
-              color: blush.withValues(alpha: .78),
-              border: Border.all(color: line),
-              borderRadius: BorderRadius.circular(19),
-            ),
-            child: const Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: Color(0xFFFFEEE8),
-                  child: Icon(Icons.favorite_border_rounded, color: sage),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Check on someone',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-                      SizedBox(height: 2),
-                      Text('Send a quick check-in'),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right_rounded, color: sage),
-              ],
-            ),
-          ),
-        ),
+        const SizedBox(height: 20),
+        _checkOnSomeoneCard(),
         if (circleMembers.isNotEmpty || incomingRequests.isNotEmpty) ...[
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
           _moreCircleTools(),
         ],
       ],
     );
   }
 
-  Widget _statusChoices() {
-    const options = <(String, String, IconData, Color)>[
-      ('Available to listen', 'Here for others', Icons.person_outline_rounded, Color(0xFFE8EBDD)),
-      ('Quiet today', 'Taking care of me', Icons.dark_mode_outlined, Color(0xFFF6ECD9)),
-      ('I need support', 'It’s okay to reach out', Icons.favorite_border_rounded, Color(0xFFF7E3E1)),
-    ];
-    return Row(
-      children: [
-        for (var index = 0; index < options.length; index++) ...[
-          if (index > 0) const SizedBox(width: 8),
-          Expanded(
-            child: InkWell(
-              onTap: () => _chooseStatus(options[index].$1),
-              borderRadius: BorderRadius.circular(18),
-              child: Container(
-                height: 132,
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: status == options[index].$1
-                      ? options[index].$4
-                      : Colors.white.withValues(alpha: .52),
-                  border: Border.all(
-                    color: status == options[index].$1 ? sage : line,
-                    width: status == options[index].$1 ? 1.6 : 1,
+  Widget _myStatusStrip(String name, String profileStatus) {
+    final initial = name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+      decoration: BoxDecoration(
+        color: paleSage.withValues(alpha: .72),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Row(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              CircleAvatar(
+                radius: 23,
+                backgroundColor: sage,
+                child: Text(initial,
+                  style: GoogleFonts.playfairDisplay(
+                    color: Colors.white, fontSize: 19, fontWeight: FontWeight.w700)),
+              ),
+              Positioned(
+                right: -1, bottom: -1,
+                child: Container(
+                  width: 11, height: 11,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5D8E62),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: paleSage, width: 2),
                   ),
-                  borderRadius: BorderRadius.circular(18),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 22,
-                      backgroundColor: options[index].$4,
-                      child: Icon(options[index].$3, color: sage, size: 24),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      options[index].$1,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      options[index].$2,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      style: const TextStyle(fontSize: 9.5, color: Color(0xFF667769)),
-                    ),
-                  ],
+              ),
+            ],
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: const TextStyle(color: ink, fontSize: 15, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 1),
+                Text(profileStatus, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: sage, fontSize: 13)),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Edit your status',
+            onPressed: () => FocusScope.of(context).requestFocus(FocusNode()),
+            icon: const Icon(Icons.edit_outlined, color: sage, size: 19),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _peopleShelf(String name) {
+    final people = circleMembers.take(3).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          Text('Your people',
+            style: GoogleFonts.playfairDisplay(color: ink, fontSize: 28, fontWeight: FontWeight.w700)),
+          const Spacer(),
+          TextButton.icon(
+            onPressed: _findPeople,
+            style: TextButton.styleFrom(foregroundColor: sage),
+            icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+            label: const Text('Invite'),
+          ),
+        ]),
+        const Text('The people you trust to show up.',
+          style: TextStyle(fontSize: 12.5, color: Color(0xFF667769))),
+        const SizedBox(height: 14),
+        Row(children: [
+          _personShelfItem(
+            label: 'You',
+            initials: name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase(),
+            color: sage,
+            status: _shortStatusLabel(),
+            isYou: true,
+          ),
+          for (final person in people)
+            _personShelfItem(
+              label: person.name.replaceFirst('@', ''),
+              initials: person.initials,
+              color: person.color,
+              status: person.status,
+              onTap: () => _openMemberProfile(person),
+            ),
+          for (var i = people.length; i < 3; i++) _addPersonShelfItem(),
+        ]),
+      ],
+    );
+  }
+
+  Widget _personShelfItem({
+    required String label, required String initials, required Color color,
+    required String status, bool isYou = false, VoidCallback? onTap,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Column(children: [
+          Stack(clipBehavior: Clip.none, children: [
+            CircleAvatar(
+              radius: 27, backgroundColor: color,
+              child: Text(initials, style: TextStyle(
+                color: isYou ? Colors.white : ink, fontWeight: FontWeight.w800, fontSize: 16)),
+            ),
+            Positioned(
+              right: -1, bottom: -1,
+              child: Container(
+                width: 12, height: 12,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF5D8E62), shape: BoxShape.circle,
+                  border: Border.all(color: cream, width: 2),
                 ),
               ),
             ),
+          ]),
+          const SizedBox(height: 6),
+          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800)),
+          Text(status, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 9.5, color: Color(0xFF667769))),
+        ]),
+      ),
+    );
+  }
+
+  Widget _addPersonShelfItem() {
+    return Expanded(
+      child: InkWell(
+        onTap: _findPeople,
+        borderRadius: BorderRadius.circular(20),
+        child: const Column(children: [
+          CircleAvatar(
+            radius: 27, backgroundColor: Color(0xFFF4F0E7),
+            child: Icon(Icons.add_rounded, color: Color(0xFF667769), size: 25),
           ),
-        ],
+          SizedBox(height: 6),
+          Text('Add', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800)),
+          Text('', style: TextStyle(fontSize: 9.5)),
+        ]),
+      ),
+    );
+  }
+
+  Widget _statusChoices() {
+    const options = <(String, IconData)>[
+      ('Available to listen', Icons.person_outline_rounded),
+      ('Quiet today', Icons.dark_mode_outlined),
+      ('I need support', Icons.favorite_border_rounded),
+    ];
+    return Row(children: [
+      for (var index = 0; index < options.length; index++) ...[
+        if (index > 0) const SizedBox(width: 8),
+        Expanded(
+          child: InkWell(
+            onTap: () => _chooseStatus(options[index].$1),
+            borderRadius: BorderRadius.circular(18),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 80,
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 8),
+              decoration: BoxDecoration(
+                color: status == options[index].$1 ? paleSage : Colors.white.withValues(alpha: .48),
+                border: Border.all(
+                  color: status == options[index].$1 ? sage : line,
+                  width: status == options[index].$1 ? 1.8 : 1),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Icon(options[index].$2, color: sage, size: 21),
+                const SizedBox(height: 5),
+                Text(
+                  switch (options[index].$1) {
+                    'Available to listen' => 'Listen',
+                    'Quiet today' => 'Quiet',
+                    _ => 'Support',
+                  },
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+                ),
+              ]),
+            ),
+          ),
+        ),
       ],
+    ]);
+  }
+
+  Widget _checkOnSomeoneCard() {
+    return InkWell(
+      onTap: _openCheckOnSomeone,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        decoration: BoxDecoration(
+          color: blush.withValues(alpha: .78),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Row(children: [
+          CircleAvatar(
+            backgroundColor: Color(0xFFFFEEE8),
+            child: Icon(Icons.favorite_border_rounded, color: sage),
+          ),
+          SizedBox(width: 12),
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Check on someone', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+              SizedBox(height: 2),
+              Text('A small reach-out can mean a lot.', style: TextStyle(fontSize: 12.5)),
+            ],
+          )),
+          Icon(Icons.arrow_forward_rounded, color: sage),
+        ]),
+      ),
     );
   }
 
