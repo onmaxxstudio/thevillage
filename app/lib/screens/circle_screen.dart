@@ -59,6 +59,7 @@ class _CircleScreenState extends State<CircleScreen> {
   static const _statusNoteKey = 'ask_the_village_circle_status_note';
   static const _reachOutsKey = 'ask_the_village_circle_reach_outs';
   static const _circleMessagesKey = 'ask_the_village_circle_messages';
+  static const _circleMomentsKey = 'ask_the_village_circle_moments';
   static const _dismissedRemindersKey =
       'ask_the_village_dismissed_reminders';
   static const _dismissedActivityKey = 'ask_the_village_dismissed_activity';
@@ -79,6 +80,7 @@ class _CircleScreenState extends State<CircleScreen> {
   final Set<String> sentRequests = {};
   List<_ReachOut> myReachOuts = [];
   List<_CircleMessage> circleMessages = [];
+  List<_CircleMoment> circleMoments = [];
   List<_CircleCandidate> incomingRequests = [];
   late final List<_CircleMember> circleMembers;
 
@@ -164,6 +166,8 @@ class _CircleScreenState extends State<CircleScreen> {
             const [];
     final savedCircleMessages =
         await _preferences.getStringList(_key(_circleMessagesKey)) ?? const [];
+    final savedCircleMoments =
+        await _preferences.getStringList(_key(_circleMomentsKey)) ?? const [];
     final loadedCircleMessages = <_CircleMessage>[];
     for (final item in savedCircleMessages) {
       try {
@@ -175,6 +179,17 @@ class _CircleScreenState extends State<CircleScreen> {
       }
     }
     loadedCircleMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final loadedCircleMoments = <_CircleMoment>[];
+    for (final item in savedCircleMoments) {
+      try {
+        loadedCircleMoments.add(
+          _CircleMoment.fromJson(jsonDecode(item) as Map<String, dynamic>),
+        );
+      } on Object {
+        // Keep the rest if one locally saved moment is damaged.
+      }
+    }
+    loadedCircleMoments.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final loadedReachOuts = <_ReachOut>[];
     for (final item in savedReachOuts) {
       try {
@@ -195,6 +210,7 @@ class _CircleScreenState extends State<CircleScreen> {
       statusNoteController.text = sharedStatusNote;
       myReachOuts = loadedReachOuts;
       circleMessages = loadedCircleMessages;
+      circleMoments = loadedCircleMoments;
       dismissedReminders
         ..clear()
         ..addAll(
@@ -1300,7 +1316,7 @@ class _CircleScreenState extends State<CircleScreen> {
                 const SizedBox(height: 5),
                 Center(
                   child: Text(
-                    'How are you showing up today?',
+                    'Your people. Your pace.',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.playfairDisplay(
                     color: ink,
@@ -1389,59 +1405,448 @@ class _CircleScreenState extends State<CircleScreen> {
   }
 
   Widget _activeCircleLayout() {
-    final profileStatus = sharedStatusNote.trim().isEmpty
-        ? _shortStatusLabel()
-        : sharedStatusNote.trim();
-    final name = myUsername.isEmpty ? 'You' : myUsername;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _myStatusStrip(name, profileStatus),
-        const SizedBox(height: 25),
-        _peopleShelf(name),
-        const SizedBox(height: 24),
-        _sectionTitle('How are you today?', 'Choose what feels most true right now.'),
+        _circleOrbit(),
+        const SizedBox(height: 22),
+        _sectionTitle(
+          'How are you today?',
+          'Choose the kind of support you can give or need.',
+        ),
         const SizedBox(height: 10),
         _statusChoices(),
-        const SizedBox(height: 18),
-        TextField(
-          controller: statusNoteController,
-          maxLength: 70,
-          textInputAction: TextInputAction.done,
-          onSubmitted: (_) => _shareStatus(),
-          onChanged: (value) => setState(() => sharedStatusNote = value.trim()),
-          decoration: InputDecoration(
-            hintText: 'Share something with your Circle…',
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: .56),
-            prefixIcon: const Icon(Icons.eco_outlined, color: sage),
-            suffixIcon: IconButton(
-              tooltip: 'Share with my Circle',
-              onPressed: _shareStatus,
-              icon: const CircleAvatar(
-                radius: 18,
-                backgroundColor: sage,
-                child: Icon(Icons.send_rounded, color: Colors.white, size: 18),
-              ),
+        const SizedBox(height: 28),
+        _sectionTitle(
+          'Good things happening',
+          'Private wins shared by your Circle.',
+        ),
+        const SizedBox(height: 12),
+        _momentsRow(),
+        const SizedBox(height: 14),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: _shareSomethingGood,
+            style: FilledButton.styleFrom(
+              backgroundColor: sage,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(28),
-              borderSide: const BorderSide(color: line),
-            ),
+            icon: const Icon(Icons.celebration_outlined, size: 20),
+            label: const Text('Share something good'),
           ),
         ),
-        const SizedBox(height: 1),
-        const Center(
-          child: Text('Only your Circle can see this.',
-              style: TextStyle(fontSize: 11.5, color: Color(0xFF667769))),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextButton.icon(
+                onPressed: _startAskMyCircle,
+                icon: const Icon(Icons.favorite_border_rounded, size: 19),
+                label: const Text('Ask for support'),
+                style: TextButton.styleFrom(foregroundColor: sage),
+              ),
+            ),
+            Container(width: 1, height: 21, color: line),
+            Expanded(
+              child: TextButton.icon(
+                onPressed: _openCheckOnSomeone,
+                icon: const Icon(Icons.waving_hand_outlined, size: 19),
+                label: const Text('Check in'),
+                style: TextButton.styleFrom(foregroundColor: sage),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 20),
-        _checkOnSomeoneCard(),
         if (circleMembers.isNotEmpty || incomingRequests.isNotEmpty) ...[
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
           _moreCircleTools(),
         ],
       ],
+    );
+  }
+
+  Widget _circleOrbit() {
+    final name = myUsername.isEmpty ? 'You' : myUsername;
+    final people = circleMembers.take(5).toList();
+    final remaining = circleMembers.length - people.length;
+    const positions = <Offset>[
+      Offset(.50, .02),
+      Offset(.10, .25),
+      Offset(.90, .25),
+      Offset(.20, .78),
+      Offset(.80, .78),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final diameter = constraints.maxWidth.clamp(280.0, 390.0);
+        const avatarSize = 56.0;
+        return Center(
+          child: SizedBox(
+            width: diameter,
+            height: 270,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left: (diameter - 190) / 2,
+                  top: 34,
+                  child: Container(
+                    width: 190,
+                    height: 190,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: paleSage.withValues(alpha: .45),
+                      border: Border.all(color: line, width: 1.2),
+                    ),
+                  ),
+                ),
+                for (var index = 0; index < people.length; index++)
+                  Positioned(
+                    left: diameter * positions[index].dx - avatarSize / 2,
+                    top: 20 + 200 * positions[index].dy - avatarSize / 2,
+                    child: _orbitPerson(
+                      people[index].initials,
+                      people[index].name.replaceFirst('@', ''),
+                      people[index].color,
+                      () => _openMemberProfile(people[index]),
+                    ),
+                  ),
+                if (people.length < 5)
+                  for (var index = people.length; index < 5; index++)
+                    Positioned(
+                      left: diameter * positions[index].dx - avatarSize / 2,
+                      top: 20 + 200 * positions[index].dy - avatarSize / 2,
+                      child: _orbitAddSpot(),
+                    ),
+                if (remaining > 0)
+                  Positioned(
+                    right: 4,
+                    bottom: 29,
+                    child: InkWell(
+                      onTap: _showAllPeople,
+                      borderRadius: BorderRadius.circular(30),
+                      child: Container(
+                        width: 58,
+                        height: 58,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: gold,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: cream, width: 3),
+                        ),
+                        child: Text(
+                          '+$remaining',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                Positioned(
+                  left: (diameter - 112) / 2,
+                  top: 75,
+                  child: _orbitYou(name),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _orbitYou(String name) {
+    final initial = name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase();
+    return Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            CircleAvatar(
+              radius: 54,
+              backgroundColor: sage,
+              child: Text(
+                initial,
+                style: GoogleFonts.playfairDisplay(
+                  color: Colors.white,
+                  fontSize: 42,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Positioned(
+              right: 2,
+              bottom: 2,
+              child: Container(
+                width: 15,
+                height: 15,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF5D8E62),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: cream, width: 3),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 7),
+        const Text('You', style: TextStyle(fontWeight: FontWeight.w800)),
+        Text(
+          _shortStatusLabel(),
+          style: const TextStyle(fontSize: 11, color: Color(0xFF667769)),
+        ),
+      ],
+    );
+  }
+
+  Widget _orbitPerson(String initials, String name, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(30),
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: color,
+            child: Text(
+              initials,
+              style: const TextStyle(color: ink, fontSize: 17, fontWeight: FontWeight.w800),
+            ),
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            width: 66,
+            child: Text(
+              name,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _orbitAddSpot() {
+    return InkWell(
+      onTap: _findPeople,
+      borderRadius: BorderRadius.circular(30),
+      child: const Column(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: Color(0xFFF4F0E7),
+            child: Icon(Icons.add_rounded, color: Color(0xFF667769), size: 27),
+          ),
+          SizedBox(height: 4),
+          SizedBox(
+            width: 66,
+            child: Text(
+              'Add',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _momentsRow() {
+    if (circleMoments.isEmpty) {
+      return InkWell(
+        onTap: _shareSomethingGood,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .58),
+            border: Border.all(color: line),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: Color(0xFFF7EDD7),
+                child: Icon(Icons.auto_awesome_rounded, color: gold),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'The good things will live here. Share the first one.',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              ),
+              Icon(Icons.arrow_forward_rounded, color: sage),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 132,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: circleMoments.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) => _momentCard(circleMoments[index]),
+      ),
+    );
+  }
+
+  Widget _momentCard(_CircleMoment moment) {
+    return Container(
+      width: 205,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: moment.author == 'You' ? blush.withValues(alpha: .8) : paleSage,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.celebration_outlined, color: gold, size: 22),
+          const SizedBox(height: 8),
+          Expanded(
+            child: Text(
+              moment.text,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, height: 1.18),
+            ),
+          ),
+          Text(
+            moment.author == 'You' ? 'You • just now' : moment.author,
+            style: const TextStyle(fontSize: 11, color: Color(0xFF667769)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _shareSomethingGood() async {
+    final controller = TextEditingController();
+    final text = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.fromLTRB(22, 6, 22, MediaQuery.viewInsetsOf(sheetContext).bottom + 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Share something good',
+              style: GoogleFonts.playfairDisplay(color: ink, fontSize: 30, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 5),
+            const Text('A win, a milestone, or a bright spot worth celebrating.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              maxLength: 180,
+              minLines: 3,
+              maxLines: 5,
+              decoration: InputDecoration(
+                hintText: 'What happened?',
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: .7),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => Navigator.pop(sheetContext, controller.text.trim()),
+                style: FilledButton.styleFrom(
+                  backgroundColor: sage,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                icon: const Icon(Icons.celebration_outlined),
+                label: const Text('Add to Circle Moments'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (text == null || text.isEmpty || !mounted) return;
+    final moment = _CircleMoment(
+      text: text,
+      author: 'You',
+      createdAt: DateTime.now(),
+    );
+    setState(() => circleMoments.insert(0, moment));
+    await _preferences.setStringList(
+      _key(_circleMomentsKey),
+      circleMoments.map((item) => jsonEncode(item.toJson())).toList(),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Added to your Circle Moments.')),
+    );
+  }
+
+  Future<void> _showAllPeople() {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Everyone in your Circle',
+                      style: GoogleFonts.playfairDisplay(color: ink, fontSize: 28, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _findPeople,
+                    icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                    label: const Text('Invite'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ...circleMembers.map(
+                (person) => ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: person.color,
+                    child: Text(person.initials, style: const TextStyle(color: ink, fontWeight: FontWeight.w800)),
+                  ),
+                  title: Text(person.name.replaceFirst('@', '')),
+                  subtitle: Text(person.status),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _openMemberProfile(person);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -2696,4 +3101,30 @@ class _CircleMember {
   final String status;
   final bool available;
   final String? uid;
+}
+
+
+class _CircleMoment {
+  const _CircleMoment({
+    required this.text,
+    required this.author,
+    required this.createdAt,
+  });
+
+  final String text;
+  final String author;
+  final DateTime createdAt;
+
+  Map<String, dynamic> toJson() => {
+        'text': text,
+        'author': author,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  factory _CircleMoment.fromJson(Map<String, dynamic> json) => _CircleMoment(
+        text: json['text'] as String? ?? '',
+        author: json['author'] as String? ?? 'You',
+        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+            DateTime.now(),
+      );
 }
