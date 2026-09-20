@@ -185,6 +185,7 @@ class _CircleScreenState extends State<CircleScreen> {
               person.status.isEmpty ? 'Connected' : person.status,
               true,
               person.uid,
+              person.photoUrl,
             );
           }).toList();
         });
