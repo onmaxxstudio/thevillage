@@ -1448,49 +1448,50 @@ class _CircleScreenState extends State<CircleScreen> {
     final people = _visibleCircleMembers.take(5).toList();
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = constraints.maxWidth.clamp(300.0, 390.0);
-        final center = size / 2;
-        const ringRadius = 116.0;
-        const personDiameter = 56.0;
+        final width = constraints.maxWidth.clamp(310.0, 390.0);
+        final centerX = width / 2;
+        const centerY = 177.0;
+        const ringRadius = 128.0;
+        const outerDiameter = 72.0;
         const startAngle = -math.pi / 2;
         return Center(
           child: SizedBox(
-            width: size,
-            height: 324,
+            width: width,
+            height: 364,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Positioned(
-                  left: center - ringRadius,
-                  top: center - ringRadius,
+                  left: centerX - ringRadius,
+                  top: centerY - ringRadius,
                   child: CustomPaint(
-                    size: const Size(ringRadius * 2, ringRadius * 2),
+                    size: const Size(256, 256),
                     painter: _OrbitRingPainter(),
                   ),
                 ),
-                for (var index = 0; index < 5; index++)
+                for (var index = 0; index < people.length; index++)
                   Builder(
                     builder: (context) {
                       final angle = startAngle + (index * (2 * math.pi / 5));
-                      final x = center + ringRadius * math.cos(angle) - personDiameter / 2;
-                      final y = center + ringRadius * math.sin(angle) - personDiameter / 2;
+                      final x = centerX + ringRadius * math.cos(angle) - outerDiameter / 2;
+                      final y = centerY + ringRadius * math.sin(angle) - outerDiameter / 2;
+                      final person = people[index];
                       return Positioned(
                         left: x,
                         top: y,
-                        child: index < people.length
-                            ? _orbitPerson(
-                                people[index].initials,
-                                people[index].name.replaceFirst('@', ''),
-                                people[index].color,
-                                () => _openMemberProfile(people[index]),
-                              )
-                            : _orbitAddSpot(),
+                        child: _orbitPerson(
+                          person.initials,
+                          person.name.replaceFirst('@', ''),
+                          person.color,
+                          person.photoUrl,
+                          () => _openMemberProfile(person),
+                        ),
                       );
                     },
                   ),
                 Positioned(
-                  left: center - 50,
-                  top: center - 58,
+                  left: centerX - 70,
+                  top: centerY - 77,
                   child: _orbitYou(name),
                 ),
               ],
@@ -1503,74 +1504,75 @@ class _CircleScreenState extends State<CircleScreen> {
 
   Widget _orbitYou(String name) {
     final initial = name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase();
-    return Column(
-      children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            CircleAvatar(
-              radius: 48,
+    final photoUrl = FirebaseAuth.instance.currentUser?.photoURL ?? '';
+    return SizedBox(
+      width: 140,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: const BoxDecoration(shape: BoxShape.circle, color: gold),
+            child: CircleAvatar(
+              radius: 61,
               backgroundColor: sage,
-              child: Text(
-                initial,
-                style: GoogleFonts.playfairDisplay(
-                  color: Colors.white,
-                  fontSize: 42,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
+              child: photoUrl.isEmpty
+                  ? Text(
+                      initial,
+                      style: GoogleFonts.playfairDisplay(
+                        color: Colors.white, fontSize: 48, fontWeight: FontWeight.w700,
+                      ),
+                    )
+                  : null,
             ),
-            Positioned(
-              right: 1,
-              bottom: 1,
-              child: Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF5D8E62),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: cream, width: 3),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 7),
-        const Text('You', style: TextStyle(fontWeight: FontWeight.w800)),
-        Text(
-          _shortStatusLabel(),
-          style: const TextStyle(fontSize: 11, color: Color(0xFF667769)),
-        ),
-      ],
+          ),
+          const SizedBox(height: 9),
+          Text(
+            name == 'You' ? 'You' : name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.playfairDisplay(color: sage, fontSize: 22, fontWeight: FontWeight.w700),
+          ),
+          Text(
+            _shortStatusLabel(),
+            style: const TextStyle(fontSize: 11, color: Color(0xFF667769), letterSpacing: .4),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _orbitPerson(String initials, String name, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(30),
-      child: Column(
-        children: [
-          CircleAvatar(
-            radius: 26,
+  Widget _orbitPerson(
+    String initials,
+    String name,
+    Color color,
+    String photoUrl,
+    VoidCallback onTap,
+  ) {
+    return Tooltip(
+      message: name,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(44),
+        child: Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(color: line, width: 1.5),
+            boxShadow: const [
+              BoxShadow(color: Color(0x16000000), blurRadius: 7, offset: Offset(0, 3)),
+            ],
+          ),
+          child: CircleAvatar(
+            radius: 33,
             backgroundColor: color,
-            child: Text(
-              initials,
-              style: const TextStyle(color: ink, fontSize: 16, fontWeight: FontWeight.w800),
-            ),
+            backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
+            child: photoUrl.isEmpty
+                ? Icon(Icons.person_rounded, color: sage.withValues(alpha: .78), size: 31)
+                : null,
           ),
-          const SizedBox(height: 2),
-          SizedBox(
-            width: 62,
-            child: Text(
-              name,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -3013,21 +3015,24 @@ class _OrbitRingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 2;
+    final radius = size.width / 2 - 3;
     final ring = Paint()
-      ..color = const Color(0xFFD8C9B4)
+      ..color = const Color(0xFFCDBB9A)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
+      ..strokeWidth = 1.25;
     canvas.drawCircle(center, radius, ring);
 
     final dot = Paint()..color = const Color(0xFFB78943);
     for (var index = 0; index < 5; index++) {
-      final angle = -math.pi / 2 + (index * (2 * math.pi / 5)) + .34;
-      final point = Offset(
-        center.dx + radius * math.cos(angle),
-        center.dy + radius * math.sin(angle),
+      final angle = -math.pi / 2 + (index * (2 * math.pi / 5)) + .46;
+      canvas.drawCircle(
+        Offset(
+          center.dx + radius * math.cos(angle),
+          center.dy + radius * math.sin(angle),
+        ),
+        4,
+        dot,
       );
-      canvas.drawCircle(point, 4.5, dot);
     }
   }
 
