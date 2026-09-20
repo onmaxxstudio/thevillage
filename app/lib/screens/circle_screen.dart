@@ -768,14 +768,19 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                 CircleAvatar(
                   radius: 31,
                   backgroundColor: member.color,
-                  child: Text(
-                    member.initials,
-                    style: const TextStyle(
-                      color: ink,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+                  backgroundImage: member.photoUrl.isEmpty
+                      ? null
+                      : NetworkImage(member.photoUrl),
+                  child: member.photoUrl.isEmpty
+                      ? Text(
+                          member.initials,
+                          style: const TextStyle(
+                            color: ink,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 13),
                 Expanded(
