@@ -3146,6 +3146,7 @@ class _CircleMember {
     this.status,
     this.available, [
     this.uid,
+    this.photoUrl = '',
   ]);
 
   final String name;
@@ -3154,6 +3155,7 @@ class _CircleMember {
   final String status;
   final bool available;
   final String? uid;
+  final String photoUrl;
 }
 
 
