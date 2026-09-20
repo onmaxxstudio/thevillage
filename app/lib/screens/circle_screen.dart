@@ -1502,18 +1502,18 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                         },
                       ),
                     Positioned(
-                      left: centerX - 62,
-                      top: centerY - 62,
+                      left: centerX - 70,
+                      top: centerY - 70,
                       child: GestureDetector(
                         onTap: _startAskMyCircle,
                         child: _orbitYou(name),
                       ),
                     ),
                     Positioned(
-                      left: centerX - 62,
-                      top: 236,
+                      left: centerX - 75,
+                      top: 254,
                       child: SizedBox(
-                        width: 124,
+                        width: 150,
                         child: Column(
                           children: [
                             Text(
@@ -1523,8 +1523,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                               textAlign: TextAlign.center,
                               style: GoogleFonts.playfairDisplay(
                                 color: sage,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -1532,15 +1532,15 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                               'AT THE CENTER\nTOGETHER IS BETTER',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 7.2,
+                                fontSize: 8.4,
                                 color: gold,
                                 fontWeight: FontWeight.w800,
-                                letterSpacing: 1.15,
-                                height: 1.3,
+                                letterSpacing: 1.45,
+                                height: 1.35,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            const Icon(Icons.wb_sunny_outlined, size: 14, color: gold),
+                            const SizedBox(height: 3),
+                            const Icon(Icons.wb_sunny_outlined, size: 19, color: gold),
                           ],
                         ),
                       ),
@@ -1615,7 +1615,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       padding: const EdgeInsets.all(4),
       decoration: const BoxDecoration(shape: BoxShape.circle, color: gold),
       child: CircleAvatar(
-        radius: 54,
+        radius: 66,
         backgroundColor: sage,
         backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
         child: photoUrl.isEmpty
