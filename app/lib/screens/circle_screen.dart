@@ -2499,7 +2499,53 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       _findPeople();
       return;
     }
-    _quickCheckIn(members.first);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Who would you like to check in on?',
+                style: GoogleFonts.playfairDisplay(
+                  color: ink, fontSize: 25, fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 5),
+              const Text('Choose someone from your Circle.'),
+              const SizedBox(height: 12),
+              ...members.map(
+                (member) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: member.color,
+                    backgroundImage: member.photoUrl.isEmpty
+                        ? null
+                        : NetworkImage(member.photoUrl),
+                    child: member.photoUrl.isEmpty
+                        ? Text(member.initials,
+                            style: const TextStyle(color: ink, fontWeight: FontWeight.w800))
+                        : null,
+                  ),
+                  title: Text(member.name.replaceFirst('@', '')),
+                  subtitle: Text(member.status),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _quickCheckIn(member);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _recentConnections() {
