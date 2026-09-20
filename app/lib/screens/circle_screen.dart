@@ -1436,7 +1436,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             final width = constraints.maxWidth.clamp(310.0, 390.0);
             final centerX = width / 2;
             const centerY = 180.0;
-            const ringRadius = 132.0;
+            // Keep the orbit moving exactly as before, but give the center
+            // message a clear lower pocket inside the ring.
+            const ringRadius = 150.0;
             const outerDiameter = 64.0;
             const badgeSize = 78.0;
 
@@ -1457,7 +1459,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             return Center(
               child: SizedBox(
                 width: width,
-                height: 326,
+                height: 344,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -1465,7 +1467,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       left: centerX - ringRadius,
                       top: centerY - ringRadius,
                       child: CustomPaint(
-                        size: const Size(264, 264),
+                        size: const Size(300, 300),
                         painter: _OrbitRingPainter(phase: turn),
                       ),
                     ),
@@ -1509,7 +1511,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                     ),
                     Positioned(
                       left: centerX - 62,
-                      top: 244,
+                      top: 236,
                       child: SizedBox(
                         width: 124,
                         child: Column(
@@ -1521,24 +1523,24 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                               textAlign: TextAlign.center,
                               style: GoogleFonts.playfairDisplay(
                                 color: sage,
-                                fontSize: 19,
+                                fontSize: 18,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 2),
                             const Text(
                               'AT THE CENTER\nTOGETHER IS BETTER',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 7.5,
+                                fontSize: 7.2,
                                 color: gold,
                                 fontWeight: FontWeight.w800,
-                                letterSpacing: 1.25,
-                                height: 1.45,
+                                letterSpacing: 1.15,
+                                height: 1.3,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            const Icon(Icons.wb_sunny_outlined, size: 15, color: gold),
+                            const SizedBox(height: 2),
+                            const Icon(Icons.wb_sunny_outlined, size: 14, color: gold),
                           ],
                         ),
                       ),
@@ -3105,7 +3107,7 @@ class _OrbitRingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 3;
+    final radius = size.width / 2;
     final ring = Paint()
       ..color = const Color(0xFFCDBB9A)
       ..style = PaintingStyle.stroke
