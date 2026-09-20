@@ -97,23 +97,31 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 2),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
               child: Column(
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.energy_savings_leaf_outlined, color: gold, size: 29),
-                      const SizedBox(width: 6),
-                      Expanded(child: Text('Ask the\nVillage', style: GoogleFonts.playfairDisplay(fontSize: 20, height: .93, fontWeight: FontWeight.w700, color: sage))),
-                      Padding(padding: const EdgeInsets.only(top: 5), child: Text('REAL PEOPLE\nBRIGHTER TOMORROWS', textAlign: TextAlign.right, style: TextStyle(color: gold, fontSize: 7.2, fontWeight: FontWeight.w800, letterSpacing: 1.7, height: 1.55))),
-                      const SizedBox(width: 10),
-                      const CircleAvatar(radius: 15, backgroundColor: sage, child: Icon(Icons.person_rounded, color: Colors.white)),
-                    ],
+                  Text(
+                    'Community Hub',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.playfairDisplay(
+                      color: sage,
+                      fontSize: 48,
+                      height: .95,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  const SizedBox(height: 9),
-                  Align(alignment: Alignment.center, child: Text('Community Hub', style: GoogleFonts.playfairDisplay(fontSize: 29, fontWeight: FontWeight.w700, color: ink))),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'GOOD PEOPLE  •  BRIGHTER DAYS',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: gold,
+                      fontSize: 9,
+                      letterSpacing: 3.1,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
                   _tabs(),
                 ],
               ),
