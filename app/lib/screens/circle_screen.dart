@@ -18,7 +18,7 @@ class CircleScreen extends StatefulWidget {
   State<CircleScreen> createState() => _CircleScreenState();
 }
 
-class _CircleScreenState extends State<CircleScreen> {
+class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderStateMixin {
   static const cream = Color(0xFFFFFAF1);
   static const sage = Color(0xFF355C3B);
   static const paleSage = Color(0xFFE8EBDD);
@@ -85,6 +85,7 @@ class _CircleScreenState extends State<CircleScreen> {
   List<_CircleMoment> circleMoments = [];
   List<_CircleCandidate> incomingRequests = [];
   late final List<_CircleMember> circleMembers;
+  late final AnimationController _orbitController;
 
   String _key(String base) {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? 'signed_out';
@@ -132,6 +133,10 @@ class _CircleScreenState extends State<CircleScreen> {
   @override
   void initState() {
     super.initState();
+    _orbitController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 72),
+    )..repeat();
     circleMembers = <_CircleMember>[];
     _loadStatus();
     _connectCircleData();
@@ -315,6 +320,7 @@ class _CircleScreenState extends State<CircleScreen> {
     requestSubscription?.cancel();
     memberSubscription?.cancel();
     statusNoteController.dispose();
+    _orbitController.dispose();
     super.dispose();
   }
 
@@ -1421,109 +1427,131 @@ class _CircleScreenState extends State<CircleScreen> {
         ? 14
         : math.max(0, _visibleCircleMembers.length - people.length);
 
-    // This deliberately mirrors the My Circle portrait layout: five people
-    // around a thin orbit, a sixth "more" badge, and the member at the center.
-    const orbitAngles = <double>[
+    // Exact reference positions: five portraits plus the pink more-people
+    // circle travel slowly around one thin, gold orbit.
+    const portraitAngles = <double>[
       -math.pi / 2, // top
-      -2.45, // upper-left
-      2.60, // lower-left
-      -0.13, // right
-      0.55, // lower-right
+      -2.42, // upper-left
+      2.52, // lower-left
+      -0.15, // right
+      0.72, // lower-right
     ];
+    const badgeAngle = -0.82;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth.clamp(310.0, 390.0);
-        final centerX = width / 2;
-        const centerY = 170.0;
-        const ringRadius = 120.0;
-        const outerDiameter = 62.0;
+    return AnimatedBuilder(
+      animation: _orbitController,
+      builder: (context, _) {
+        final turn = _orbitController.value * 2 * math.pi;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth.clamp(310.0, 390.0);
+            final centerX = width / 2;
+            const centerY = 180.0;
+            const ringRadius = 132.0;
+            const outerDiameter = 64.0;
 
-        return Center(
-          child: SizedBox(
-            width: width,
-            height: 334,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned(
-                  left: centerX - ringRadius,
-                  top: centerY - ringRadius,
-                  child: CustomPaint(
-                    size: const Size(240, 240),
-                    painter: _OrbitRingPainter(),
-                  ),
-                ),
-                for (var index = 0; index < people.length; index++)
-                  Builder(
-                    builder: (context) {
-                      final angle = orbitAngles[index];
-                      final x = centerX + ringRadius * math.cos(angle) - outerDiameter / 2;
-                      final y = centerY + ringRadius * math.sin(angle) - outerDiameter / 2;
-                      final person = people[index];
-                      return Positioned(
-                        left: x,
-                        top: y,
-                        child: _orbitPerson(
-                          person.initials,
-                          person.name.replaceFirst('@', ''),
-                          person.color,
-                          person.photoUrl,
-                          () => _openMemberProfile(person),
-                        ),
-                      );
-                    },
-                  ),
-                if (moreCount > 0)
-                  Positioned(
-                    left: centerX + 73,
-                    top: 31,
-                    child: _orbitMorePeople(moreCount),
-                  ),
-                Positioned(
-                  left: centerX - 62,
-                  top: centerY - 62,
-                  child: _orbitYou(name),
-                ),
-                Positioned(
-                  left: centerX - 66,
-                  top: 258,
-                  child: SizedBox(
-                    width: 132,
-                    child: Column(
-                      children: [
-                        Text(
-                          name == 'You' ? 'You' : name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.playfairDisplay(
-                            color: sage,
-                            fontSize: 19,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'AT THE CENTER\nTOGETHER IS BETTER',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 7.8,
-                            color: gold,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.45,
-                            height: 1.45,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Icon(Icons.wb_sunny_outlined, size: 15, color: gold),
-                      ],
+            Offset positionFor(double angle, double diameter) {
+              final movingAngle = angle + turn;
+              return Offset(
+                centerX + ringRadius * math.cos(movingAngle) - diameter / 2,
+                centerY + ringRadius * math.sin(movingAngle) - diameter / 2,
+              );
+            }
+
+            return Center(
+              child: SizedBox(
+                width: width,
+                height: 326,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: centerX - ringRadius,
+                      top: centerY - ringRadius,
+                      child: CustomPaint(
+                        size: const Size(264, 264),
+                        painter: _OrbitRingPainter(),
+                      ),
                     ),
-                  ),
+                    for (var index = 0; index < people.length; index++)
+                      Builder(
+                        builder: (context) {
+                          final point = positionFor(portraitAngles[index], outerDiameter);
+                          final person = people[index];
+                          return Positioned(
+                            left: point.dx,
+                            top: point.dy,
+                            child: _orbitPerson(
+                              person.initials,
+                              person.name.replaceFirst('@', ''),
+                              person.color,
+                              person.photoUrl,
+                              () => _openMemberProfile(person),
+                            ),
+                          );
+                        },
+                      ),
+                    if (moreCount > 0)
+                      Builder(
+                        builder: (context) {
+                          const badgeSize = 78.0;
+                          final point = positionFor(badgeAngle, badgeSize);
+                          return Positioned(
+                            left: point.dx,
+                            top: point.dy,
+                            child: _orbitMorePeople(moreCount),
+                          );
+                        },
+                      ),
+                    Positioned(
+                      left: centerX - 62,
+                      top: centerY - 62,
+                      child: GestureDetector(
+                        onTap: _askMyCircle,
+                        child: _orbitYou(name),
+                      ),
+                    ),
+                    Positioned(
+                      left: centerX - 66,
+                      top: 250,
+                      child: SizedBox(
+                        width: 132,
+                        child: Column(
+                          children: [
+                            Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.playfairDisplay(
+                                color: sage,
+                                fontSize: 19,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'AT THE CENTER\nTOGETHER IS BETTER',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 7.8,
+                                color: gold,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.45,
+                                height: 1.45,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Icon(Icons.wb_sunny_outlined, size: 15, color: gold),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -1583,7 +1611,7 @@ class _CircleScreenState extends State<CircleScreen> {
   Widget _orbitYou(String name) {
     final initial = name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase();
     final photoUrl = _isTestCircle
-        ? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=320&q=85'
+        ? 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=320&q=85'
         : FirebaseAuth.instance.currentUser?.photoURL ?? '';
     return Container(
       padding: const EdgeInsets.all(4),
