@@ -1507,7 +1507,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       left: centerX - 62,
                       top: centerY - 62,
                       child: GestureDetector(
-                        onTap: _askMyCircle,
+                        onTap: _startAskMyCircle,
                         child: _orbitYou(name),
                       ),
                     ),
