@@ -96,11 +96,11 @@ class _CircleScreenState extends State<CircleScreen> {
   List<_CircleMember> get _visibleCircleMembers {
     if (!_isTestCircle) return circleMembers;
     return const [
-      _CircleMember('@MayaTest', 'M', Color(0xFFF0D9CF), 'Available to listen', true, 'test_maya'),
-      _CircleMember('@JordanTest', 'J', Color(0xFFDCE8D9), 'Quiet today', true, 'test_jordan'),
-      _CircleMember('@ReneeTest', 'R', Color(0xFFE6DDF1), 'Available to listen', true, 'test_renee'),
-      _CircleMember('@MarcusTest', 'M', Color(0xFFF5E6C8), 'I need support', true, 'test_marcus'),
-      _CircleMember('@PriyaTest', 'P', Color(0xFFDDE9EB), 'Available to listen', true, 'test_priya'),
+      _CircleMember('@MayaTest', 'M', Color(0xFFF0D9CF), 'Available to listen', true, 'test_maya', 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=240&q=85'),
+      _CircleMember('@JordanTest', 'J', Color(0xFFDCE8D9), 'Quiet today', true, 'test_jordan', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=85'),
+      _CircleMember('@ReneeTest', 'R', Color(0xFFE6DDF1), 'Available to listen', true, 'test_renee', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=240&q=85'),
+      _CircleMember('@MarcusTest', 'M', Color(0xFFF5E6C8), 'I need support', true, 'test_marcus', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=240&q=85'),
+      _CircleMember('@PriyaTest', 'P', Color(0xFFDDE9EB), 'Available to listen', true, 'test_priya', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=240&q=85'),
     ];
   }
 
@@ -1505,7 +1505,9 @@ class _CircleScreenState extends State<CircleScreen> {
 
   Widget _orbitYou(String name) {
     final initial = name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase();
-    final photoUrl = FirebaseAuth.instance.currentUser?.photoURL ?? '';
+    final photoUrl = _isTestCircle
+        ? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=320&q=85'
+        : FirebaseAuth.instance.currentUser?.photoURL ?? '';
     return SizedBox(
       width: 140,
       child: Column(
