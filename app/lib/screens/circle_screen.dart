@@ -1249,6 +1249,15 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             child: ListView(
               padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    tooltip: 'Menu',
+                    onPressed: () => VillageNavigationScope.of(context).onOpenMenu(),
+                    icon: const Icon(Icons.menu_rounded, size: 30),
+                  ),
+                ),
+                const SizedBox(height: 2),
                 Center(
                   child: Image.asset(
                     'assets/images/welcome_branch.png',

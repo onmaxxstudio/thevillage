@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/admin_content_service.dart';
 import '../services/community_hub_service.dart';
 import '../services/personalization_service.dart';
+import '../navigation/village_navigation_scope.dart';
 import 'community_detail_screen.dart';
 import 'find_help_screen.dart';
 
@@ -100,6 +101,15 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
               child: Column(
                 children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      tooltip: 'Menu',
+                      onPressed: () => VillageNavigationScope.of(context).onOpenMenu(),
+                      icon: const Icon(Icons.menu_rounded, size: 30),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   Image.asset(
                     'assets/images/welcome_branch.png',
                     height: 18,

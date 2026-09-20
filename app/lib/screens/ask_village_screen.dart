@@ -190,9 +190,9 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         backgroundColor: cream,
         toolbarHeight: 92,
         leading: IconButton(
-          onPressed: () =>
-              VillageNavigationScope.of(context).onSelect(0),
-          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'Menu',
+          onPressed: () => VillageNavigationScope.of(context).onOpenMenu(),
+          icon: const Icon(Icons.menu_rounded),
         ),
         title: FittedBox(
           fit: BoxFit.scaleDown,
