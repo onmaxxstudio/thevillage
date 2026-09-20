@@ -1447,7 +1447,7 @@ class _CircleScreenState extends State<CircleScreen> {
   String get _circleDisplayName {
     if (_isTestCircle) return 'Ariel';
     final displayName = FirebaseAuth.instance.currentUser?.displayName?.trim() ?? '';
-    if (displayName.isNotEmpty) return displayName.split(RegExp(r'\\s+')).first;
+    if (displayName.isNotEmpty) return displayName.split(RegExp(r'\s+')).first;
     final username = myUsername.trim().replaceFirst('@', '');
     return username.isEmpty ? 'You' : username;
   }
