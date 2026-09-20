@@ -1447,26 +1447,32 @@ class _CircleScreenState extends State<CircleScreen> {
   Widget _circleOrbit() {
     final name = myUsername.isEmpty ? 'You' : myUsername;
     final people = _visibleCircleMembers.take(5).toList();
-    final moreCount = _isTestCircle ? 14 : math.max(0, _visibleCircleMembers.length - people.length);
+    final moreCount = _isTestCircle
+        ? 14
+        : math.max(0, _visibleCircleMembers.length - people.length);
+
+    // This deliberately mirrors the My Circle portrait layout: five people
+    // around a thin orbit, a sixth "more" badge, and the member at the center.
     const orbitAngles = <double>[
-      -math.pi / 2,
-      -0.05,
-      0.9,
-      2.24,
-      math.pi + 0.05,
+      -math.pi / 2, // top
+      -2.45, // upper-left
+      2.55, // lower-left
+      -0.13, // right
+      0.72, // lower-right
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth.clamp(310.0, 390.0);
         final centerX = width / 2;
-        const centerY = 160.0;
-        const ringRadius = 128.0;
-        const outerDiameter = 72.0;
+        const centerY = 170.0;
+        const ringRadius = 120.0;
+        const outerDiameter = 62.0;
+
         return Center(
           child: SizedBox(
             width: width,
-            height: 370,
+            height: 326,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -1474,7 +1480,7 @@ class _CircleScreenState extends State<CircleScreen> {
                   left: centerX - ringRadius,
                   top: centerY - ringRadius,
                   child: CustomPaint(
-                    size: const Size(256, 256),
+                    size: const Size(240, 240),
                     painter: _OrbitRingPainter(),
                   ),
                 ),
@@ -1500,20 +1506,20 @@ class _CircleScreenState extends State<CircleScreen> {
                   ),
                 if (moreCount > 0)
                   Positioned(
-                    left: centerX + 70,
-                    top: 13,
+                    left: centerX + 73,
+                    top: 31,
                     child: _orbitMorePeople(moreCount),
                   ),
                 Positioned(
-                  left: centerX - 58,
-                  top: centerY - 60,
+                  left: centerX - 62,
+                  top: centerY - 62,
                   child: _orbitYou(name),
                 ),
                 Positioned(
-                  left: centerX - 102,
-                  top: 274,
+                  left: centerX - 66,
+                  top: 238,
                   child: SizedBox(
-                    width: 204,
+                    width: 132,
                     child: Column(
                       children: [
                         Text(
@@ -1523,24 +1529,24 @@ class _CircleScreenState extends State<CircleScreen> {
                           textAlign: TextAlign.center,
                           style: GoogleFonts.playfairDisplay(
                             color: sage,
-                            fontSize: 22,
+                            fontSize: 19,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 4),
                         const Text(
                           'AT THE CENTER\nTOGETHER IS BETTER',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 9.5,
+                            fontSize: 7.8,
                             color: gold,
                             fontWeight: FontWeight.w800,
-                            letterSpacing: 1.7,
-                            height: 1.4,
+                            letterSpacing: 1.45,
+                            height: 1.45,
                           ),
                         ),
-                        const SizedBox(height: 5),
-                        const Icon(Icons.wb_sunny_outlined, size: 17, color: gold),
+                        const SizedBox(height: 4),
+                        const Icon(Icons.wb_sunny_outlined, size: 15, color: gold),
                       ],
                     ),
                   ),
