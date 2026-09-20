@@ -1281,62 +1281,46 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   Widget _newCircleLayout() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _circleOrbit(),
+        const SizedBox(height: 12),
         Container(
-          padding: const EdgeInsets.all(23),
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 17),
           decoration: BoxDecoration(
-            color: sage,
-            borderRadius: BorderRadius.circular(26),
+            color: Colors.white.withValues(alpha: .62),
+            border: Border.all(color: line),
+            borderRadius: BorderRadius.circular(22),
           ),
           child: Column(
             children: [
-              const CircleAvatar(
-                radius: 31,
-                backgroundColor: Color(0xFFFFE8BE),
-                child: Icon(Icons.groups_2_outlined, color: sage, size: 27),
-              ),
-              const SizedBox(height: 14),
               Text(
-                'Build your Circle',
-                textAlign: TextAlign.center,
+                'Start your Circle',
                 style: GoogleFonts.playfairDisplay(
-                  color: Colors.white,
-                  fontSize: 30,
+                  color: ink,
+                  fontSize: 25,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 4),
               const Text(
-                'Start with people you trust. Your Circle is for calm, private support.',
+                'Invite the people you trust for private support and real check-ins.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, height: 1.35),
+                style: TextStyle(fontSize: 13.5, height: 1.35),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: _findPeople,
                   style: FilledButton.styleFrom(
-                    backgroundColor: cream,
-                    foregroundColor: sage,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  icon: const Icon(Icons.person_search_rounded),
-                  label: const Text('Find by username'),
-                ),
-              ),
-              const SizedBox(height: 9),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _findPeople,
-                  style: OutlinedButton.styleFrom(
+                    backgroundColor: sage,
                     foregroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFFFFE8BE)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   icon: const Icon(Icons.person_add_alt_1_rounded),
-                  label: const Text('Invite someone'),
+                  label: const Text('Invite your first person'),
                 ),
               ),
             ],
@@ -1471,8 +1455,21 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                         painter: _OrbitRingPainter(phase: turn),
                       ),
                     ),
-                    for (var index = 0; index < people.length; index++)
-                      Builder(
+                    if (people.isEmpty)
+                      for (final index in const [0, 2, 3, 5])
+                        Builder(
+                          builder: (context) {
+                            final point = positionFor(index, outerDiameter);
+                            return Positioned(
+                              left: point.dx,
+                              top: point.dy,
+                              child: _orbitAddAvatar(),
+                            );
+                          },
+                        )
+                    else
+                      for (var index = 0; index < people.length; index++)
+                        Builder(
                         builder: (context) {
                           // Reserve position 0 for the pink +more circle.
                           final point = positionFor(index + 1, outerDiameter);
@@ -1661,6 +1658,30 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                 ? Icon(Icons.person_rounded, color: sage.withValues(alpha: .78), size: 27)
                 : null,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _orbitAddAvatar() {
+    return Semantics(
+      button: true,
+      label: 'Invite someone to your Circle',
+      child: InkWell(
+        onTap: _findPeople,
+        borderRadius: BorderRadius.circular(32),
+        child: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFFF4F0E7),
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: const [
+              BoxShadow(color: Color(0x12000000), blurRadius: 7, offset: Offset(0, 3)),
+            ],
+          ),
+          child: const Icon(Icons.add_rounded, color: Color(0xFF667769), size: 28),
         ),
       ),
     );
@@ -1915,51 +1936,104 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   }
 
   Future<void> _showAllPeople() {
+    final controller = TextEditingController();
+    var query = '';
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: cream,
+      isScrollControlled: true,
       showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Everyone in your Circle',
-                      style: GoogleFonts.playfairDisplay(color: ink, fontSize: 28, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: _findPeople,
-                    icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-                    label: const Text('Invite'),
-                  ),
-                ],
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          final visible = _visibleCircleMembers.where((person) {
+            final searchable = '${person.name} ${person.status}'.toLowerCase();
+            return searchable.contains(query.toLowerCase());
+          }).toList();
+          return SafeArea(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                22, 4, 22, 24 + MediaQuery.of(sheetContext).viewInsets.bottom,
               ),
-              const SizedBox(height: 8),
-              ..._visibleCircleMembers.map(
-                (person) => ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: person.color,
-                    child: Text(person.initials, style: const TextStyle(color: ink, fontWeight: FontWeight.w800)),
-                  ),
-                  title: Text(person.name.replaceFirst('@', '')),
-                  subtitle: Text(person.status),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _openMemberProfile(person);
-                  },
+              child: SizedBox(
+                height: MediaQuery.of(sheetContext).size.height * .68,
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Everyone in your Circle',
+                            style: GoogleFonts.playfairDisplay(
+                              color: ink, fontSize: 28, fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: _findPeople,
+                          icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                          label: const Text('Invite'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: controller,
+                      onChanged: (value) => setSheetState(() => query = value.trim()),
+                      decoration: InputDecoration(
+                        hintText: 'Search your Circle',
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: .65),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: line),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: line),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: visible.isEmpty
+                          ? const Center(child: Text('No one matches that search.'))
+                          : ListView.separated(
+                              itemCount: visible.length,
+                              separatorBuilder: (_, __) => const Divider(height: 1),
+                              itemBuilder: (_, index) {
+                                final person = visible[index];
+                                return ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 3),
+                                  leading: CircleAvatar(
+                                    backgroundColor: person.color,
+                                    backgroundImage: person.photoUrl.isEmpty
+                                        ? null
+                                        : NetworkImage(person.photoUrl),
+                                    child: person.photoUrl.isEmpty
+                                        ? Text(person.initials,
+                                            style: const TextStyle(color: ink, fontWeight: FontWeight.w800))
+                                        : null,
+                                  ),
+                                  title: Text(person.name.replaceFirst('@', '')),
+                                  subtitle: Text(person.status),
+                                  trailing: const Icon(Icons.chevron_right_rounded),
+                                  onTap: () {
+                                    Navigator.pop(sheetContext);
+                                    _openMemberProfile(person);
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 
   Widget _myStatusStrip(String name, String profileStatus) {
