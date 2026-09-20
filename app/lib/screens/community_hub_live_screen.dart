@@ -101,40 +101,51 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
               child: Column(
                 children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      tooltip: 'Menu',
-                      onPressed: () => VillageNavigationScope.of(context).onOpenMenu(),
-                      icon: const Icon(Icons.menu_rounded, size: 30),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Image.asset(
-                    'assets/images/welcome_branch.png',
-                    height: 18,
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    'Community Hub',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.playfairDisplay(
-                      color: sage,
-                      fontSize: 48,
-                      height: .95,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'GOOD PEOPLE  •  BRIGHTER DAYS',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: gold,
-                      fontSize: 9,
-                      letterSpacing: 3.1,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  Stack(
+                    alignment: Alignment.topCenter,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'assets/images/welcome_branch.png',
+                            height: 18,
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            'Community Hub',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.playfairDisplay(
+                              color: sage,
+                              fontSize: 48,
+                              height: .95,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'GOOD PEOPLE  •  BRIGHTER DAYS',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: gold,
+                              fontSize: 9,
+                              letterSpacing: 3.1,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        child: IconButton(
+                          tooltip: 'Menu',
+                          onPressed: () =>
+                              VillageNavigationScope.of(context).onOpenMenu(),
+                          icon: const Icon(Icons.menu_rounded, size: 30),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 14),
                   _tabs(),
