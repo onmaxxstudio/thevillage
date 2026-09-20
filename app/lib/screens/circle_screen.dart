@@ -1504,7 +1504,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                     // Keep the full center group optically balanced inside the orbit.
                     Positioned(
                       left: centerX - 62,
-                      top: centerY - 86,
+                      top: centerY - 78,
                       child: GestureDetector(
                         onTap: _startAskMyCircle,
                         child: _orbitYou(name),
@@ -1512,7 +1512,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                     ),
                     Positioned(
                       left: centerX - 62,
-                      top: 212,
+                      top: 220,
                       child: SizedBox(
                         width: 124,
                         child: Column(
