@@ -100,6 +100,11 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
               child: Column(
                 children: [
+                  Image.asset(
+                    'assets/images/welcome_branch.png',
+                    height: 18,
+                  ),
+                  const SizedBox(height: 5),
                   Text(
                     'Community Hub',
                     textAlign: TextAlign.center,

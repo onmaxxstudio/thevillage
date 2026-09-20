@@ -1250,6 +1250,13 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
               children: [
                 Center(
+                  child: Image.asset(
+                    'assets/images/welcome_branch.png',
+                    height: 18,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Center(
                   child: Text(
                     'My Circle',
                     textAlign: TextAlign.center,
