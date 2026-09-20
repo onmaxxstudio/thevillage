@@ -1253,7 +1253,7 @@ class _CircleScreenState extends State<CircleScreen> {
                   'REAL PEOPLE. BRIGHTER DAYS.',
                   style: TextStyle(
                     color: Color(0xFF667769),
-                    fontSize: 7.5,
+                    fontSize: 7.1,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.3,
                   ),
@@ -1325,7 +1325,7 @@ class _CircleScreenState extends State<CircleScreen> {
               const CircleAvatar(
                 radius: 31,
                 backgroundColor: Color(0xFFFFE8BE),
-                child: Icon(Icons.groups_2_outlined, color: sage, size: 31),
+                child: Icon(Icons.groups_2_outlined, color: sage, size: 27),
               ),
               const SizedBox(height: 14),
               Text(
@@ -1567,8 +1567,8 @@ class _CircleScreenState extends State<CircleScreen> {
         onTap: _showAllPeople,
         borderRadius: BorderRadius.circular(43),
         child: Container(
-          width: 86,
-          height: 86,
+          width: 78,
+          height: 78,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: blush,
@@ -1584,7 +1584,7 @@ class _CircleScreenState extends State<CircleScreen> {
                 '+$count',
                 style: GoogleFonts.playfairDisplay(
                   color: sage,
-                  fontSize: 25,
+                  fontSize: 23,
                   fontWeight: FontWeight.w700,
                   height: 1,
                 ),
@@ -1657,7 +1657,7 @@ class _CircleScreenState extends State<CircleScreen> {
             ],
           ),
           child: CircleAvatar(
-            radius: 33,
+            radius: 28,
             backgroundColor: color,
             backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
             child: photoUrl.isEmpty
