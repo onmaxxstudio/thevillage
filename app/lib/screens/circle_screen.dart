@@ -1595,7 +1595,7 @@ class _CircleScreenState extends State<CircleScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: sage,
-                  fontSize: 7.5,
+                  fontSize: 7.1,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.2,
                   height: 1.25,
@@ -1661,7 +1661,7 @@ class _CircleScreenState extends State<CircleScreen> {
             backgroundColor: color,
             backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
             child: photoUrl.isEmpty
-                ? Icon(Icons.person_rounded, color: sage.withValues(alpha: .78), size: 31)
+                ? Icon(Icons.person_rounded, color: sage.withValues(alpha: .78), size: 27)
                 : null,
           ),
         ),
