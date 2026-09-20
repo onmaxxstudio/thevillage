@@ -279,10 +279,8 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
         child: Row(
           children: [
-            IconButton(
-              tooltip: 'Menu',
+            VillageMenuButton(
               onPressed: Scaffold.of(context).openDrawer,
-              icon: const Icon(Icons.menu_rounded, size: 30),
             ),
             Expanded(
               child: Column(
