@@ -817,27 +817,30 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
       backgroundColor: cream,
       appBar: widget.embedded ? null : AppBar(
         backgroundColor: cream,
-        toolbarHeight: 74,
+        toolbarHeight: 92,
         leading: IconButton(
           tooltip: 'Back',
           onPressed: () =>
               VillageNavigationScope.of(context).onSelect(0),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/images/welcome_branch.png', height: 18),
-            const SizedBox(height: 3),
-            Text(
-              'The Village',
-              style: GoogleFonts.playfairDisplay(
-                color: sage,
-                fontSize: 29,
-                fontWeight: FontWeight.w600,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset('assets/images/welcome_branch.png', height: 18),
+              const SizedBox(height: 3),
+              Text(
+                'The Village',
+                style: GoogleFonts.playfairDisplay(
+                  color: sage,
+                  fontSize: 42,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         centerTitle: true,
       ),
