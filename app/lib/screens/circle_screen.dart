@@ -1281,7 +1281,7 @@ class _CircleScreenState extends State<CircleScreen> {
                     textAlign: TextAlign.center,
                     style: GoogleFonts.playfairDisplay(
                     color: ink,
-                    fontSize: 42,
+                    fontSize: 38,
                     height: 1,
                     fontWeight: FontWeight.w700,
                     ),
@@ -1382,20 +1382,6 @@ class _CircleScreenState extends State<CircleScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_isTestCircle) ...[
-          const Center(
-            child: Text(
-              'TEST CIRCLE • PRIVATE PREVIEW',
-              style: TextStyle(
-                color: gold,
-                fontSize: 10,
-                letterSpacing: 1.35,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
         _circleOrbit(),
         const SizedBox(height: 22),
         _sectionTitle(
@@ -1465,27 +1451,27 @@ class _CircleScreenState extends State<CircleScreen> {
       builder: (context, constraints) {
         final diameter = constraints.maxWidth.clamp(280.0, 390.0);
         final center = diameter / 2;
-        const avatarSize = 56.0;
+        const avatarSize = 52.0;
         final positions = <Offset>[
-          Offset(center - avatarSize / 2, 16),
-          Offset(center - 130, 85),
-          Offset(center + 74, 85),
-          Offset(center - 103, 194),
-          Offset(center + 47, 194),
+          Offset(center - avatarSize / 2, 12),
+          Offset(center - 124, 82),
+          Offset(center + 72, 82),
+          Offset(center - 98, 186),
+          Offset(center + 46, 186),
         ];
         return Center(
           child: SizedBox(
             width: diameter,
-            height: 286,
+            height: 270,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Positioned(
-                  left: center - 108,
-                  top: 43,
+                  left: center - 102,
+                  top: 39,
                   child: Container(
-                    width: 216,
-                    height: 216,
+                    width: 204,
+                    height: 204,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: paleSage.withValues(alpha: .45),
@@ -1539,8 +1525,8 @@ class _CircleScreenState extends State<CircleScreen> {
                     ),
                   ),
                 Positioned(
-                  left: center - 56,
-                  top: 91,
+                  left: center - 50,
+                  top: 88,
                   child: _orbitYou(name),
                 ),
               ],
@@ -1559,7 +1545,7 @@ class _CircleScreenState extends State<CircleScreen> {
           clipBehavior: Clip.none,
           children: [
             CircleAvatar(
-              radius: 54,
+              radius: 48,
               backgroundColor: sage,
               child: Text(
                 initial,
@@ -1571,11 +1557,11 @@ class _CircleScreenState extends State<CircleScreen> {
               ),
             ),
             Positioned(
-              right: 2,
-              bottom: 2,
+              right: 1,
+              bottom: 1,
               child: Container(
-                width: 15,
-                height: 15,
+                width: 14,
+                height: 14,
                 decoration: BoxDecoration(
                   color: const Color(0xFF5D8E62),
                   shape: BoxShape.circle,
@@ -1602,22 +1588,22 @@ class _CircleScreenState extends State<CircleScreen> {
       child: Column(
         children: [
           CircleAvatar(
-            radius: 28,
+            radius: 26,
             backgroundColor: color,
             child: Text(
               initials,
-              style: const TextStyle(color: ink, fontSize: 17, fontWeight: FontWeight.w800),
+              style: const TextStyle(color: ink, fontSize: 16, fontWeight: FontWeight.w800),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           SizedBox(
-            width: 66,
+            width: 62,
             child: Text(
               name,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
+              style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700),
             ),
           ),
         ],
