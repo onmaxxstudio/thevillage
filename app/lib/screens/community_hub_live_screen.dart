@@ -105,7 +105,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       tooltip: 'Menu',
-                      onPressed: () => VillageNavigationScope.of(context).openMenu(),
+                      onPressed: () => VillageNavigationScope.of(context).onOpenMenu(),
                       icon: const Icon(Icons.menu_rounded, size: 30),
                     ),
                   ),
