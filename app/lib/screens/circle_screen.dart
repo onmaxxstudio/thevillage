@@ -1456,6 +1456,21 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               );
             }
 
+            // Reserve the lower-center space for Ariel's identity and message.
+            // A portrait fades out before it reaches that space, then returns
+            // whole on the other side—nothing gets clipped or covered.
+            double orbitOpacity(Offset point, double diameter) {
+              const copyTop = 248.0;
+              const copyBottom = 330.0;
+              const copyHalfWidth = 78.0;
+              final overlapsCopy =
+                  point.dx < centerX + copyHalfWidth &&
+                  point.dx + diameter > centerX - copyHalfWidth &&
+                  point.dy < copyBottom &&
+                  point.dy + diameter > copyTop;
+              return overlapsCopy ? 0 : 1;
+            }
+
             return Center(
               child: SizedBox(
                 width: width,
@@ -1480,12 +1495,15 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                           return Positioned(
                             left: point.dx,
                             top: point.dy,
-                            child: _orbitPerson(
-                              person.initials,
-                              person.name.replaceFirst('@', ''),
-                              person.color,
-                              person.photoUrl,
-                              () => _openMemberProfile(person),
+                            child: Opacity(
+                              opacity: orbitOpacity(point, outerDiameter),
+                              child: _orbitPerson(
+                                person.initials,
+                                person.name.replaceFirst('@', ''),
+                                person.color,
+                                person.photoUrl,
+                                () => _openMemberProfile(person),
+                              ),
                             ),
                           );
                         },
@@ -1497,7 +1515,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                           return Positioned(
                             left: point.dx,
                             top: point.dy,
-                            child: _orbitMorePeople(moreCount),
+                            child: Opacity(
+                              opacity: orbitOpacity(point, badgeSize),
+                              child: _orbitMorePeople(moreCount),
+                            ),
                           );
                         },
                       ),
@@ -1509,18 +1530,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                         child: _orbitYou(name),
                       ),
                     ),
-                    // This cream inset keeps the center copy legible while
-                    // the orbiting portraits travel behind it.
                     Positioned(
-                      left: centerX - 85,
-                      top: 248,
-                      child: Container(
-                        width: 170,
-                        padding: const EdgeInsets.only(bottom: 4),
-                        decoration: BoxDecoration(
-                          color: cream,
-                          borderRadius: BorderRadius.circular(46),
-                        ),
+                      left: centerX - 75,
+                      top: 254,
+                      child: SizedBox(
+                        width: 150,
                         child: Column(
                           children: [
                             Text(
@@ -3125,14 +3139,13 @@ class _OrbitRingPainter extends CustomPainter {
     final dot = Paint()..color = const Color(0xFFB78943);
     for (var index = 0; index < 6; index++) {
       final angle = phase + (-math.pi / 3) + (index * 2 * math.pi / 6);
-      canvas.drawCircle(
-        Offset(
-          center.dx + radius * math.cos(angle),
-          center.dy + radius * math.sin(angle),
-        ),
-        4,
-        dot,
+      final point = Offset(
+        center.dx + radius * math.cos(angle),
+        center.dy + radius * math.sin(angle),
       );
+      // Keep the center words and sun clear of traveling gold dots too.
+      if ((point.dx - center.dx).abs() < 82 && point.dy > 212) continue;
+      canvas.drawCircle(point, 4, dot);
     }
   }
 
