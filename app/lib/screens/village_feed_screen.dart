@@ -821,7 +821,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
         leading: IconButton(
           tooltip: 'Menu',
           onPressed: () => VillageNavigationScope.of(context).onOpenMenu(),
-          icon: const Icon(Icons.menu_rounded),
+          icon: const Icon(Icons.menu_rounded, size: 30),
         ),
         title: FittedBox(
           fit: BoxFit.scaleDown,
