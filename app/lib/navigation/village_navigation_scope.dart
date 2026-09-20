@@ -5,11 +5,13 @@ class VillageNavigationScope extends InheritedWidget {
     super.key,
     required this.selectedIndex,
     required this.onSelect,
+    required this.onOpenMenu,
     required super.child,
   });
 
   final int selectedIndex;
   final ValueChanged<int> onSelect;
+  final VoidCallback onOpenMenu;
 
   static VillageNavigationScope of(BuildContext context) {
     final scope =
@@ -26,6 +28,7 @@ class VillageNavigationScope extends InheritedWidget {
   @override
   bool updateShouldNotify(VillageNavigationScope oldWidget) {
     return selectedIndex != oldWidget.selectedIndex ||
-        onSelect != oldWidget.onSelect;
+        onSelect != oldWidget.onSelect ||
+        onOpenMenu != oldWidget.onOpenMenu;
   }
 }
