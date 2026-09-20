@@ -78,6 +78,7 @@ class _CircleScreenState extends State<CircleScreen> {
   final Set<int> dismissedReminders = {};
   final Set<int> dismissedActivity = {};
   final Set<String> sentRequests = {};
+  final Set<String> heartedMoments = {};
   List<_ReachOut> myReachOuts = [];
   List<_CircleMessage> circleMessages = [];
   List<_CircleMoment> circleMoments = [];
@@ -409,144 +410,62 @@ class _CircleScreenState extends State<CircleScreen> {
     );
   }
 
-  Future<void> _openReachOut() async {
+  Future<void> _openReachOut({required String audience}) async {
     final need = selectedNeed;
-    if (need == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Choose the kind of support you need.')),
-      );
-      return;
-    }
-
+    if (need == null) return;
     final controller = TextEditingController();
-    var audience = 'My whole circle';
     final sent = await showModalBottomSheet<_ReachOut>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: cream,
-      showDragHandle: true,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            22,
-            4,
-            22,
-            MediaQuery.viewInsetsOf(context).bottom + 24,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Reach Out',
-                  style: GoogleFonts.playfairDisplay(
-                    color: sage,
-                    fontSize: 31,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  need,
-                  style: const TextStyle(
-                    color: gold,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  'Who should receive this?',
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    for (final option in const [
-                      'My whole circle',
-                      'Choose one person',
-                    ])
-                      ChoiceChip(
-                        label: Text(option),
-                        selected: audience == option,
-                        onSelected: (_) {
-                          setSheetState(() => audience = option);
-                        },
-                        selectedColor: paleSage,
-                        side: const BorderSide(color: line),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: controller,
-                  minLines: 3,
-                  maxLines: 6,
-                  maxLength: 500,
-                  decoration: InputDecoration(
-                    hintText: 'Add what would feel helpful (optional)…',
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: .62),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
-                const Row(
-                  children: [
-                    Icon(Icons.lock_outline_rounded, color: sage, size: 17),
-                    SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'Shared only with the people you choose.',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      Navigator.pop(
-                        sheetContext,
-                        _ReachOut(
-                          type: need,
-                          message: controller.text.trim(),
-                          audience: audience,
-                          createdAt: DateTime.now(),
-                        ),
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: sage,
-                      padding: const EdgeInsets.all(16),
-                    ),
-                    icon: const Icon(Icons.favorite_outline_rounded),
-                    label: const Text('Send Private Reach-Out'),
-                  ),
-                ),
-              ],
+      context: context, isScrollControlled: true, backgroundColor: cream, showDragHandle: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.fromLTRB(22, 4, 22, MediaQuery.viewInsetsOf(sheetContext).bottom + 24),
+        child: SingleChildScrollView(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Reach Out', style: GoogleFonts.playfairDisplay(color: sage, fontSize: 31, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text(need, style: const TextStyle(color: gold, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.all(13),
+              decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(16)),
+              child: Row(children: [
+                const Icon(Icons.lock_outline_rounded, color: sage, size: 19),
+                const SizedBox(width: 9),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Sending privately to', style: TextStyle(fontSize: 11)),
+                  Text(audience, style: const TextStyle(fontWeight: FontWeight.w800)),
+                ])),
+              ]),
             ),
-          ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller, autofocus: true, minLines: 3, maxLines: 6, maxLength: 500,
+              decoration: InputDecoration(
+                hintText: 'Add what would feel helpful (optional)…',
+                filled: true, fillColor: Colors.white.withValues(alpha: .62),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => Navigator.pop(sheetContext, _ReachOut(type: need, message: controller.text.trim(), audience: audience, createdAt: DateTime.now())),
+                style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.all(16)),
+                icon: const Icon(Icons.favorite_outline_rounded),
+                label: const Text('Send private reach-out'),
+              ),
+            ),
+          ]),
         ),
       ),
     );
     controller.dispose();
-
     if (sent != null && mounted) {
-      setState(() {
-        selectedNeed = null;
-        myReachOuts.insert(0, sent);
-      });
+      setState(() { selectedNeed = null; myReachOuts.insert(0, sent); });
       await _saveReachOuts();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Your reach-out was shared with ${sent.audience}.')),
+        SnackBar(content: Text('Your reach-out was shared with \${sent.audience}.')),
       );
     }
   }
@@ -1236,57 +1155,74 @@ class _CircleScreenState extends State<CircleScreen> {
     );
   }
 
-  Future<void> _startAskMyCircle() async {
-    final need = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: cream,
-      showDragHandle: true,
+  Future<String?> _chooseSupportAudience() {
+    final members = _visibleCircleMembers;
+    return showModalBottomSheet<String>(
+      context: context, backgroundColor: cream, showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(18, 2, 18, 22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'What do you need?',
-                style: GoogleFonts.playfairDisplay(
-                  color: sage,
-                  fontSize: 29,
-                  fontWeight: FontWeight.w600,
-                ),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Who needs to see this?',
+              style: GoogleFonts.playfairDisplay(color: sage, fontSize: 29, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            const Text('Choose your whole Circle or one person you trust.'),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: const CircleAvatar(backgroundColor: paleSage, child: Icon(Icons.groups_2_outlined, color: sage)),
+              title: const Text('My whole Circle', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: const Text('Everyone in your private Circle'),
+              trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
+              onTap: () => Navigator.pop(sheetContext, 'My whole Circle'),
+            ),
+            const Divider(color: line),
+            for (final member in members)
+              ListTile(
+                leading: CircleAvatar(backgroundColor: member.color, child: Text(member.initials, style: const TextStyle(color: ink, fontWeight: FontWeight.w800))),
+                title: Text(member.name),
+                subtitle: Text(member.status),
+                trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
+                onTap: () => Navigator.pop(sheetContext, member.name),
               ),
-              const Text('Choose the support that would feel helpful.'),
-              const SizedBox(height: 12),
-              for (final choice in supportChoices)
-                Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  elevation: 0,
-                  color: Colors.white.withValues(alpha: .62),
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(color: line),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: ListTile(
-                    leading: Icon(choice.$1, color: gold),
-                    title: Text(
-                      choice.$2,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    subtitle: Text(choice.$3),
-                    trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
-                    onTap: () => Navigator.pop(sheetContext, choice.$2),
-                  ),
-                ),
-            ],
-          ),
+          ]),
         ),
       ),
     );
+  }
 
+  Future<void> _startAskMyCircle() async {
+    final need = await showModalBottomSheet<String>(
+      context: context, backgroundColor: cream, showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 2, 18, 22),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('What do you need?',
+              style: GoogleFonts.playfairDisplay(color: sage, fontSize: 29, fontWeight: FontWeight.w600)),
+            const Text('Choose the support that would feel helpful.'),
+            const SizedBox(height: 12),
+            for (final choice in supportChoices)
+              Card(
+                margin: const EdgeInsets.only(bottom: 8), elevation: 0,
+                color: Colors.white.withValues(alpha: .62),
+                shape: RoundedRectangleBorder(side: const BorderSide(color: line), borderRadius: BorderRadius.circular(16)),
+                child: ListTile(
+                  leading: Icon(choice.$1, color: gold),
+                  title: Text(choice.$2, style: const TextStyle(fontWeight: FontWeight.w800)),
+                  subtitle: Text(choice.$3),
+                  trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
+                  onTap: () => Navigator.pop(sheetContext, choice.$2),
+                ),
+              ),
+          ]),
+        ),
+      ),
+    );
     if (need == null || !mounted) return;
+    final audience = await _chooseSupportAudience();
+    if (audience == null || !mounted) return;
     setState(() => selectedNeed = need);
-    await _openReachOut();
+    await _openReachOut(audience: audience);
   }
 
   @override
@@ -1759,32 +1695,113 @@ class _CircleScreenState extends State<CircleScreen> {
     );
   }
 
-  Widget _momentCard(_CircleMoment moment) {
-    return Container(
-      width: 205,
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: moment.author == 'You' ? blush.withValues(alpha: .8) : paleSage,
-        borderRadius: BorderRadius.circular(20),
+  String _momentKey(_CircleMoment moment) =>
+      '\${moment.author}|\${moment.text}';
+
+  _CircleMember? _memberForMoment(_CircleMoment moment) {
+    for (final member in _visibleCircleMembers) {
+      if (member.name.toLowerCase() == moment.author.toLowerCase()) return member;
+    }
+    return null;
+  }
+
+  Future<void> _openMomentActions(_CircleMoment moment) async {
+    final member = _memberForMoment(moment);
+    if (member == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This is your private win.')),
+      );
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Celebrate \${member.name}',
+                style: GoogleFonts.playfairDisplay(color: ink, fontSize: 29, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              Text('“\${moment.text}”'),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    setState(() => heartedMoments.add(_momentKey(moment)));
+                    Navigator.pop(sheetContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Heart sent to \${member.name}.')),
+                    );
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: blush, foregroundColor: sage, padding: const EdgeInsets.all(15),
+                  ),
+                  icon: const Icon(Icons.favorite_rounded),
+                  label: Text(heartedMoments.contains(_momentKey(moment)) ? 'Heart sent' : 'Send a heart'),
+                ),
+              ),
+              const SizedBox(height: 9),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () { Navigator.pop(sheetContext); _quickCheckIn(member); },
+                  style: OutlinedButton.styleFrom(foregroundColor: sage, side: const BorderSide(color: sage), padding: const EdgeInsets.all(15)),
+                  icon: const Icon(Icons.waving_hand_outlined),
+                  label: const Text('Check in'),
+                ),
+              ),
+              const SizedBox(height: 9),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () { Navigator.pop(sheetContext); _messageMember(member); },
+                  style: OutlinedButton.styleFrom(foregroundColor: sage, side: const BorderSide(color: line), padding: const EdgeInsets.all(15)),
+                  icon: const Icon(Icons.chat_bubble_outline_rounded),
+                  label: const Text('Message'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.celebration_outlined, color: gold, size: 22),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Text(
-              moment.text,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, height: 1.18),
+    );
+  }
+
+  Widget _momentCard(_CircleMoment moment) {
+    final hearted = heartedMoments.contains(_momentKey(moment));
+    return InkWell(
+      onTap: () => _openMomentActions(moment),
+      borderRadius: BorderRadius.circular(20),
+      child: Ink(
+        width: 205,
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: moment.author == 'You' ? blush.withValues(alpha: .8) : paleSage,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(hearted ? Icons.favorite_rounded : Icons.celebration_outlined, color: hearted ? const Color(0xFFC56868) : gold, size: 22),
+            const SizedBox(height: 8),
+            Expanded(
+              child: Text(moment.text, maxLines: 3, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, height: 1.18),
+              ),
             ),
-          ),
-          Text(
-            moment.author == 'You' ? 'You • just now' : moment.author,
-            style: const TextStyle(fontSize: 11, color: Color(0xFF667769)),
-          ),
-        ],
+            Text(
+              hearted ? 'Heart sent • \${moment.author}' : moment.author == 'You' ? 'You • just now' : moment.author,
+              style: const TextStyle(fontSize: 11, color: Color(0xFF667769)),
+            ),
+          ],
+        ),
       ),
     );
   }
