@@ -1509,11 +1509,18 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                         child: _orbitYou(name),
                       ),
                     ),
+                    // This cream inset keeps the center copy legible while
+                    // the orbiting portraits travel behind it.
                     Positioned(
-                      left: centerX - 75,
-                      top: 254,
-                      child: SizedBox(
-                        width: 150,
+                      left: centerX - 85,
+                      top: 248,
+                      child: Container(
+                        width: 170,
+                        padding: const EdgeInsets.only(bottom: 4),
+                        decoration: BoxDecoration(
+                          color: cream,
+                          borderRadius: BorderRadius.circular(46),
+                        ),
                         child: Column(
                           children: [
                             Text(
