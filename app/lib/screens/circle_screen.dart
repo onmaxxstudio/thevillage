@@ -135,7 +135,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     super.initState();
     _orbitController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 72),
+      duration: const Duration(seconds: 48),
     )..repeat();
     circleMembers = <_CircleMember>[];
     _loadStatus();
@@ -1427,17 +1427,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         ? 14
         : math.max(0, _visibleCircleMembers.length - people.length);
 
-    // Exact reference positions: five portraits plus the pink more-people
-    // circle travel slowly around one thin, gold orbit.
-    const portraitAngles = <double>[
-      -math.pi / 2, // top
-      -2.42, // upper-left
-      2.52, // lower-left
-      -0.15, // right
-      0.72, // lower-right
-    ];
-    const badgeAngle = -0.82;
-
     return AnimatedBuilder(
       animation: _orbitController,
       builder: (context, _) {
@@ -1449,12 +1438,19 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             const centerY = 180.0;
             const ringRadius = 132.0;
             const outerDiameter = 64.0;
+            const badgeSize = 78.0;
 
-            Offset positionFor(double angle, double diameter) {
-              final movingAngle = angle + turn;
+            // Six evenly spaced positions. The offset leaves the bottom-center
+            // open for Ariel's name and the center message.
+            const firstAngle = -math.pi / 3;
+            double movingAngle(int index) =>
+                firstAngle + (index * 2 * math.pi / 6) + turn;
+
+            Offset positionFor(int index, double diameter) {
+              final angle = movingAngle(index);
               return Offset(
-                centerX + ringRadius * math.cos(movingAngle) - diameter / 2,
-                centerY + ringRadius * math.sin(movingAngle) - diameter / 2,
+                centerX + ringRadius * math.cos(angle) - diameter / 2,
+                centerY + ringRadius * math.sin(angle) - diameter / 2,
               );
             }
 
@@ -1470,13 +1466,14 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       top: centerY - ringRadius,
                       child: CustomPaint(
                         size: const Size(264, 264),
-                        painter: _OrbitRingPainter(),
+                        painter: _OrbitRingPainter(phase: turn),
                       ),
                     ),
                     for (var index = 0; index < people.length; index++)
                       Builder(
                         builder: (context) {
-                          final point = positionFor(portraitAngles[index], outerDiameter);
+                          // Reserve position 0 for the pink +more circle.
+                          final point = positionFor(index + 1, outerDiameter);
                           final person = people[index];
                           return Positioned(
                             left: point.dx,
@@ -1494,8 +1491,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                     if (moreCount > 0)
                       Builder(
                         builder: (context) {
-                          const badgeSize = 78.0;
-                          final point = positionFor(badgeAngle, badgeSize);
+                          final point = positionFor(0, badgeSize);
                           return Positioned(
                             left: point.dx,
                             top: point.dy,
@@ -1512,10 +1508,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       ),
                     ),
                     Positioned(
-                      left: centerX - 66,
-                      top: 250,
+                      left: centerX - 62,
+                      top: 244,
                       child: SizedBox(
-                        width: 132,
+                        width: 124,
                         child: Column(
                           children: [
                             Text(
@@ -1534,10 +1530,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                               'AT THE CENTER\nTOGETHER IS BETTER',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 7.8,
+                                fontSize: 7.5,
                                 color: gold,
                                 fontWeight: FontWeight.w800,
-                                letterSpacing: 1.45,
+                                letterSpacing: 1.25,
                                 height: 1.45,
                               ),
                             ),
@@ -3102,6 +3098,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 }
 
 class _OrbitRingPainter extends CustomPainter {
+  const _OrbitRingPainter({required this.phase});
+
+  final double phase;
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -3112,9 +3112,10 @@ class _OrbitRingPainter extends CustomPainter {
       ..strokeWidth = 1.25;
     canvas.drawCircle(center, radius, ring);
 
+    // Gold dots travel with the portraits along this same line.
     final dot = Paint()..color = const Color(0xFFB78943);
-    for (var index = 0; index < 5; index++) {
-      final angle = -math.pi / 2 + (index * (2 * math.pi / 5)) + .46;
+    for (var index = 0; index < 6; index++) {
+      final angle = phase + (-math.pi / 3) + (index * 2 * math.pi / 6);
       canvas.drawCircle(
         Offset(
           center.dx + radius * math.cos(angle),
@@ -3127,7 +3128,8 @@ class _OrbitRingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _OrbitRingPainter oldDelegate) =>
+      oldDelegate.phase != phase;
 }
 
 class _ReachOut {
