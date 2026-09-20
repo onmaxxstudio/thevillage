@@ -102,6 +102,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
               child: Column(
                 children: [
                   Stack(
+                    clipBehavior: Clip.none,
                     alignment: Alignment.topCenter,
                     children: [
                       Column(
@@ -136,13 +137,11 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                         ],
                       ),
                       Positioned(
-                        top: 0,
-                        left: 0,
-                        child: IconButton(
-                          tooltip: 'Menu',
+                        top: -8,
+                        left: -8,
+                        child: VillageMenuButton(
                           onPressed: () =>
                               VillageNavigationScope.of(context).onOpenMenu(),
-                          icon: const Icon(Icons.menu_rounded, size: 30),
                         ),
                       ),
                     ],
