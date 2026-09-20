@@ -1456,21 +1456,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               );
             }
 
-            // Reserve the lower-center space for Ariel's identity and message.
-            // A portrait fades out before it reaches that space, then returns
-            // whole on the other side—nothing gets clipped or covered.
-            double orbitOpacity(Offset point, double diameter) {
-              const copyTop = 248.0;
-              const copyBottom = 330.0;
-              const copyHalfWidth = 78.0;
-              final overlapsCopy =
-                  point.dx < centerX + copyHalfWidth &&
-                  point.dx + diameter > centerX - copyHalfWidth &&
-                  point.dy < copyBottom &&
-                  point.dy + diameter > copyTop;
-              return overlapsCopy ? 0 : 1;
-            }
-
             return Center(
               child: SizedBox(
                 width: width,
@@ -1495,15 +1480,12 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                           return Positioned(
                             left: point.dx,
                             top: point.dy,
-                            child: Opacity(
-                              opacity: orbitOpacity(point, outerDiameter),
-                              child: _orbitPerson(
-                                person.initials,
-                                person.name.replaceFirst('@', ''),
-                                person.color,
-                                person.photoUrl,
-                                () => _openMemberProfile(person),
-                              ),
+                            child: _orbitPerson(
+                              person.initials,
+                              person.name.replaceFirst('@', ''),
+                              person.color,
+                              person.photoUrl,
+                              () => _openMemberProfile(person),
                             ),
                           );
                         },
@@ -1515,26 +1497,23 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                           return Positioned(
                             left: point.dx,
                             top: point.dy,
-                            child: Opacity(
-                              opacity: orbitOpacity(point, badgeSize),
-                              child: _orbitMorePeople(moreCount),
-                            ),
+                            child: _orbitMorePeople(moreCount),
                           );
                         },
                       ),
                     Positioned(
-                      left: centerX - 70,
-                      top: centerY - 70,
+                      left: centerX - 62,
+                      top: centerY - 62,
                       child: GestureDetector(
                         onTap: _startAskMyCircle,
                         child: _orbitYou(name),
                       ),
                     ),
                     Positioned(
-                      left: centerX - 75,
-                      top: 254,
+                      left: centerX - 62,
+                      top: 236,
                       child: SizedBox(
-                        width: 150,
+                        width: 124,
                         child: Column(
                           children: [
                             Text(
@@ -1544,8 +1523,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                               textAlign: TextAlign.center,
                               style: GoogleFonts.playfairDisplay(
                                 color: sage,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -1553,15 +1532,15 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                               'AT THE CENTER\nTOGETHER IS BETTER',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 8.4,
+                                fontSize: 7.2,
                                 color: gold,
                                 fontWeight: FontWeight.w800,
-                                letterSpacing: 1.45,
-                                height: 1.35,
+                                letterSpacing: 1.15,
+                                height: 1.3,
                               ),
                             ),
-                            const SizedBox(height: 3),
-                            const Icon(Icons.wb_sunny_outlined, size: 19, color: gold),
+                            const SizedBox(height: 2),
+                            const Icon(Icons.wb_sunny_outlined, size: 14, color: gold),
                           ],
                         ),
                       ),
@@ -1636,7 +1615,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       padding: const EdgeInsets.all(4),
       decoration: const BoxDecoration(shape: BoxShape.circle, color: gold),
       child: CircleAvatar(
-        radius: 66,
+        radius: 54,
         backgroundColor: sage,
         backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
         child: photoUrl.isEmpty
@@ -3139,13 +3118,14 @@ class _OrbitRingPainter extends CustomPainter {
     final dot = Paint()..color = const Color(0xFFB78943);
     for (var index = 0; index < 6; index++) {
       final angle = phase + (-math.pi / 3) + (index * 2 * math.pi / 6);
-      final point = Offset(
-        center.dx + radius * math.cos(angle),
-        center.dy + radius * math.sin(angle),
+      canvas.drawCircle(
+        Offset(
+          center.dx + radius * math.cos(angle),
+          center.dy + radius * math.sin(angle),
+        ),
+        4,
+        dot,
       );
-      // Keep the center words and sun clear of traveling gold dots too.
-      if ((point.dx - center.dx).abs() < 82 && point.dy > 212) continue;
-      canvas.drawCircle(point, 4, dot);
     }
   }
 
