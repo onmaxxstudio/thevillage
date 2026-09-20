@@ -1444,8 +1444,16 @@ class _CircleScreenState extends State<CircleScreen> {
     );
   }
 
+  String get _circleDisplayName {
+    if (_isTestCircle) return 'Ariel';
+    final displayName = FirebaseAuth.instance.currentUser?.displayName?.trim() ?? '';
+    if (displayName.isNotEmpty) return displayName.split(RegExp(r'\s+')).first;
+    final username = myUsername.trim().replaceFirst('@', '');
+    return username.isEmpty ? 'You' : username;
+  }
+
   Widget _circleOrbit() {
-    final name = myUsername.isEmpty ? 'You' : myUsername;
+    final name = _circleDisplayName;
     final people = _visibleCircleMembers.take(5).toList();
     final moreCount = _isTestCircle
         ? 14
@@ -1456,9 +1464,9 @@ class _CircleScreenState extends State<CircleScreen> {
     const orbitAngles = <double>[
       -math.pi / 2, // top
       -2.45, // upper-left
-      2.55, // lower-left
+      2.60, // lower-left
       -0.13, // right
-      0.72, // lower-right
+      0.55, // lower-right
     ];
 
     return LayoutBuilder(
@@ -1472,7 +1480,7 @@ class _CircleScreenState extends State<CircleScreen> {
         return Center(
           child: SizedBox(
             width: width,
-            height: 326,
+            height: 334,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -1517,7 +1525,7 @@ class _CircleScreenState extends State<CircleScreen> {
                 ),
                 Positioned(
                   left: centerX - 66,
-                  top: 238,
+                  top: 258,
                   child: SizedBox(
                     width: 132,
                     child: Column(
