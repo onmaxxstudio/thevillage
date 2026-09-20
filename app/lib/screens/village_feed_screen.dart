@@ -819,10 +819,9 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
         backgroundColor: cream,
         toolbarHeight: 92,
         leading: IconButton(
-          tooltip: 'Back',
-          onPressed: () =>
-              VillageNavigationScope.of(context).onSelect(0),
-          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'Menu',
+          onPressed: () => VillageNavigationScope.of(context).openMenu(),
+          icon: const Icon(Icons.menu_rounded),
         ),
         title: FittedBox(
           fit: BoxFit.scaleDown,
