@@ -1250,6 +1250,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
               children: [
                 Stack(
+                  clipBehavior: Clip.none,
                   alignment: Alignment.topCenter,
                   children: [
                     Column(
@@ -1284,13 +1285,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       ],
                     ),
                     Positioned(
-                      top: 0,
-                      left: 0,
-                      child: IconButton(
-                        tooltip: 'Menu',
+                      top: -8,
+                      left: -6,
+                      child: VillageMenuButton(
                         onPressed: () =>
                             VillageNavigationScope.of(context).onOpenMenu(),
-                        icon: const Icon(Icons.menu_rounded, size: 30),
                       ),
                     ),
                   ],

@@ -1,4 +1,27 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+
+
+/// The one menu control used throughout the signed-in app.
+/// Its fixed 48px touch target keeps the icon from drifting between headers.
+class VillageMenuButton extends StatelessWidget {
+  const VillageMenuButton({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: IconButton(
+        tooltip: 'Menu',
+        padding: EdgeInsets.zero,
+        onPressed: onPressed,
+        icon: const Icon(Icons.menu_rounded, size: 30),
+      ),
+    );
+  }
+}
 
 class VillageNavigationScope extends InheritedWidget {
   const VillageNavigationScope({
