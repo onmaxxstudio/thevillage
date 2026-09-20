@@ -1558,7 +1558,7 @@ class _CircleScreenState extends State<CircleScreen> {
       button: true,
       label: 'View $count more amazing people',
       child: InkWell(
-        onTap: _showAllCirclePeople,
+        onTap: _showAllPeople,
         borderRadius: BorderRadius.circular(43),
         child: Container(
           width: 86,
