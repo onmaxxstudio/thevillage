@@ -195,7 +195,8 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         ),
         title: Column(
           children: [
-            Image.asset('assets/images/welcome_branch.png', height: 20),
+            Image.asset('assets/images/welcome_branch.png', height: 18),
+            const SizedBox(height: 3),
             Text(
               'Ask the Village',
               style: GoogleFonts.playfairDisplay(
