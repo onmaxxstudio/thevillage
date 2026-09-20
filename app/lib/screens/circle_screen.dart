@@ -88,7 +88,7 @@ class _CircleScreenState extends State<CircleScreen> {
 
   String _key(String base) {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? 'signed_out';
-    return '\${base}_\$uid';
+    return '${base}_\$uid';
   }
 
   bool get _isTestCircle => Uri.base.queryParameters['testCircle'] == '1';
@@ -467,7 +467,7 @@ class _CircleScreenState extends State<CircleScreen> {
       await _saveReachOuts();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Your reach-out was shared with \${sent.audience}.')),
+        SnackBar(content: Text('Your reach-out was shared with ${sent.audience}.')),
       );
     }
   }
@@ -1447,18 +1447,26 @@ class _CircleScreenState extends State<CircleScreen> {
   Widget _circleOrbit() {
     final name = myUsername.isEmpty ? 'You' : myUsername;
     final people = _visibleCircleMembers.take(5).toList();
+    final moreCount = _isTestCircle ? 14 : math.max(0, _visibleCircleMembers.length - people.length);
+    const orbitAngles = <double>[
+      -math.pi / 2,
+      -0.05,
+      0.9,
+      2.24,
+      math.pi + 0.05,
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth.clamp(310.0, 390.0);
         final centerX = width / 2;
-        const centerY = 177.0;
+        const centerY = 160.0;
         const ringRadius = 128.0;
         const outerDiameter = 72.0;
-        const startAngle = -math.pi / 2;
         return Center(
           child: SizedBox(
             width: width,
-            height: 364,
+            height: 370,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -1473,7 +1481,7 @@ class _CircleScreenState extends State<CircleScreen> {
                 for (var index = 0; index < people.length; index++)
                   Builder(
                     builder: (context) {
-                      final angle = startAngle + (index * (2 * math.pi / 5));
+                      final angle = orbitAngles[index];
                       final x = centerX + ringRadius * math.cos(angle) - outerDiameter / 2;
                       final y = centerY + ringRadius * math.sin(angle) - outerDiameter / 2;
                       final person = people[index];
@@ -1490,10 +1498,52 @@ class _CircleScreenState extends State<CircleScreen> {
                       );
                     },
                   ),
+                if (moreCount > 0)
+                  Positioned(
+                    left: centerX + 70,
+                    top: 13,
+                    child: _orbitMorePeople(moreCount),
+                  ),
                 Positioned(
-                  left: centerX - 70,
-                  top: centerY - 77,
+                  left: centerX - 58,
+                  top: centerY - 60,
                   child: _orbitYou(name),
+                ),
+                Positioned(
+                  left: centerX - 102,
+                  top: 274,
+                  child: SizedBox(
+                    width: 204,
+                    child: Column(
+                      children: [
+                        Text(
+                          name == 'You' ? 'You' : name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.playfairDisplay(
+                            color: sage,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        const Text(
+                          'AT THE CENTER\nTOGETHER IS BETTER',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            color: gold,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.7,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        const Icon(Icons.wb_sunny_outlined, size: 17, color: gold),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1503,44 +1553,77 @@ class _CircleScreenState extends State<CircleScreen> {
     );
   }
 
+  Widget _orbitMorePeople(int count) {
+    return Semantics(
+      button: true,
+      label: 'View $count more amazing people',
+      child: InkWell(
+        onTap: _showAllCirclePeople,
+        borderRadius: BorderRadius.circular(43),
+        child: Container(
+          width: 86,
+          height: 86,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: blush,
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: const [
+              BoxShadow(color: Color(0x12000000), blurRadius: 8, offset: Offset(0, 3)),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '+$count',
+                style: GoogleFonts.playfairDisplay(
+                  color: sage,
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 3),
+              const Text(
+                'AMAZING\nPEOPLE',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: sage,
+                  fontSize: 7.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  height: 1.25,
+                ),
+              ),
+              const SizedBox(height: 2),
+              const Icon(Icons.favorite_border_rounded, color: gold, size: 13),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _orbitYou(String name) {
     final initial = name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase();
     final photoUrl = _isTestCircle
         ? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=320&q=85'
         : FirebaseAuth.instance.currentUser?.photoURL ?? '';
-    return SizedBox(
-      width: 140,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(shape: BoxShape.circle, color: gold),
-            child: CircleAvatar(
-              radius: 61,
-              backgroundColor: sage,
-              backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
-              child: photoUrl.isEmpty
-                  ? Text(
-                      initial,
-                      style: GoogleFonts.playfairDisplay(
-                        color: Colors.white, fontSize: 48, fontWeight: FontWeight.w700,
-                      ),
-                    )
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 9),
-          Text(
-            name == 'You' ? 'You' : name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.playfairDisplay(color: sage, fontSize: 22, fontWeight: FontWeight.w700),
-          ),
-          Text(
-            _shortStatusLabel(),
-            style: const TextStyle(fontSize: 11, color: Color(0xFF667769), letterSpacing: .4),
-          ),
-        ],
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: const BoxDecoration(shape: BoxShape.circle, color: gold),
+      child: CircleAvatar(
+        radius: 54,
+        backgroundColor: sage,
+        backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
+        child: photoUrl.isEmpty
+            ? Text(
+                initial,
+                style: GoogleFonts.playfairDisplay(
+                  color: Colors.white, fontSize: 42, fontWeight: FontWeight.w700,
+                ),
+              )
+            : null,
       ),
     );
   }
@@ -1651,7 +1734,7 @@ class _CircleScreenState extends State<CircleScreen> {
   }
 
   String _momentKey(_CircleMoment moment) =>
-      '\${moment.author}|\${moment.text}';
+      '${moment.author}|${moment.text}';
 
   _CircleMember? _memberForMoment(_CircleMoment moment) {
     for (final member in _visibleCircleMembers) {
@@ -1679,11 +1762,11 @@ class _CircleScreenState extends State<CircleScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Celebrate \${member.name}',
+              Text('Celebrate ${member.name}',
                 style: GoogleFonts.playfairDisplay(color: ink, fontSize: 29, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 6),
-              Text('“\${moment.text}”'),
+              Text('“${moment.text}”'),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
@@ -1692,7 +1775,7 @@ class _CircleScreenState extends State<CircleScreen> {
                     setState(() => heartedMoments.add(_momentKey(moment)));
                     Navigator.pop(sheetContext);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Heart sent to \${member.name}.')),
+                      SnackBar(content: Text('Heart sent to ${member.name}.')),
                     );
                   },
                   style: FilledButton.styleFrom(
@@ -1752,7 +1835,7 @@ class _CircleScreenState extends State<CircleScreen> {
               ),
             ),
             Text(
-              hearted ? 'Heart sent • \${moment.author}' : moment.author == 'You' ? 'You • just now' : moment.author,
+              hearted ? 'Heart sent • ${moment.author}' : moment.author == 'You' ? 'You • just now' : moment.author,
               style: const TextStyle(fontSize: 11, color: Color(0xFF667769)),
             ),
           ],
