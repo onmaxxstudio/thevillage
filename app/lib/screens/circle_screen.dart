@@ -1249,46 +1249,51 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             child: ListView(
               padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    tooltip: 'Menu',
-                    onPressed: () => VillageNavigationScope.of(context).onOpenMenu(),
-                    icon: const Icon(Icons.menu_rounded, size: 30),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Center(
-                  child: Image.asset(
-                    'assets/images/welcome_branch.png',
-                    height: 18,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Center(
-                  child: Text(
-                    'My Circle',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.playfairDisplay(
-                      color: sage,
-                      fontSize: 48,
-                      height: .95,
-                      fontWeight: FontWeight.w700,
+                Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/images/welcome_branch.png',
+                          height: 18,
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          'My Circle',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.playfairDisplay(
+                            color: sage,
+                            fontSize: 48,
+                            height: .95,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'REAL PEOPLE  •  DEEPER DAYS',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: gold,
+                            fontSize: 9,
+                            letterSpacing: 3.1,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Center(
-                  child: Text(
-                    'REAL PEOPLE  •  DEEPER DAYS',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: gold,
-                      fontSize: 9,
-                      letterSpacing: 3.1,
-                      fontWeight: FontWeight.w800,
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      child: IconButton(
+                        tooltip: 'Menu',
+                        onPressed: () =>
+                            VillageNavigationScope.of(context).onOpenMenu(),
+                        icon: const Icon(Icons.menu_rounded, size: 30),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
                 const SizedBox(height: 18),
                 _activeCircleLayout(),
