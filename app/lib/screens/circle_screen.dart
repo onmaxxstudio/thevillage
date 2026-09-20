@@ -1231,77 +1231,39 @@ class _CircleScreenState extends State<CircleScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: cream,
-      appBar: AppBar(
-        backgroundColor: cream,
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            Image.asset('assets/images/welcome_branch.png', height: 25),
-            const SizedBox(width: 7),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Ask the Village',
-                  style: GoogleFonts.playfairDisplay(
-                    color: sage,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const Text(
-                  'REAL PEOPLE. BRIGHTER DAYS.',
-                  style: TextStyle(
-                    color: Color(0xFF667769),
-                    fontSize: 7.1,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.3,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Find people by username',
-            onPressed: _findPeople,
-            icon: const Icon(Icons.person_add_alt_1_rounded, color: sage),
-          ),
-        ],
-      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 620),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(18, 8, 18, 28),
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
               children: [
                 Center(
                   child: Text(
                     'My Circle',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.playfairDisplay(
-                    color: ink,
-                    fontSize: 38,
-                    height: 1,
-                    fontWeight: FontWeight.w700,
+                      color: sage,
+                      fontSize: 48,
+                      height: .95,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                const SizedBox(height: 5),
-                Center(
+                const SizedBox(height: 12),
+                const Center(
                   child: Text(
-                    'Your people. Your pace.',
+                    'REAL PEOPLE  •  DEEPER DAYS',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.playfairDisplay(
-                    color: ink,
-                    fontSize: 21,
-                    fontStyle: FontStyle.italic,
+                    style: TextStyle(
+                      color: gold,
+                      fontSize: 9,
+                      letterSpacing: 3.1,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
                 _activeCircleLayout(),
               ],
             ),
