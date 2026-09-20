@@ -820,7 +820,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
         toolbarHeight: 92,
         leading: IconButton(
           tooltip: 'Menu',
-          onPressed: () => VillageNavigationScope.of(context).openMenu(),
+          onPressed: () => VillageNavigationScope.of(context).onOpenMenu(),
           icon: const Icon(Icons.menu_rounded),
         ),
         title: FittedBox(
