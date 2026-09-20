@@ -1442,11 +1442,19 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             const outerDiameter = 64.0;
             const badgeSize = 78.0;
 
-            // Six evenly spaced positions. The offset leaves the bottom-center
-            // open for Ariel's name and the center message.
-            const firstAngle = -math.pi / 3;
+            // Keep the six profiles on a graceful orbit with a deliberate
+            // lower-center opening for Ariel's message, just like the reference.
+            // Each portrait gently travels along the ring without crossing it.
+            const baseAngles = [
+              -0.65, // +more, upper-right
+              -1.55, // top
+              -2.50, // upper-left
+              -3.12, // left
+              2.25, // lower-left
+              0.55, // lower-right
+            ];
             double movingAngle(int index) =>
-                firstAngle + (index * 2 * math.pi / 6) + turn;
+                baseAngles[index] + math.sin(turn + (index * .9)) * .055;
 
             Offset positionFor(int index, double diameter) {
               final angle = movingAngle(index);
