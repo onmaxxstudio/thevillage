@@ -86,8 +86,46 @@ class _CircleScreenState extends State<CircleScreen> {
 
   String _key(String base) {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? 'signed_out';
-    return '${base}_$uid';
+    return '\${base}_\$uid';
   }
+
+  bool get _isTestCircle => Uri.base.queryParameters['testCircle'] == '1';
+
+  List<_CircleMember> get _visibleCircleMembers {
+    if (!_isTestCircle) return circleMembers;
+    return const [
+      _CircleMember('@MayaTest', 'M', Color(0xFFF0D9CF), 'Available to listen', true, 'test_maya'),
+      _CircleMember('@JordanTest', 'J', Color(0xFFDCE8D9), 'Quiet today', true, 'test_jordan'),
+      _CircleMember('@ReneeTest', 'R', Color(0xFFE6DDF1), 'Available to listen', true, 'test_renee'),
+      _CircleMember('@MarcusTest', 'M', Color(0xFFF5E6C8), 'I need support', true, 'test_marcus'),
+      _CircleMember('@PriyaTest', 'P', Color(0xFFDDE9EB), 'Available to listen', true, 'test_priya'),
+    ];
+  }
+
+  List<_CircleMoment> get _visibleCircleMoments {
+    if (!_isTestCircle) return circleMoments;
+    return [
+      ...circleMoments,
+      _CircleMoment(
+        text: 'I started my new job today!',
+        author: '@ReneeTest',
+        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+      ),
+      _CircleMoment(
+        text: 'I finally finished my certification.',
+        author: '@JordanTest',
+        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      ),
+      _CircleMoment(
+        text: 'My daughter had the best first soccer game.',
+        author: '@MayaTest',
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      ),
+    ];
+  }
+
+  bool _isTestMember(_CircleMember member) =>
+      member.uid?.startsWith('test_') ?? false;
 
   @override
   void initState() {
@@ -617,7 +655,7 @@ class _CircleScreenState extends State<CircleScreen> {
         );
       });
       await _saveCircleMessages();
-      if (member.uid != null) {
+      if (member.uid != null && !_isTestMember(member)) {
         try {
           await circleService.sendMessage(
             recipient: CirclePerson(
@@ -714,7 +752,7 @@ class _CircleScreenState extends State<CircleScreen> {
         );
       });
       await _saveCircleMessages();
-      if (member.uid != null) {
+      if (member.uid != null && !_isTestMember(member)) {
         try {
           await circleService.sendMessage(
             recipient: CirclePerson(
@@ -763,7 +801,7 @@ class _CircleScreenState extends State<CircleScreen> {
     var messages = circleMessages
         .where((item) => item.memberName == member.name)
         .toList();
-    if (member.uid != null) {
+    if (member.uid != null && !_isTestMember(member)) {
       try {
         final remote = await circleService.messages(member.uid!).first;
         messages = remote
@@ -1408,6 +1446,20 @@ class _CircleScreenState extends State<CircleScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (_isTestCircle) ...[
+          const Center(
+            child: Text(
+              'TEST CIRCLE • PRIVATE PREVIEW',
+              style: TextStyle(
+                color: gold,
+                fontSize: 10,
+                letterSpacing: 1.35,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         _circleOrbit(),
         const SizedBox(height: 22),
         _sectionTitle(
@@ -1460,7 +1512,7 @@ class _CircleScreenState extends State<CircleScreen> {
             ),
           ],
         ),
-        if (circleMembers.isNotEmpty || incomingRequests.isNotEmpty) ...[
+        if (_visibleCircleMembers.isNotEmpty || incomingRequests.isNotEmpty) ...[
           const SizedBox(height: 12),
           _moreCircleTools(),
         ],
@@ -1470,8 +1522,9 @@ class _CircleScreenState extends State<CircleScreen> {
 
   Widget _circleOrbit() {
     final name = myUsername.isEmpty ? 'You' : myUsername;
-    final people = circleMembers.take(5).toList();
-    final remaining = circleMembers.length - people.length;
+    final members = _visibleCircleMembers;
+    final people = members.take(5).toList();
+    final remaining = members.length - people.length;
     return LayoutBuilder(
       builder: (context, constraints) {
         final diameter = constraints.maxWidth.clamp(280.0, 390.0);
@@ -1662,7 +1715,8 @@ class _CircleScreenState extends State<CircleScreen> {
   }
 
   Widget _momentsRow() {
-    if (circleMoments.isEmpty) {
+    final moments = _visibleCircleMoments;
+    if (moments.isEmpty) {
       return InkWell(
         onTap: _shareSomethingGood,
         borderRadius: BorderRadius.circular(20),
@@ -1698,9 +1752,9 @@ class _CircleScreenState extends State<CircleScreen> {
       height: 132,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: circleMoments.length,
+        itemCount: moments.length,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) => _momentCard(circleMoments[index]),
+        itemBuilder: (context, index) => _momentCard(moments[index]),
       ),
     );
   }
@@ -1829,7 +1883,7 @@ class _CircleScreenState extends State<CircleScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              ...circleMembers.map(
+              ..._visibleCircleMembers.map(
                 (person) => ListTile(
                   leading: CircleAvatar(
                     backgroundColor: person.color,
@@ -2308,11 +2362,12 @@ class _CircleScreenState extends State<CircleScreen> {
   );
 
   void _openCheckOnSomeone() {
-    if (circleMembers.isEmpty) {
+    final members = _visibleCircleMembers;
+    if (members.isEmpty) {
       _findPeople();
       return;
     }
-    _quickCheckIn(circleMembers.first);
+    _quickCheckIn(members.first);
   }
 
   Widget _recentConnections() {
