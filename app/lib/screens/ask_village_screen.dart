@@ -188,31 +188,36 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       backgroundColor: cream,
       appBar: AppBar(
         backgroundColor: cream,
+        toolbarHeight: 92,
         leading: IconButton(
           onPressed: () =>
               VillageNavigationScope.of(context).onSelect(0),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: Column(
-          children: [
-            Image.asset('assets/images/welcome_branch.png', height: 18),
-            const SizedBox(height: 3),
-            Text(
-              'Ask the Village',
-              style: GoogleFonts.playfairDisplay(
-                color: sage,
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset('assets/images/welcome_branch.png', height: 18),
+              const SizedBox(height: 3),
+              Text(
+                'Ask the Village',
+                style: GoogleFonts.playfairDisplay(
+                  color: sage,
+                  fontSize: 42,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         centerTitle: true,
         actions: [
-          TextButton.icon(
+          IconButton(
+            tooltip: 'Restore draft',
             onPressed: _restoreDraft,
             icon: const Icon(Icons.note_alt_outlined),
-            label: const Text('Drafts'),
           ),
         ],
       ),
