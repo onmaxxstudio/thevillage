@@ -1472,31 +1472,31 @@ class _CircleScreenState extends State<CircleScreen> {
     final name = myUsername.isEmpty ? 'You' : myUsername;
     final people = circleMembers.take(5).toList();
     final remaining = circleMembers.length - people.length;
-    const positions = <Offset>[
-      Offset(.50, .02),
-      Offset(.10, .25),
-      Offset(.90, .25),
-      Offset(.20, .78),
-      Offset(.80, .78),
-    ];
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final diameter = constraints.maxWidth.clamp(280.0, 390.0);
+        final center = diameter / 2;
         const avatarSize = 56.0;
+        final positions = <Offset>[
+          Offset(center - avatarSize / 2, 16),
+          Offset(center - 130, 85),
+          Offset(center + 74, 85),
+          Offset(center - 103, 194),
+          Offset(center + 47, 194),
+        ];
         return Center(
           child: SizedBox(
             width: diameter,
-            height: 270,
+            height: 286,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Positioned(
-                  left: (diameter - 190) / 2,
-                  top: 34,
+                  left: center - 108,
+                  top: 43,
                   child: Container(
-                    width: 190,
-                    height: 190,
+                    width: 216,
+                    height: 216,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: paleSage.withValues(alpha: .45),
@@ -1506,8 +1506,8 @@ class _CircleScreenState extends State<CircleScreen> {
                 ),
                 for (var index = 0; index < people.length; index++)
                   Positioned(
-                    left: diameter * positions[index].dx - avatarSize / 2,
-                    top: 20 + 200 * positions[index].dy - avatarSize / 2,
+                    left: positions[index].dx,
+                    top: positions[index].dy,
                     child: _orbitPerson(
                       people[index].initials,
                       people[index].name.replaceFirst('@', ''),
@@ -1518,14 +1518,14 @@ class _CircleScreenState extends State<CircleScreen> {
                 if (people.length < 5)
                   for (var index = people.length; index < 5; index++)
                     Positioned(
-                      left: diameter * positions[index].dx - avatarSize / 2,
-                      top: 20 + 200 * positions[index].dy - avatarSize / 2,
+                      left: positions[index].dx,
+                      top: positions[index].dy,
                       child: _orbitAddSpot(),
                     ),
                 if (remaining > 0)
                   Positioned(
-                    right: 4,
-                    bottom: 29,
+                    left: center + 95,
+                    top: 161,
                     child: InkWell(
                       onTap: _showAllPeople,
                       borderRadius: BorderRadius.circular(30),
@@ -1550,8 +1550,8 @@ class _CircleScreenState extends State<CircleScreen> {
                     ),
                   ),
                 Positioned(
-                  left: (diameter - 112) / 2,
-                  top: 75,
+                  left: center - 56,
+                  top: 91,
                   child: _orbitYou(name),
                 ),
               ],
