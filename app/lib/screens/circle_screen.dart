@@ -1249,47 +1249,33 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             child: ListView(
               padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
               children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.topCenter,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'assets/images/welcome_branch.png',
-                          height: 18,
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          'My Circle',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.playfairDisplay(
-                            color: sage,
-                            fontSize: 48,
-                            height: .95,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'REAL PEOPLE  •  DEEPER DAYS',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: gold,
-                            fontSize: 9,
-                            letterSpacing: 3.1,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
+                    Image.asset(
+                      'assets/images/welcome_branch.png',
+                      height: 18,
                     ),
-                    Positioned(
-                      top: -8,
-                      left: -6,
-                      child: VillageMenuButton(
-                        onPressed: () =>
-                            VillageNavigationScope.of(context).onOpenMenu(),
+                    const SizedBox(height: 5),
+                    Text(
+                      'My Circle',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.playfairDisplay(
+                        color: sage,
+                        fontSize: 48,
+                        height: .95,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'REAL PEOPLE  •  DEEPER DAYS',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: gold,
+                        fontSize: 9,
+                        letterSpacing: 3.1,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],
