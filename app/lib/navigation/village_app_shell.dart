@@ -179,9 +179,26 @@ class _VillageAppShellState extends State<VillageAppShell> {
           key: _shellScaffoldKey,
           backgroundColor: cream,
           drawer: _buildDrawer(),
-          body: IndexedStack(
-            index: selectedIndex,
-            children: List.generate(rootPages.length, buildTabNavigator),
+          body: Stack(
+            children: [
+              IndexedStack(
+                index: selectedIndex,
+                children: List.generate(rootPages.length, buildTabNavigator),
+              ),
+              Positioned(
+                top: 0,
+                left: 0,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 12, top: 8),
+                    child: VillageMenuButton(
+                      onPressed: () =>
+                          _shellScaffoldKey.currentState?.openDrawer(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: selectedIndex,

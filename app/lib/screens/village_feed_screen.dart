@@ -819,12 +819,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
         backgroundColor: cream,
         toolbarHeight: 92,
         leadingWidth: 60,
-        leading: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 0, 36),
-          child: VillageMenuButton(
-            onPressed: () => VillageNavigationScope.of(context).onOpenMenu(),
-          ),
-        ),
+        leading: const SizedBox(width: 60),
         title: FittedBox(
           fit: BoxFit.scaleDown,
           child: Column(
