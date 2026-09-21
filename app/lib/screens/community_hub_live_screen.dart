@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/admin_content_service.dart';
 import '../services/community_hub_service.dart';
 import '../services/personalization_service.dart';
-import '../navigation/village_navigation_scope.dart';
 import 'community_detail_screen.dart';
 import 'find_help_screen.dart';
 
@@ -101,47 +100,33 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
               child: Column(
                 children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.topCenter,
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Image.asset(
-                            'assets/images/welcome_branch.png',
-                            height: 18,
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            'Community Hub',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.playfairDisplay(
-                              color: sage,
-                              fontSize: 48,
-                              height: .95,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'GOOD PEOPLE  •  BRIGHTER DAYS',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: gold,
-                              fontSize: 9,
-                              letterSpacing: 3.1,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
+                      Image.asset(
+                        'assets/images/welcome_branch.png',
+                        height: 18,
                       ),
-                      Positioned(
-                        top: -8,
-                        left: -8,
-                        child: VillageMenuButton(
-                          onPressed: () =>
-                              VillageNavigationScope.of(context).onOpenMenu(),
+                      const SizedBox(height: 5),
+                      Text(
+                        'Community Hub',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.playfairDisplay(
+                          color: sage,
+                          fontSize: 48,
+                          height: .95,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'GOOD PEOPLE  •  BRIGHTER DAYS',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: gold,
+                          fontSize: 9,
+                          letterSpacing: 3.1,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ],
