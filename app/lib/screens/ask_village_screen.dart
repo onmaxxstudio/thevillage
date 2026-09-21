@@ -47,7 +47,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   final preferences = SharedPreferencesAsync();
   bool anonymous = false;
   bool needsSupport = false;
-  bool welcomesPrayer = false;
   String audience = 'The Village';
   String category = 'Relationship & dating';
   String supportIntent = 'Advice';
@@ -74,6 +73,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     'Work & money',
     'Life changes',
     'Health & self-care',
+    'Faith',
     'Something else',
   ];
 
@@ -168,7 +168,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
             needsSupport: needsSupport,
             supportIntent: supportIntent,
             username: currentUsername,
-            welcomesPrayer: welcomesPrayer,
+            welcomesPrayer: false,
             communityId: widget.initialCommunityId,
             communityName: widget.initialCommunityName,
           ),
@@ -325,32 +325,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                               setState(() => supportIntent = intent.$1),
                         ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7F0F8),
-                    border: Border.all(color: const Color(0xFFE5D4E8)),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text(
-                      'I’d welcome prayer too',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: const Text(
-                      'Optional — this lets neighbors know prayer is welcome.',
-                    ),
-                    secondary: const Icon(
-                      Icons.auto_awesome_outlined,
-                      color: Color(0xFF8B5B91),
-                    ),
-                    value: welcomesPrayer,
-                    onChanged: (value) =>
-                        setState(() => welcomesPrayer = value),
                   ),
                 ),
                 if (!(widget.initialCommunityName?.trim().isNotEmpty ?? false)) ...[
@@ -685,7 +659,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         'audience': audience,
         'anonymous': anonymous,
         'needsSupport': needsSupport,
-        'welcomesPrayer': welcomesPrayer,
         'supportIntent': supportIntent,
       }),
     );
@@ -712,7 +685,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         audience = 'The Village';
         anonymous = draft['anonymous'] as bool? ?? anonymous;
         needsSupport = draft['needsSupport'] as bool? ?? needsSupport;
-        welcomesPrayer = draft['welcomesPrayer'] as bool? ?? welcomesPrayer;
         supportIntent = draft['supportIntent'] as String? ?? supportIntent;
       });
       ScaffoldMessenger.of(context).showSnackBar(
