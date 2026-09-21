@@ -47,7 +47,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   final preferences = SharedPreferencesAsync();
   bool anonymous = false;
   bool needsSupport = false;
-  String audience = 'The Village';
   String category = 'Relationship & dating';
   String supportIntent = 'Advice';
   String currentUsername = 'VillageMember';
@@ -163,7 +162,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
           post: VillagePostDraft(
             question: question,
             category: category,
-            audience: audience,
+            audience: 'The Village',
             anonymous: anonymous,
             needsSupport: needsSupport,
             supportIntent: supportIntent,
@@ -358,58 +357,30 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                   ),
                 ],
                 const SizedBox(height: 14),
-                _section(
-                  title: 'Who can see your post?',
-                  subtitle: 'Public questions belong in the Village. Private reach-outs belong in your trusted Circle.',
-                  child: Column(
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(13),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F3E9),
-                          border: Border.all(color: sage),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.groups_outlined, color: sage),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'The Village — visible to signed-in community members',
-                                style: TextStyle(fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                            Icon(Icons.check_circle, color: sage),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton.icon(
-                        onPressed: () =>
-                            VillageNavigationScope.of(context).onSelect(1),
-                        icon: const Icon(Icons.lock_outline_rounded),
-                        label: const Text('Send a private reach-out to My Circle'),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF1DE),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: SwitchListTile.adaptive(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Need Support Today?', style: TextStyle(fontWeight: FontWeight.w700)),
-                          subtitle: const Text('Let neighbors know you could use extra support.'),
-                          secondary: const Icon(Icons.volunteer_activism_outlined, color: gold, size: 34),
-                          activeThumbColor: sage,
-                          value: needsSupport,
-                          onChanged: (value) => setState(() => needsSupport = value),
-                        ),
-                      ),
-                    ],
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF1DE),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'Need Support Today?',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: const Text(
+                      'Let neighbors know you could use extra support.',
+                    ),
+                    secondary: const Icon(
+                      Icons.volunteer_activism_outlined,
+                      color: gold,
+                      size: 34,
+                    ),
+                    activeThumbColor: sage,
+                    value: needsSupport,
+                    onChanged: (value) =>
+                        setState(() => needsSupport = value),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -656,7 +627,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       jsonEncode({
         'question': questionController.text,
         'category': category,
-        'audience': audience,
         'anonymous': anonymous,
         'needsSupport': needsSupport,
         'supportIntent': supportIntent,
@@ -682,7 +652,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       setState(() {
         questionController.text = draft['question'] as String? ?? '';
         category = draft['category'] as String? ?? category;
-        audience = 'The Village';
         anonymous = draft['anonymous'] as bool? ?? anonymous;
         needsSupport = draft['needsSupport'] as bool? ?? needsSupport;
         supportIntent = draft['supportIntent'] as String? ?? supportIntent;
