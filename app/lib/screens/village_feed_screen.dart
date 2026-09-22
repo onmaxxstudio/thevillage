@@ -264,53 +264,36 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                       ),
                     ),
                   ),
-                  const Text(
-                    'Post this reply as:',
-                    style: TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 7),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ChoiceChip(
-                        avatar: const Icon(Icons.person_outline_rounded, size: 17),
-                        label: Text(currentHandle),
-                        selected: !anonymous,
-                        onSelected: (_) => setSheetState(() => anonymous = false),
-                        selectedColor: paleSage,
-                        side: const BorderSide(color: line),
-                        showCheckmark: false,
-                      ),
-                      ChoiceChip(
-                        avatar: const Icon(
-                          Icons.visibility_off_outlined,
-                          size: 17,
-                        ),
-                        label: const Text('Anonymous'),
-                        selected: anonymous,
-                        onSelected: (_) => setSheetState(() => anonymous = true),
-                        selectedColor: blush,
-                        side: const BorderSide(color: line),
-                        showCheckmark: false,
-                      ),
-                    ],
-                  ),
-                  if (anonymous) ...[
-                    const SizedBox(height: 7),
-                    const Row(
-                      children: [
-                        Icon(Icons.lock_outline_rounded, color: sage, size: 16),
-                        SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            'Your username will not appear with this reply.',
-                            style: TextStyle(fontSize: 11.5),
-                          ),
-                        ),
-                      ],
+                  Container(
+                    decoration: BoxDecoration(
+                      color: anonymous ? blush : paleSage,
+                      border: Border.all(color: line),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  ],
+                    child: SwitchListTile.adaptive(
+                      key: const ValueKey('anonymous-reply-toggle'),
+                      value: anonymous,
+                      onChanged: (value) =>
+                          setSheetState(() => anonymous = value),
+                      activeColor: sage,
+                      secondary: Icon(
+                        anonymous
+                            ? Icons.visibility_off_outlined
+                            : Icons.person_outline_rounded,
+                        color: sage,
+                      ),
+                      title: const Text(
+                        'Reply anonymously',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      subtitle: Text(
+                        anonymous
+                            ? 'Your name and profile stay hidden on this reply.'
+                            : 'Your reply will appear as $currentHandle.',
+                        style: const TextStyle(fontSize: 11.5, height: 1.3),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 15),
                   SizedBox(
                     width: double.infinity,
