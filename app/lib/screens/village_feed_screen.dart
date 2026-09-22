@@ -5,8 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/village_post_service.dart';
 import '../services/profile_service.dart';
 import '../services/safety_service.dart';
+import '../services/notification_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
+import 'notifications_screen.dart';
 
 class VillageFeedScreen extends StatefulWidget {
   const VillageFeedScreen({
@@ -42,13 +44,30 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   String currentUsername = 'VillageMember';
   final Map<String, String> usernamesByUid = {};
   late String filter;
+  String selectedTopic = 'All Topics';
+  String sort = 'Latest';
 
   static const filters = [
     'All',
     'My Posts',
-    'My Circle',
     'Saved',
     'Needs Support',
+  ];
+
+  static const primaryTopics = [
+    ('All Topics', Icons.grid_view_rounded),
+    ('Relationships', Icons.favorite_border_rounded),
+    ('Parenting', Icons.people_outline_rounded),
+    ('Mental Wellness', Icons.spa_outlined),
+  ];
+
+  static const moreTopics = [
+    ('Friendship', Icons.group_outlined),
+    ('Work & Money', Icons.work_outline_rounded),
+    ('Faith', Icons.church_outlined),
+    ('Life & Growth', Icons.eco_outlined),
+    ('Health & Self-Care', Icons.self_improvement_rounded),
+    ('Other', Icons.more_horiz_rounded),
   ];
 
   @override
@@ -143,21 +162,43 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
 
   List<VillagePost> get visiblePosts {
     final query = searchController.text.trim().toLowerCase();
-    return posts.where((post) {
+    final visible = posts.where((post) {
       final matchesFilter = switch (filter) {
         'My Posts' => post.isMine,
-        'My Circle' => post.audience == 'My Circle',
         'Saved' => post.saved,
         'Needs Support' => post.needsSupport,
         _ => true,
       };
+      final matchesTopic = _categoriesForTopic(selectedTopic)
+          .contains(post.category.toLowerCase());
       final matchesSearch = query.isEmpty ||
           post.question.toLowerCase().contains(query) ||
           post.category.toLowerCase().contains(query) ||
           _postAuthor(post).toLowerCase().contains(query);
-      return matchesFilter && matchesSearch;
+      return matchesFilter && matchesTopic && matchesSearch;
     }).toList();
+    visible.sort(switch (sort) {
+      'Most Supported' =>
+        (a, b) => b.supportCount.compareTo(a.supportCount),
+      'Most Replies' =>
+        (a, b) => b.replies.length.compareTo(a.replies.length),
+      _ => (a, b) => b.createdAt.compareTo(a.createdAt),
+    });
+    return visible;
   }
+
+  Set<String> _categoriesForTopic(String topic) => switch (topic) {
+        'Relationships' => {'relationship & dating', 'relationships'},
+        'Parenting' => {'family & parenting', 'parenting'},
+        'Mental Wellness' => {'mental wellbeing', 'mental health'},
+        'Friendship' => {'friendship & social life', 'friendship'},
+        'Work & Money' => {'work & money', 'work & school'},
+        'Faith' => {'faith'},
+        'Life & Growth' => {'life changes', 'life & growth'},
+        'Health & Self-Care' => {'health & self-care'},
+        'Other' => {'something else', 'other'},
+        _ => posts.map((post) => post.category.toLowerCase()).toSet(),
+      };
 
   Future<void> _persistMine() {
     return service.save(posts);
@@ -466,13 +507,15 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                   initialValue: category,
                   decoration: const InputDecoration(labelText: 'Category'),
                   items: const [
-                    'Relationships',
-                    'Mental Health',
-                    'Parenting',
-                    'Life & Growth',
-                    'Friendship',
-                    'Work & School',
-                    'Other',
+                    'Relationship & dating',
+                    'Family & parenting',
+                    'Mental wellbeing',
+                    'Friendship & social life',
+                    'Work & money',
+                    'Life changes',
+                    'Health & self-care',
+                    'Faith',
+                    'Something else',
                   ].map((value) => DropdownMenuItem(
                     value: value,
                     child: Text(value),
@@ -793,6 +836,112 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     VillageNavigationScope.of(context).onSelect(2);
   }
 
+  void _openNotifications() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const NotificationsScreen()),
+    );
+  }
+
+  String get _feedTitle {
+    if (filter == 'Saved') return 'Saved Conversations';
+    if (filter == 'My Posts') return 'My Conversations';
+    if (filter == 'Needs Support') return 'Needs Support';
+    if (selectedTopic == 'All Topics') return 'All Conversations';
+    return '$selectedTopic Conversations';
+  }
+
+  Future<void> _showMoreTopics() async {
+    final chosen = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 26),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'More topics',
+                style: GoogleFonts.playfairDisplay(
+                  color: ink,
+                  fontSize: 27,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: moreTopics
+                    .map(
+                      (topic) => ChoiceChip(
+                        avatar: Icon(topic.$2, size: 17, color: sage),
+                        label: Text(topic.$1),
+                        selected: selectedTopic == topic.$1,
+                        onSelected: (_) => Navigator.pop(sheetContext, topic.$1),
+                        selectedColor: paleSage,
+                        side: const BorderSide(color: line),
+                        showCheckmark: false,
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (chosen != null && mounted) setState(() => selectedTopic = chosen);
+  }
+
+  Widget _topicChip(String label, IconData icon) {
+    final selected = selectedTopic == label;
+    return ChoiceChip(
+      avatar: Icon(icon, size: 17, color: selected ? Colors.white : sage),
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => setState(() => selectedTopic = label),
+      selectedColor: sage,
+      backgroundColor: Colors.white.withValues(alpha: .56),
+      labelStyle: TextStyle(
+        color: selected ? Colors.white : ink,
+        fontWeight: FontWeight.w700,
+      ),
+      side: const BorderSide(color: line),
+      showCheckmark: false,
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  Widget _personalFilter(String label) {
+    final selected = filter == label;
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => setState(() => filter = label),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? sage : Colors.transparent,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: selected ? Colors.white : ink,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final shown = visiblePosts;
@@ -800,28 +949,57 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
       backgroundColor: cream,
       appBar: widget.embedded ? null : AppBar(
         backgroundColor: cream,
-        toolbarHeight: 92,
+        toolbarHeight: 76,
         leadingWidth: 60,
         leading: const SizedBox(width: 60),
         title: FittedBox(
           fit: BoxFit.scaleDown,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset('assets/images/welcome_branch.png', height: 18),
-              const SizedBox(height: 3),
-              Text(
-                'The Village',
-                style: GoogleFonts.playfairDisplay(
-                  color: sage,
-                  fontSize: 42,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+          child: Text(
+            'The Village',
+            style: GoogleFonts.playfairDisplay(
+              color: ink,
+              fontSize: 35,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: filter == 'Saved'
+                ? 'Show all conversations'
+                : 'Saved conversations',
+            onPressed: () => setState(
+              () => filter = filter == 'Saved' ? 'All' : 'Saved',
+            ),
+            icon: Icon(
+              filter == 'Saved'
+                  ? Icons.bookmark_rounded
+                  : Icons.bookmark_border_rounded,
+              color: ink,
+            ),
+          ),
+          ValueListenableBuilder<int>(
+            valueListenable: NotificationService.unreadCount,
+            builder: (context, unreadCount, _) => Stack(
+              clipBehavior: Clip.none,
+              children: [
+                IconButton(
+                  tooltip: 'Notifications',
+                  onPressed: _openNotifications,
+                  icon: const Icon(Icons.notifications_none_rounded, color: ink),
+                ),
+                if (unreadCount > 0)
+                  const Positioned(
+                    right: 7,
+                    top: 7,
+                    child: CircleAvatar(radius: 4, backgroundColor: gold),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: Center(
@@ -832,68 +1010,138 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                 : RefreshIndicator(
                     onRefresh: _load,
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
+                      padding: const EdgeInsets.fromLTRB(18, 8, 18, 30),
                       children: [
-                        _welcomeCard(),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: _createVillagePost,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: sage,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(17),
-                              ),
-                            ),
-                            icon: const Icon(Icons.add_rounded),
-                            label: const Text(
-                              'Create a Post',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
                         TextField(
                           controller: searchController,
                           decoration: InputDecoration(
-                            hintText: 'Search questions, topics, or usernames',
+                            hintText: 'Search conversations',
                             prefixIcon: const Icon(Icons.search_rounded),
                             filled: true,
                             fillColor: Colors.white.withValues(alpha: .58),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: const BorderSide(color: line),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: const BorderSide(color: line),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 15),
+                        const Text(
+                          'BROWSE BY TOPIC',
+                          style: TextStyle(
+                            color: Color(0xFF566057),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
                         SizedBox(
                           height: 40,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
-                            itemCount: filters.length,
+                            itemCount: primaryTopics.length + 1,
                             separatorBuilder: (_, __) =>
-                                const SizedBox(width: 7),
+                                const SizedBox(width: 6),
                             itemBuilder: (_, index) {
-                              final option = filters[index];
-                              return ChoiceChip(
-                                label: Text(option),
-                                selected: filter == option,
-                                onSelected: (_) {
-                                  setState(() => filter = option);
-                                },
-                                selectedColor: paleSage,
+                              if (index < primaryTopics.length) {
+                                final topic = primaryTopics[index];
+                                return _topicChip(topic.$1, topic.$2);
+                              }
+                              final moreSelected = moreTopics.any(
+                                (topic) => topic.$1 == selectedTopic,
+                              );
+                              return ActionChip(
+                                avatar: Icon(
+                                  moreSelected
+                                      ? Icons.check_circle_outline_rounded
+                                      : Icons.chevron_right_rounded,
+                                  size: 17,
+                                  color: sage,
+                                ),
+                                label: Text(
+                                  moreSelected ? selectedTopic : 'More',
+                                ),
+                                onPressed: _showMoreTopics,
+                                backgroundColor: moreSelected
+                                    ? paleSage
+                                    : Colors.white.withValues(alpha: .56),
                                 side: const BorderSide(color: line),
-                                showCheckmark: false,
+                                visualDensity: VisualDensity.compact,
                               );
                             },
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: .52),
+                            border: Border.all(color: line),
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          child: Row(
+                            children: [
+                              _personalFilter('All'),
+                              _personalFilter('My Posts'),
+                              _personalFilter('Needs Support'),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 13),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _feedTitle,
+                                style: GoogleFonts.playfairDisplay(
+                                  color: ink,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            PopupMenuButton<String>(
+                              tooltip: 'Sort conversations',
+                              initialValue: sort,
+                              onSelected: (value) => setState(() => sort = value),
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(value: 'Latest', child: Text('Latest')),
+                                PopupMenuItem(value: 'Most Supported', child: Text('Most Supported')),
+                                PopupMenuItem(value: 'Most Replies', child: Text('Most Replies')),
+                              ],
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 8,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      sort,
+                                      style: const TextStyle(
+                                        color: ink,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 2),
+                                    const Icon(Icons.keyboard_arrow_down_rounded),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                         if (shown.isEmpty)
                           _emptyState()
                         else
@@ -906,44 +1154,6 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                   ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _welcomeCard() {
-    return Container(
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: sage,
-        borderRadius: BorderRadius.circular(23),
-      ),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            backgroundColor: Color(0xFFFFE8BE),
-            child: Icon(Icons.forum_outlined, color: sage),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Real questions. Real care.',
-                  style: GoogleFonts.playfairDisplay(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Text(
-                  'Listen, share what helped, and remind someone they are not alone.',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1120,18 +1330,13 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
               ),
               const SizedBox(width: 9),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _postAuthor(post),
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    Text(
-                      _timeLabel(post.createdAt),
-                      style: const TextStyle(fontSize: 10.5),
-                    ),
-                  ],
+                child: Text(
+                  '${_postAuthor(post)}  •  ${_timeLabel(post.createdAt)}',
+                  style: const TextStyle(
+                    color: ink,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               if (post.isMine)
@@ -1195,15 +1400,8 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
             spacing: 7,
             runSpacing: 6,
             children: [
-              _label(post.category, paleSage),
-              _label(
-                post.audience == 'My Circle' ? 'Circle only' : 'Village',
-                const Color(0xFFFFF4DD),
-              ),
+              _label(post.category, blush),
               if (post.needsSupport) _label('Needs support', blush),
-              if (post.welcomesPrayer)
-                _label('Prayer welcome', const Color(0xFFF5EAF7)),
-              _label('Looking for ' + post.supportIntent.toLowerCase(), const Color(0xFFF1EEE4)),
               if (post.followUpStatus != 'Open')
                 _label(post.followUpStatus, const Color(0xFFDDE9DA)),
             ],
@@ -1211,11 +1409,11 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
           const SizedBox(height: 12),
           Text(
             post.question,
-            style: const TextStyle(
+            style: GoogleFonts.playfairDisplay(
               color: ink,
-              fontSize: 17,
-              height: 1.35,
-              fontWeight: FontWeight.w700,
+              fontSize: 21,
+              height: 1.28,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 13),
