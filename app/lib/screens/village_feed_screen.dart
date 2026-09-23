@@ -56,17 +56,19 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
 
   static const primaryTopics = [
     ('All Topics', Icons.grid_view_rounded),
-    ('Relationships', Icons.favorite_border_rounded),
-    ('Parenting', Icons.people_outline_rounded),
-    ('Mental Wellness', Icons.spa_outlined),
+    ('Men', Icons.male_rounded),
+    ('Women', Icons.female_rounded),
+    ('Relationships & Dating', Icons.favorite_border_rounded),
+    ('Family & Parenting', Icons.people_outline_rounded),
   ];
 
   static const moreTopics = [
+    ('Mental Wellness', Icons.spa_outlined),
     ('Friendship', Icons.group_outlined),
     ('Work & Money', Icons.work_outline_rounded),
-    ('Faith', Icons.church_outlined),
-    ('Life & Growth', Icons.eco_outlined),
+    ('Life Changes & Growth', Icons.eco_outlined),
     ('Health & Self-Care', Icons.self_improvement_rounded),
+    ('Faith', Icons.church_outlined),
     ('Other', Icons.more_horiz_rounded),
   ];
 
@@ -188,16 +190,43 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   }
 
   Set<String> _categoriesForTopic(String topic) => switch (topic) {
-        'Relationships' => {'relationship & dating', 'relationships'},
-        'Parenting' => {'family & parenting', 'parenting'},
-        'Mental Wellness' => {'mental wellbeing', 'mental health'},
+        'Relationships & Dating' => {
+          'relationships & dating',
+          'relationship & dating',
+          'relationships',
+        },
+        'Men' => {'men'},
+        'Women' => {'women'},
+        'Family & Parenting' => {'family & parenting', 'parenting'},
+        'Mental Wellness' => {
+          'mental wellness',
+          'mental wellbeing',
+          'mental health',
+        },
         'Friendship' => {'friendship & social life', 'friendship'},
         'Work & Money' => {'work & money', 'work & school'},
         'Faith' => {'faith'},
-        'Life & Growth' => {'life changes', 'life & growth'},
+        'Life Changes & Growth' => {
+          'life changes & growth',
+          'life changes',
+          'life & growth',
+        },
         'Health & Self-Care' => {'health & self-care'},
         'Other' => {'something else', 'other'},
         _ => posts.map((post) => post.category.toLowerCase()).toSet(),
+      };
+
+  String _normalizedCategory(String value) => switch (value) {
+        'Relationship & dating' || 'Relationships' =>
+          'Relationships & Dating',
+        'Family & parenting' || 'Parenting' => 'Family & Parenting',
+        'Mental wellbeing' || 'Mental Health' => 'Mental Wellness',
+        'Friendship & social life' => 'Friendship',
+        'Work & money' || 'Work & School' => 'Work & Money',
+        'Life changes' || 'Life & Growth' => 'Life Changes & Growth',
+        'Health & self-care' => 'Health & Self-Care',
+        'Something else' => 'Other',
+        _ => value,
       };
 
   Future<void> _persistMine() {
@@ -480,7 +509,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
 
   Future<void> _editPost(VillagePost post) async {
     final controller = TextEditingController(text: post.question);
-    var category = post.category;
+    var category = _normalizedCategory(post.category);
     var intent = post.supportIntent;
     final saved = await showDialog<bool>(
       context: context,
@@ -507,15 +536,17 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                   initialValue: category,
                   decoration: const InputDecoration(labelText: 'Category'),
                   items: const [
-                    'Relationship & dating',
-                    'Family & parenting',
-                    'Mental wellbeing',
-                    'Friendship & social life',
-                    'Work & money',
-                    'Life changes',
-                    'Health & self-care',
+                    'Relationships & Dating',
+                    'Men',
+                    'Women',
+                    'Family & Parenting',
+                    'Mental Wellness',
+                    'Friendship',
+                    'Work & Money',
+                    'Life Changes & Growth',
+                    'Health & Self-Care',
                     'Faith',
-                    'Something else',
+                    'Other',
                   ].map((value) => DropdownMenuItem(
                     value: value,
                     child: Text(value),

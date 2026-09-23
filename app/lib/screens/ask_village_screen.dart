@@ -47,7 +47,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   final preferences = SharedPreferencesAsync();
   bool anonymous = false;
   bool needsSupport = false;
-  String category = 'Relationship & dating';
+  String category = 'Relationships & Dating';
   String supportIntent = 'Advice';
   String currentUsername = 'VillageMember';
 
@@ -65,33 +65,59 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   ];
 
   static const categories = [
-    'Relationship & dating',
-    'Family & parenting',
-    'Mental wellbeing',
-    'Friendship & social life',
-    'Work & money',
-    'Life changes',
-    'Health & self-care',
+    'Men',
+    'Women',
+    'Relationships & Dating',
+    'Family & Parenting',
+    'Mental Wellness',
+    'Friendship',
+    'Work & Money',
+    'Life Changes & Growth',
+    'Health & Self-Care',
     'Faith',
-    'Something else',
+    'Other',
   ];
+
+  static String? _normalizedCategory(String? value) => switch (value) {
+        'Relationship & dating' ||
+        'Relationships' ||
+        'Relationships & Dating' =>
+          'Relationships & Dating',
+        'Men' => 'Men',
+        'Women' => 'Women',
+        'Family & parenting' || 'Parenting' || 'Family & Parenting' =>
+          'Family & Parenting',
+        'Mental wellbeing' || 'Mental Health' || 'Mental Wellness' =>
+          'Mental Wellness',
+        'Friendship & social life' || 'Friendship' => 'Friendship',
+        'Work & money' || 'Work & School' || 'Work & Money' => 'Work & Money',
+        'Life changes' || 'Life & Growth' || 'Life Changes & Growth' =>
+          'Life Changes & Growth',
+        'Health & self-care' || 'Health & Self-Care' =>
+          'Health & Self-Care',
+        'Faith' => 'Faith',
+        'Something else' || 'Other' => 'Other',
+        _ => null,
+      };
 
   @override
   void initState() {
     super.initState();
     questionController.text = widget.initialQuestion ?? '';
-    if (categories.contains(widget.initialCategory)) {
-      category = widget.initialCategory!;
-    }
+    category = _normalizedCategory(widget.initialCategory) ?? category;
     if (widget.firstQuestionFlow) {
       anonymous = true;
       category = switch (widget.initialCommunityId) {
-        'relationships' => 'Relationship & dating',
-        'moms' || 'caregivers' => 'Family & parenting',
-        'wellness' || 'grief' => 'Mental wellbeing',
-        'career' => 'Work & money',
-        'friendship' => 'Friendship & social life',
-        _ => 'Something else',
+        'relationships' => 'Relationships & Dating',
+        'men' => 'Men',
+        'women' => 'Women',
+        'moms' || 'caregivers' => 'Family & Parenting',
+        'wellness' || 'grief' => 'Mental Wellness',
+        'career' => 'Work & Money',
+        'friendship' => 'Friendship',
+        'new_beginnings' => 'Life Changes & Growth',
+        'faith' => 'Faith',
+        _ => 'Other',
       };
     }
     if (supportIntents.any((item) => item.$1 == widget.initialSupportIntent)) {
