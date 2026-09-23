@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/admin_content_service.dart';
+import 'community_hub_feature_admin_screen.dart';
 import 'admin_moderation_screen.dart';
 
 class VillageAdminScreen extends StatefulWidget {
@@ -61,6 +62,16 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
+                  style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.symmetric(vertical: 14)),
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubFeatureAdminScreen())),
+                  icon: const Icon(Icons.dashboard_customize_outlined),
+                  label: const Text('Curate Community Hub'),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
                   style: FilledButton.styleFrom(backgroundColor: const Color(0xFF243B2A), padding: const EdgeInsets.symmetric(vertical: 14)),
                   onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminModerationScreen())),
                   icon: const Icon(Icons.shield_outlined),
@@ -98,7 +109,7 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
         if (tab == 0) return _communityList(snapshot.data!.docs);
         final docs=snapshot.data!.docs.where((doc){
           final isQuestion=(doc.data()['kind']??'').toString()=='question';
-          return tab==3 ? isQuestion : tab==1 ? !isQuestion : true;
+          return tab==3 ? isQuestion : tab==1 ? !isQuestion && doc.data()['kind']!='hub_config' : true;
         }).toList();
         return _documentList(docs);
       },
@@ -230,6 +241,7 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
     final helpPhone=TextEditingController(text:(existing?['phone']??'').toString());
     final helpLabel=TextEditingController(text:(existing?['freeLabel']??'Free resource').toString());
     final helpVerified=TextEditingController(text:(existing?['verifiedAt']??'').toString());
+    final imageUrl=TextEditingController(text:(existing?['imageUrl']??'').toString());
     final courseLength=TextEditingController(text:(existing?['courseLength']??'').toString());
     final courseUrl=TextEditingController(text:(existing?['courseUrl']??'').toString());
     bool helpResource=existing?['helpResource']==true;
@@ -250,6 +262,7 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
           _field(title,tab==0?'Community name':tab==3?'Suggested question':'$singular title'),
           if(tab!=3)_field(description,'Short description',lines:3),
           if(tab==0)_field(category,'Category'),
+          if(tab==0)_field(imageUrl,'Cover image URL'),
           if(tab!=0)_field(community,'Community / category'),
           if(tab==1)...[
             _field(body,'Resource content',lines:8),
@@ -281,18 +294,6 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
             ],
           ],
           if(tab==2)_field(date,'Date & time'),
-          if(tab!=3) Padding(
-            padding:const EdgeInsets.only(top:14),
-            child:Container(
-              padding:const EdgeInsets.all(12),
-              decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),
-              child:const Row(children:[
-                Icon(Icons.image_outlined,color:sage),
-                SizedBox(width:10),
-                Expanded(child:Text('Photo uploads are paused until Firebase Storage is enabled. Existing covers will stay in place.')),
-              ]),
-            ),
-          ),
           if(!isBuiltIn) SwitchListTile(
             contentPadding:EdgeInsets.zero,
             title:const Text('Publish now'),
@@ -310,7 +311,8 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
                 if(tab==3)'question':title.text.trim(),
                 if(tab!=0&&tab!=3)'title':title.text.trim(),
                 if(tab!=3)'description':description.text.trim(),
-                if(tab!=3)'imageUrl':(existing?['imageUrl']??'').toString(),
+                if(tab==0)'imageUrl':imageUrl.text.trim(),
+                if(tab==1||tab==2)'imageUrl':(existing?['imageUrl']??'').toString(),
                 'published':published,
                 'sortOrder':existing?['sortOrder']??DateTime.now().millisecondsSinceEpoch,
                 if(tab==0)'category':category.text.trim(),

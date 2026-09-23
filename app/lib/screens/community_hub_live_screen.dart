@@ -3,10 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/admin_content_service.dart';
 import '../services/community_hub_service.dart';
+import '../services/community_hub_feature_service.dart';
 import '../services/personalization_service.dart';
+import '../services/village_post_service.dart';
 import 'ask_village_screen.dart';
 import 'community_detail_screen.dart';
 import 'find_help_screen.dart';
+import 'village_feed_screen.dart';
 
 class CommunityHubLiveScreen extends StatefulWidget {
   const CommunityHubLiveScreen({super.key});
@@ -24,6 +27,8 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
 
   final admin = AdminContentService();
   final hub = CommunityHubService();
+  final featuresService = CommunityHubFeatureService();
+  final postService = VillagePostService();
   final searchController = TextEditingController();
   late final PageController featurePager;
 
@@ -32,6 +37,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   String query = '';
   Set<String> joined = {};
   Map<String, int> memberCounts = {};
+  List<VillagePost> pulsePosts = const [];
   VillagePersonalization personalization = const VillagePersonalization.empty();
 
   static const categoryGroups = <_CommunityGroup>[
@@ -62,6 +68,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     super.initState();
     featurePager = PageController(initialPage: 1, viewportFraction: .76);
     _loadMemberships();
+    _loadPosts();
   }
 
   @override
@@ -87,6 +94,11 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     } on Object {
       // Community discovery remains usable if membership data is unavailable.
     }
+  }
+
+  Future<void> _loadPosts() async {
+    final posts = await postService.load();
+    if (mounted) setState(() => pulsePosts = posts);
   }
 
   @override
@@ -164,19 +176,62 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
       );
 
   Widget _communities() {
-    if (!admin.cloudReady) return _communityHome(_filter(builtIns));
-    return StreamBuilder<List<ManagedContentItem>>(
-      stream: admin.watchPublished('communities'),
-      builder: (context, snapshot) => _communityHome(_filter(_merge(snapshot.data ?? const <ManagedContentItem>[]))),
+    return StreamBuilder<CommunityHubFeatures>(
+      stream: featuresService.watch(),
+      builder: (context, configSnapshot) => StreamBuilder<List<ManagedContentItem>>(
+        stream: admin.watchPublished('resources'),
+        builder: (context, resourcesSnapshot) =>
+            StreamBuilder<List<ManagedContentItem>>(
+          stream: admin.watchPublished('events'),
+          builder: (context, eventsSnapshot) =>
+              StreamBuilder<List<ManagedContentItem>>(
+            stream: admin.watchPublished('communities'),
+            builder: (context, communitiesSnapshot) => _communityHome(
+              _filter(_merge(communitiesSnapshot.data ?? const [])),
+              configSnapshot.data ?? const CommunityHubFeatures(),
+              resourcesSnapshot.data ?? const [],
+              eventsSnapshot.data ?? const [],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _communityHome(List<_Community> communities) {
+  Widget _communityHome(
+    List<_Community> communities,
+    CommunityHubFeatures features,
+    List<ManagedContentItem> resources,
+    List<ManagedContentItem> events,
+  ) {
     final joinedCommunities = communities
         .where((community) => joined.contains(community.id))
         .toList();
-    final spotlight = _communityById(communities, 'new_beginnings') ??
+    final spotlight = _communityById(communities, features.spotlightId) ??
+        _communityById(communities, 'new_beginnings') ??
         (communities.isEmpty ? null : communities.first);
+    final selectedPosts = <VillagePost>[
+      for (final id in features.pulsePostIds)
+        ...pulsePosts.where((post) => post.id == id),
+    ];
+    final latestPosts = [...pulsePosts]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final visiblePosts = <VillagePost>[
+      ...selectedPosts,
+      ...latestPosts.where((post) =>
+          !selectedPosts.any((selected) => selected.id == post.id)),
+    ].take(2).toList();
+    ManagedContentItem? featuredItem(
+        List<ManagedContentItem> items, String id) {
+      for (final item in items) {
+        if (item.id == id) return item;
+      }
+      return items.isEmpty ? null : items.first;
+    }
+    final resourceItems =
+        resources.where((item) => item.text('kind') != 'question').toList();
+    final featuredResource = featuredItem(resourceItems, features.resourceId);
+    final featuredEvent = featuredItem(events, features.eventId);
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
       children: [
@@ -227,23 +282,27 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
           ),
         const SizedBox(height: 27),
         _premiumSectionHeader('Community Pulse', 'See All',
-            onAction: _showAll),
+            onAction: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => const VillageFeedScreen())).then((_) => _loadPosts())),
         const SizedBox(height: 4),
         const Text('Real questions. Real people. Real support.',
             style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
         const SizedBox(height: 12),
-        _pulseCard(
-          communities,
-          communityId: 'relationships',
-          question: 'How do you rebuild trust after disappointment?',
-          needsSupport: true,
-        ),
-        const SizedBox(height: 10),
-        _pulseCard(
-          communities,
-          communityId: 'grief',
-          question: 'What helped you through a season of grief?',
-        ),
+        if (visiblePosts.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: line),
+            ),
+            child: const Text('Conversations will appear here when neighbors start sharing.'),
+          )
+        else
+          for (final post in visiblePosts) ...[
+            _pulseCard(post),
+            const SizedBox(height: 10),
+          ],
         if (spotlight != null) ...[
           const SizedBox(height: 27),
           _premiumSectionHeader('Community Spotlight', 'See All',
@@ -262,8 +321,10 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
             Expanded(
               child: _previewCard(
                 icon: Icons.auto_stories_outlined,
-                eyebrow: 'RESOURCE OF THE WEEK',
-                title: 'Setting boundaries without guilt',
+                eyebrow: featuredResource == null
+                    ? 'RESOURCES'
+                    : 'FEATURED RESOURCE',
+                title: featuredResource?.text('title') ?? 'Explore helpful resources',
                 action: 'Read now',
                 onTap: () => setState(() => selected = 1),
               ),
@@ -272,8 +333,8 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
             Expanded(
               child: _previewCard(
                 icon: Icons.calendar_month_outlined,
-                eyebrow: 'UPCOMING EVENT',
-                title: 'Real talk: navigating life transitions',
+                eyebrow: featuredEvent == null ? 'EVENTS' : 'FEATURED EVENT',
+                title: featuredEvent?.text('title') ?? 'See upcoming events',
                 action: 'View event',
                 onTap: () => setState(() => selected = 2),
               ),
@@ -399,13 +460,12 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     );
   }
 
-  Widget _pulseCard(List<_Community> communities,
-      {required String communityId,
-      required String question,
-      bool needsSupport = false}) {
-    final community = _communityById(communities, communityId);
+  Widget _pulseCard(VillagePost post) {
     return InkWell(
-      onTap: community == null ? null : () => _open(community),
+      onTap: () => Navigator.of(context)
+          .push(MaterialPageRoute<void>(
+              builder: (_) => VillageFeedScreen(initialSearch: post.question)))
+          .then((_) => _loadPosts()),
       borderRadius: BorderRadius.circular(18),
       child: Container(
         padding: const EdgeInsets.all(13),
@@ -430,14 +490,14 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                 color: const Color(0xFFE8EBDD),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(_spaceIcon(communityId), color: sage),
+              child: Icon(Icons.forum_outlined, color: sage),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(question,
+                  Text(post.question,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.playfairDisplay(
@@ -451,12 +511,12 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                     runSpacing: 5,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Text(community?.name ?? 'Community',
+                      Text(post.communityName ?? post.category,
                           style: const TextStyle(
                               fontSize: 10.5,
                               color: sage,
                               fontWeight: FontWeight.w700)),
-                      if (needsSupport)
+                      if (post.needsSupport)
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 4),
@@ -475,8 +535,6 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.bookmark_border_rounded, color: sage, size: 19),
-            const SizedBox(width: 4),
             const Icon(Icons.chevron_right_rounded, color: sage),
           ],
         ),
