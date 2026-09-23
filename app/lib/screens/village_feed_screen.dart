@@ -54,15 +54,12 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     'Needs Support',
   ];
 
-  static const primaryTopics = [
+  static const browseTopics = [
     ('All Topics', Icons.grid_view_rounded),
     ('Men', Icons.male_rounded),
     ('Women', Icons.female_rounded),
     ('Relationships & Dating', Icons.favorite_border_rounded),
     ('Family & Parenting', Icons.people_outline_rounded),
-  ];
-
-  static const moreTopics = [
     ('Mental Wellness', Icons.spa_outlined),
     ('Friendship', Icons.group_outlined),
     ('Work & Money', Icons.work_outline_rounded),
@@ -881,52 +878,6 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     return '$selectedTopic Conversations';
   }
 
-  Future<void> _showMoreTopics() async {
-    final chosen = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: cream,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 26),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'More topics',
-                style: GoogleFonts.playfairDisplay(
-                  color: ink,
-                  fontSize: 27,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: moreTopics
-                    .map(
-                      (topic) => ChoiceChip(
-                        avatar: Icon(topic.$2, size: 17, color: sage),
-                        label: Text(topic.$1),
-                        selected: selectedTopic == topic.$1,
-                        onSelected: (_) => Navigator.pop(sheetContext, topic.$1),
-                        selectedColor: paleSage,
-                        side: const BorderSide(color: line),
-                        showCheckmark: false,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (chosen != null && mounted) setState(() => selectedTopic = chosen);
-  }
-
   Widget _topicChip(String label, IconData icon) {
     final selected = selectedTopic == label;
     return ChoiceChip(
@@ -1087,35 +1038,12 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                           height: 40,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
-                            itemCount: primaryTopics.length + 1,
+                            itemCount: browseTopics.length,
                             separatorBuilder: (_, __) =>
                                 const SizedBox(width: 6),
                             itemBuilder: (_, index) {
-                              if (index < primaryTopics.length) {
-                                final topic = primaryTopics[index];
-                                return _topicChip(topic.$1, topic.$2);
-                              }
-                              final moreSelected = moreTopics.any(
-                                (topic) => topic.$1 == selectedTopic,
-                              );
-                              return ActionChip(
-                                avatar: Icon(
-                                  moreSelected
-                                      ? Icons.check_circle_outline_rounded
-                                      : Icons.chevron_right_rounded,
-                                  size: 17,
-                                  color: sage,
-                                ),
-                                label: Text(
-                                  moreSelected ? selectedTopic : 'More',
-                                ),
-                                onPressed: _showMoreTopics,
-                                backgroundColor: moreSelected
-                                    ? paleSage
-                                    : Colors.white.withValues(alpha: .56),
-                                side: const BorderSide(color: line),
-                                visualDensity: VisualDensity.compact,
-                              );
+                              final topic = browseTopics[index];
+                              return _topicChip(topic.$1, topic.$2);
                             },
                           ),
                         ),
