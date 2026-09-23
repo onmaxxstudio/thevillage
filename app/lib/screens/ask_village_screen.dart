@@ -72,9 +72,9 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     'Mental Wellness',
     'Friendship',
     'Work & Money',
+    'Faith',
     'Life Changes & Growth',
     'Health & Self-Care',
-    'Faith',
     'Other',
   ];
 
@@ -591,46 +591,19 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   }
 
   Widget _topicChoices() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const gap = 7.0;
-        final columns = constraints.maxWidth >= 520 ? 4 : 2;
-        final cellWidth =
-            (constraints.maxWidth - (gap * (columns - 1))) / columns;
-        final remainder = categories.length % columns;
-
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: [
-            for (var index = 0; index < categories.length; index++)
-              SizedBox(
-                width: index == categories.length - 1 && remainder != 0
-                    ? (cellWidth * (columns - remainder + 1)) +
-                        (gap * (columns - remainder))
-                    : cellWidth,
-                height: 46,
-                child: ChoiceChip(
-                  label: SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      categories[index],
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                    ),
-                  ),
-                  selected: category == categories[index],
-                  selectedColor: const Color(0xFFE8EBDD),
-                  side: BorderSide(
-                    color: category == categories[index] ? sage : line,
-                  ),
-                  onSelected: (_) =>
-                      setState(() => category = categories[index]),
-                ),
-              ),
-          ],
-        );
-      },
+    return Wrap(
+      spacing: 7,
+      runSpacing: 7,
+      children: [
+        for (final item in categories)
+          ChoiceChip(
+            label: Text(item),
+            selected: category == item,
+            selectedColor: const Color(0xFFE8EBDD),
+            side: BorderSide(color: category == item ? sage : line),
+            onSelected: (_) => setState(() => category = item),
+          ),
+      ],
     );
   }
 
