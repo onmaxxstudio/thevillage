@@ -949,18 +949,25 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
       backgroundColor: cream,
       appBar: widget.embedded ? null : AppBar(
         backgroundColor: cream,
-        toolbarHeight: 76,
+        toolbarHeight: 92,
         leadingWidth: 60,
         leading: const SizedBox(width: 60),
         title: FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(
-            'The Village',
-            style: GoogleFonts.playfairDisplay(
-              color: ink,
-              fontSize: 35,
-              fontWeight: FontWeight.w700,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset('assets/images/welcome_branch.png', height: 18),
+              const SizedBox(height: 3),
+              Text(
+                'The Village',
+                style: GoogleFonts.playfairDisplay(
+                  color: sage,
+                  fontSize: 42,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
         centerTitle: true,
