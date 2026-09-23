@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/admin_content_service.dart';
 import '../services/community_hub_service.dart';
 import '../services/personalization_service.dart';
+import 'ask_village_screen.dart';
 import 'community_detail_screen.dart';
 import 'find_help_screen.dart';
 
@@ -171,43 +172,527 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _communityHome(List<_Community> communities) {
-    final carouselOrder = <String>['men', 'women', 'relationships'];
-    final carouselItems = <_Community>[
-      for (final id in carouselOrder)
-        ...communities.where((community) => community.id == id),
-      ...communities.where((community) => !carouselOrder.contains(community.id)),
-    ];
-    final visible = carouselItems.isEmpty ? communities : carouselItems;
+    final joinedCommunities = communities
+        .where((community) => joined.contains(community.id))
+        .toList();
+    final spotlight = _communityById(communities, 'new_beginnings') ??
+        (communities.isEmpty ? null : communities.first);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 25),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
       children: [
-        _clubhousePager(visible),
+        TextField(
+          controller: searchController,
+          onChanged: (value) => setState(() => query = value.trim().toLowerCase()),
+          decoration: InputDecoration(
+            hintText: 'What are you navigating right now?',
+            prefixIcon: const Icon(Icons.search_rounded, color: sage),
+            suffixIcon: IconButton(
+              tooltip: 'Trust & Safety',
+              onPressed: _showTrustSafety,
+              icon: const Icon(Icons.shield_outlined, color: sage),
+            ),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: .72),
+            contentPadding: const EdgeInsets.symmetric(vertical: 15),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: const BorderSide(color: line),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: const BorderSide(color: line),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        _premiumSectionHeader('Your Village',
+            joinedCommunities.isEmpty ? null : 'Manage',
+            onAction: joinedCommunities.isEmpty ? null : _showAll),
+        const SizedBox(height: 4),
+        const Text('Joined communities that support your journey.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
         const SizedBox(height: 12),
-        _pagerDots(visible.length),
-        const SizedBox(height: 18),
-        _quickSpaces(communities),
+        if (joinedCommunities.isEmpty)
+          _joinFirstCard()
+        else
+          SizedBox(
+            height: 154,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: joinedCommunities.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 11),
+              itemBuilder: (_, index) =>
+                  _joinedPremiumCard(joinedCommunities[index]),
+            ),
+          ),
+        const SizedBox(height: 27),
+        _premiumSectionHeader('Community Pulse', 'See All',
+            onAction: _showAll),
+        const SizedBox(height: 4),
+        const Text('Real questions. Real people. Real support.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+        const SizedBox(height: 12),
+        _pulseCard(
+          communities,
+          communityId: 'relationships',
+          question: 'How do you rebuild trust after disappointment?',
+          needsSupport: true,
+        ),
         const SizedBox(height: 10),
-        Center(
-          child: Column(
+        _pulseCard(
+          communities,
+          communityId: 'grief',
+          question: 'What helped you through a season of grief?',
+        ),
+        if (spotlight != null) ...[
+          const SizedBox(height: 27),
+          _premiumSectionHeader('Community Spotlight', 'See All',
+              onAction: _showAll),
+          const SizedBox(height: 12),
+          _spotlightCard(spotlight),
+        ],
+        const SizedBox(height: 27),
+        _premiumSectionHeader('Explore Communities', 'See All',
+            onAction: _showAll),
+        const SizedBox(height: 12),
+        _communityChips(communities),
+        const SizedBox(height: 18),
+        Row(
+          children: [
+            Expanded(
+              child: _previewCard(
+                icon: Icons.auto_stories_outlined,
+                eyebrow: 'RESOURCE OF THE WEEK',
+                title: 'Setting boundaries without guilt',
+                action: 'Read now',
+                onTap: () => setState(() => selected = 1),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _previewCard(
+                icon: Icons.calendar_month_outlined,
+                eyebrow: 'UPCOMING EVENT',
+                title: 'Real talk: navigating life transitions',
+                action: 'View event',
+                onTap: () => setState(() => selected = 2),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        FilledButton.icon(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const AskVillageScreen()),
+          ),
+          style: FilledButton.styleFrom(
+            backgroundColor: sage,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          icon: const Icon(Icons.add_circle_outline_rounded),
+          label: const Text('Ask a Community',
+              style: TextStyle(fontWeight: FontWeight.w800)),
+        ),
+      ],
+    );
+  }
+
+  Widget _premiumSectionHeader(String title, String? action,
+      {VoidCallback? onAction}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 25,
+              fontWeight: FontWeight.w700,
+              color: ink,
+            ),
+          ),
+        ),
+        if (action != null)
+          TextButton.icon(
+            onPressed: onAction,
+            style: TextButton.styleFrom(
+              foregroundColor: gold,
+              visualDensity: VisualDensity.compact,
+            ),
+            label: Text(action,
+                style: const TextStyle(
+                    fontSize: 11.5, fontWeight: FontWeight.w800)),
+            icon: const Icon(Icons.arrow_forward_rounded, size: 15),
+            iconAlignment: IconAlignment.end,
+          ),
+      ],
+    );
+  }
+
+  Widget _joinedPremiumCard(_Community community) {
+    return InkWell(
+      onTap: () => _open(community),
+      borderRadius: BorderRadius.circular(18),
+      child: SizedBox(
+        width: 154,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              SizedBox(width: 34, child: Divider(color: gold, thickness: 1.4)),
-              const SizedBox(height: 10),
-              Text(
-                'GOOD PEOPLE\nBRIGHTER DAYS',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: gold,
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 2.1,
-                  height: 1.55,
+              community.imageUrl.isEmpty
+                  ? _fallback()
+                  : Image.network(community.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _fallback()),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x12000000), Color(0xD9000000)],
+                    stops: [.35, 1],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Spacer(),
+                    Text(
+                      community.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.playfairDisplay(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        height: 1.05,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        const Icon(Icons.people_outline_rounded,
+                            color: Colors.white, size: 13),
+                        const SizedBox(width: 4),
+                        Text('${memberCounts[community.id] ?? 0} members',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-      ],
+      ),
     );
+  }
+
+  Widget _pulseCard(List<_Community> communities,
+      {required String communityId,
+      required String question,
+      bool needsSupport = false}) {
+    final community = _communityById(communities, communityId);
+    return InkWell(
+      onTap: community == null ? null : () => _open(community),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .76),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: line),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0D172019),
+              blurRadius: 16,
+              offset: Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8EBDD),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(_spaceIcon(communityId), color: sage),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(question,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.playfairDisplay(
+                          fontSize: 16,
+                          height: 1.12,
+                          fontWeight: FontWeight.w700,
+                          color: ink)),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 5,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(community?.name ?? 'Community',
+                          style: const TextStyle(
+                              fontSize: 10.5,
+                              color: sage,
+                              fontWeight: FontWeight.w700)),
+                      if (needsSupport)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF5EAD6),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                          child: const Text('Needs Support Today',
+                              style: TextStyle(
+                                  color: gold,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800)),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.bookmark_border_rounded, color: sage, size: 19),
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right_rounded, color: sage),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _spotlightCard(_Community community) {
+    return InkWell(
+      onTap: () => _open(community),
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        height: 205,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: line),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          children: [
+            Expanded(
+              flex: 5,
+              child: community.imageUrl.isEmpty
+                  ? _fallback()
+                  : Image.network(community.imageUrl,
+                      fit: BoxFit.cover,
+                      height: double.infinity,
+                      errorBuilder: (_, __, ___) => _fallback()),
+            ),
+            Expanded(
+              flex: 6,
+              child: Padding(
+                padding: const EdgeInsets.all(15),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('FEATURED COMMUNITY',
+                        style: TextStyle(
+                            color: gold,
+                            fontSize: 8.5,
+                            letterSpacing: 1.5,
+                            fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 7),
+                    Text(community.name,
+                        style: GoogleFonts.playfairDisplay(
+                            color: ink,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 5),
+                    Expanded(
+                      child: Text(community.description,
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: Color(0xFF626A63),
+                              fontSize: 11.5,
+                              height: 1.35)),
+                    ),
+                    Text('${memberCounts[community.id] ?? 0} members',
+                        style: const TextStyle(
+                            color: sage,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: sage,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Explore Community',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800)),
+                          SizedBox(width: 5),
+                          Icon(Icons.arrow_forward_rounded,
+                              color: Colors.white, size: 13),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _communityChips(List<_Community> communities) {
+    const preferred = <String>[
+      'relationships',
+      'moms',
+      'women',
+      'men',
+      'friendship',
+      'career',
+      'faith',
+      'grief',
+    ];
+    final items = <_Community>[
+      for (final id in preferred)
+        ...communities.where((community) => community.id == id),
+    ];
+    return Wrap(
+      spacing: 8,
+      runSpacing: 9,
+      children: items.map((community) {
+        final label = switch (community.id) {
+          'moms' => 'Parenting',
+          'career' => 'Work & Money',
+          _ => community.name,
+        };
+        return ActionChip(
+          avatar: Icon(_spaceIcon(community.id), color: sage, size: 17),
+          label: Text(label),
+          labelStyle: const TextStyle(
+              color: ink, fontSize: 11, fontWeight: FontWeight.w700),
+          backgroundColor: const Color(0xFFE9EEE4),
+          side: BorderSide.none,
+          shape: const StadiumBorder(),
+          onPressed: () => _open(community),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _previewCard({
+    required IconData icon,
+    required String eyebrow,
+    required String title,
+    required String action,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        height: 150,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .72),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: line),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: sage, size: 23),
+            const SizedBox(height: 9),
+            Text(eyebrow,
+                style: const TextStyle(
+                    color: gold,
+                    fontSize: 7.5,
+                    letterSpacing: 1,
+                    fontWeight: FontWeight.w900)),
+            const SizedBox(height: 5),
+            Text(title,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.playfairDisplay(
+                    color: ink, fontSize: 15, fontWeight: FontWeight.w700)),
+            const Spacer(),
+            Text('$action  →',
+                style: const TextStyle(
+                    color: sage, fontSize: 10, fontWeight: FontWeight.w800)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showTrustSafety() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 4, 22, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.shield_outlined, color: sage, size: 30),
+              const SizedBox(height: 10),
+              Text('Trust & Safety',
+                  style: GoogleFonts.playfairDisplay(
+                      fontSize: 27,
+                      fontWeight: FontWeight.w700,
+                      color: ink)),
+              const SizedBox(height: 8),
+              const Text(
+                'The Village is built for supportive conversation. You can post anonymously, report harmful content, block members, and find crisis support when you need it.',
+                style: TextStyle(
+                    color: Color(0xFF626A63), fontSize: 13, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  _Community? _communityById(List<_Community> communities, String id) {
+    for (final community in communities) {
+      if (community.id == id) return community;
+    }
+    return null;
   }
 
   Widget _clubhousePager(List<_Community> items) => SizedBox(
