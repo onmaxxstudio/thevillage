@@ -7,12 +7,14 @@ class CommunityHubFeatures {
     this.pulsePostIds = const [],
     this.resourceId = '',
     this.eventId = '',
+    this.communityOrder = const [],
   });
 
   final String spotlightId;
   final List<String> pulsePostIds;
   final String resourceId;
   final String eventId;
+  final List<String> communityOrder;
 
   factory CommunityHubFeatures.fromMap(Map<String, dynamic> data) =>
       CommunityHubFeatures(
@@ -23,6 +25,9 @@ class CommunityHubFeatures {
             .toList(),
         resourceId: (data['resourceId'] ?? '').toString(),
         eventId: (data['eventId'] ?? '').toString(),
+        communityOrder: (data['communityOrder'] as List<dynamic>? ?? const [])
+            .map((id) => id.toString())
+            .toList(),
       );
 
   Map<String, dynamic> toMap() => {
@@ -30,6 +35,7 @@ class CommunityHubFeatures {
         'pulsePostIds': pulsePostIds.take(2).toList(),
         'resourceId': resourceId,
         'eventId': eventId,
+        'communityOrder': communityOrder,
         'updatedAt': FieldValue.serverTimestamp(),
       };
 }

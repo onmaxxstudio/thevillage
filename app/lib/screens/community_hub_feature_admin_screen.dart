@@ -48,6 +48,7 @@ class _CommunityHubFeatureAdminScreenState
   Map<String, String> posts = {};
   Map<String, String> resources = {};
   Map<String, String> events = {};
+  List<String> communityOrder = [];
 
   @override
   void initState() {
@@ -79,6 +80,11 @@ class _CommunityHubFeatureAdminScreenState
             else
               'admin_${item.id}': item.text('name', item.text('title')),
         };
+        communityOrder = [
+          ...features.communityOrder.where((id) => communities.containsKey(id)),
+          ...communities.keys.where(
+              (id) => !features.communityOrder.contains(id)),
+        ];
         posts = {
           if (postService.lastLoadUsedCloud)
             for (final post in loadedPosts)
@@ -123,6 +129,7 @@ class _CommunityHubFeatureAdminScreenState
         ],
         resourceId: resourceId,
         eventId: eventId,
+        communityOrder: communityOrder,
       ));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -199,6 +206,53 @@ class _CommunityHubFeatureAdminScreenState
                       (value) => setState(() => resourceId = value)),
                   _selector('Upcoming Event', eventId, events,
                       (value) => setState(() => eventId = value)),
+                  const SizedBox(height: 8),
+                  Text('Community order',
+                      style: GoogleFonts.playfairDisplay(
+                          color: ink, fontSize: 23, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Use the arrows to choose the order in Explore Communities.',
+                    style: TextStyle(color: ink, fontSize: 12),
+                  ),
+                  const SizedBox(height: 10),
+                  for (var index = 0; index < communityOrder.length; index++)
+                    Card(
+                      color: Colors.white,
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              communities[communityOrder[index]] ??
+                                  communityOrder[index],
+                              style: const TextStyle(
+                                  color: ink, fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Move up',
+                            onPressed: index == 0
+                                ? null
+                                : () => setState(() {
+                                      final item = communityOrder.removeAt(index);
+                                      communityOrder.insert(index - 1, item);
+                                    }),
+                            icon: const Icon(Icons.arrow_upward_rounded),
+                          ),
+                          IconButton(
+                            tooltip: 'Move down',
+                            onPressed: index == communityOrder.length - 1
+                                ? null
+                                : () => setState(() {
+                                      final item = communityOrder.removeAt(index);
+                                      communityOrder.insert(index + 1, item);
+                                    }),
+                            icon: const Icon(Icons.arrow_downward_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(height: 8),
                   FilledButton.icon(
                     onPressed: saving ? null : _save,
