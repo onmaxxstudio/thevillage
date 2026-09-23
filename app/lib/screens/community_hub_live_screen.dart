@@ -199,11 +199,27 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _communityHome(
-    List<_Community> communities,
+    List<_Community> availableCommunities,
     CommunityHubFeatures features,
     List<ManagedContentItem> resources,
     List<ManagedContentItem> events,
   ) {
+    final priority = {
+      for (var i = 0; i < features.communityOrder.length; i++)
+        features.communityOrder[i]: i,
+    };
+    final defaultOrder = {
+      for (var i = 0; i < availableCommunities.length; i++)
+        availableCommunities[i].id: i,
+    };
+    final communities = [...availableCommunities]
+      ..sort((a, b) {
+        final first = priority[a.id] ?? features.communityOrder.length +
+            (defaultOrder[a.id] ?? 0);
+        final second = priority[b.id] ?? features.communityOrder.length +
+            (defaultOrder[b.id] ?? 0);
+        return first.compareTo(second);
+      });
     final joinedCommunities = communities
         .where((community) => joined.contains(community.id))
         .toList();
@@ -632,20 +648,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _communityChips(List<_Community> communities) {
-    const preferred = <String>[
-      'relationships',
-      'moms',
-      'women',
-      'men',
-      'friendship',
-      'career',
-      'faith',
-      'grief',
-    ];
-    final items = <_Community>[
-      for (final id in preferred)
-        ...communities.where((community) => community.id == id),
-    ];
+    final items = communities;
     return Wrap(
       spacing: 8,
       runSpacing: 9,
