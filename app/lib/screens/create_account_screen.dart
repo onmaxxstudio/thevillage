@@ -11,7 +11,7 @@ class CreateAccountScreen extends StatelessWidget {
   const CreateAccountScreen({super.key});
 
   static const _referenceAsset = 'design/02-create-account-and-sign-in.png';
-  static const _heroAsset = 'assets/images/create_account_hero.png';
+  static const _heroAsset = 'assets/images/create_account_photo.jpg';
   static const _sage = Color(0xFF496B4F);
   static const _ink = Color(0xFF172019);
   static const _cream = Color(0xFFFFFAF1);
