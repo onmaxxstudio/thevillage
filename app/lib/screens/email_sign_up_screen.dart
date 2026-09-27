@@ -101,7 +101,7 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
         ),
         title: Text('Create Account', style: GoogleFonts.inter(fontSize: 22)),
         centerTitle: true,
-        backgroundColor: const Color(0xFFF4EEDF),
+        backgroundColor: cream,
         foregroundColor: const Color(0xFF354337),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
