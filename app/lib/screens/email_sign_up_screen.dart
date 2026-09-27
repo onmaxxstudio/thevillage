@@ -85,6 +85,15 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
     return Scaffold(
       backgroundColor: cream,
       appBar: AppBar(
+        leadingWidth: 72,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 24),
+          child: IconButton(
+            tooltip: 'Back',
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 24),
+          ),
+        ),
         title: Text('Create Account', style: GoogleFonts.inter(fontSize: 22)),
         centerTitle: true,
         backgroundColor: const Color(0xFFF4EEDF),
