@@ -62,6 +62,11 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final centeredContentInset =
+        ((MediaQuery.sizeOf(context).width - 550) / 2)
+            .clamp(0.0, 550.0)
+            .toDouble();
+
     InputDecoration decoration(String label, IconData icon) {
       final border = OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -85,9 +90,9 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
     return Scaffold(
       backgroundColor: cream,
       appBar: AppBar(
-        leadingWidth: 72,
+        leadingWidth: centeredContentInset + 72,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
+          padding: EdgeInsets.only(left: centeredContentInset + 12),
           child: IconButton(
             tooltip: 'Back',
             onPressed: () => Navigator.of(context).pop(),
