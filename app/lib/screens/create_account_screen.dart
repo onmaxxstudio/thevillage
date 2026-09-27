@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../navigation/village_app_shell.dart';
 import '../services/auth_service.dart';
+import '../widgets/auth_attempt_state.dart';
 import 'email_sign_up_screen.dart';
 import 'sign_in_screen.dart';
 import 'village_promise_screen.dart';
@@ -213,9 +214,9 @@ class _AccountCard extends StatefulWidget {
   State<_AccountCard> createState() => _AccountCardState();
 }
 
-class _AccountCardState extends State<_AccountCard> {
+class _AccountCardState extends State<_AccountCard>
+    with AuthAttemptState<_AccountCard> {
   final auth = AuthService();
-  bool loading = false;
 
   Future<void> _showAppleUnavailable() {
     return showDialog<void>(
@@ -241,11 +242,12 @@ class _AccountCardState extends State<_AccountCard> {
     Future<Object?> Function() action,
   ) async {
     if (loading) return;
-    setState(() => loading = true);
+    final attempt = beginAuthAttempt(external: method == 'Google sign-in');
     try {
       await action();
+      if (!isCurrentAuthAttempt(attempt)) return;
       final acceptedPromise = await auth.hasAcceptedVillagePromise();
-      if (!mounted) return;
+      if (!isCurrentAuthAttempt(attempt)) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => acceptedPromise
@@ -254,7 +256,9 @@ class _AccountCardState extends State<_AccountCard> {
         ),
       );
     } catch (error) {
-      if (!mounted) return;
+      if (!isCurrentAuthAttempt(attempt)) return;
+      finishAuthAttempt(attempt);
+      if (AuthService.isSignInCanceled(error)) return;
       final message = AuthService.messageFor(error);
       await showDialog<void>(
         context: context,
@@ -270,7 +274,7 @@ class _AccountCardState extends State<_AccountCard> {
         ),
       );
     } finally {
-      if (mounted) setState(() => loading = false);
+      finishAuthAttempt(attempt);
     }
   }
 

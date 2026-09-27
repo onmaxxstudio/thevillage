@@ -33,6 +33,10 @@ jobs:
         working-directory: app
         run: flutter pub get
 
+      - name: Test sign-in recovery
+        working-directory: app
+        run: flutter test test/auth_attempt_state_test.dart
+
       - name: Build website without stale PWA cache
         working-directory: app
         run: |

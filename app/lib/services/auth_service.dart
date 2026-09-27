@@ -121,6 +121,16 @@ class AuthService {
     await _auth.signOut();
   }
 
+  static bool isSignInCanceled(Object error) {
+    if (error is FirebaseAuthException) {
+      return error.code == 'popup-closed-by-user' ||
+          error.code == 'cancelled-popup-request' ||
+          error.code == 'canceled-popup-request';
+    }
+    return error is GoogleSignInException &&
+        error.code == GoogleSignInExceptionCode.canceled;
+  }
+
   static String messageFor(Object error) {
     if (error is AuthSetupException) return error.message;
     if (error is FirebaseAuthException) {

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../navigation/village_app_shell.dart';
 import '../services/auth_service.dart';
+import '../widgets/auth_attempt_state.dart';
 import 'create_account_screen.dart';
 import 'village_promise_screen.dart';
 
@@ -14,7 +15,8 @@ class SignInScreen extends StatefulWidget {
   State<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _SignInScreenState extends State<SignInScreen>
+    with AuthAttemptState<SignInScreen> {
   static const cream = Color(0xFFFFFAF1);
   static const sage = Color(0xFF496B4F);
   static const ink = Color(0xFF172019);
@@ -24,7 +26,6 @@ class _SignInScreenState extends State<SignInScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool hidePassword = true;
-  bool loading = false;
 
   final auth = AuthService();
 
@@ -51,11 +52,12 @@ class _SignInScreenState extends State<SignInScreen> {
     Future<Object?> Function() action,
   ) async {
     if (loading) return;
-    setState(() => loading = true);
+    final attempt = beginAuthAttempt(external: method == 'Google sign-in');
     try {
       await action();
+      if (!isCurrentAuthAttempt(attempt)) return;
       final acceptedPromise = await auth.hasAcceptedVillagePromise();
-      if (!mounted) return;
+      if (!isCurrentAuthAttempt(attempt)) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => acceptedPromise
@@ -64,7 +66,9 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
       );
     } catch (error) {
-      if (!mounted) return;
+      if (!isCurrentAuthAttempt(attempt)) return;
+      finishAuthAttempt(attempt);
+      if (AuthService.isSignInCanceled(error)) return;
       final message = AuthService.messageFor(error);
       await showDialog<void>(
         context: context,
@@ -80,7 +84,7 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
       );
     } finally {
-      if (mounted) setState(() => loading = false);
+      finishAuthAttempt(attempt);
     }
   }
 
