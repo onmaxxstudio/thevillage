@@ -259,7 +259,8 @@ class _SignInScreenState extends State<SignInScreen>
                               const SizedBox(width: 12),
                               Expanded(
                                 child: _SocialButton(
-                                  icon: Icons.g_mobiledata_rounded,
+                                  icon: null,
+                                  googleIcon: true,
                                   label: 'Google',
                                   onPressed: loading
                                       ? null
@@ -447,11 +448,13 @@ class _FieldLabel extends StatelessWidget {
 class _SocialButton extends StatelessWidget {
   const _SocialButton({
     required this.icon,
+    this.googleIcon = false,
     required this.label,
     required this.onPressed,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final bool googleIcon;
   final String label;
   final VoidCallback? onPressed;
 
@@ -467,9 +470,54 @@ class _SocialButton extends StatelessWidget {
           side: const BorderSide(color: _SignInScreenState.line),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
         ),
-        icon: Icon(icon, size: 25),
+        icon: googleIcon
+            ? const _GoogleGIcon(size: 20)
+            : Icon(icon, size: 25),
         label: Text(label),
       ),
     );
   }
+}
+
+
+class _GoogleGIcon extends StatelessWidget {
+  const _GoogleGIcon({this.size = 20});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _GoogleGPainter()),
+    );
+  }
+}
+
+class _GoogleGPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final stroke = w * .19;
+    final rect = Rect.fromLTWH(stroke / 2, stroke / 2, w - stroke, w - stroke);
+    final paint = Paint()..style = PaintingStyle.stroke..strokeWidth = stroke..strokeCap = StrokeCap.butt;
+    paint.color = const Color(0xFF4285F4);
+    canvas.drawArc(rect, -.78, 1.55, false, paint);
+    paint.color = const Color(0xFF34A853);
+    canvas.drawArc(rect, .77, 1.55, false, paint);
+    paint.color = const Color(0xFFFBBC05);
+    canvas.drawArc(rect, 2.32, .82, false, paint);
+    paint.color = const Color(0xFFEA4335);
+    canvas.drawArc(rect, 3.14, 1.36, false, paint);
+    paint
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.square
+      ..color = const Color(0xFF4285F4);
+    canvas.drawLine(Offset(w * .53, w * .51), Offset(w * .91, w * .51), paint);
+    canvas.drawLine(Offset(w * .82, w * .51), Offset(w * .82, w * .72), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
