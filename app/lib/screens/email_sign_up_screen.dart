@@ -87,7 +87,7 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
       appBar: AppBar(
         leadingWidth: 72,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 24),
+          padding: const EdgeInsets.only(left: 12),
           child: IconButton(
             tooltip: 'Back',
             onPressed: () => Navigator.of(context).pop(),
