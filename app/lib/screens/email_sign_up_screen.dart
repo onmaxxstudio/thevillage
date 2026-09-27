@@ -117,6 +117,32 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Join Ask the Village',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.playfairDisplay(
+                              color: sage,
+                              fontSize: 30,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          SizedBox(
+                            width: 150,
+                            height: 24,
+                            child: Image.asset(
+                              'assets/images/welcome_branch.png',
+                              fit: BoxFit.contain,
+                              filterQuality: FilterQuality.high,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     Image.asset(
                       'assets/images/email_signup_hero.jpg',
                       width: double.infinity,
