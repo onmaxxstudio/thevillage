@@ -109,18 +109,73 @@ class _SignInScreenState extends State<SignInScreen>
   }
 
   Future<void> resetPassword() async {
-    final email = emailController.text.trim();
-    if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter your email address first.')),
-      );
-      return;
-    }
+    final recoveryEmailController =
+        TextEditingController(text: emailController.text.trim());
+    String? validationMessage;
+    final email = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Recover My Account'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Enter the email address linked to your account.'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: recoveryEmailController,
+                autofocus: true,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  errorText: validationMessage,
+                ),
+                onSubmitted: (_) {
+                  final value = recoveryEmailController.text.trim();
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value)) {
+                    setDialogState(() {
+                      validationMessage = 'Enter a valid email address.';
+                    });
+                    return;
+                  }
+                  Navigator.of(dialogContext).pop(value);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final value = recoveryEmailController.text.trim();
+                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value)) {
+                  setDialogState(() {
+                    validationMessage = 'Enter a valid email address.';
+                  });
+                  return;
+                }
+                Navigator.of(dialogContext).pop(value);
+              },
+              child: const Text('Send reset link'),
+            ),
+          ],
+        ),
+      ),
+    );
+    recoveryEmailController.dispose();
+    if (email == null) return;
     try {
       await auth.sendPasswordReset(email);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password reset email sent.')),
+        const SnackBar(
+          content: Text('If an account uses that email, a reset link is on its way.'),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
