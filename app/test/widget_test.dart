@@ -41,7 +41,8 @@ void main() {
     await tester.tap(find.text('Continue with Email'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Join Ask the Village'), findsOneWidget);
+    expect(find.text('Create Your Account'), findsOneWidget);
+    expect(find.text('Join Ask the Village'), findsNothing);
     expect(find.text('Username'), findsOneWidget);
     expect(find.text('Confirm password'), findsOneWidget);
     expect(find.text('Create My Account'), findsOneWidget);
