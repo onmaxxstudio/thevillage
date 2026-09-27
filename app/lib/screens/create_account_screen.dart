@@ -93,8 +93,8 @@ class _Header extends StatelessWidget {
           ),
         ),
         Positioned(
-          left: 12,
-          top: 17,
+          left: 24,
+          top: 10,
           child: IconButton(
             tooltip: 'Back',
             onPressed: onBack,
