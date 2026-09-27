@@ -99,8 +99,6 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
             icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 24),
           ),
         ),
-        title: Text('Create Account', style: GoogleFonts.inter(fontSize: 22)),
-        centerTitle: true,
         backgroundColor: cream,
         foregroundColor: const Color(0xFF354337),
         surfaceTintColor: Colors.transparent,
@@ -133,11 +131,11 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
                           FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text(
-                              'Join Ask the Village',
+                              'Create Your Account',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.playfairDisplay(
                                 color: sage,
-                                fontSize: 38,
+                                fontSize: 32,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
