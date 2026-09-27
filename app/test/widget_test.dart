@@ -33,6 +33,20 @@ void main() {
     expect(find.text('Recover My Account'), findsOneWidget);
   });
 
+  testWidgets('recover account asks for an email address', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(find.text('I already have an account'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Recover My Account'));
+    await tester.tap(find.text('Recover My Account'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter the email address linked to your account.'),
+        findsOneWidget);
+    expect(find.text('Send reset link'), findsOneWidget);
+  });
+
   testWidgets('email account option opens the real sign-up form', (tester) async {
     await tester.pumpWidget(const MyApp());
 
