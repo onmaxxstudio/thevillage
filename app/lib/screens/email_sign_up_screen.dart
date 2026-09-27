@@ -62,11 +62,6 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final centeredContentInset =
-        ((MediaQuery.sizeOf(context).width - 550) / 2)
-            .clamp(0.0, 550.0)
-            .toDouble();
-
     InputDecoration decoration(String label, IconData icon) {
       final border = OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -89,22 +84,6 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
 
     return Scaffold(
       backgroundColor: cream,
-      appBar: AppBar(
-        leadingWidth: centeredContentInset + 72,
-        leading: Padding(
-          padding: EdgeInsets.only(left: centeredContentInset + 12),
-          child: IconButton(
-            tooltip: 'Back',
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 24),
-          ),
-        ),
-        backgroundColor: cream,
-        foregroundColor: const Color(0xFF354337),
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-      ),
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
@@ -117,31 +96,8 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Join Ask the Village',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.playfairDisplay(
-                              color: sage,
-                              fontSize: 30,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          SizedBox(
-                            width: 150,
-                            height: 24,
-                            child: Image.asset(
-                              'assets/images/welcome_branch.png',
-                              fit: BoxFit.contain,
-                              filterQuality: FilterQuality.high,
-                            ),
-                          ),
-                        ],
-                      ),
+                    _EmailSignUpHeader(
+                      onBack: () => Navigator.of(context).pop(),
                     ),
                     Image.asset(
                       'assets/images/email_signup_hero.jpg',
@@ -275,6 +231,80 @@ class _EmailSignUpScreenState extends State<EmailSignUpScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+class _EmailSignUpHeader extends StatelessWidget {
+  const _EmailSignUpHeader({required this.onBack});
+
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 14),
+          child: Column(
+            children: [
+              Text(
+                'Ask the Village',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 51,
+                  fontWeight: FontWeight.w600,
+                  height: 1,
+                  color: const Color(0xFF496B4F),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    width: 76,
+                    child: Divider(color: Color(0xFFC8A35E)),
+                  ),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 52,
+                    height: 25,
+                    child: Image.asset(
+                      'assets/images/welcome_branch.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const SizedBox(
+                    width: 76,
+                    child: Divider(color: Color(0xFFC8A35E)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Real People. Real Support. Real Answers.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF172019),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          left: 24,
+          top: 10,
+          child: IconButton(
+            tooltip: 'Back',
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 24),
+            color: const Color(0xFF172019),
+          ),
+        ),
+      ],
     );
   }
 }
