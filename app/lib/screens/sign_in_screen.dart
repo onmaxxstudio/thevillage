@@ -405,9 +405,13 @@ class _BrandHeader extends StatelessWidget {
       children: [
         Align(
           alignment: Alignment.topLeft,
-          child: IconButton(
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 0),
+            child: IconButton(
+              tooltip: 'Back',
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 24),
+            ),
           ),
         ),
         Column(
