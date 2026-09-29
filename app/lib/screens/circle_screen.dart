@@ -1463,38 +1463,32 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       top: centerY - ringRadius,
                       child: CustomPaint(
                         size: const Size(300, 300),
-                        painter: _OrbitRingPainter(phase: turn),
+                        painter: const _OrbitRingPainter(),
                       ),
                     ),
-                    if (people.isEmpty)
-                      for (final index in const [0, 2, 3, 5])
-                        Builder(
-                          builder: (context) {
-                            final point = positionFor(index, outerDiameter);
-                            return Positioned(
-                              left: point.dx,
-                              top: point.dy,
-                              child: _orbitAddAvatar(),
-                            );
-                          },
-                        )
-                    else
-                      for (var index = 0; index < people.length; index++)
-                        Builder(
+                    for (var index = 0; index < 6; index++)
+                      Builder(
                         builder: (context) {
-                          // Reserve position 0 for the pink +more circle.
-                          final point = positionFor(index + 1, outerDiameter);
-                          final person = people[index];
+                          // Position 0 is reserved for the “more people” badge.
+                          final memberIndex = index - 1;
+                          final isMoreBadge = index == 0 && moreCount > 0;
+                          final hasPerson =
+                              memberIndex >= 0 && memberIndex < people.length;
+                          final point = positionFor(index, outerDiameter);
                           return Positioned(
                             left: point.dx,
                             top: point.dy,
-                            child: _orbitPerson(
-                              person.initials,
-                              person.name.replaceFirst('@', ''),
-                              person.color,
-                              person.photoUrl,
-                              () => _openMemberProfile(person),
-                            ),
+                            child: isMoreBadge
+                                ? const SizedBox.shrink()
+                                : hasPerson
+                                    ? _orbitPerson(
+                                        people[memberIndex].initials,
+                                        people[memberIndex].name.replaceFirst('@', ''),
+                                        people[memberIndex].color,
+                                        people[memberIndex].photoUrl,
+                                        () => _openMemberProfile(people[memberIndex]),
+                                      )
+                                    : _orbitAddAvatar(),
                           );
                         },
                       ),
@@ -3232,9 +3226,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 }
 
 class _OrbitRingPainter extends CustomPainter {
-  const _OrbitRingPainter({required this.phase});
-
-  final double phase;
+  const _OrbitRingPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -3245,25 +3237,10 @@ class _OrbitRingPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.25;
     canvas.drawCircle(center, radius, ring);
-
-    // Gold dots travel with the portraits along this same line.
-    final dot = Paint()..color = const Color(0xFFB78943);
-    for (var index = 0; index < 6; index++) {
-      final angle = phase + (-math.pi / 3) + (index * 2 * math.pi / 6);
-      canvas.drawCircle(
-        Offset(
-          center.dx + radius * math.cos(angle),
-          center.dy + radius * math.sin(angle),
-        ),
-        4,
-        dot,
-      );
-    }
   }
 
   @override
-  bool shouldRepaint(covariant _OrbitRingPainter oldDelegate) =>
-      oldDelegate.phase != phase;
+  bool shouldRepaint(covariant _OrbitRingPainter oldDelegate) => false;
 }
 
 class _ReachOut {
