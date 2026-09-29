@@ -161,7 +161,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
         personalizationComplete = true;
         firstCommunityId = destination.communityId;
         firstCommunityName = destination.communityName;
-        selectedIndex = destination.startAsking ? 2 : 4;
+        selectedIndex = 0;
       }),
       );
     }
