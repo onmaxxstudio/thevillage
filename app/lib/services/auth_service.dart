@@ -121,6 +121,61 @@ class AuthService {
     await _auth.signOut();
   }
 
+  Future<void> reauthenticateForAccountDeletion({String? password}) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const AuthSetupException('Please sign in again to delete your account.');
+    }
+
+    final providers = user.providerData.map((info) => info.providerId).toSet();
+    if (providers.contains('password')) {
+      final email = user.email;
+      if (email == null || email.isEmpty || password == null || password.isEmpty) {
+        throw const AuthSetupException('Enter your password to verify your account.');
+      }
+      await user.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: email, password: password),
+      );
+      return;
+    }
+
+    final provider = providers.contains('google.com')
+        ? GoogleAuthProvider()
+        : providers.contains('apple.com')
+            ? AppleAuthProvider()
+            : null;
+    if (provider == null) {
+      throw const AuthSetupException(
+        'Sign out and sign back in with your usual sign-in method, then try again.',
+      );
+    }
+
+    if (kIsWeb) {
+      await user.reauthenticateWithPopup(provider);
+      return;
+    }
+
+    if (provider is GoogleAuthProvider) {
+      if (!_googleInitialized) {
+        await GoogleSignIn.instance.initialize(
+          clientId: defaultTargetPlatform == TargetPlatform.iOS
+              ? DefaultFirebaseOptions.googleIosClientId
+              : null,
+          serverClientId: DefaultFirebaseOptions.googleServerClientId,
+        );
+        _googleInitialized = true;
+      }
+      final googleUser = await GoogleSignIn.instance.authenticate();
+      final googleAuth = googleUser.authentication;
+      await user.reauthenticateWithCredential(
+        GoogleAuthProvider.credential(idToken: googleAuth.idToken),
+      );
+      return;
+    }
+
+    await user.reauthenticateWithProvider(provider);
+  }
+
   static bool isSignInCanceled(Object error) {
     if (error is FirebaseAuthException) {
       return error.code == 'popup-closed-by-user' ||
