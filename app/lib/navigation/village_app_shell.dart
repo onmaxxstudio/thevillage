@@ -26,6 +26,8 @@ class _VillageAppShellState extends State<VillageAppShell> {
   final GlobalKey<ScaffoldState> _shellScaffoldKey =
       GlobalKey<ScaffoldState>();
   int selectedIndex = 0;
+  final List<int> _tabRouteDepth = List<int>.filled(5, 0);
+  late final List<_VillageTabRouteObserver> _routeObservers;
   final personalizationService = PersonalizationService();
   bool checkingPersonalization = true;
   bool personalizationComplete = false;
@@ -35,6 +37,12 @@ class _VillageAppShellState extends State<VillageAppShell> {
   @override
   void initState() {
     super.initState();
+    _routeObservers = List.generate(
+      5,
+      (index) => _VillageTabRouteObserver(
+        onDepthChanged: (depth) => _setTabRouteDepth(index, depth),
+      ),
+    );
     _loadPersonalization();
   }
 
@@ -69,11 +77,19 @@ class _VillageAppShellState extends State<VillageAppShell> {
   Widget buildTabNavigator(int index) {
     return Navigator(
       key: navigatorKeys[index],
+      observers: [_routeObservers[index]],
       onGenerateRoute: (_) => MaterialPageRoute<void>(
         builder: (_) => rootPages[index],
         settings: RouteSettings(name: 'village-tab-$index'),
       ),
     );
+  }
+
+  void _setTabRouteDepth(int index, int depth) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _tabRouteDepth[index] == depth) return;
+      setState(() => _tabRouteDepth[index] = depth);
+    });
   }
 
   Future<bool> handleBack() async {
@@ -185,19 +201,21 @@ class _VillageAppShellState extends State<VillageAppShell> {
                 index: selectedIndex,
                 children: List.generate(rootPages.length, buildTabNavigator),
               ),
-              Positioned(
-                top: 0,
-                left: 0,
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 12, top: 8),
-                    child: VillageMenuButton(
-                      onPressed: () =>
-                          _shellScaffoldKey.currentState?.openDrawer(),
+              if (_tabRouteDepth[selectedIndex] == 0 &&
+                  !(selectedIndex == 2 && firstCommunityId != null))
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 12, top: 8),
+                      child: VillageMenuButton(
+                        onPressed: () => _shellScaffoldKey.currentState
+                            ?.openDrawer(),
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
           bottomNavigationBar: NavigationBar(
@@ -217,5 +235,25 @@ class _VillageAppShellState extends State<VillageAppShell> {
         ),
       ),
     );
+  }
+}
+
+class _VillageTabRouteObserver extends NavigatorObserver {
+  _VillageTabRouteObserver({required this.onDepthChanged});
+
+  final ValueChanged<int> onDepthChanged;
+  int _depth = 0;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (previousRoute != null) onDepthChanged(++_depth);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (previousRoute != null) {
+      _depth = _depth > 0 ? _depth - 1 : 0;
+      onDepthChanged(_depth);
+    }
   }
 }
