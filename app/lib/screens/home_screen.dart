@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 14373)
-Total output lines: 1803
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -735,7 +732,341 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: const [
               BoxShadow(
-                color:…2373 tokens truncated…                   padding: const EdgeInsets.symmetric(horizontal: 2),
+                color: Color(0x1F172019),
+                blurRadius: 14,
+                offset: Offset(0, 7),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                left: -25,
+                bottom: -24,
+                child: Opacity(
+                  opacity: .5,
+                  child: Image.asset(
+                    'assets/images/welcome_branch.png',
+                    width: 155,
+                    color: const Color(0xFFE4C48A),
+                    colorBlendMode: BlendMode.srcIn,
+                  ),
+                ),
+              ),
+              if (compact)
+                callToAction
+              else
+                Row(
+                  children: [
+                    Expanded(flex: 3, child: callToAction),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 1,
+                      height: 120,
+                      color: const Color(0x99E4C48A),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.diversity_1_outlined,
+                            color: Color(0xFFE4C48A),
+                            size: 44,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'REAL\nQUESTIONS.\nBRIGHTER\nDAYS.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              height: 1.55,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTrendingCard() {
+    return InkWell(
+      onTap: openVillage,
+      borderRadius: BorderRadius.circular(21),
+      child: Container(
+        padding: const EdgeInsets.all(17),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .6),
+          border: Border.all(color: line),
+          borderRadius: BorderRadius.circular(21),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x10172019),
+              blurRadius: 12,
+              offset: Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const CircleAvatar(
+              radius: 29,
+              backgroundColor: blush,
+              child: Icon(
+                Icons.chat_bubble_outline_rounded,
+                color: gold,
+              ),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Visit the Village',
+                    style: GoogleFonts.playfairDisplay(
+                      color: ink,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Text(
+                    'Read real questions, offer support, or start a conversation.',
+                    style: TextStyle(fontSize: 14.5),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: sage),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommunityHubCard() {
+    return InkWell(
+      onTap: openCommunityHub,
+      borderRadius: BorderRadius.circular(23),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: paleSage,
+          border: Border.all(color: line),
+          borderRadius: BorderRadius.circular(23),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x10172019),
+              blurRadius: 12,
+              offset: Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const CircleAvatar(
+              radius: 30,
+              backgroundColor: cream,
+              child: Icon(Icons.diversity_3_outlined, color: sage, size: 29),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Community Hub',
+                    style: GoogleFonts.playfairDisplay(
+                      color: ink,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Find your people, explore resources, and gather for live events.',
+                    style: TextStyle(fontSize: 14.5, height: 1.35),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: sage),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+}
+
+class _DashboardCard extends StatelessWidget {
+  const _DashboardCard({
+    required this.color,
+    required this.child,
+    required this.onTap,
+  });
+
+  final Color color;
+  final Widget child;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 160,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: color,
+            border: Border.all(color: _HomeScreenState.line),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _RoundIcon extends StatelessWidget {
+  const _RoundIcon({
+    required this.icon,
+    this.gold = false,
+    this.radius = 24,
+  });
+
+  final IconData icon;
+  final bool gold;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor:
+          gold ? const Color(0xFFFFEBD0) : _HomeScreenState.blush,
+      child: Icon(
+        icon,
+        color: gold ? _HomeScreenState.gold : _HomeScreenState.sage,
+      ),
+    );
+  }
+}
+
+class _CheckInResult {
+  const _CheckInResult({
+    required this.mood,
+    required this.details,
+    required this.periodStarted,
+    required this.healthNotes,
+  });
+
+  final String mood;
+  final String details;
+  final bool periodStarted;
+  final String healthNotes;
+}
+
+class _CheckInSheet extends StatefulWidget {
+  const _CheckInSheet({this.existing, this.initialMood, required this.showPeriodTracking});
+
+  final MoodCheckIn? existing;
+  final String? initialMood;
+  final bool showPeriodTracking;
+
+  @override
+  State<_CheckInSheet> createState() => _CheckInSheetState();
+}
+
+class _CheckInSheetState extends State<_CheckInSheet> {
+  String? selectedMood;
+  bool periodStarted = false;
+  late final TextEditingController detailsController;
+  late final TextEditingController healthNotesController;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedMood = widget.initialMood ?? widget.existing?.mood;
+    periodStarted = widget.existing?.periodStarted ?? false;
+    detailsController = TextEditingController(
+      text: widget.existing?.details ?? '',
+    );
+    healthNotesController = TextEditingController(
+      text: widget.existing?.healthNotes ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    detailsController.dispose();
+    healthNotesController.dispose();
+    super.dispose();
+  }
+
+  void save({required bool includeDetails}) {
+    if (selectedMood == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Choose how you’re feeling first.')),
+      );
+      return;
+    }
+    Navigator.pop(
+      context,
+      _CheckInResult(
+        mood: selectedMood!,
+        details: includeDetails ? detailsController.text : '',
+        periodStarted: periodStarted,
+        healthNotes: includeDetails ? healthNotesController.text : '',
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        22,
+        2,
+        22,
+        MediaQuery.viewInsetsOf(context).bottom + 24,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Daily Check-In',
+              style: GoogleFonts.playfairDisplay(
+                color: _HomeScreenState.sage,
+                fontSize: 31,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Text(
+              'How are you showing up for yourself today?',
+              style: TextStyle(fontSize: 15),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                for (final mood in _HomeScreenState.moods)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
                       child: InkWell(
                         onTap: () => setState(() => selectedMood = mood.$2),
                         borderRadius: BorderRadius.circular(14),
