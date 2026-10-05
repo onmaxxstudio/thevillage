@@ -111,6 +111,7 @@ class CircleService {
 
     final myUsername =
         await ProfileService.currentUsername() ?? 'Village member';
+    const visiblePhoto = '';
     final requestReference = _firestore
         .collection('circle_requests')
         .doc(recipient.uid)
@@ -130,7 +131,7 @@ class CircleService {
       'senderUid': user.uid,
       'recipientUid': recipient.uid,
       'username': myUsername,
-      'photoUrl': user.photoURL ?? '',
+      'photoUrl': visiblePhoto,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -200,6 +201,7 @@ class CircleService {
     final user = _user;
     final myUsername =
         await ProfileService.currentUsername() ?? 'Village member';
+    const visiblePhoto = '';
     final incomingReference = _firestore
         .collection('circle_requests')
         .doc(user.uid)
@@ -232,7 +234,7 @@ class CircleService {
       'uid': user.uid,
       'username': myUsername,
       'usernameLower': myUsername.toLowerCase(),
-      'photoUrl': user.photoURL ?? '',
+      'photoUrl': visiblePhoto,
       'status': '',
       'connectedAt': FieldValue.serverTimestamp(),
     });

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
+import '../widgets/village_avatar.dart';
 import 'welcome_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -68,6 +69,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await loadProfile();
       if (!mounted) return;
       showMessage('Your username was saved.');
+    } catch (error) {
+      if (mounted) showMessage(messageFor(error));
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  Future<void> chooseAvatar() async {
+    const keys = ProfileService.avatarKeys;
+    const names = <String>[
+      'Coil Crown', 'Soft Curls', 'Headscarf', 'Long Locs',
+      'Soft Waves', 'Braids', 'Full Afro', 'Curly Bob',
+      'Headwrap', 'Short Curls', 'Natural Bob', 'Locs',
+    ];
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: cream,
+        title: const Text('Choose an Avatar'),
+        content: SizedBox(
+          width: 320,
+          child: GridView.builder(
+            shrinkWrap: true,
+            itemCount: keys.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 12, crossAxisSpacing: 12),
+            itemBuilder: (_, index) => Semantics(
+              label: 'Avatar ${index + 1}: ${names[index]}',
+              button: true,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: () => Navigator.pop(dialogContext, keys[index]),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(color: Colors.white, border: Border.all(color: profile?.avatarKey == keys[index] && profile?.avatarMode == 'avatar' ? sage : line, width: 2), borderRadius: BorderRadius.circular(18)),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      VillageAvatar(avatarMode: 'avatar', avatarKey: keys[index], radius: 25),
+                      const SizedBox(height: 3),
+                      Text(names[index], textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: ink)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel'))],
+      ),
+    );
+    if (selected == null) return;
+    await saveAvatar(mode: 'avatar', key: selected);
+  }
+
+  Future<void> saveAvatar({required String mode, String key = 'sage'}) async {
+    if (mounted) setState(() => saving = true);
+    try {
+      await service.updateAvatar(mode: mode, key: key);
+      if (profile != null) VillageAvatar.invalidate(profile!.uid);
+      await loadProfile();
+      if (mounted) showMessage('Your profile avatar was updated.');
     } catch (error) {
       if (mounted) showMessage(messageFor(error));
     } finally {
@@ -241,6 +302,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           _ProfileHeader(profile: profile!),
                           const SizedBox(height: 18),
+                          _sectionTitle('Profile image'),
+                          _card(children: [
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: VillageAvatar(avatarMode: profile!.avatarMode, avatarKey: profile!.avatarKey, photoUrl: profile!.photoUrl, radius: 22),
+                              title: const Text('Choose an Avatar'),
+                              subtitle: const Text('Choose from 12 illustrated avatars with varied looks'),
+                              trailing: profile!.avatarMode == 'avatar' ? const Icon(Icons.check_circle, color: sage) : const Icon(Icons.chevron_right_rounded),
+                              onTap: saving ? null : chooseAvatar,
+                            ),
+                            if (saving) const Padding(padding: EdgeInsets.only(top: 10), child: LinearProgressIndicator(color: sage)),
+                            const Padding(
+                              padding: EdgeInsets.only(top: 8),
+                              child: Text(
+                                'Your illustrated avatar does not show a personal photo. Your username may still appear on attributed posts; anonymous posts and replies continue to hide your identity.',
+                                style: TextStyle(fontSize: 12, color: Colors.black54),
+                              ),
+                            ),
+                          ]),
+                          const SizedBox(height: 20),
                           _sectionTitle('Public profile'),
                           _card(
                             children: [
@@ -419,20 +500,14 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = profile.username.isEmpty ? 'Village Member' : profile.username;
-    final initial = name.substring(0, 1).toUpperCase();
     return Column(
       children: [
-        CircleAvatar(
+        VillageAvatar(
+          uid: profile.uid,
           radius: 42,
-          backgroundColor: _ProfileScreenState.paleSage,
-          child: Text(
-            initial,
-            style: GoogleFonts.playfairDisplay(
-              color: _ProfileScreenState.sage,
-              fontSize: 38,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          avatarMode: profile.avatarMode,
+          avatarKey: profile.avatarKey,
+          photoUrl: profile.photoUrl,
         ),
         const SizedBox(height: 10),
         Text(

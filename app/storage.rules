@@ -8,6 +8,12 @@ service firebase.storage {
         firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data.active == true;
     }
 
+    match /profile_photos/{uid}/{fileName} {
+      allow read: if signedIn();
+      allow delete: if signedIn() && uid == request.auth.uid;
+      allow create, update: if false;
+    }
+
     match /admin_content/{uid}/{allPaths=**} {
       allow read: if true;
       allow write: if isAdmin() && uid == request.auth.uid

@@ -63,6 +63,8 @@ service cloud.firestore {
           'usernameLower',
           'email',
           'photoUrl',
+          'avatarMode',
+          'avatarKey',
           'createdAt',
           'updatedAt'
         ]) &&
@@ -71,7 +73,12 @@ service cloud.firestore {
         request.resource.data.usernameLower ==
           request.resource.data.username.lower() &&
         request.resource.data.email is string &&
-        request.resource.data.photoUrl is string;
+        request.resource.data.photoUrl is string &&
+        request.resource.data.avatarMode == 'avatar' &&
+        request.resource.data.avatarKey in [
+          'sage', 'rose', 'gold', 'sky', 'lavender', 'peach',
+          'cobalt', 'plum', 'coral', 'mint', 'teal', 'amber'
+        ];
 
       allow delete: if isSelf(uid);
     }
@@ -103,13 +110,20 @@ service cloud.firestore {
           'username',
           'usernameLower',
           'photoUrl',
+          'avatarMode',
+          'avatarKey',
           'updatedAt'
         ]) &&
         request.resource.data.uid == request.auth.uid &&
         validUsername(request.resource.data.username) &&
         request.resource.data.usernameLower ==
           request.resource.data.username.lower() &&
-        request.resource.data.photoUrl is string;
+        request.resource.data.photoUrl is string &&
+        request.resource.data.avatarMode == 'avatar' &&
+        request.resource.data.avatarKey in [
+          'sage', 'rose', 'gold', 'sky', 'lavender', 'peach',
+          'cobalt', 'plum', 'coral', 'mint', 'teal', 'amber'
+        ];
 
       allow delete: if isSelf(uid);
     }

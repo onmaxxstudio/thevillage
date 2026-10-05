@@ -6,6 +6,7 @@ import '../services/village_post_service.dart';
 import '../services/profile_service.dart';
 import '../services/safety_service.dart';
 import '../services/notification_service.dart';
+import '../widgets/village_avatar.dart';
 import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
 import 'notifications_screen.dart';
@@ -1171,17 +1172,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: anonymous ? blush : Colors.white,
-            child: Icon(
-              anonymous
-                  ? Icons.visibility_off_outlined
-                  : Icons.person_outline_rounded,
-              color: sage,
-              size: 17,
-            ),
-          ),
+          VillageAvatar(uid: reply.authorUid, radius: 16, anonymous: anonymous),
           const SizedBox(width: 9),
           Expanded(
             child: Column(
@@ -1281,18 +1272,10 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
           ],
           Row(
             children: [
-              CircleAvatar(
+              VillageAvatar(
+                uid: post.authorUid,
                 radius: 19,
-                backgroundColor: post.author == 'Anonymous Neighbor'
-                    ? blush
-                    : paleSage,
-                child: Icon(
-                  post.author == 'Anonymous Neighbor'
-                      ? Icons.visibility_off_outlined
-                      : Icons.person_outline_rounded,
-                  color: sage,
-                  size: 20,
-                ),
+                anonymous: post.author == 'Anonymous Neighbor',
               ),
               const SizedBox(width: 9),
               Expanded(

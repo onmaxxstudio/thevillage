@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,11 +12,17 @@ class VillageProfile {
     required this.uid,
     required this.username,
     required this.email,
+    this.avatarMode = 'avatar',
+    this.avatarKey = 'sage',
+    this.photoUrl = '',
   });
 
   final String uid;
   final String username;
   final String email;
+  final String avatarMode;
+  final String avatarKey;
+  final String photoUrl;
 }
 
 class UsernameLookup {
@@ -70,6 +77,7 @@ class ProfileService {
 
   FirebaseAuth get _auth => FirebaseAuth.instance;
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  FirebaseStorage get _storage => FirebaseStorage.instance;
 
   User get _user {
     final user = _auth.currentUser;
@@ -193,6 +201,16 @@ class ProfileService {
         transaction.delete(_usernameDocument(oldLower!));
       }
 
+      final savedProfile = userSnapshot.data() ?? const <String, dynamic>{};
+      final avatarKeys = ProfileService.avatarKeys.toSet();
+      final savedMode = savedProfile['avatarMode'];
+      final savedKey = savedProfile['avatarKey'];
+      final avatarKey = savedMode == 'avatar' && avatarKeys.contains(savedKey)
+          ? savedKey as String
+          : 'sage';
+      const avatarMode = 'avatar';
+      const photoUrl = '';
+
       transaction.set(
         userReference,
         {
@@ -200,7 +218,9 @@ class ProfileService {
           'username': username,
           'usernameLower': lower,
           'email': user.email ?? '',
-          'photoUrl': user.photoURL ?? '',
+          'photoUrl': photoUrl,
+          'avatarMode': avatarMode,
+          'avatarKey': avatarKey,
           'updatedAt': FieldValue.serverTimestamp(),
           if (!userSnapshot.exists) 'createdAt': FieldValue.serverTimestamp(),
         },
@@ -213,7 +233,9 @@ class ProfileService {
           'uid': user.uid,
           'username': username,
           'usernameLower': lower,
-          'photoUrl': user.photoURL ?? '',
+          'photoUrl': photoUrl,
+          'avatarMode': avatarMode,
+          'avatarKey': avatarKey,
           'updatedAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true),
@@ -325,11 +347,89 @@ class ProfileService {
     final refreshedUser = _auth.currentUser ?? user;
     final username =
         await currentUsername() ?? _fallbackUsername(refreshedUser);
+    var data = <String, dynamic>{};
+    try {
+      final snapshot = await _userDocument(refreshedUser.uid).get();
+      data = snapshot.data() ?? data;
+      // Older accounts receive the default illustrated avatar. Personal photos
+      // are not used as profile images in the avatar-only profile system.
+      final savedKey = data['avatarKey'] as String? ?? '';
+      final savedPhotoUrl = data['photoUrl'] as String? ?? '';
+      if (data['avatarMode'] != 'avatar' ||
+          !avatarKeys.contains(savedKey) ||
+          savedPhotoUrl.isNotEmpty) {
+        data = {
+          ...data,
+          'avatarMode': 'avatar',
+          'avatarKey': avatarKeys.contains(savedKey) ? savedKey : 'sage',
+          'photoUrl': '',
+        };
+        await _saveAvatarFields(refreshedUser.uid, data);
+      }
+    } on Object {
+      // Profile remains usable from auth/local fallback while Firestore retries.
+    }
     return VillageProfile(
       uid: refreshedUser.uid,
       username: username,
       email: refreshedUser.email ?? '',
+      avatarMode: data['avatarMode'] as String? ?? 'avatar',
+      avatarKey: data['avatarKey'] as String? ?? 'sage',
+      photoUrl: data['photoUrl'] as String? ?? '',
     );
+  }
+
+  static const avatarKeys = <String>[
+    'sage', 'rose', 'gold', 'sky', 'lavender', 'peach',
+    'cobalt', 'plum', 'coral', 'mint', 'teal', 'amber',
+  ];
+
+  Future<void> _saveAvatarFields(String uid, Map<String, dynamic> fields) async {
+    final batch = _firestore.batch();
+    batch.set(_userDocument(uid), {
+      'uid': uid,
+      'username': fields['username'],
+      'usernameLower': fields['usernameLower'],
+      'email': fields['email'] ?? '',
+      'photoUrl': fields['photoUrl'] ?? '',
+      'avatarMode': fields['avatarMode'] ?? 'avatar',
+      'avatarKey': fields['avatarKey'] ?? 'sage',
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    batch.set(_publicProfileDocument(uid), {
+      'uid': uid,
+      'username': fields['username'],
+      'usernameLower': fields['usernameLower'],
+      'photoUrl': fields['photoUrl'] ?? '',
+      'avatarMode': fields['avatarMode'] ?? 'avatar',
+      'avatarKey': fields['avatarKey'] ?? 'sage',
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    await batch.commit();
+  }
+
+  Future<void> updateAvatar({required String mode, String key = 'sage'}) async {
+    if (mode != 'avatar') {
+      throw const ProfileValidationException('Choose a valid profile option.');
+    }
+    if (mode == 'avatar' && !avatarKeys.contains(key)) {
+      throw const ProfileValidationException('Choose one of the available avatars.');
+    }
+    final user = _user;
+    final current = await loadProfile();
+    final priorUrl = current.photoUrl;
+    final fields = <String, dynamic>{
+      'username': current.username,
+      'usernameLower': current.username.toLowerCase(),
+      'email': current.email,
+      'avatarMode': mode,
+      'avatarKey': key,
+      'photoUrl': '',
+    };
+    await _saveAvatarFields(user.uid, fields);
+    if (priorUrl.isNotEmpty) {
+      try { await _storage.refFromURL(priorUrl).delete(); } catch (_) {}
+    }
   }
 
   Future<void> updateUsername(String value) async {
@@ -390,6 +490,13 @@ class ProfileService {
     };
     if (Firebase.apps.isNotEmpty) {
       try {
+        final accountProfile = await _userDocument(user.uid).get();
+        final accountData = accountProfile.data() ?? const <String, dynamic>{};
+        (payload['account'] as Map<String, Object?>).addAll({
+          'avatarMode': accountData['avatarMode'] ?? 'avatar',
+          'avatarKey': accountData['avatarKey'] ?? 'sage',
+          'photoUrl': accountData['photoUrl'] ?? '',
+        });
         final results = await Future.wait([
           _userDocument(user.uid)
               .collection('blocked')
@@ -520,6 +627,10 @@ class ProfileService {
     final user = _user;
     try {
       final profile = await _userDocument(user.uid).get();
+      final photoUrl = profile.data()?['photoUrl'] as String? ?? '';
+      if (photoUrl.isNotEmpty) {
+        try { await _storage.refFromURL(photoUrl).delete(); } on Object { /* Best-effort cleanup. */ }
+      }
       final lower = profile.data()?['usernameLower'] as String?;
       final batch = _firestore.batch();
       batch.delete(_userDocument(user.uid));

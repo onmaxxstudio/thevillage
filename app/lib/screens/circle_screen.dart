@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/profile_service.dart';
 import '../services/circle_service.dart';
 import '../navigation/village_navigation_scope.dart';
+import '../widgets/village_avatar.dart';
 
 class CircleScreen extends StatefulWidget {
   const CircleScreen({super.key});
@@ -765,23 +766,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 31,
-                  backgroundColor: member.color,
-                  backgroundImage: member.photoUrl.isEmpty
-                      ? null
-                      : NetworkImage(member.photoUrl),
-                  child: member.photoUrl.isEmpty
-                      ? Text(
-                          member.initials,
-                          style: const TextStyle(
-                            color: ink,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        )
-                      : null,
-                ),
+                VillageAvatar(uid: member.uid, radius: 31),
                 const SizedBox(width: 13),
                 Expanded(
                   child: Column(
@@ -1060,18 +1045,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                     ),
                     child: Row(
                       children: [
-                        CircleAvatar(
-                          backgroundColor: const Color(0xFFFFE8BE),
-                          child: Text(
-                            result!.username.isEmpty
-                                ? '?'
-                                : result!.username[0].toUpperCase(),
-                            style: const TextStyle(
-                              color: ink,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
+                        VillageAvatar(uid: result!.uid, radius: 20),
                         const SizedBox(width: 11),
                         Expanded(
                           child: Text(
@@ -1191,7 +1165,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             const Divider(color: line),
             for (final member in members)
               ListTile(
-                leading: CircleAvatar(backgroundColor: member.color, child: Text(member.initials, style: const TextStyle(color: ink, fontWeight: FontWeight.w800))),
+                leading: VillageAvatar(uid: member.uid, radius: 20),
                 title: Text(member.name),
                 subtitle: Text(member.status),
                 trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
@@ -1482,10 +1456,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                                 ? const SizedBox.shrink()
                                 : hasPerson
                                     ? _orbitPerson(
-                                        people[memberIndex].initials,
                                         people[memberIndex].name.replaceFirst('@', ''),
-                                        people[memberIndex].color,
-                                        people[memberIndex].photoUrl,
+                                        people[memberIndex].uid,
                                         () => _openMemberProfile(people[memberIndex]),
                                       )
                                     : _orbitAddAvatar(),
@@ -1509,7 +1481,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       top: centerY - 78,
                       child: GestureDetector(
                         onTap: _startAskMyCircle,
-                        child: _orbitYou(name),
+                        child: _orbitYou(),
                       ),
                     ),
                     Positioned(
@@ -1609,35 +1581,22 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _orbitYou(String name) {
-    final initial = name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase();
+  Widget _orbitYou() {
     final photoUrl = _isTestCircle
         ? 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=320&q=85'
         : FirebaseAuth.instance.currentUser?.photoURL ?? '';
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: const BoxDecoration(shape: BoxShape.circle, color: gold),
-      child: CircleAvatar(
-        radius: 54,
-        backgroundColor: sage,
-        backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
-        child: photoUrl.isEmpty
-            ? Text(
-                initial,
-                style: GoogleFonts.playfairDisplay(
-                  color: Colors.white, fontSize: 42, fontWeight: FontWeight.w700,
-                ),
-              )
-            : null,
-      ),
+      child: _isTestCircle
+          ? CircleAvatar(radius: 54, backgroundImage: NetworkImage(photoUrl))
+          : VillageAvatar(uid: FirebaseAuth.instance.currentUser?.uid, radius: 54),
     );
   }
 
   Widget _orbitPerson(
-    String initials,
     String name,
-    Color color,
-    String photoUrl,
+    String? uid,
     VoidCallback onTap,
   ) {
     return Tooltip(
@@ -1655,14 +1614,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               BoxShadow(color: Color(0x16000000), blurRadius: 7, offset: Offset(0, 3)),
             ],
           ),
-          child: CircleAvatar(
-            radius: 28,
-            backgroundColor: color,
-            backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
-            child: photoUrl.isEmpty
-                ? Icon(Icons.person_rounded, color: sage.withValues(alpha: .78), size: 27)
-                : null,
-          ),
+          child: VillageAvatar(uid: uid, radius: 28),
         ),
       ),
     );
@@ -2010,16 +1962,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                                 final person = visible[index];
                                 return ListTile(
                                   contentPadding: const EdgeInsets.symmetric(vertical: 3),
-                                  leading: CircleAvatar(
-                                    backgroundColor: person.color,
-                                    backgroundImage: person.photoUrl.isEmpty
-                                        ? null
-                                        : NetworkImage(person.photoUrl),
-                                    child: person.photoUrl.isEmpty
-                                        ? Text(person.initials,
-                                            style: const TextStyle(color: ink, fontWeight: FontWeight.w800))
-                                        : null,
-                                  ),
+                                  leading: VillageAvatar(uid: person.uid, radius: 20),
                                   title: Text(person.name.replaceFirst('@', '')),
                                   subtitle: Text(person.status),
                                   trailing: const Icon(Icons.chevron_right_rounded),
@@ -2042,7 +1985,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   }
 
   Widget _myStatusStrip(String name, String profileStatus) {
-    final initial = name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
@@ -2055,13 +1997,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           Stack(
             clipBehavior: Clip.none,
             children: [
-              CircleAvatar(
-                radius: 23,
-                backgroundColor: sage,
-                child: Text(initial,
-                  style: GoogleFonts.playfairDisplay(
-                    color: Colors.white, fontSize: 19, fontWeight: FontWeight.w700)),
-              ),
+              VillageAvatar(uid: FirebaseAuth.instance.currentUser?.uid, radius: 23),
               Positioned(
                 right: -1, bottom: -1,
                 child: Container(
@@ -2119,17 +2055,15 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         Row(children: [
           _personShelfItem(
             label: 'You',
-            initials: name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase(),
-            color: sage,
             status: _shortStatusLabel(),
             isYou: true,
+            uid: FirebaseAuth.instance.currentUser?.uid,
           ),
           for (final person in people)
             _personShelfItem(
               label: person.name.replaceFirst('@', ''),
-              initials: person.initials,
-              color: person.color,
               status: person.status,
+              uid: person.uid,
               onTap: () => _openMemberProfile(person),
             ),
           for (var i = people.length; i < 3; i++) _addPersonShelfItem(),
@@ -2139,8 +2073,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   }
 
   Widget _personShelfItem({
-    required String label, required String initials, required Color color,
-    required String status, bool isYou = false, VoidCallback? onTap,
+    required String label,
+    required String status,
+    String? uid,
+    bool isYou = false,
+    VoidCallback? onTap,
   }) {
     return Expanded(
       child: InkWell(
@@ -2148,10 +2085,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         borderRadius: BorderRadius.circular(18),
         child: Column(children: [
           Stack(clipBehavior: Clip.none, children: [
-            CircleAvatar(
-              radius: 27, backgroundColor: color,
-              child: Text(initials, style: TextStyle(
-                color: isYou ? Colors.white : ink, fontWeight: FontWeight.w800, fontSize: 16)),
+            VillageAvatar(
+              uid: uid ?? (isYou ? FirebaseAuth.instance.currentUser?.uid : null),
+              radius: 27,
             ),
             Positioned(
               right: -1, bottom: -1,
@@ -2298,7 +2234,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: _myCircleProfile(name)),
+              Expanded(child: _myCircleProfile()),
               for (final person in people)
                 Expanded(child: _trustedPerson(person)),
               ...List.generate(
@@ -2347,8 +2283,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _myCircleProfile(String name) {
-    final initial = name.isEmpty ? 'Y' : name.substring(0, 1).toUpperCase();
+  Widget _myCircleProfile() {
     final profileStatus =
         sharedStatusNote.trim().isEmpty ? _shortStatusLabel() : sharedStatusNote.trim();
     return InkWell(
@@ -2359,18 +2294,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           Stack(
             clipBehavior: Clip.none,
             children: [
-              CircleAvatar(
-                radius: 27,
-                backgroundColor: sage,
-                child: Text(
-                  initial,
-                  style: GoogleFonts.playfairDisplay(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+              VillageAvatar(uid: FirebaseAuth.instance.currentUser?.uid, radius: 27),
               Positioned(
                 right: -1,
                 bottom: -1,
@@ -2444,12 +2368,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           Stack(
             clipBehavior: Clip.none,
             children: [
-              CircleAvatar(
-                radius: 27,
-                backgroundColor: person.color,
-                child: Text(person.initials,
-                    style: const TextStyle(color: ink, fontWeight: FontWeight.w800)),
-              ),
+              VillageAvatar(uid: person.uid, radius: 27),
               Positioned(
                 right: -1,
                 bottom: -1,
@@ -2527,16 +2446,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               ...members.map(
                 (member) => ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor: member.color,
-                    backgroundImage: member.photoUrl.isEmpty
-                        ? null
-                        : NetworkImage(member.photoUrl),
-                    child: member.photoUrl.isEmpty
-                        ? Text(member.initials,
-                            style: const TextStyle(color: ink, fontWeight: FontWeight.w800))
-                        : null,
-                  ),
+                  leading: VillageAvatar(uid: member.uid, radius: 20),
                   title: Text(member.name.replaceFirst('@', '')),
                   subtitle: Text(member.status),
                   trailing: const Icon(Icons.chevron_right_rounded),
@@ -2834,16 +2744,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: person.color,
-            child: Text(
-              person.initials,
-              style: const TextStyle(
-                color: ink,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
+          VillageAvatar(uid: person.uid, radius: 20),
           const SizedBox(width: 11),
           Expanded(
             child: Column(

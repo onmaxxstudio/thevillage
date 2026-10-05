@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/admin_content_service.dart';
 import '../services/community_hub_service.dart';
 import '../services/village_post_service.dart';
+import '../widgets/village_avatar.dart';
 import 'ask_village_screen.dart';
 import 'village_feed_screen.dart';
 
@@ -632,16 +633,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
+                  VillageAvatar(
+                    uid: post.authorUid,
                     radius: 17,
-                    backgroundColor: softSage,
-                    child: Icon(
-                      post.author.toLowerCase().contains('anonymous')
-                          ? Icons.masks_outlined
-                          : Icons.person_outline_rounded,
-                      size: 18,
-                      color: sage,
-                    ),
+                    anonymous: post.author.toLowerCase().contains('anonymous'),
                   ),
                   const SizedBox(width: 9),
                   Expanded(

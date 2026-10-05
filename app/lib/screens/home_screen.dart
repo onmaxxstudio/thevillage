@@ -9,6 +9,7 @@ import '../services/notification_service.dart';
 import '../services/profile_service.dart';
 import '../services/personalization_service.dart';
 import '../navigation/village_navigation_scope.dart';
+import '../widgets/village_avatar.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
@@ -605,19 +606,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 for (final member in circleMembers.take(4))
                   Align(
                     widthFactor: .76,
-                    child: CircleAvatar(
-                      radius: 15,
-                      backgroundColor: paleSage,
-                      child: Text(
-                        member.username.isEmpty
-                            ? '?'
-                            : member.username[0].toUpperCase(),
-                        style: const TextStyle(
-                          color: sage,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
+                    child: VillageAvatar(uid: member.uid, radius: 15),
                   ),
               ],
               const Spacer(),

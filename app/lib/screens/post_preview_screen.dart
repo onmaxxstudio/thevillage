@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../navigation/village_navigation_scope.dart';
+import '../widgets/village_avatar.dart';
 import '../services/village_post_service.dart';
 
 class VillagePostDraft {
@@ -77,10 +79,7 @@ class PostPreviewScreen extends StatelessWidget {
                         padding: const EdgeInsets.all(17),
                         child: Row(
                           children: [
-                            CircleAvatar(
-                              backgroundColor: const Color(0xFFE5E7D9),
-                              child: Icon(post.anonymous ? Icons.visibility_off_outlined : Icons.person_rounded, color: sage),
-                            ),
+                            VillageAvatar(uid: post.anonymous ? null : FirebaseAuth.instance.currentUser?.uid, anonymous: post.anonymous),
                             const SizedBox(width: 10),
                             Expanded(child: Text('Posting as\n$name', style: const TextStyle(fontWeight: FontWeight.w700))),
                             const Icon(Icons.groups_outlined, color: sage),
