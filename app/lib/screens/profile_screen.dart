@@ -249,7 +249,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (confirmed != true) return;
 
     try {
-      await service.deleteAccount();
+      try {
+        await service.deleteAccount();
+      } on FirebaseAuthException catch (error) {
+        if (error.code != 'requires-recent-login') rethrow;
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null || !await _reauthenticateForDeletion(user)) return;
+        await service.deleteAccount();
+      }
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(builder: (_) => const WelcomeScreen()),
@@ -258,6 +265,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (error) {
       if (mounted) showMessage(messageFor(error));
     }
+  }
+
+  Future<bool> _reauthenticateForDeletion(User user) async {
+    final providers = user.providerData.map((info) => info.providerId).toSet();
+    if (providers.contains('password')) {
+      final controller = TextEditingController();
+      final password = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: cream,
+          title: const Text('Confirm it’s you'),
+          content: TextField(
+            controller: controller,
+            obscureText: true,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Account password'),
+            onSubmitted: (value) => Navigator.pop(dialogContext, value),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, controller.text),
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
+      controller.dispose();
+      if (password == null || password.isEmpty) return false;
+      await AuthService().reauthenticateForAccountDeletion(password: password);
+      return true;
+    }
+
+    final providerName = providers.contains('google.com')
+        ? 'Google'
+        : providers.contains('apple.com')
+            ? 'Apple'
+            : null;
+    if (providerName == null) {
+      showMessage('Sign out and sign back in, then try deleting your account again.');
+      return false;
+    }
+
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            backgroundColor: cream,
+            title: const Text('Confirm it’s you'),
+            content: Text('Continue with $providerName to verify your account.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  try {
+                    await AuthService().reauthenticateForAccountDeletion();
+                    if (dialogContext.mounted) {
+                      Navigator.pop(dialogContext, true);
+                    }
+                  } catch (error) {
+                    if (dialogContext.mounted) {
+                      Navigator.pop(dialogContext, false);
+                    }
+                    if (mounted) showMessage(messageFor(error));
+                  }
+                },
+                child: Text('Continue with $providerName'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   String messageFor(Object error) {
