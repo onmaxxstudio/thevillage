@@ -1237,9 +1237,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                         textAlign: TextAlign.center,
                         style: GoogleFonts.playfairDisplay(
                           color: sage,
-                          fontSize: 48,
+                          fontSize: 42,
                           height: .95,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 12),
