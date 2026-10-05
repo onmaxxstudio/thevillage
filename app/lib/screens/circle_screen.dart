@@ -1219,43 +1219,49 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
+          constraints: const BoxConstraints(maxWidth: 620),
+            child: Column(
               children: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      'assets/images/welcome_branch.png',
-                      height: 18,
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      'My Circle',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.playfairDisplay(
-                        color: sage,
-                        fontSize: 48,
-                        height: .95,
-                        fontWeight: FontWeight.w700,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'assets/images/welcome_branch.png',
+                        height: 18,
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'REAL PEOPLE  •  DEEPER DAYS',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: gold,
-                        fontSize: 9,
-                        letterSpacing: 3.1,
-                        fontWeight: FontWeight.w800,
+                      const SizedBox(height: 5),
+                      Text(
+                        'My Circle',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.playfairDisplay(
+                          color: sage,
+                          fontSize: 48,
+                          height: .95,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 12),
+                      const Text(
+                        'REAL PEOPLE  •  DEEPER DAYS',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: gold,
+                          fontSize: 9,
+                          letterSpacing: 3.1,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 18),
-                _activeCircleLayout(),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(18, 0, 18, 28),
+                    children: [_activeCircleLayout()],
+                  ),
+                ),
               ],
             ),
           ),
@@ -3138,6 +3144,7 @@ class _OrbitRingPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.25;
     canvas.drawCircle(center, radius, ring);
+
   }
 
   @override
