@@ -202,7 +202,8 @@ class _VillageAppShellState extends State<VillageAppShell> {
                 index: selectedIndex,
                 children: List.generate(rootPages.length, buildTabNavigator),
               ),
-              if (_tabRouteDepth[selectedIndex] == 0 &&
+              if (selectedIndex != 0 &&
+                  _tabRouteDepth[selectedIndex] == 0 &&
                   !(selectedIndex == 2 && firstCommunityId != null))
                 Positioned(
                   top: 0,
