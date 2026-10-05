@@ -40,6 +40,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
     _routeObservers = List.generate(
       5,
       (index) => _VillageTabRouteObserver(
+        rootRouteName: 'village-tab-$index',
         onDepthChanged: (depth) => _setTabRouteDepth(index, depth),
       ),
     );
@@ -239,19 +240,31 @@ class _VillageAppShellState extends State<VillageAppShell> {
 }
 
 class _VillageTabRouteObserver extends NavigatorObserver {
-  _VillageTabRouteObserver({required this.onDepthChanged});
+  _VillageTabRouteObserver({
+    required this.rootRouteName,
+    required this.onDepthChanged,
+  });
 
+  final String rootRouteName;
   final ValueChanged<int> onDepthChanged;
   int _depth = 0;
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    if (previousRoute != null) onDepthChanged(++_depth);
+    if (route.settings.name != rootRouteName) onDepthChanged(++_depth);
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    if (previousRoute != null) {
+    if (route.settings.name != rootRouteName) {
+      _depth = _depth > 0 ? _depth - 1 : 0;
+      onDepthChanged(_depth);
+    }
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route.settings.name != rootRouteName) {
       _depth = _depth > 0 ? _depth - 1 : 0;
       onDepthChanged(_depth);
     }
