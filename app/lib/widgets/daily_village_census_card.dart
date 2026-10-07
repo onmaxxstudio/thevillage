@@ -28,7 +28,7 @@ class _DailyVillageCensusCardState extends State<DailyVillageCensusCard> {
       builder: (context, snapshot) {
         if (!snapshot.hasData || !snapshot.data!.exists || snapshot.data!.data()?['status'] != 'published') return const SizedBox.shrink();
         final doc = snapshot.data!;
-        final data = doc.data();
+        final data = doc.data()!;
         final options = List<String>.from(data['options'] ?? []);
         return Container(
           width: double.infinity,
