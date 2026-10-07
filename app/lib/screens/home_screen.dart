@@ -10,6 +10,7 @@ import '../services/profile_service.dart';
 import '../services/personalization_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import '../widgets/village_avatar.dart';
+import '../widgets/daily_village_census_card.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
@@ -221,6 +222,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             _buildDashboardRow(),
                             const SizedBox(height: 14),
                             _buildAskCard(),
+                            const SizedBox(height: 14),
+                            const DailyVillageCensusCard(),
                             const SizedBox(height: 18),
                             _buildCommunityHubCard(),
                             const SizedBox(height: 14),
