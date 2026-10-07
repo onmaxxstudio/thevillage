@@ -14,6 +14,8 @@ class VillageCensusService {
   CollectionReference<Map<String, dynamic>> get questions =>
       _db.collection('village_census_questions');
 
+  DocumentReference<Map<String, dynamic>> questionForDate(String dateKey) => questions.doc(dateKey);
+
   Stream<QuerySnapshot<Map<String, dynamic>>> watchQuestions() =>
       questions.orderBy('dateKey', descending: true).limit(90).snapshots();
 
