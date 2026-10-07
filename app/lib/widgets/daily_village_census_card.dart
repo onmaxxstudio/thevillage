@@ -23,12 +23,11 @@ class _DailyVillageCensusCardState extends State<DailyVillageCensusCard> {
   @override
   Widget build(BuildContext context) {
     if (FirebaseAuth.instance.currentUser == null) return const SizedBox.shrink();
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: service.questions.where('dateKey', isEqualTo: dayKey)
-          .where('status', isEqualTo: 'published').limit(1).snapshots(),
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: service.questionForDate(dayKey).snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const SizedBox.shrink();
-        final doc = snapshot.data!.docs.first;
+        if (!snapshot.hasData || !snapshot.data!.exists || snapshot.data!.data()?['status'] != 'published') return const SizedBox.shrink();
+        final doc = snapshot.data!;
         final data = doc.data();
         final options = List<String>.from(data['options'] ?? []);
         return Container(
