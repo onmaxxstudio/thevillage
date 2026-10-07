@@ -512,6 +512,26 @@ service cloud.firestore {
       allow delete: if isSelf(uid);
     }
 
+    // Daily census: published questions readable by members, management by admins.
+    match /village_census_questions/{questionId} {
+      allow get, list: if signedIn() &&
+        (isAdmin() || resource.data.status == 'published');
+      allow create, update, delete: if isAdmin();
+
+      match /votes/{uid} {
+        allow get: if isSelf(uid) || isAdmin();
+        allow list: if isAdmin();
+        allow create: if isSelf(uid) &&
+          exists(/databases/$(database)/documents/village_census_questions/$(questionId)) &&
+          get(/databases/$(database)/documents/village_census_questions/$(questionId)).data.status == 'published' &&
+          request.resource.data.keys().hasOnly(['option', 'createdAt']) &&
+          request.resource.data.option is string &&
+          request.resource.data.option in get(/databases/$(database)/documents/village_census_questions/$(questionId)).data.options &&
+          request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
