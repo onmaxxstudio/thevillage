@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/admin_access_service.dart';
 import '../services/village_census_service.dart';
 
@@ -30,7 +31,7 @@ class _VillageCensusAdminScreenState extends State<VillageCensusAdminScreen> {
         !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(date.text)) return;
     setState(() => saving = true);
     try {
-      final id = '${date.text}_${DateTime.now().microsecondsSinceEpoch}';
+      final id = date.text;
       await service.createQuestion(id: id, text: question.text, options: options, dateKey: date.text, category: category.text);
       question.clear();
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Draft saved. Publish when ready.')));
@@ -54,6 +55,7 @@ class _VillageCensusAdminScreenState extends State<VillageCensusAdminScreen> {
           TextField(controller: category, decoration: const InputDecoration(labelText: 'Category')),
           const SizedBox(height: 12),
           FilledButton(onPressed: saving ? null : add, child: const Text('Save question draft')),
+          const Text('Only one question can be scheduled per date. Answers are aggregated; individual votes are not exported.', style: TextStyle(fontSize: 12)),
           const Divider(height: 36),
           const Text('Question history and results', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -80,6 +82,15 @@ class _VillageCensusAdminScreenState extends State<VillageCensusAdminScreen> {
                           final total = counts.data!.values.fold<int>(0, (a,b) => a+b);
                           return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             Text('Total votes: $total'),
+                            TextButton.icon(icon: const Icon(Icons.copy_outlined), label: const Text('Copy CSV summary'), onPressed: () async {
+                              String cell(String value) => '\"${value.replaceAll('\"', '\"\"')}\"';
+                              final rows = <String>['date,category,question,answer,votes,total'];
+                              for (final entry in counts.data!.entries) {
+                                rows.add([doc.data()['dateKey'], doc.data()['category'], doc.data()['text'], entry.key, entry.value, total].map((e) => cell('$e')).join(','));
+                              }
+                              await Clipboard.setData(ClipboardData(text: rows.join('\\n')));
+                              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('CSV summary copied. Paste into a .csv file.')));
+                            }),
                             for (final entry in counts.data!.entries)
                               Text('${entry.key}: ${entry.value} (${total == 0 ? 0 : (100*entry.value/total).round()}%)'),
                           ]);
