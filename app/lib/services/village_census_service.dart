@@ -56,7 +56,11 @@ class VillageCensusService {
     if (options.length < 2 || options.length > 4 || options.toSet().length != options.length) {
       throw ArgumentError('Provide 2–4 unique answers');
     }
-    await questions.doc(id).set({
+    final ref = questions.doc(id);
+    await _db.runTransaction((transaction) async {
+      final existing = await transaction.get(ref);
+      if (existing.exists) throw StateError('A question is already scheduled for this date');
+      transaction.set(ref, {
       'text': text.trim(),
       'options': options,
       'dateKey': dateKey,
@@ -64,6 +68,7 @@ class VillageCensusService {
       'status': 'draft',
       'sponsored': false,
       'createdAt': FieldValue.serverTimestamp(),
+      });
     });
   }
 
