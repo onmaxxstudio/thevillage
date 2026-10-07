@@ -83,12 +83,12 @@ class _VillageCensusAdminScreenState extends State<VillageCensusAdminScreen> {
                           return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             Text('Total votes: $total'),
                             TextButton.icon(icon: const Icon(Icons.copy_outlined), label: const Text('Copy CSV summary'), onPressed: () async {
-                              String cell(String value) => '\"${value.replaceAll('\"', '\"\"')}\"';
+                              String cell(String value) => '"${value.replaceAll('"', '""')}"';
                               final rows = <String>['date,category,question,answer,votes,total'];
                               for (final entry in counts.data!.entries) {
                                 rows.add([doc.data()['dateKey'], doc.data()['category'], doc.data()['text'], entry.key, entry.value, total].map((e) => cell('$e')).join(','));
                               }
-                              await Clipboard.setData(ClipboardData(text: rows.join('\\n')));
+                              await Clipboard.setData(ClipboardData(text: rows.join('\n')));
                               if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('CSV summary copied. Paste into a .csv file.')));
                             }),
                             for (final entry in counts.data!.entries)
