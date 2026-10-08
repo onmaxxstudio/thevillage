@@ -16,6 +16,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  deploy_rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out app
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Firebase
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_THE_VILLAGE_D7AF4 }}
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Deploy Firestore rules
+        working-directory: app
+        run: firebase deploy --only firestore:rules --project the-village-d7af4
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -58,7 +76,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs: [deploy_rules, build]
     steps:
       - name: Publish website
         id: deployment

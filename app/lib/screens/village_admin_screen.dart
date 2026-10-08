@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/admin_content_service.dart';
 import 'community_hub_feature_admin_screen.dart';
 import 'admin_moderation_screen.dart';
+import 'village_census_admin_screen.dart';
 
 class VillageAdminScreen extends StatefulWidget {
   const VillageAdminScreen({super.key});
@@ -78,6 +79,13 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
                   label: const Text('Moderate Posts & Review Reports'),
                 ),
               ),
+              const SizedBox(height: 10),
+              SizedBox(width: double.infinity, child: FilledButton.icon(
+                style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.symmetric(vertical: 14)),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VillageCensusAdminScreen())),
+                icon: const Icon(Icons.poll_outlined),
+                label: const Text('Census Insights & Daily Polls'),
+              )),
               const SizedBox(height: 14),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
