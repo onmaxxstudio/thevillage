@@ -92,7 +92,7 @@ class _VillageCensusAdminScreenState extends State<VillageCensusAdminScreen> {
                               for (final entry in counts.data!.entries) {
                                 rows.add([doc.data()['dateKey'], doc.data()['category'], doc.data()['text'], entry.key, entry.value, total].map((e) => cell('$e')).join(','));
                               }
-                              await Clipboard.setData(ClipboardData(text: rows.join('\\n')));
+                              await Clipboard.setData(ClipboardData(text: rows.join('\n')));
                               if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('CSV summary copied. Paste into a .csv file.')));
                             }),
                             for (final entry in counts.data!.entries)
