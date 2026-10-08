@@ -12,8 +12,8 @@ class VillageCensusAdminScreen extends StatefulWidget {
 class _VillageCensusAdminScreenState extends State<VillageCensusAdminScreen> {
   final service = VillageCensusService();
   final access = AdminAccessService();
-  final question = TextEditingController();
-  final choices = TextEditingController(text: 'Yes\nNo');
+  final question = TextEditingController(text: 'Who do you find more difficult to understand?');
+  final choices = TextEditingController(text: 'Men\nWomen\nIt depends');
   final date = TextEditingController();
   final category = TextEditingController(text: 'Community');
   bool saving = false;
@@ -27,8 +27,9 @@ class _VillageCensusAdminScreenState extends State<VillageCensusAdminScreen> {
   void dispose() { question.dispose(); choices.dispose(); date.dispose(); category.dispose(); super.dispose(); }
   Future<void> add() async {
     final options = choices.text.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    final selectedDate = DateTime.tryParse(date.text);
     if (question.text.trim().isEmpty || options.length < 2 || options.length > 4 ||
-        !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(date.text)) return;
+        selectedDate == null || selectedDate.toIso8601String().substring(0, 10) != date.text) return;
     setState(() => saving = true);
     try {
       final id = date.text;
@@ -55,7 +56,7 @@ class _VillageCensusAdminScreenState extends State<VillageCensusAdminScreen> {
           TextField(controller: category, decoration: const InputDecoration(labelText: 'Category')),
           const SizedBox(height: 12),
           FilledButton(onPressed: saving ? null : add, child: const Text('Save question draft')),
-          const Text('Only one question can be scheduled per date. Answers are aggregated; individual votes are not exported.', style: TextStyle(fontSize: 12)),
+          const Text('One question per date. The starter question is prefilled. Only opted-in answers count toward report totals; CSV is available after 20 members opt in.', style: TextStyle(fontSize: 12)),
           const Divider(height: 36),
           const Text('Question history and results', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -80,15 +81,18 @@ class _VillageCensusAdminScreenState extends State<VillageCensusAdminScreen> {
                         builder: (context, counts) {
                           if (!counts.hasData) return const Text('Loading vote totals…');
                           final total = counts.data!.values.fold<int>(0, (a,b) => a+b);
+                          if (total < service.minimumReportResponses) {
+                            return const Text('Report results are hidden until at least 20 members opt in.');
+                          }
                           return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('Total votes: $total'),
+                            Text('Opt-in responses: $total'),
                             TextButton.icon(icon: const Icon(Icons.copy_outlined), label: const Text('Copy CSV summary'), onPressed: () async {
                               String cell(String value) => '"${value.replaceAll('"', '""')}"';
                               final rows = <String>['date,category,question,answer,votes,total'];
                               for (final entry in counts.data!.entries) {
                                 rows.add([doc.data()['dateKey'], doc.data()['category'], doc.data()['text'], entry.key, entry.value, total].map((e) => cell('$e')).join(','));
                               }
-                              await Clipboard.setData(ClipboardData(text: rows.join('\n')));
+                              await Clipboard.setData(ClipboardData(text: rows.join('\\n')));
                               if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('CSV summary copied. Paste into a .csv file.')));
                             }),
                             for (final entry in counts.data!.entries)
