@@ -11,6 +11,9 @@ class VillageCensusService {
   final FirebaseFirestore _db;
   final FirebaseAuth _auth;
 
+  static const aggregateConsentVersion = 'census-consent-v1';
+  static const minimumReportResponses = 20;
+
   CollectionReference<Map<String, dynamic>> get questions =>
       _db.collection('village_census_questions');
 
@@ -28,7 +31,7 @@ class VillageCensusService {
     return questions.doc(id).collection('votes').doc(uid).snapshots();
   }
 
-  Future<void> vote({required String questionId, required String option}) async {
+  Future<void> vote({required String questionId, required String option, required bool allowAggregateUse}) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw StateError('Sign in to vote');
     final questionRef = questions.doc(questionId);
@@ -42,7 +45,12 @@ class VillageCensusService {
       if (previous.exists) throw StateError('You already voted');
       final options = List<String>.from(question.data()?['options'] ?? []);
       if (!options.contains(option)) throw ArgumentError('Invalid answer');
-      tx.set(voteRef, {'option': option, 'createdAt': FieldValue.serverTimestamp()});
+      tx.set(voteRef, {
+        'option': option,
+        'createdAt': FieldValue.serverTimestamp(),
+        'aggregateUseConsent': allowAggregateUse,
+        'consentVersion': allowAggregateUse ? aggregateConsentVersion : null,
+      });
     });
   }
 
@@ -80,7 +88,9 @@ class VillageCensusService {
     final counts = {for (final option in options) option: 0};
     for (final vote in votes.docs) {
       final answer = vote.data()['option'];
-      if (counts.containsKey(answer)) counts[answer] = counts[answer]! + 1;
+      if (vote.data()['aggregateUseConsent'] == true && counts.containsKey(answer)) {
+        counts[answer] = counts[answer]! + 1;
+      }
     }
     return counts;
   }
