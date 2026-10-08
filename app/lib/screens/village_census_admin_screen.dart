@@ -29,7 +29,9 @@ class _VillageCensusAdminScreenState extends State<VillageCensusAdminScreen> {
     final options = choices.text.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
     final selectedDate = DateTime.tryParse(date.text);
     if (question.text.trim().isEmpty || options.length < 2 || options.length > 4 ||
-        selectedDate == null || selectedDate.toIso8601String().substring(0, 10) != date.text) return;
+        selectedDate == null || selectedDate.toIso8601String().substring(0, 10) != date.text) {
+      return;
+    }
     setState(() => saving = true);
     try {
       final id = date.text;
@@ -81,7 +83,7 @@ class _VillageCensusAdminScreenState extends State<VillageCensusAdminScreen> {
                         builder: (context, counts) {
                           if (!counts.hasData) return const Text('Loading vote totals…');
                           final total = counts.data!.values.fold<int>(0, (a,b) => a+b);
-                          if (total < service.minimumReportResponses) {
+                          if (total < VillageCensusService.minimumReportResponses) {
                             return const Text('Report results are hidden until at least 20 members opt in.');
                           }
                           return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
