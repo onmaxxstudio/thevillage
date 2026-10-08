@@ -524,9 +524,14 @@ service cloud.firestore {
         allow create: if isSelf(uid) &&
           exists(/databases/$(database)/documents/village_census_questions/$(questionId)) &&
           get(/databases/$(database)/documents/village_census_questions/$(questionId)).data.status == 'published' &&
-          request.resource.data.keys().hasOnly(['option', 'createdAt']) &&
+          request.resource.data.keys().hasOnly(['option', 'createdAt', 'aggregateUseConsent', 'consentVersion']) &&
           request.resource.data.option is string &&
           request.resource.data.option in get(/databases/$(database)/documents/village_census_questions/$(questionId)).data.options &&
+          request.resource.data.aggregateUseConsent is bool &&
+          (request.resource.data.aggregateUseConsent == false ||
+            request.resource.data.consentVersion == 'census-consent-v1') &&
+          (request.resource.data.aggregateUseConsent == true ||
+            request.resource.data.consentVersion == null) &&
           request.resource.data.createdAt == request.time;
         allow update, delete: if false;
       }
