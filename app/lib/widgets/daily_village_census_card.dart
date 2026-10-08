@@ -13,6 +13,7 @@ class DailyVillageCensusCard extends StatefulWidget {
 class _DailyVillageCensusCardState extends State<DailyVillageCensusCard> {
   final service = VillageCensusService();
   bool submitting = false;
+  bool allowAggregateUse = false;
   String? error;
 
   String get dayKey {
@@ -55,23 +56,49 @@ class _DailyVillageCensusCardState extends State<DailyVillageCensusCard> {
                   return Text('Your vote: ${voteSnapshot.data!.data()?['option']}. Thanks for sharing your voice!',
                       style: const TextStyle(color: Color(0xFF355C3B), fontWeight: FontWeight.w600));
                 }
-                return Wrap(spacing: 8, runSpacing: 8, children: [
-                  for (final option in options)
-                    OutlinedButton(
-                      onPressed: submitting ? null : () async {
-                        setState(() { submitting = true; error = null; });
-                        try { await service.vote(questionId: doc.id, option: option); }
-                        catch (e) { if (mounted) setState(() => error = 'Could not save your vote. Please try again.'); }
-                        finally { if (mounted) setState(() => submitting = false); }
-                      },
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFFAF1),
-                        foregroundColor: const Color(0xFF355C3B),
-                        side: const BorderSide(color: Color(0xFF355C3B)),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      value: allowAggregateUse,
+                      onChanged: submitting
+                          ? null
+                          : (value) => setState(() => allowAggregateUse = value ?? false),
+                      title: const Text(
+                        'I agree my answer may be included in grouped reports that may be shared or sold to partners. My account and individual vote will not be shared.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF355C3B)),
                       ),
-                      child: Text(option.toUpperCase()),
                     ),
-                ]);
+                    Wrap(spacing: 8, runSpacing: 8, children: [
+                      for (final option in options)
+                        OutlinedButton(
+                          onPressed: submitting ? null : () async {
+                            setState(() { submitting = true; error = null; });
+                            try {
+                              await service.vote(
+                                questionId: doc.id,
+                                option: option,
+                                allowAggregateUse: allowAggregateUse,
+                              );
+                            } catch (e) {
+                              if (mounted) setState(() => error = 'Could not save your vote. Please try again.');
+                            } finally {
+                              if (mounted) setState(() => submitting = false);
+                            }
+                          },
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFFAF1),
+                            foregroundColor: const Color(0xFF355C3B),
+                            side: const BorderSide(color: Color(0xFF355C3B)),
+                          ),
+                          child: Text(option.toUpperCase()),
+                        ),
+                    ]),
+                  ],
+                );
               },
             ),
             if (error != null) Padding(
@@ -79,7 +106,7 @@ class _DailyVillageCensusCardState extends State<DailyVillageCensusCard> {
               child: Text(error!, style: const TextStyle(color: Colors.red)),
             ),
             const SizedBox(height: 6),
-            const Text('One vote per member. Results are reported in aggregate.',
+            const Text('One vote per member. Report summaries include only answers with opt-in and are hidden until at least 20 members opt in.',
                 style: TextStyle(fontSize: 11, color: Color(0xFF355C3B))),
           ]),
         );
