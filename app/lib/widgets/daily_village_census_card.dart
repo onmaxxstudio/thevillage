@@ -68,7 +68,7 @@ class _DailyVillageCensusCardState extends State<DailyVillageCensusCard> {
                           ? null
                           : (value) => setState(() => allowAggregateUse = value ?? false),
                       title: const Text(
-                        'I agree my answer may be included in grouped reports that may be shared or sold to partners. My account and individual vote will not be shared.',
+                        'I agree my answer may be included in grouped reports sold or shared with research or marketing partners. They receive totals only, not my account or individual vote.',
                         style: TextStyle(fontSize: 12, color: Color(0xFF355C3B)),
                       ),
                     ),
