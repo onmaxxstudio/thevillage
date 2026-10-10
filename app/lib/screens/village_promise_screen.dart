@@ -119,9 +119,45 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
                             style: GoogleFonts.allura(color: sage, fontSize: 40),
                           ),
                           const SizedBox(height: 14),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.fromLTRB(12, 9, 12, 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F1E8),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFC9CDB9)),
+                            ),
+                            child: CheckboxListTile(
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                              controlAffinity: ListTileControlAffinity.trailing,
+                              value: censusConsent,
+                              activeColor: sage,
+                              onChanged: saving
+                                  ? null
+                                  : (value) => setState(() => censusConsent = value ?? false),
+                              title: Text(
+                                'Help Us Learn & Grow (Optional)',
+                                style: GoogleFonts.playfairDisplay(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  color: ink,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Allow my Village Question answers to be included in grouped, anonymous reports shared or sold to research or marketing partners. Only totals are shared—not my account or individual vote. Not required to join or vote.',
+                                style: GoogleFonts.inter(fontSize: 11.5, color: ink, height: 1.32),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                           Text(
-                            'Please accept all three promises to continue.',
-                            style: GoogleFonts.inter(color: ink, fontSize: 14),
+                            'Your 3 required Village promises',
+                            style: GoogleFonts.inter(
+                              color: ink,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           for (var index = 0; index < promises.length; index++) ...[
@@ -141,25 +177,6 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
                             ),
                             const SizedBox(height: 10),
                           ],
-                          CheckboxListTile(
-                            contentPadding: EdgeInsets.zero,
-                            dense: true,
-                            controlAffinity: ListTileControlAffinity.leading,
-                            value: censusConsent,
-                            activeColor: sage,
-                            onChanged: saving
-                                ? null
-                                : (value) => setState(() => censusConsent = value ?? false),
-                            title: Text(
-                              'Optional: include my Village Question answers in grouped reports sold or shared with research or marketing partners. Only totals are shared—not my account or individual vote.',
-                              style: GoogleFonts.inter(fontSize: 12.5, color: ink, height: 1.35),
-                            ),
-                            subtitle: Text(
-                              'Not required to join or vote.',
-                              style: GoogleFonts.inter(fontSize: 11.5, color: ink),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
                           SizedBox(
                             width: double.infinity,
                             height: 55,
