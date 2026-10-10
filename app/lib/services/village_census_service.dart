@@ -31,9 +31,11 @@ class VillageCensusService {
     return questions.doc(id).collection('votes').doc(uid).snapshots();
   }
 
-  Future<void> vote({required String questionId, required String option, required bool allowAggregateUse}) async {
+  Future<void> vote({required String questionId, required String option, }) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw StateError('Sign in to vote');
+    final consentDoc = await _db.collection('village_census_consents').doc(uid).get();
+    final allowAggregateUse = consentDoc.data()?['allowAggregateUse'] == true;
     final questionRef = questions.doc(questionId);
     final voteRef = questionRef.collection('votes').doc(uid);
     await _db.runTransaction((tx) async {
