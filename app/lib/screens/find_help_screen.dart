@@ -846,8 +846,11 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
 
   Widget _helpStart() => guidedHelp
       ? ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 32), children: [
-          TextButton.icon(onPressed: () => setState(() => guidedHelp = false),
-            icon: const Icon(Icons.arrow_back), label: const Text('Browse all categories')),
+          TextButton.icon(
+            onPressed: () => setState(() => guidedHelp = false),
+            icon: const Icon(Icons.arrow_back),
+            label: const Text('Browse all categories'),
+          ),
           GuidedHelpAssistant(onBrowse: (need, state, zip) {
             setState(() {
               guidedHelp = false;
@@ -860,106 +863,222 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           }),
         ])
       : ListView(
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(18, 38, 18, 22),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
-                colors: [Color(0xFFF8CDB7), Color(0xFFFFE8CF), Color(0xFFF3C8AD)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(children: [
-              Text('Resource Directory', textAlign: TextAlign.center,
-                style: GoogleFonts.playfairDisplay(fontSize: 32,
-                  fontWeight: FontWeight.w800, color: ink)),
-              const SizedBox(height: 8),
-              const Text('Find free and low-cost programs\\nand services in your area.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: ink, height: 1.45)),
-              const SizedBox(height: 24),
-              Row(children: [
-                Expanded(child: OutlinedButton.icon(
-                  onPressed: _chooseState,
-                  icon: const Icon(Icons.location_on_outlined, color: sage),
-                  label: Text(selectedState ?? 'Choose state', overflow: TextOverflow.ellipsis),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white, foregroundColor: ink,
-                    padding: const EdgeInsets.symmetric(vertical: 14)),
-                )),
-                const SizedBox(width: 10),
-                Expanded(child: OutlinedButton.icon(
-                  onPressed: _chooseState,
-                  icon: const Icon(Icons.my_location_outlined, color: sage),
-                  label: const Text('State or ZIP', overflow: TextOverflow.ellipsis),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white, foregroundColor: ink,
-                    padding: const EdgeInsets.symmetric(vertical: 14)),
-                )),
-              ]),
-            ]),
-          ),
-          const SizedBox(height: 14),
-          _urgentBanner(),
-          const SizedBox(height: 14),
-          SegmentedButton<int>(
-            segments: const [
-              ButtonSegment(value: 0, label: Text('Find Help'), icon: Icon(Icons.map_outlined)),
-              ButtonSegment(value: 1, label: Text('Courses'), icon: Icon(Icons.auto_stories_outlined)),
-              ButtonSegment(value: 2, label: Text('Saved'), icon: Icon(Icons.bookmark_border_rounded)),
-            ],
-            selected: {view},
-            onSelectionChanged: (value) => setState(() => view = value.first),
-            style: ButtonStyle(visualDensity: VisualDensity.compact),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(17),
-            decoration: BoxDecoration(color: const Color(0xFFE8F0E7),
-              borderRadius: BorderRadius.circular(18)),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('You don\'t have to figure it out alone.',
-                style: GoogleFonts.playfairDisplay(fontSize: 21, fontWeight: FontWeight.bold, color: ink)),
-              const SizedBox(height: 7),
-              const Text('Answer three quick questions to find assistance that fits your situation.'),
-              const SizedBox(height: 12),
-              FilledButton.icon(onPressed: () => setState(() => guidedHelp = true),
-                icon: const Icon(Icons.auto_awesome_outlined),
-                label: const Text('Find Help for Me'),
-                style: FilledButton.styleFrom(backgroundColor: sage)),
-            ]),
-          ),
-          const SizedBox(height: 20),
-          ResourceCategoryBrowser(onExplore: _exploreCategory),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(color: const Color(0xFFFFF0DC),
-              borderRadius: BorderRadius.circular(17)),
-            child: Row(children: [
-              const CircleAvatar(backgroundColor: Color(0xFFFFE0B5),
-                child: Icon(Icons.lock_outline, color: Color(0xFFBD801F))),
-              const SizedBox(width: 12),
-              const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
                 children: [
-                  Text('See more resources', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                  Text('Explore the categories above to find available assistance.',
-                    style: TextStyle(fontSize: 12)),
-                ])),
+                  SizedBox(
+                    height: 280,
+                    width: double.infinity,
+                    child: Image.asset(
+                      'assets/images/home_breathing_hero_v2.jpg',
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                      errorBuilder: (_, __, ___) => const SizedBox.expand(),
+                    ),
+                  ),
+                  Container(
+                    height: 280,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xDFFFF1E4),
+                          Color(0xEFFFF2D7),
+                          Color(0xFDF7DABF),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 25, 18, 18),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Resource Directory',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 31,
+                            height: 1,
+                            fontWeight: FontWeight.w800,
+                            color: ink,
+                          ),
+                        ),
+                        const SizedBox(height: 9),
+                        const Text(
+                          'Find free and low-cost programs\nand services in your area.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 14.5, height: 1.35, color: ink),
+                        ),
+                        const SizedBox(height: 19),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: .96),
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: const [
+                              BoxShadow(color: Color(0x22000000), blurRadius: 10, offset: Offset(0, 4)),
+                            ],
+                          ),
+                          child: TextField(
+                            onSubmitted: (_) => _showZipResults(),
+                            decoration: InputDecoration(
+                              hintText: 'What do you need help with?',
+                              prefixIcon: const Icon(Icons.search_rounded, color: ink),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _locationButton(
+                                icon: Icons.location_on_rounded,
+                                label: selectedState == null
+                                    ? 'Choose state'
+                                    : stateNames[selectedState]!,
+                                onTap: _chooseState,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _locationButton(
+                                icon: Icons.my_location_rounded,
+                                label: localZip == null ? 'County or ZIP' : localZip!,
+                                onTap: _chooseZip,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+            ResourceCategoryBrowser(onExplore: _exploreCategory),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: () => setState(() => guidedHelp = true),
+              icon: const Icon(Icons.auto_awesome_outlined),
+              label: const Text('Help me find the right support'),
+              style: TextButton.styleFrom(foregroundColor: sage),
+            ),
+          ],
+        );
+
+  Widget _locationButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) => Material(
+        color: Colors.white.withValues(alpha: .96),
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            height: 53,
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: const [
+                BoxShadow(color: Color(0x1D000000), blurRadius: 8, offset: Offset(0, 3)),
+              ],
+            ),
+            child: Row(children: [
+              Icon(icon, color: const Color(0xFF0A9A69), size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                ),
+              ),
+              const Icon(Icons.keyboard_arrow_down_rounded, color: ink),
             ]),
           ),
-          const SizedBox(height: 14),
-          TextButton.icon(
-            onPressed: _chooseState,
-            icon: const Icon(Icons.map_outlined),
-            label: const Text('Browse state programs instead'),
-            style: TextButton.styleFrom(foregroundColor: sage),
-          ),
-        ],
+        ),
       );
+
+  Future<void> _chooseZip() async {
+    final enteredZip = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 6, 22, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Search by ZIP code',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                  color: ink,
+                ),
+              ),
+              const SizedBox(height: 7),
+              const Text(
+                'We’ll use it to point you to local programs and nonprofits.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Color(0xFF626A63)),
+              ),
+              const SizedBox(height: 18),
+              TextField(
+                controller: zipController,
+                autofocus: true,
+                maxLength: 5,
+                keyboardType: TextInputType.number,
+                onSubmitted: (value) => Navigator.pop(sheetContext, value.trim()),
+                decoration: InputDecoration(
+                  counterText: '',
+                  hintText: 'Enter ZIP code',
+                  prefixIcon: const Icon(Icons.location_on_outlined, color: sage),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    borderSide: const BorderSide(color: line),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(sheetContext, zipController.text.trim()),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: sage,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text('Find resources near me'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (enteredZip == null) return;
+    if (!RegExp(r'^\\d{5}$').hasMatch(enteredZip)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Enter a 5-digit ZIP code.')),
+        );
+      }
+      return;
+    }
+    if (mounted) setState(() => localZip = enteredZip);
+  }
 
   void _exploreCategory(String category) {
     // Existing resource data supports nine broad needs. Do not falsely label
