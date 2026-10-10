@@ -26,18 +26,18 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
   ResourceBrowseCategory? selected;
 
   static const categories = <ResourceBrowseCategory>[
-  ResourceBrowseCategory('Housing & Home Assistance', Icons.home_outlined, Color(0xFFE7EEE5), ['Emergency shelters & temporary housing', 'Rent, mortgage & eviction assistance', 'Home repairs, accessibility & weatherization', 'Furniture, appliances & household essentials', 'Homelessness day services & hygiene', 'Emergency displacement & house-fire recovery']),
-  ResourceBrowseCategory('Food, Clothing & Basic Needs', Icons.restaurant_outlined, Color(0xFFF8E9D7), ['Food pantries, groceries & meal programs', 'Clothing, shoes & community closets', 'Personal care, haircuts & hygiene supplies', 'Laundry, showers & essential services', 'Free goods, exchanges & equipment lending']),
-  ResourceBrowseCategory('Money, Bills & Financial Support', Icons.account_balance_wallet_outlined, Color(0xFFECE6F5), ['Emergency grants & financial assistance', 'Utilities, energy & water bills', 'Debt, credit & financial counseling', 'Government benefits & public assistance', 'Free tax preparation & financial education']),
-  ResourceBrowseCategory('Health, Mental Health & Recovery', Icons.favorite_border_rounded, Color(0xFFE6F1EF), ['Free and affordable healthcare', 'Dental, vision & hearing assistance', 'Mental health, counseling & emotional support', 'Addiction treatment & recovery', 'Medication, medical devices & assistive technology', 'Disability, brain injury & trauma support']),
-  ResourceBrowseCategory('Little Villagers — Kids & Teens', Icons.child_care_outlined, Color(0xFFFFEDD8), ['Free books, literacy & tutoring', 'School supplies, backpacks & technology', 'Children\'s clothing, shoes & special-occasion outfits', 'Beds, cribs, diapers & baby essentials', 'School meals & youth food programs', 'Free sports, swimming & equipment', 'Arts, music, STEM & creative programs', 'Camps, after-school care & mentoring', 'Free museums, outings & youth experiences', 'Children\'s health & developmental services', 'Birthdays, holidays, toys & gifts', 'Teen jobs, scholarships & college preparation']),
-  ResourceBrowseCategory('Parenting, Family & Relationships', Icons.family_restroom_outlined, Color(0xFFF5E7EB), ['Pregnancy, postpartum & lactation support', 'Childcare & daycare assistance', 'Parenting classes & family support', 'Marriage, couples & family counseling', 'Foster care, adoption & kinship support', 'Family respite & caregiver relief']),
-  ResourceBrowseCategory('Jobs, Education & Business', Icons.school_outlined, Color(0xFFE7EDF8), ['Job placement, resumes & interview support', 'Free job training, certifications & licensing', 'Work clothing, tools & transportation support', 'GED, adult literacy, ESL & higher education', 'Business grants, entrepreneurship & mentoring']),
-  ResourceBrowseCategory('Transportation & Technology', Icons.directions_car_outlined, Color(0xFFF6EDD8), ['Bus passes, medical rides & transportation assistance', 'Car repairs, driving lessons & license assistance', 'Affordable internet, phones & computers', 'Digital skills, online learning & technology safety']),
-  ResourceBrowseCategory('Legal, Safety & Life Transitions', Icons.gavel_outlined, Color(0xFFECE8E2), ['Free legal aid & consumer protection', 'Domestic violence, trafficking & abuse survivor support', 'Immigration, refugee & identity-document assistance', 'Reentry & incarceration-related family support', 'Grief, funeral & end-of-life assistance']),
-  ResourceBrowseCategory('Specialized Community Support', Icons.diversity_3_outlined, Color(0xFFE8EDE4), ['Veterans & military families', 'Seniors & aging services', 'Men\'s and women\'s support programs', 'LGBTQ+ community support', 'Foster youth & young adult independence', 'Support for hospitalized patients & families']),
-  ResourceBrowseCategory('Emergencies & Disaster Relief', Icons.health_and_safety_outlined, Color(0xFFF8E7DF), ['Hurricane, flood, fire & disaster recovery', 'Crisis hotlines & immediate safety assistance']),
-  ResourceBrowseCategory('Community, Recreation & Pets', Icons.pets_outlined, Color(0xFFE9E6F5), ['Free community events, festivals & entertainment', 'Community gardens, seed libraries & food-growing support', 'Volunteer programs, repair cafés & skill exchanges', 'Social connection, cultural programs & recreation', 'Pet food, veterinary assistance & animal support']),
+  ResourceBrowseCategory('Housing & Home Assistance', Icons.home_outlined, Color(0xFFEFDFF3), ['Emergency shelters & temporary housing', 'Rent, mortgage & eviction assistance', 'Home repairs, accessibility & weatherization', 'Furniture, appliances & household essentials', 'Homelessness day services & hygiene', 'Emergency displacement & house-fire recovery']),
+  ResourceBrowseCategory('Food, Clothing & Basic Needs', Icons.restaurant_outlined, Color(0xFFE1F1E5), ['Food pantries, groceries & meal programs', 'Clothing, shoes & community closets', 'Personal care, haircuts & hygiene supplies', 'Laundry, showers & essential services', 'Free goods, exchanges & equipment lending']),
+  ResourceBrowseCategory('Money, Bills & Financial Support', Icons.account_balance_wallet_outlined, Color(0xFFFFEBD0), ['Emergency grants & financial assistance', 'Utilities, energy & water bills', 'Debt, credit & financial counseling', 'Government benefits & public assistance', 'Free tax preparation & financial education']),
+  ResourceBrowseCategory('Health, Mental Health & Recovery', Icons.favorite_border_rounded, Color(0xFFF9DDE1), ['Free and affordable healthcare', 'Dental, vision & hearing assistance', 'Mental health, counseling & emotional support', 'Addiction treatment & recovery', 'Medication, medical devices & assistive technology', 'Disability, brain injury & trauma support']),
+  ResourceBrowseCategory('Little Villagers — Kids & Teens', Icons.child_care_outlined, Color(0xFFE8DDFB), ['Free books, literacy & tutoring', 'School supplies, backpacks & technology', 'Children\'s clothing, shoes & special-occasion outfits', 'Beds, cribs, diapers & baby essentials', 'School meals & youth food programs', 'Free sports, swimming & equipment', 'Arts, music, STEM & creative programs', 'Camps, after-school care & mentoring', 'Free museums, outings & youth experiences', 'Children\'s health & developmental services', 'Birthdays, holidays, toys & gifts', 'Teen jobs, scholarships & college preparation']),
+  ResourceBrowseCategory('Parenting, Family & Relationships', Icons.family_restroom_outlined, Color(0xFFDCECF9), ['Pregnancy, postpartum & lactation support', 'Childcare & daycare assistance', 'Parenting classes & family support', 'Marriage, couples & family counseling', 'Foster care, adoption & kinship support', 'Family respite & caregiver relief']),
+  ResourceBrowseCategory('Jobs, Education & Business', Icons.school_outlined, Color(0xFFDEF2E8), ['Job placement, resumes & interview support', 'Free job training, certifications & licensing', 'Work clothing, tools & transportation support', 'GED, adult literacy, ESL & higher education', 'Business grants, entrepreneurship & mentoring']),
+  ResourceBrowseCategory('Transportation & Technology', Icons.directions_car_outlined, Color(0xFFDCEAF9), ['Bus passes, medical rides & transportation assistance', 'Car repairs, driving lessons & license assistance', 'Affordable internet, phones & computers', 'Digital skills, online learning & technology safety']),
+  ResourceBrowseCategory('Legal, Safety & Life Transitions', Icons.gavel_outlined, Color(0xFFFFE9D3), ['Free legal aid & consumer protection', 'Domestic violence, trafficking & abuse survivor support', 'Immigration, refugee & identity-document assistance', 'Reentry & incarceration-related family support', 'Grief, funeral & end-of-life assistance']),
+  ResourceBrowseCategory('Specialized Community Support', Icons.diversity_3_outlined, Color(0xFFF9E1E4), ['Veterans & military families', 'Seniors & aging services', 'Men\'s and women\'s support programs', 'LGBTQ+ community support', 'Foster youth & young adult independence', 'Support for hospitalized patients & families']),
+  ResourceBrowseCategory('Emergencies & Disaster Relief', Icons.health_and_safety_outlined, Color(0xFFE9D9FA), ['Hurricane, flood, fire & disaster recovery', 'Crisis hotlines & immediate safety assistance']),
+  ResourceBrowseCategory('Community, Recreation & Pets', Icons.pets_outlined, Color(0xFFE9F1E2), ['Free community events, festivals & entertainment', 'Community gardens, seed libraries & food-growing support', 'Volunteer programs, repair cafés & skill exchanges', 'Social connection, cultural programs & recreation', 'Pet food, veterinary assistance & animal support']),
   ];
 
   @override
@@ -60,17 +60,20 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
           icon: const Icon(Icons.arrow_back_rounded),
           label: const Text('All categories'),
         ),
-        Text(selected!.title, style: GoogleFonts.playfairDisplay(
+        Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 14), decoration: BoxDecoration(color: const Color(0xFFFFDFCC), borderRadius: BorderRadius.circular(18)), child: Column(children: [Icon(selected!.icon, color: const Color(0xFFDE743F), size: 44), const SizedBox(height: 8), Text(selected!.title, textAlign: TextAlign.center, style: GoogleFonts.playfairDisplay(fontSize: 24, fontWeight: FontWeight.w700, color: ink)), const SizedBox(height: 5), const Text('Explore assistance and programs for your community.', textAlign: TextAlign.center)])),
+        const SizedBox(height: 10),
+        Text('Available support', style: GoogleFonts.playfairDisplay(
           fontSize: 24, fontWeight: FontWeight.w700, color: ink)),
         const SizedBox(height: 8),
-        const Text('Explore the types of support available in this category.'),
+        const Text('Choose a topic to explore available assistance.'),
         const SizedBox(height: 14),
         for (final subcategory in selected!.subcategories)
           Card(
             color: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             child: ListTile(
               title: Text(subcategory, style: const TextStyle(fontSize: 14)),
-              leading: Icon(selected!.icon, color: sage),
+              leading: CircleAvatar(backgroundColor: const Color(0xFFFFE4D4), child: Icon(selected!.icon, color: const Color(0xFFB56E4C))),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => widget.onExplore(selected!.title),
             ),
@@ -86,7 +89,7 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
         Text('Browse by Category', style: GoogleFonts.playfairDisplay(
           fontSize: 24, fontWeight: FontWeight.w700, color: ink)),
         const SizedBox(height: 5),
-        const Text('Explore help for you, your family and your community.',
+        const Text('12 categories · 67 subcategories',
           style: TextStyle(fontSize: 12.5, color: Color(0xFF626A63))),
         const SizedBox(height: 14),
         TextField(
@@ -107,7 +110,7 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
         ),
         const SizedBox(height: 14),
         LayoutBuilder(builder: (context, constraints) {
-          final columns = constraints.maxWidth >= 760 ? 4 : constraints.maxWidth >= 520 ? 3 : 2;
+          final columns = constraints.maxWidth >= 760 ? 4 : 3;
           return GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -115,7 +118,7 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columns,
               crossAxisSpacing: 10, mainAxisSpacing: 10,
-              childAspectRatio: columns == 2 ? 1.18 : 1.12,
+              childAspectRatio: columns == 3 ? 0.79 : 1.02,
             ),
             itemBuilder: (context, index) {
               final category = matching[index];
@@ -129,12 +132,14 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
                     decoration: BoxDecoration(color: category.tint,
                       borderRadius: BorderRadius.circular(17)),
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Icon(category.icon, size: 29, color: sage),
-                      const SizedBox(height: 9),
+                      Icon(category.icon, size: 32, color: const [Color(0xFFE97643), Color(0xFF319449), Color(0xFFD99A05), Color(0xFFE93463), Color(0xFF7948C9), Color(0xFF1386C4), Color(0xFF12845B), Color(0xFF1679C6), Color(0xFFB87715), Color(0xFFDE5673), Color(0xFF7140B7), Color(0xFF4A963C)][categories.indexOf(category)]),
+                      const SizedBox(height: 8),
                       Text(category.title, textAlign: TextAlign.center,
                         maxLines: 3, overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w700,
-                          color: ink, fontSize: 12)),
+                          color: ink, fontSize: 11.5)),
+                      const SizedBox(height: 5),
+                      Text('${category.subcategories.length} subcategories', style: const TextStyle(fontSize: 10, color: Color(0xFF514D49))),
                     ]),
                   ),
                 ),

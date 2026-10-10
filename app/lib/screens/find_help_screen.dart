@@ -845,9 +845,24 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   Widget _helpStart() => ListView(
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
         children: [
-          Text('Get help, your way.', style: GoogleFonts.playfairDisplay(fontSize: 30, fontWeight: FontWeight.w700, color: ink)),
-          const SizedBox(height: 4),
-          Text('Start with what feels hardest right now. We will help you find the next step.', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF626A63))),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 30, 20, 28),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft, end: Alignment.bottomRight,
+                colors: [Color(0xFFF9D7C3), Color(0xFFFFE9CE), Color(0xFFF4D6BB)],
+              ),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Column(children: [
+              Text('Resource Directory', textAlign: TextAlign.center,
+                style: GoogleFonts.playfairDisplay(fontSize: 30, fontWeight: FontWeight.w800, color: ink)),
+              const SizedBox(height: 9),
+              const Text('Find free and low-cost programs\nand services in your area.',
+                textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: ink, height: 1.45)),
+            ]),
+          ),
           const SizedBox(height: 14),
           _urgentBanner(),
           const SizedBox(height: 14),
@@ -863,6 +878,23 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           ),
           const SizedBox(height: 20),
           ResourceCategoryBrowser(onExplore: _exploreCategory),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(color: const Color(0xFFFFF0DC),
+              borderRadius: BorderRadius.circular(17)),
+            child: Row(children: [
+              const CircleAvatar(backgroundColor: Color(0xFFFFE0B5),
+                child: Icon(Icons.lock_outline, color: Color(0xFFBD801F))),
+              const SizedBox(width: 12),
+              const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('See more resources', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                  Text('Explore the categories above to find available assistance.',
+                    style: TextStyle(fontSize: 12)),
+                ])),
+            ]),
+          ),
           const SizedBox(height: 14),
           TextButton.icon(
             onPressed: _chooseState,
