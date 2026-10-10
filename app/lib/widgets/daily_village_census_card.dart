@@ -39,57 +39,41 @@ class _DailyVillageCensusCardState extends State<DailyVillageCensusCard> {
             borderRadius: BorderRadius.circular(22),
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('TODAY’S VILLAGE QUESTION',
-                style: GoogleFonts.inter(color: const Color(0xFF355C3B),
-                    fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w700)),
+            Text('TODAY’S VILLAGE QUESTION', style: GoogleFonts.inter(color: const Color(0xFF355C3B), fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w700)),
             const SizedBox(height: 9),
-            Text((data['text'] ?? '').toString(),
-                style: GoogleFonts.playfairDisplay(fontSize: 22,
-                    fontWeight: FontWeight.w600, color: const Color(0xFF172019))),
+            Text((data['text'] ?? '').toString(), style: GoogleFonts.playfairDisplay(fontSize: 22, fontWeight: FontWeight.w600, color: const Color(0xFF172019))),
             const SizedBox(height: 12),
             StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
               stream: service.watchMyVote(doc.id),
               builder: (context, voteSnapshot) {
                 if (!voteSnapshot.hasData) return const Center(child: CircularProgressIndicator());
                 if (voteSnapshot.data!.exists) {
-                  return Text('Your vote: ${voteSnapshot.data!.data()?['option']}. Thanks for sharing your voice!',
-                      style: const TextStyle(color: Color(0xFF355C3B), fontWeight: FontWeight.w600));
+                  return Text('Your vote: ${voteSnapshot.data!.data()?['option']}. Thanks for sharing your voice!', style: const TextStyle(color: Color(0xFF355C3B), fontWeight: FontWeight.w600));
                 }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(spacing: 8, runSpacing: 8, children: [
-                      for (final option in options)
-                        OutlinedButton(
-                          onPressed: submitting ? null : () async {
-                            setState(() { submitting = true; error = null; });
-                            try {
-                              await service.vote(
-                                questionId: doc.id,
-                                option: option,
-                              );
-                            } catch (e) {
-                              if (mounted) setState(() => error = 'Could not save your vote. Please try again.');
-                            } finally {
-                              if (mounted) setState(() => submitting = false);
-                            }
-                          },
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFFAF1),
-                            foregroundColor: const Color(0xFF355C3B),
-                            side: const BorderSide(color: Color(0xFF355C3B)),
-                          ),
-                          child: Text(option.toUpperCase()),
-                        ),
-                    ]),
-                  ],
-                );
+                return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Wrap(spacing: 8, runSpacing: 8, children: [
+                    for (final option in options)
+                      OutlinedButton(
+                        onPressed: submitting ? null : () async {
+                          setState(() { submitting = true; error = null; });
+                          try {
+                            await service.vote(questionId: doc.id, option: option);
+                          } catch (e) {
+                            if (mounted) setState(() => error = 'Could not save your vote. Please try again.');
+                          } finally {
+                            if (mounted) setState(() => submitting = false);
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(backgroundColor: const Color(0xFFFFFAF1), foregroundColor: const Color(0xFF355C3B), side: const BorderSide(color: Color(0xFF355C3B))),
+                        child: Text(option.toUpperCase()),
+                      ),
+                  ]),
+                ]);
               },
             ),
-            if (error != null) Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(error!, style: const TextStyle(color: Colors.red)),
-            ),
+            if (error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(error!, style: const TextStyle(color: Colors.red))),
+            const SizedBox(height: 6),
+            const Text('One vote per member. Report summaries include only answers with opt-in and are hidden until at least 20 members opt in.', style: TextStyle(fontSize: 11, color: Color(0xFF355C3B))),
           ]),
         );
       },
