@@ -1,0 +1,346 @@
+{
+  "version": 1,
+  "description": "Proposed directory taxonomy; no resource availability is implied.",
+  "sections": [
+    {
+      "id": "housing-home-assistance",
+      "name": "Housing & Home Assistance",
+      "subcategories": [
+        {
+          "id": "emergency-shelters-temporary-housing",
+          "name": "Emergency shelters & temporary housing"
+        },
+        {
+          "id": "rent-mortgage-eviction-assistance",
+          "name": "Rent, mortgage & eviction assistance"
+        },
+        {
+          "id": "home-repairs-accessibility-weatherization",
+          "name": "Home repairs, accessibility & weatherization"
+        },
+        {
+          "id": "furniture-appliances-household-essentials",
+          "name": "Furniture, appliances & household essentials"
+        },
+        {
+          "id": "homelessness-day-services-hygiene",
+          "name": "Homelessness day services & hygiene"
+        },
+        {
+          "id": "emergency-displacement-house-fire-recovery",
+          "name": "Emergency displacement & house-fire recovery"
+        }
+      ]
+    },
+    {
+      "id": "food-clothing-basic-needs",
+      "name": "Food, Clothing & Basic Needs",
+      "subcategories": [
+        {
+          "id": "food-pantries-groceries-meal-programs",
+          "name": "Food pantries, groceries & meal programs"
+        },
+        {
+          "id": "clothing-shoes-community-closets",
+          "name": "Clothing, shoes & community closets"
+        },
+        {
+          "id": "personal-care-haircuts-hygiene-supplies",
+          "name": "Personal care, haircuts & hygiene supplies"
+        },
+        {
+          "id": "laundry-showers-essential-services",
+          "name": "Laundry, showers & essential services"
+        },
+        {
+          "id": "free-goods-exchanges-equipment-lending",
+          "name": "Free goods, exchanges & equipment lending"
+        }
+      ]
+    },
+    {
+      "id": "money-bills-financial-support",
+      "name": "Money, Bills & Financial Support",
+      "subcategories": [
+        {
+          "id": "emergency-grants-financial-assistance",
+          "name": "Emergency grants & financial assistance"
+        },
+        {
+          "id": "utilities-energy-water-bills",
+          "name": "Utilities, energy & water bills"
+        },
+        {
+          "id": "debt-credit-financial-counseling",
+          "name": "Debt, credit & financial counseling"
+        },
+        {
+          "id": "government-benefits-public-assistance",
+          "name": "Government benefits & public assistance"
+        },
+        {
+          "id": "free-tax-preparation-financial-education",
+          "name": "Free tax preparation & financial education"
+        }
+      ]
+    },
+    {
+      "id": "health-mental-health-recovery",
+      "name": "Health, Mental Health & Recovery",
+      "subcategories": [
+        {
+          "id": "free-and-affordable-healthcare",
+          "name": "Free and affordable healthcare"
+        },
+        {
+          "id": "dental-vision-hearing-assistance",
+          "name": "Dental, vision & hearing assistance"
+        },
+        {
+          "id": "mental-health-counseling-emotional-support",
+          "name": "Mental health, counseling & emotional support"
+        },
+        {
+          "id": "addiction-treatment-recovery",
+          "name": "Addiction treatment & recovery"
+        },
+        {
+          "id": "medication-medical-devices-assistive-technology",
+          "name": "Medication, medical devices & assistive technology"
+        },
+        {
+          "id": "disability-brain-injury-trauma-support",
+          "name": "Disability, brain injury & trauma support"
+        }
+      ]
+    },
+    {
+      "id": "little-villagers-kids-teens",
+      "name": "Little Villagers — Kids & Teens",
+      "subcategories": [
+        {
+          "id": "free-books-literacy-tutoring",
+          "name": "Free books, literacy & tutoring"
+        },
+        {
+          "id": "school-supplies-backpacks-technology",
+          "name": "School supplies, backpacks & technology"
+        },
+        {
+          "id": "children-s-clothing-shoes-special-occasion-outfits",
+          "name": "Children's clothing, shoes & special-occasion outfits"
+        },
+        {
+          "id": "beds-cribs-diapers-baby-essentials",
+          "name": "Beds, cribs, diapers & baby essentials"
+        },
+        {
+          "id": "school-meals-youth-food-programs",
+          "name": "School meals & youth food programs"
+        },
+        {
+          "id": "free-sports-swimming-equipment",
+          "name": "Free sports, swimming & equipment"
+        },
+        {
+          "id": "arts-music-stem-creative-programs",
+          "name": "Arts, music, STEM & creative programs"
+        },
+        {
+          "id": "camps-after-school-care-mentoring",
+          "name": "Camps, after-school care & mentoring"
+        },
+        {
+          "id": "free-museums-outings-youth-experiences",
+          "name": "Free museums, outings & youth experiences"
+        },
+        {
+          "id": "children-s-health-developmental-services",
+          "name": "Children's health & developmental services"
+        },
+        {
+          "id": "birthdays-holidays-toys-gifts",
+          "name": "Birthdays, holidays, toys & gifts"
+        },
+        {
+          "id": "teen-jobs-scholarships-college-preparation",
+          "name": "Teen jobs, scholarships & college preparation"
+        }
+      ]
+    },
+    {
+      "id": "parenting-family-relationships",
+      "name": "Parenting, Family & Relationships",
+      "subcategories": [
+        {
+          "id": "pregnancy-postpartum-lactation-support",
+          "name": "Pregnancy, postpartum & lactation support"
+        },
+        {
+          "id": "childcare-daycare-assistance",
+          "name": "Childcare & daycare assistance"
+        },
+        {
+          "id": "parenting-classes-family-support",
+          "name": "Parenting classes & family support"
+        },
+        {
+          "id": "marriage-couples-family-counseling",
+          "name": "Marriage, couples & family counseling"
+        },
+        {
+          "id": "foster-care-adoption-kinship-support",
+          "name": "Foster care, adoption & kinship support"
+        },
+        {
+          "id": "family-respite-caregiver-relief",
+          "name": "Family respite & caregiver relief"
+        }
+      ]
+    },
+    {
+      "id": "jobs-education-business",
+      "name": "Jobs, Education & Business",
+      "subcategories": [
+        {
+          "id": "job-placement-resumes-interview-support",
+          "name": "Job placement, resumes & interview support"
+        },
+        {
+          "id": "free-job-training-certifications-licensing",
+          "name": "Free job training, certifications & licensing"
+        },
+        {
+          "id": "work-clothing-tools-transportation-support",
+          "name": "Work clothing, tools & transportation support"
+        },
+        {
+          "id": "ged-adult-literacy-esl-higher-education",
+          "name": "GED, adult literacy, ESL & higher education"
+        },
+        {
+          "id": "business-grants-entrepreneurship-mentoring",
+          "name": "Business grants, entrepreneurship & mentoring"
+        }
+      ]
+    },
+    {
+      "id": "transportation-technology",
+      "name": "Transportation & Technology",
+      "subcategories": [
+        {
+          "id": "bus-passes-medical-rides-transportation-assistance",
+          "name": "Bus passes, medical rides & transportation assistance"
+        },
+        {
+          "id": "car-repairs-driving-lessons-license-assistance",
+          "name": "Car repairs, driving lessons & license assistance"
+        },
+        {
+          "id": "affordable-internet-phones-computers",
+          "name": "Affordable internet, phones & computers"
+        },
+        {
+          "id": "digital-skills-online-learning-technology-safety",
+          "name": "Digital skills, online learning & technology safety"
+        }
+      ]
+    },
+    {
+      "id": "legal-safety-life-transitions",
+      "name": "Legal, Safety & Life Transitions",
+      "subcategories": [
+        {
+          "id": "free-legal-aid-consumer-protection",
+          "name": "Free legal aid & consumer protection"
+        },
+        {
+          "id": "domestic-violence-trafficking-abuse-survivor-support",
+          "name": "Domestic violence, trafficking & abuse survivor support"
+        },
+        {
+          "id": "immigration-refugee-identity-document-assistance",
+          "name": "Immigration, refugee & identity-document assistance"
+        },
+        {
+          "id": "reentry-incarceration-related-family-support",
+          "name": "Reentry & incarceration-related family support"
+        },
+        {
+          "id": "grief-funeral-end-of-life-assistance",
+          "name": "Grief, funeral & end-of-life assistance"
+        }
+      ]
+    },
+    {
+      "id": "specialized-community-support",
+      "name": "Specialized Community Support",
+      "subcategories": [
+        {
+          "id": "veterans-military-families",
+          "name": "Veterans & military families"
+        },
+        {
+          "id": "seniors-aging-services",
+          "name": "Seniors & aging services"
+        },
+        {
+          "id": "men-s-and-women-s-support-programs",
+          "name": "Men's and women's support programs"
+        },
+        {
+          "id": "lgbtq-community-support",
+          "name": "LGBTQ+ community support"
+        },
+        {
+          "id": "foster-youth-young-adult-independence",
+          "name": "Foster youth & young adult independence"
+        },
+        {
+          "id": "support-for-hospitalized-patients-families",
+          "name": "Support for hospitalized patients & families"
+        }
+      ]
+    },
+    {
+      "id": "emergencies-disaster-relief",
+      "name": "Emergencies & Disaster Relief",
+      "subcategories": [
+        {
+          "id": "hurricane-flood-fire-disaster-recovery",
+          "name": "Hurricane, flood, fire & disaster recovery"
+        },
+        {
+          "id": "crisis-hotlines-immediate-safety-assistance",
+          "name": "Crisis hotlines & immediate safety assistance"
+        }
+      ]
+    },
+    {
+      "id": "community-recreation-pets",
+      "name": "Community, Recreation & Pets",
+      "subcategories": [
+        {
+          "id": "free-community-events-festivals-entertainment",
+          "name": "Free community events, festivals & entertainment"
+        },
+        {
+          "id": "community-gardens-seed-libraries-food-growing-support",
+          "name": "Community gardens, seed libraries & food-growing support"
+        },
+        {
+          "id": "volunteer-programs-repair-cafes-skill-exchanges",
+          "name": "Volunteer programs, repair cafés & skill exchanges"
+        },
+        {
+          "id": "social-connection-cultural-programs-recreation",
+          "name": "Social connection, cultural programs & recreation"
+        },
+        {
+          "id": "pet-food-veterinary-assistance-animal-support",
+          "name": "Pet food, veterinary assistance & animal support"
+        }
+      ]
+    }
+  ]
+}

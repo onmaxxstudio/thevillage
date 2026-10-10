@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/admin_content_service.dart';
+import 'resource_category_browser.dart';
 
 class FindHelpScreen extends StatefulWidget {
   const FindHelpScreen({super.key});
@@ -336,6 +337,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
 
   List<HelpResource> _applyNeed(List<HelpResource> items) {
     final path = _selectedPath;
+    if (selectedNeed != null) return items.where((resource) => resource.needs.contains(selectedNeed)).toList();
     if (path != null) return items.where((resource) => resource.needs.any(path.needs.contains)).toList();
     if (selectedNeed == null) return items;
     return items.where((resource) => resource.needs.contains(selectedNeed)).toList();
@@ -369,7 +371,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ? visible
             : visible.where((resource) => resource.states.isEmpty).toList();
         if (view == 1) return _courses(snapshot.data ?? const <ManagedContentItem>[]);
-        if (view == 0 && selectedPathId == null) return _helpStart();
+        if (view == 0 && selectedPathId == null && selectedNeed == null) return _helpStart();
         return ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           children: [
@@ -394,7 +396,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ),
             const SizedBox(height: 15),
             if (view == 0) ...[
-              _selectedHelpHeader(),
+              if (selectedPathId != null) _selectedHelpHeader(),
               const SizedBox(height: 12),
               _zipSearch(),
               if (localZip != null) ...[
@@ -697,7 +699,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
 
   Widget _localResultsPanel() {
     final zip = localZip!;
-    final path = _selectedPath!;
+    final path = _selectedPath;
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
@@ -705,7 +707,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         Row(children: [
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Local results for ' + zip, style: GoogleFonts.playfairDisplay(fontSize: 21, fontWeight: FontWeight.w700, color: ink)),
-            Text('Focused on ' + path.title.toLowerCase(), style: const TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+            Text('Focused on ' + (path?.title ?? selectedNeed ?? 'available help').toLowerCase(), style: const TextStyle(fontSize: 12, color: Color(0xFF626A63))),
           ])),
           TextButton(onPressed: () => setState(() => localZip = null), child: const Text('Edit ZIP')),
         ]),
@@ -722,14 +724,14 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           detail: 'Get help explaining your situation and finding options.',
           onTap: () => _call('211'),
         ),
-        if (path.id == 'family')
+        if (path?.id == 'family' || selectedNeed == 'Healthcare' || selectedNeed == 'Childcare')
           _inlineResult(
             icon: Icons.local_hospital_outlined,
             title: 'Community health centers near you',
             detail: 'Find low-cost medical, dental, behavioral and family care.',
             onTap: () => _open('https://findahealthcenter.hrsa.gov/?incrementalsearch=true&radius=10&zip=' + zip),
           ),
-        if (path.id == 'work')
+        if (path?.id == 'work' || selectedNeed == 'Legal Help')
           _inlineResult(
             icon: Icons.gavel_outlined,
             title: 'Free legal aid',
@@ -860,15 +862,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             style: ButtonStyle(visualDensity: VisualDensity.compact),
           ),
           const SizedBox(height: 20),
-          Text('What do you need help with?', style: GoogleFonts.playfairDisplay(fontSize: 23, fontWeight: FontWeight.w700, color: ink)),
-          const SizedBox(height: 5),
-          const Text('You do not have to figure it all out alone.', style: TextStyle(fontSize: 12.5, color: Color(0xFF626A63))),
-          const SizedBox(height: 12),
-          for (final path in helpPaths) ...[
-            _helpPathCard(path),
-            const SizedBox(height: 10),
-          ],
-          const SizedBox(height: 4),
+          ResourceCategoryBrowser(onExplore: _exploreCategory),
+          const SizedBox(height: 14),
           TextButton.icon(
             onPressed: _chooseState,
             icon: const Icon(Icons.map_outlined),
@@ -877,6 +872,34 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           ),
         ],
       );
+
+  void _exploreCategory(String category) {
+    // Existing resource data supports nine broad needs. Do not falsely label
+    // unmatched listings as category-specific until tags are migrated.
+    const mapping = <String, String>{
+      'Housing & Home Assistance': 'Rent & Housing',
+      'Food, Clothing & Basic Needs': 'Food',
+      'Money, Bills & Financial Support': 'Utilities',
+      'Health, Mental Health & Recovery': 'Healthcare',
+      'Little Villagers — Kids & Teens': 'Childcare',
+      'Parenting, Family & Relationships': 'Childcare',
+      'Jobs, Education & Business': 'Employment',
+      'Transportation & Technology': 'Transportation',
+      'Legal, Safety & Life Transitions': 'Legal Help',
+      'Emergencies & Disaster Relief': 'Crisis & Safety',
+    };
+    if (!mapping.containsKey(category)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Specific listings for $category are being added. Showing currently available resources.')),
+      );
+    }
+    setState(() {
+      selectedPathId = null;
+      selectedNeed = mapping[category];
+      selectedState = null;
+      showAllResources = false;
+    });
+  }
 
   Widget _helpPathCard(HelpPath path) => InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -915,6 +938,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ])),
         TextButton(onPressed: () => setState(() {
           selectedPathId = null;
+          selectedNeed = null;
           selectedState = null;
           showAllResources = false;
         }), child: const Text('Change')),
