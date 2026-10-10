@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/admin_content_service.dart';
+import 'resource_category_browser.dart';
 
 class FindHelpScreen extends StatefulWidget {
   const FindHelpScreen({super.key});
@@ -860,15 +861,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             style: ButtonStyle(visualDensity: VisualDensity.compact),
           ),
           const SizedBox(height: 20),
-          Text('What do you need help with?', style: GoogleFonts.playfairDisplay(fontSize: 23, fontWeight: FontWeight.w700, color: ink)),
-          const SizedBox(height: 5),
-          const Text('You do not have to figure it all out alone.', style: TextStyle(fontSize: 12.5, color: Color(0xFF626A63))),
-          const SizedBox(height: 12),
-          for (final path in helpPaths) ...[
-            _helpPathCard(path),
-            const SizedBox(height: 10),
-          ],
-          const SizedBox(height: 4),
+          ResourceCategoryBrowser(onExplore: _exploreCategory),
+          const SizedBox(height: 14),
           TextButton.icon(
             onPressed: _chooseState,
             icon: const Icon(Icons.map_outlined),
@@ -877,6 +871,31 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           ),
         ],
       );
+
+  void _exploreCategory(String category) {
+    // Existing resource data supports nine broad needs. Do not falsely label
+    // unmatched listings as category-specific until tags are migrated.
+    const mapping = <String, String>{
+      'Housing & Home Assistance': 'Rent & Housing',
+      'Food, Clothing & Basic Needs': 'Food',
+      'Money, Bills & Financial Support': 'Utilities',
+      'Health, Mental Health & Recovery': 'Healthcare',
+      'Little Villagers — Kids & Teens': 'Childcare',
+      'Parenting, Family & Relationships': 'Childcare',
+      'Jobs, Education & Business': 'Employment',
+      'Transportation & Technology': 'Transportation',
+      'Legal, Safety & Life Transitions': 'Legal Help',
+      'Specialized Community Support': 'Healthcare',
+      'Emergencies & Disaster Relief': 'Crisis & Safety',
+      'Community, Recreation & Pets': 'Food',
+    };
+    setState(() {
+      selectedPathId = 'work';
+      selectedNeed = mapping[category];
+      selectedState = null;
+      showAllResources = false;
+    });
+  }
 
   Widget _helpPathCard(HelpPath path) => InkWell(
         borderRadius: BorderRadius.circular(20),
