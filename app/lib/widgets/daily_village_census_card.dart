@@ -13,7 +13,6 @@ class DailyVillageCensusCard extends StatefulWidget {
 class _DailyVillageCensusCardState extends State<DailyVillageCensusCard> {
   final service = VillageCensusService();
   bool submitting = false;
-  bool allowAggregateUse = false;
   String? error;
 
   String get dayKey {
@@ -59,19 +58,6 @@ class _DailyVillageCensusCardState extends State<DailyVillageCensusCard> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      value: allowAggregateUse,
-                      onChanged: submitting
-                          ? null
-                          : (value) => setState(() => allowAggregateUse = value ?? false),
-                      title: const Text(
-                        'I agree my answer may be included in grouped reports sold or shared with research or marketing partners. They receive totals only, not my account or individual vote.',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF355C3B)),
-                      ),
-                    ),
                     Wrap(spacing: 8, runSpacing: 8, children: [
                       for (final option in options)
                         OutlinedButton(
@@ -81,7 +67,6 @@ class _DailyVillageCensusCardState extends State<DailyVillageCensusCard> {
                               await service.vote(
                                 questionId: doc.id,
                                 option: option,
-                                allowAggregateUse: allowAggregateUse,
                               );
                             } catch (e) {
                               if (mounted) setState(() => error = 'Could not save your vote. Please try again.');
@@ -105,9 +90,6 @@ class _DailyVillageCensusCardState extends State<DailyVillageCensusCard> {
               padding: const EdgeInsets.only(top: 8),
               child: Text(error!, style: const TextStyle(color: Colors.red)),
             ),
-            const SizedBox(height: 6),
-            const Text('One vote per member. Report summaries include only answers with opt-in and are hidden until at least 20 members opt in.',
-                style: TextStyle(fontSize: 11, color: Color(0xFF355C3B))),
           ]),
         );
       },
