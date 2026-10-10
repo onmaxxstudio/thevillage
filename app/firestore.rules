@@ -512,6 +512,18 @@ service cloud.firestore {
       allow delete: if isSelf(uid);
     }
 
+    // Separate, optional census consent recorded at onboarding.
+    match /village_census_consents/{uid} {
+      allow get: if isSelf(uid);
+      allow list: if false;
+      allow create, update: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly(['allowAggregateUse', 'consentVersion', 'updatedAt']) &&
+        request.resource.data.allowAggregateUse is bool &&
+        request.resource.data.consentVersion == 'census-consent-v1' &&
+        request.resource.data.updatedAt == request.time;
+      allow delete: if isSelf(uid);
+    }
+
     // Daily census: published questions readable by members, management by admins.
     match /village_census_questions/{questionId} {
       allow get, list: if signedIn() &&
@@ -529,7 +541,9 @@ service cloud.firestore {
           request.resource.data.option in get(/databases/$(database)/documents/village_census_questions/$(questionId)).data.options &&
           request.resource.data.aggregateUseConsent is bool &&
           (request.resource.data.aggregateUseConsent == false ||
-            request.resource.data.consentVersion == 'census-consent-v1') &&
+            (request.resource.data.consentVersion == 'census-consent-v1' &&
+             exists(/databases/$(database)/documents/village_census_consents/$(uid)) &&
+             get(/databases/$(database)/documents/village_census_consents/$(uid)).data.allowAggregateUse == true)) &&
           (request.resource.data.aggregateUseConsent == true ||
             request.resource.data.consentVersion == null) &&
           request.resource.data.createdAt == request.time;
