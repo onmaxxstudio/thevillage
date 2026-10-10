@@ -337,6 +337,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
 
   List<HelpResource> _applyNeed(List<HelpResource> items) {
     final path = _selectedPath;
+    if (selectedNeed != null) return items.where((resource) => resource.needs.contains(selectedNeed)).toList();
     if (path != null) return items.where((resource) => resource.needs.any(path.needs.contains)).toList();
     if (selectedNeed == null) return items;
     return items.where((resource) => resource.needs.contains(selectedNeed)).toList();
@@ -370,7 +371,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ? visible
             : visible.where((resource) => resource.states.isEmpty).toList();
         if (view == 1) return _courses(snapshot.data ?? const <ManagedContentItem>[]);
-        if (view == 0 && selectedPathId == null) return _helpStart();
+        if (view == 0 && selectedPathId == null && selectedNeed == null) return _helpStart();
         return ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           children: [
@@ -395,7 +396,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ),
             const SizedBox(height: 15),
             if (view == 0) ...[
-              _selectedHelpHeader(),
+              if (selectedPathId != null) _selectedHelpHeader(),
               const SizedBox(height: 12),
               _zipSearch(),
               if (localZip != null) ...[
@@ -890,7 +891,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       'Community, Recreation & Pets': 'Food',
     };
     setState(() {
-      selectedPathId = 'work';
+      selectedPathId = null;
       selectedNeed = mapping[category];
       selectedState = null;
       showAllResources = false;
@@ -934,6 +935,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ])),
         TextButton(onPressed: () => setState(() {
           selectedPathId = null;
+          selectedNeed = null;
           selectedState = null;
           showAllResources = false;
         }), child: const Text('Change')),
