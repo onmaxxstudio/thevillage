@@ -699,7 +699,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
 
   Widget _localResultsPanel() {
     final zip = localZip!;
-    final path = _selectedPath!;
+    final path = _selectedPath;
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
@@ -707,7 +707,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         Row(children: [
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Local results for ' + zip, style: GoogleFonts.playfairDisplay(fontSize: 21, fontWeight: FontWeight.w700, color: ink)),
-            Text('Focused on ' + path.title.toLowerCase(), style: const TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+            Text('Focused on ' + (path?.title ?? selectedNeed ?? 'available help').toLowerCase(), style: const TextStyle(fontSize: 12, color: Color(0xFF626A63))),
           ])),
           TextButton(onPressed: () => setState(() => localZip = null), child: const Text('Edit ZIP')),
         ]),
@@ -724,14 +724,14 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           detail: 'Get help explaining your situation and finding options.',
           onTap: () => _call('211'),
         ),
-        if (path.id == 'family')
+        if (path?.id == 'family' || selectedNeed == 'Healthcare' || selectedNeed == 'Childcare')
           _inlineResult(
             icon: Icons.local_hospital_outlined,
             title: 'Community health centers near you',
             detail: 'Find low-cost medical, dental, behavioral and family care.',
             onTap: () => _open('https://findahealthcenter.hrsa.gov/?incrementalsearch=true&radius=10&zip=' + zip),
           ),
-        if (path.id == 'work')
+        if (path?.id == 'work' || selectedNeed == 'Legal Help')
           _inlineResult(
             icon: Icons.gavel_outlined,
             title: 'Free legal aid',
