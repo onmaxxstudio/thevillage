@@ -886,10 +886,13 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       'Jobs, Education & Business': 'Employment',
       'Transportation & Technology': 'Transportation',
       'Legal, Safety & Life Transitions': 'Legal Help',
-      'Specialized Community Support': 'Healthcare',
       'Emergencies & Disaster Relief': 'Crisis & Safety',
-      'Community, Recreation & Pets': 'Food',
     };
+    if (!mapping.containsKey(category)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Specific listings for $category are being added. Showing currently available resources.')),
+      );
+    }
     setState(() {
       selectedPathId = null;
       selectedNeed = mapping[category];
