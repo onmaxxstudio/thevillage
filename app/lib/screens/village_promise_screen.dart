@@ -19,7 +19,7 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
 
   final auth = AuthService();
   final selectedPromises = <int>{};
-  bool get agreed => selectedPromises.length == 3;
+  bool get agreed => selectedPromises.length == promises.length;
   bool censusConsent = false;
   bool saving = false;
 
@@ -101,87 +101,100 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
                       ),
                       child: Column(
                         children: [
-                          Text('The Village Promise',
-                            style: GoogleFonts.playfairDisplay(color: sage, fontSize: 32, fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 6),
-                          Text('Please accept all three Village Promises to continue.',
-                            style: GoogleFonts.inter(color: ink, fontSize: 14)),
-                          const SizedBox(height: 16),
-                          Container(
-                            decoration: BoxDecoration(color: const Color(0xFFFFFCF7),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: const Color(0xFFE3D8C9))),
-                            child: Column(children: [
-                              for (var i = 0; i < promises.length; i++) ...[
-                                InkWell(
-                                  onTap: saving ? null : () => setState(() {
-                                    if (!selectedPromises.add(i)) selectedPromises.remove(i);
-                                  }),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
-                                    child: Row(children: [
-                                      CircleAvatar(backgroundColor: i == 0 ? const Color(0xFFE8EBDD) : i == 1 ? const Color(0xFFF3E2DD) : const Color(0xFFF5E4CE),
-                                        child: Icon(promises[i].$1, color: sage)),
-                                      const SizedBox(width: 12),
-                                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                        Text(promises[i].$2, style: GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w600, color: ink)),
-                                        Text(promises[i].$3, style: GoogleFonts.inter(fontSize: 12.5, color: ink)),
-                                      ])),
-                                      Checkbox(value: selectedPromises.contains(i), activeColor: sage,
-                                        onChanged: saving ? null : (value) => setState(() {
-                                          if (value == true) { selectedPromises.add(i); } else { selectedPromises.remove(i); }
-                                        })),
-                                    ]),
-                                  ),
-                                ),
-                                if (i != promises.length - 1) const Divider(height: 1, indent: 16, endIndent: 16),
-                              ],
-                            ]),
+                          const Icon(
+                            Icons.favorite_border_rounded,
+                            color: gold,
+                            size: 33,
                           ),
-                          const SizedBox(height: 16),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(color: const Color(0xFFF3E2DD), borderRadius: BorderRadius.circular(20)),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Row(children: [
-                                const Icon(Icons.bar_chart_rounded, color: sage),
-                                const SizedBox(width: 10),
-                                Expanded(child: Text('Help Us Learn & Grow', style: GoogleFonts.playfairDisplay(fontSize: 20, color: ink, fontWeight: FontWeight.w600))),
-                                Text('Optional', style: GoogleFonts.inter(fontSize: 12, color: sage)),
-                              ]),
-                              const SizedBox(height: 10),
-                              Text('With your permission, your Village Question answers may be included in grouped reports sold or shared with research or marketing partners. They receive totals only, not your account or individual vote.',
-                                style: GoogleFonts.inter(fontSize: 12.5, height: 1.4, color: ink)),
-                              CheckboxListTile(
-                                contentPadding: EdgeInsets.zero,
-                                controlAffinity: ListTileControlAffinity.leading,
-                                value: censusConsent,
-                                activeColor: sage,
-                                onChanged: saving ? null : (value) => setState(() => censusConsent = value ?? false),
-                                title: Text('I agree to include my answers in these reports.', style: GoogleFonts.inter(fontSize: 13, color: ink)),
-                                subtitle: Text('You can join and vote without agreeing.', style: GoogleFonts.inter(fontSize: 11, color: ink)),
-                              ),
-                            ]),
-                          ),
-                          const SizedBox(height: 18),
-                          SizedBox(
-                            width: double.infinity, height: 55,
-                            child: FilledButton(
-                              onPressed: agreed && !saving ? acceptPromise : null,
-                              style: FilledButton.styleFrom(backgroundColor: sage,
-                                disabledBackgroundColor: sage.withValues(alpha: 0.38),
-                                shape: const StadiumBorder()),
-                              child: Text(saving ? 'Saving…' : 'Continue to the Village',
-                                style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w600)),
+                          Text(
+                            'Before you enter,',
+                            style: GoogleFonts.playfairDisplay(
+                              color: sage,
+                              fontSize: 34,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          if (!agreed) Padding(
-                            padding: const EdgeInsets.only(top: 9),
-                            child: Text('All three promises are required to continue.',
-                              style: GoogleFonts.inter(fontSize: 12, color: sage)),
+                          Text(
+                            'one simple promise.',
+                            style: GoogleFonts.allura(color: sage, fontSize: 40),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 14),
+                          Text(
+                            'Please accept all three promises to continue.',
+                            style: GoogleFonts.inter(color: ink, fontSize: 14),
+                          ),
+                          const SizedBox(height: 12),
+                          for (var index = 0; index < promises.length; index++) ...[
+                            _PromiseRow(
+                              icon: promises[index].$1,
+                              title: promises[index].$2,
+                              text: promises[index].$3,
+                              checked: selectedPromises.contains(index),
+                              enabled: !saving,
+                              onChanged: (checked) => setState(() {
+                                if (checked) {
+                                  selectedPromises.add(index);
+                                } else {
+                                  selectedPromises.remove(index);
+                                }
+                              }),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                          CheckboxListTile(
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            value: censusConsent,
+                            activeColor: sage,
+                            onChanged: saving
+                                ? null
+                                : (value) => setState(() => censusConsent = value ?? false),
+                            title: Text(
+                              'Optional: include my Village Question answers in grouped reports sold or shared with research or marketing partners. Only totals are shared—not my account or individual vote.',
+                              style: GoogleFonts.inter(fontSize: 12.5, color: ink, height: 1.35),
+                            ),
+                            subtitle: Text(
+                              'Not required to join or vote.',
+                              style: GoogleFonts.inter(fontSize: 11.5, color: ink),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 55,
+                            child: FilledButton.icon(
+                              onPressed:
+                                  agreed && !saving ? acceptPromise : null,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: sage,
+                                disabledBackgroundColor: sage.withValues(alpha: 0.38),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              icon: const Icon(Icons.favorite_border_rounded),
+                              label: const Text(
+                                'Continue to the Village',
+                                style: TextStyle(fontSize: 19),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 11),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 51,
+                            child: OutlinedButton(
+                              onPressed: () {},
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: sage),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              child: const Text('Read Community Standards'),
+                            ),
+                          ),
                           TextButton.icon(
                             onPressed: () => Navigator.of(context).pop(),
                             icon: const Icon(Icons.arrow_back_rounded),
@@ -201,3 +214,67 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
   }
 }
 
+class _PromiseRow extends StatelessWidget {
+  const _PromiseRow({
+    required this.icon,
+    required this.title,
+    required this.text,
+    required this.checked,
+    required this.enabled,
+    required this.onChanged,
+  });
+  final IconData icon;
+  final String title;
+  final String text;
+  final bool checked;
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: enabled ? () => onChanged(!checked) : null,
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F1E8),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: checked ? _VillagePromiseScreenState.sage : const Color(0xFFC9CDB9),
+            width: checked ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFC9CDB9)),
+              ),
+              child: Icon(icon, color: _VillagePromiseScreenState.sage),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: GoogleFonts.playfairDisplay(color: _VillagePromiseScreenState.ink, fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text(text, style: GoogleFonts.inter(color: _VillagePromiseScreenState.ink, fontSize: 12.5, height: 1.3)),
+                ],
+              ),
+            ),
+            Checkbox(
+              value: checked,
+              activeColor: _VillagePromiseScreenState.sage,
+              onChanged: enabled ? (value) => onChanged(value ?? false) : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
