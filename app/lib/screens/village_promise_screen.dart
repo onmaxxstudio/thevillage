@@ -145,7 +145,7 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
                                 ),
                               ),
                               subtitle: Text(
-                                'Allow my Village Question answers to be included in grouped, anonymous reports shared or sold to research or marketing partners. Only totals are shared—not my account or individual vote. Not required to join or vote.',
+                                'Allow my Village Question answers to be included in grouped, anonymous reports shared or sold to research or marketing partners.',
                                 style: GoogleFonts.inter(fontSize: 11.5, color: ink, height: 1.32),
                               ),
                             ),
