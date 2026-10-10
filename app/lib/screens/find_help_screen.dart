@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/admin_content_service.dart';
 import 'resource_category_browser.dart';
+import 'guided_help_assistant.dart';
 
 class FindHelpScreen extends StatefulWidget {
   const FindHelpScreen({super.key});
@@ -25,6 +26,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   final admin = AdminContentService();
   final zipController = TextEditingController();
   int view = 0;
+  bool guidedHelp = false;
   String? selectedState;
   String? selectedNeed;
   Set<String> saved = {};
@@ -842,7 +844,22 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ),
       );
 
-  Widget _helpStart() => ListView(
+  Widget _helpStart() => guidedHelp
+      ? ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 32), children: [
+          TextButton.icon(onPressed: () => setState(() => guidedHelp = false),
+            icon: const Icon(Icons.arrow_back), label: const Text('Browse all categories')),
+          GuidedHelpAssistant(onBrowse: (need, state, zip) {
+            setState(() {
+              guidedHelp = false;
+              selectedNeed = need;
+              selectedPathId = null;
+              selectedState = state;
+              localZip = zip;
+              showAllResources = false;
+            });
+          }),
+        ])
+      : ListView(
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
         children: [
           Container(
@@ -875,6 +892,23 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             selected: {view},
             onSelectionChanged: (value) => setState(() => view = value.first),
             style: ButtonStyle(visualDensity: VisualDensity.compact),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(17),
+            decoration: BoxDecoration(color: const Color(0xFFE8F0E7),
+              borderRadius: BorderRadius.circular(18)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('You don\'t have to figure it out alone.',
+                style: GoogleFonts.playfairDisplay(fontSize: 21, fontWeight: FontWeight.bold, color: ink)),
+              const SizedBox(height: 7),
+              const Text('Answer three quick questions to find assistance that fits your situation.'),
+              const SizedBox(height: 12),
+              FilledButton.icon(onPressed: () => setState(() => guidedHelp = true),
+                icon: const Icon(Icons.auto_awesome_outlined),
+                label: const Text('Find Help for Me'),
+                style: FilledButton.styleFrom(backgroundColor: sage)),
+            ]),
           ),
           const SizedBox(height: 20),
           ResourceCategoryBrowser(onExplore: _exploreCategory),
