@@ -82,7 +82,7 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
                     ),
                   ),
                   Image.asset(
-                    'assets/images/create_account_hero.png',
+                    'assets/images/create_account_photo.jpg',
                     width: double.infinity,
                     height: 210,
                     fit: BoxFit.cover,
