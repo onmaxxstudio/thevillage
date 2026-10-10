@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -104,6 +105,16 @@ class AuthService {
     if (user == null) return false;
     final preferences = await SharedPreferences.getInstance();
     return preferences.getBool(_promiseKey(user.uid)) ?? false;
+  }
+
+  Future<void> saveCensusConsent(bool consent) async {
+    final user = _auth.currentUser;
+    if (user == null) throw const AuthSetupException('Please sign in first.');
+    await FirebaseFirestore.instance.collection('village_census_consents').doc(user.uid).set({
+      'allowAggregateUse': consent,
+      'consentVersion': 'census-consent-v1',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> acceptVillagePromise() async {
