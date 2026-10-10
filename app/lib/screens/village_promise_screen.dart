@@ -19,12 +19,14 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
 
   final auth = AuthService();
   bool agreed = false;
+  bool censusConsent = false;
   bool saving = false;
 
   Future<void> acceptPromise() async {
     if (!agreed || saving) return;
     setState(() => saving = true);
     try {
+      await auth.saveCensusConsent(censusConsent);
       await auth.acceptVillagePromise();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
@@ -143,6 +145,16 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
                                 ],
                               ),
                             ),
+                          ),
+                          const SizedBox(height: 8),
+                          CheckboxListTile(
+                            contentPadding: EdgeInsets.zero,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            value: censusConsent,
+                            activeColor: sage,
+                            onChanged: saving ? null : (value) => setState(() => censusConsent = value ?? false),
+                            title: const Text('Optional: I agree that my Village Question answers may be included in grouped reports sold or shared with research or marketing partners. Only totals are shared, not my account or individual vote.', style: TextStyle(fontSize: 13)),
+                            subtitle: const Text('Not required to join or vote. Leave unchecked to exclude your answers from commercial reports.', style: TextStyle(fontSize: 12)),
                           ),
                           const SizedBox(height: 10),
                           SizedBox(
