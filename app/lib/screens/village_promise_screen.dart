@@ -202,7 +202,7 @@ class _VillagePromiseScreenState extends State<VillagePromiseScreen> {
                             width: double.infinity,
                             height: 51,
                             child: OutlinedButton(
-                              onPressed: () {},
+                              onPressed: () => showDialog<void>(context: context, builder: (_) => AlertDialog(title: const Text('Community Standards'), content: const Text('Be respectful. Protect privacy. Keep it safe. Report harmful behavior.'), actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))])),
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(color: sage),
                                 shape: RoundedRectangleBorder(
