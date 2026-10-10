@@ -923,7 +923,6 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                             ],
                           ),
                           child: TextField(
-                            onSubmitted: (_) => _showZipResults(),
                             decoration: InputDecoration(
                               hintText: 'What do you need help with?',
                               prefixIcon: const Icon(Icons.search_rounded, color: ink),
