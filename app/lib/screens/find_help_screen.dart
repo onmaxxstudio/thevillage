@@ -864,20 +864,42 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(20, 30, 20, 28),
+            padding: const EdgeInsets.fromLTRB(18, 38, 18, 22),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topLeft, end: Alignment.bottomRight,
-                colors: [Color(0xFFF9D7C3), Color(0xFFFFE9CE), Color(0xFFF4D6BB)],
+                colors: [Color(0xFFF8CDB7), Color(0xFFFFE8CF), Color(0xFFF3C8AD)],
               ),
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Column(children: [
               Text('Resource Directory', textAlign: TextAlign.center,
-                style: GoogleFonts.playfairDisplay(fontSize: 30, fontWeight: FontWeight.w800, color: ink)),
-              const SizedBox(height: 9),
-              const Text('Find free and low-cost programs\nand services in your area.',
-                textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: ink, height: 1.45)),
+                style: GoogleFonts.playfairDisplay(fontSize: 32,
+                  fontWeight: FontWeight.w800, color: ink)),
+              const SizedBox(height: 8),
+              const Text('Find free and low-cost programs\\nand services in your area.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: ink, height: 1.45)),
+              const SizedBox(height: 24),
+              Row(children: [
+                Expanded(child: OutlinedButton.icon(
+                  onPressed: _chooseState,
+                  icon: const Icon(Icons.location_on_outlined, color: sage),
+                  label: Text(selectedState ?? 'Choose state', overflow: TextOverflow.ellipsis),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white, foregroundColor: ink,
+                    padding: const EdgeInsets.symmetric(vertical: 14)),
+                )),
+                const SizedBox(width: 10),
+                Expanded(child: OutlinedButton.icon(
+                  onPressed: _chooseState,
+                  icon: const Icon(Icons.my_location_outlined, color: sage),
+                  label: const Text('State or ZIP', overflow: TextOverflow.ellipsis),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white, foregroundColor: ink,
+                    padding: const EdgeInsets.symmetric(vertical: 14)),
+                )),
+              ]),
             ]),
           ),
           const SizedBox(height: 14),
