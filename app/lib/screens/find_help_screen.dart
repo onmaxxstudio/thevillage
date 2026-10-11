@@ -880,7 +880,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           if (items.isEmpty)
             const Padding(padding: EdgeInsets.symmetric(vertical: 20),
                 child: Text('No matching resources found. Try another keyword or category.'))
-          else _resourceGrid(items.take(directoryQuery.isEmpty ? 3 : 30).toList()),
+          else _resourceGrid((directoryQuery.isEmpty && !showAllResources ? items.take(3).toList() : items)),
         ]);
       },
     );
@@ -1017,9 +1017,9 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               ),
             ),
             const SizedBox(height: 22),
-            ResourceCategoryBrowser(onExplore: _exploreCategory),
-            const SizedBox(height: 22),
             _directorySearchResults(),
+            const SizedBox(height: 22),
+            ResourceCategoryBrowser(onExplore: _exploreCategory),
             const SizedBox(height: 16),
             TextButton.icon(
               onPressed: () => setState(() => guidedHelp = true),
