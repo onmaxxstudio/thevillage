@@ -306,8 +306,10 @@ class _SignInScreenState extends State<SignInScreen>
                               Expanded(
                                 child: _SocialButton(
                                   icon: Icons.apple,
-                                  label: 'Apple unavailable',
-                                  onPressed: null,
+                                  label: 'Apple',
+                                  onPressed: loading
+                                      ? null
+                                      : () => _showAppleUnavailable(),
                                 ),
                               ),
                               const SizedBox(width: 12),
