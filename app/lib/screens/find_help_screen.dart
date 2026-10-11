@@ -979,6 +979,10 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                             controller: directorySearchController,
                             textInputAction: TextInputAction.search,
                             onSubmitted: (_) => _submitDirectorySearch(),
+                            onChanged: (value) => setState(() {
+                              directoryQuery = value.trim();
+                              showAllResources = value.trim().isNotEmpty;
+                            }),
                             decoration: InputDecoration(
                               hintText: 'What do you need help with?',
                               prefixIcon: const Icon(Icons.search_rounded, color: ink),
@@ -1031,8 +1035,10 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ),
             const SizedBox(height: 22),
             KeyedSubtree(key: directoryResultsKey, child: _directorySearchResults()),
-            const SizedBox(height: 22),
-            ResourceCategoryBrowser(onExplore: _exploreCategory),
+            if (directoryQuery.isEmpty) ...[
+              const SizedBox(height: 22),
+              ResourceCategoryBrowser(onExplore: _exploreCategory),
+            ],
             const SizedBox(height: 16),
             TextButton.icon(
               onPressed: () => setState(() => guidedHelp = true),
