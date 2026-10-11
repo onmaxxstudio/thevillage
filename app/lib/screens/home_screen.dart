@@ -2073,7 +2073,7 @@ class _MoodHistoryScreenState extends State<MoodHistoryScreen> {
         _PeriodPredictionCard(history: data), const SizedBox(height: 12),
       ],
       _panel('Your Mood Trend', subtitle: 'Your saved check-ins over time', child: Column(children: [
-        _MoodTrendChart(history: data),
+        _MoodTrendChart(history: widget.history),
         const SizedBox(height: 12),
         _counts(data),
       ])),
@@ -2109,7 +2109,7 @@ class _MoodHistoryScreenState extends State<MoodHistoryScreen> {
 
   Widget _mood(List<MoodCheckIn> data) => Column(children: [
     _panel('Your Mood Journey', subtitle: 'See how your mood has changed over time.',
-      child: Column(children: [_MoodTrendChart(history: data), const SizedBox(height: 12), _counts(data)])),
+      child: Column(children: [_MoodTrendChart(history: widget.history), const SizedBox(height: 12), _counts(data)])),
     const SizedBox(height: 12),
     _panel('Mood Patterns', child: Row(children: [
       const Icon(Icons.lightbulb_outline_rounded, color: _HomeScreenState.gold),
@@ -2691,14 +2691,26 @@ class _MonthlyHealthSummary extends StatelessWidget {
   }
 }
 
-class _MoodTrendChart extends StatelessWidget {
+class _MoodTrendChart extends StatefulWidget {
   const _MoodTrendChart({required this.history});
 
   final List<MoodCheckIn> history;
 
   @override
+  State<_MoodTrendChart> createState() => _MoodTrendChartState();
+}
+
+class _MoodTrendChartState extends State<_MoodTrendChart> {
+  int rangeDays = 7;
+
+  @override
   Widget build(BuildContext context) {
-    final points = history.take(7).toList().reversed.toList();
+    final start = DateTime.now().subtract(Duration(days: rangeDays));
+    final points = widget.history
+        .where((entry) => !entry.createdAt.isBefore(start))
+        .toList()
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 17, 16, 14),
       decoration: BoxDecoration(
@@ -2709,17 +2721,44 @@ class _MoodTrendChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Your Mood Trend',
-            style: GoogleFonts.playfairDisplay(
-              color: _HomeScreenState.ink,
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  'Your Mood Trend',
+                  style: GoogleFonts.playfairDisplay(
+                    color: _HomeScreenState.ink,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              DropdownButtonHideUnderline(
+                child: DropdownButton<int>(
+                  value: rangeDays,
+                  isDense: true,
+                  iconSize: 18,
+                  style: const TextStyle(
+                    color: _HomeScreenState.ink,
+                    fontSize: 12,
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 7, child: Text('7 days')),
+                    DropdownMenuItem(value: 30, child: Text('30 days')),
+                    DropdownMenuItem(value: 60, child: Text('60 days')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => rangeDays = value);
+                  },
+                ),
+              ),
+            ],
           ),
-          const Text(
-            'Your last 7 check-ins, from happy to sad',
-            style: TextStyle(fontSize: 12),
+          Text(
+            '${points.length} check-ins in the last $rangeDays days',
+            style: const TextStyle(fontSize: 12),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -2823,6 +2862,8 @@ class _MoodTrendPainter extends CustomPainter {
         3,
         Paint()..color = _HomeScreenState.cream,
       );
+      final labelStride = (entries.length / 6).ceil();
+      if (index % labelStride != 0 && index != entries.length - 1) continue;
       final date = entries[index].createdAt;
       final label = TextPainter(
         text: TextSpan(
