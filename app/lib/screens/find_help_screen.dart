@@ -969,10 +969,17 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                             textInputAction: TextInputAction.search,
                             onSubmitted: (_) => _submitDirectorySearch(),
                             decoration: InputDecoration(
-                              suffixIcon: IconButton(
-                                tooltip: 'Search resources',
-                                icon: const Icon(Icons.arrow_forward_rounded, color: sage),
-                                onPressed: _submitDirectorySearch,
+                              suffixIcon: Padding(
+                                padding: const EdgeInsets.all(5),
+                                child: FilledButton(
+                                  onPressed: _submitDirectorySearch,
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: sage,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    minimumSize: const Size(75, 42),
+                                  ),
+                                  child: const Text('Search', style: TextStyle(fontSize: 12)),
+                                ),
                               ),
                               hintText: 'What do you need help with?',
                               prefixIcon: const Icon(Icons.search_rounded, color: ink),
