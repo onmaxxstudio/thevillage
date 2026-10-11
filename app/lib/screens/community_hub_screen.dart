@@ -31,6 +31,8 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   Set<String> usedSuggestedQuestions = {};
   Map<String, int> memberCounts = {};
   List<VillagePost> villagePosts = [];
+  List<_CommunityInfo> memberCommunities = [];
+  List<_CommunityInfo> get allCommunities => [...communities, ...memberCommunities];
 
   static const sections = <(IconData, String)>[
     (Icons.groups_2_outlined, 'Communities'),
@@ -400,7 +402,25 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       registeredEvents = loadedEvents;
       usedSuggestedQuestions = loadedSuggestions;
     });
+    await _loadMemberCommunities();
     await _loadCommunityContent();
+  }
+
+  Future<void> _loadMemberCommunities() async {
+    try {
+      final items = await service.memberCommunities();
+      if (!mounted) return;
+      setState(() => memberCommunities = items.map((item) => _CommunityInfo(
+        id: item['id'] as String,
+        name: item['name'] as String? ?? 'Village Community',
+        description: item['description'] as String? ?? '',
+        icon: Icons.groups_2_outlined,
+        color: const Color(0xFFE8EBDD),
+        memberLabel: 'Member-created community',
+        conversationSearch: item['name'] as String? ?? '',
+        prompts: const ['What would you like to share?'],
+      )).toList());
+    } catch (_) {}
   }
 
   Future<void> _loadCommunityContent() async {
@@ -408,7 +428,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
     List<VillagePost> loadedPosts = [];
     try {
       loadedCounts = await service
-          .memberCounts(communities.map((community) => community.id))
+          .memberCounts(allCommunities.map((community) => community.id))
           .timeout(const Duration(seconds: 6));
     } on Object {
       // Counts can update later without blocking the rest of the Hub.
@@ -688,10 +708,99 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
     );
   }
 
+  Future<void> _createCommunity() async {
+    final name = TextEditingController();
+    final description = TextEditingController();
+    final purpose = TextEditingController();
+    String? error;
+    bool saving = false;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, update) {
+          final slug = CommunityHubService.communitySlug(name.text);
+          final matches = allCommunities.where((c) {
+            final candidate = CommunityHubService.communitySlug(c.name);
+            return slug.isNotEmpty && (candidate == slug ||
+                candidate.contains(slug) || slug.contains(candidate));
+          }).toList();
+          final exact = matches.any((c) =>
+              CommunityHubService.communitySlug(c.name) == slug);
+          return AlertDialog(
+            backgroundColor: cream,
+            title: Text('Create your village',
+                style: GoogleFonts.playfairDisplay(color: sage)),
+            content: SingleChildScrollView(
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Text('Find an existing village first, or create a unique space.'),
+                TextField(controller: name, maxLength: 50,
+                  onChanged: (_) => update(() {}),
+                  decoration: const InputDecoration(labelText: 'Community name')),
+                if (matches.isNotEmpty) ...[
+                  const Text('Similar communities:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  for (final match in matches.take(5))
+                    ListTile(title: Text(match.name),
+                      subtitle: Text(match.description, maxLines: 2),
+                      onTap: () {
+                        Navigator.pop(dialogContext);
+                        _openCommunity(match);
+                      }),
+                ],
+                TextField(controller: description, maxLength: 180, maxLines: 2,
+                  decoration: const InputDecoration(labelText: 'Community description')),
+                TextField(controller: purpose, maxLength: 300, maxLines: 2,
+                  decoration: const InputDecoration(labelText: 'What makes it unique?')),
+                if (error != null) Text(error!,
+                  style: const TextStyle(color: Colors.red)),
+              ]),
+            ),
+            actions: [
+              TextButton(onPressed: saving ? null : () => Navigator.pop(dialogContext),
+                child: const Text('Cancel')),
+              FilledButton(
+                onPressed: saving || exact ? null : () async {
+                  if (name.text.trim().length < 3 ||
+                      description.text.trim().length < 15 ||
+                      purpose.text.trim().length < 15) {
+                    update(() => error = 'Provide a name and descriptions of at least 15 characters.');
+                    return;
+                  }
+                  update(() { saving = true; error = null; });
+                  try {
+                    await service.createMemberCommunity(
+                      name: name.text, description: description.text,
+                      purpose: purpose.text,
+                      reservedSlugs: communities.map((c) =>
+                        CommunityHubService.communitySlug(c.name)).toSet());
+                    if (!dialogContext.mounted) return;
+                    Navigator.pop(dialogContext);
+                    await _loadMemberCommunities();
+                  } catch (e) {
+                    update(() => error = e.toString().replaceFirst('Bad state: ', ''));
+                  } finally {
+                    if (dialogContext.mounted) update(() => saving = false);
+                  }
+                },
+                child: Text(exact ? 'Already exists' : saving ? 'Creating…' : 'Create community'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    name.dispose();
+    description.dispose();
+    purpose.dispose();
+  }
+
   Widget _communitiesView() {
     return _centeredList(
       children: [
         _featuredCard(),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(onPressed: _createCommunity,
+          icon: const Icon(Icons.add_circle_outline),
+          label: const Text('Can’t find your village? Create one')),
         const SizedBox(height: 22),
         _sectionHeading(
           'Explore Communities',
@@ -707,9 +816,9 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
             mainAxisSpacing: 12,
             childAspectRatio: .88,
           ),
-          itemCount: communities.length,
+          itemCount: allCommunities.length,
           itemBuilder: (context, index) {
-            final community = communities[index];
+            final community = allCommunities[index];
             final isJoined = joined.contains(community.id);
             return _communityCard(community, isJoined);
           },
