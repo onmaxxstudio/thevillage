@@ -146,6 +146,22 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     super.dispose();
   }
 
+  Future<void> setAnonymousForJournalShare(bool value) async {
+    if (value || !widget.defaultAnonymous) {
+      setState(() => anonymous = value);
+      return;
+    }
+    final showName = await showDialog<bool>(context: context, builder: (dialogContext) => AlertDialog(
+      title: const Text('Share using your username?'),
+      content: const Text('This post will show your Village username instead of Anonymous. Your original My Space entry will remain private.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Stay anonymous')),
+        FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Show my username')),
+      ],
+    ));
+    if (mounted && showName == true) setState(() => anonymous = false);
+  }
+
   Future<void> preview() async {
     final question = questionController.text.trim();
     if (question.length < 10) {
@@ -258,7 +274,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                   const SizedBox(height: 10),
                   SwitchListTile.adaptive(
                     value: anonymous,
-                    onChanged: (value) => setState(() => anonymous = value),
+                    onChanged: setAnonymousForJournalShare,
                     secondary: const Icon(Icons.visibility_off_outlined, color: sage),
                     title: const Text('Post anonymously', style: TextStyle(fontWeight: FontWeight.w800)),
                     subtitle: const Text('Your name will not be shown.'),
