@@ -35,12 +35,54 @@ service cloud.firestore {
     }
 
 
-    // Member-created villages are readable only to signed-in members.
-    // Canonical document IDs make exact-name creation atomic and race-safe.
+    // Atomic ownership and quota enforcement: one immutable slot per village.
+    match /member_community_slots/{slotId} {
+      allow get: if signedIn() &&
+        slotId.matches('^' + request.auth.uid + '_[0-2]$');
+      allow list: if false;
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly(['uid', 'slug', 'slot', 'createdAt']) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.slot is int &&
+        request.resource.data.slot >= 0 && request.resource.data.slot < 3 &&
+        slotId == request.auth.uid + '_' + string(request.resource.data.slot) &&
+        request.resource.data.slug is string &&
+        request.resource.data.createdAt == request.time &&
+        getAfter(/databases/$(database)/documents/member_communities/$(request.resource.data.slug)).data.creatorUid == request.auth.uid &&
+        getAfter(/databases/$(database)/documents/member_communities/$(request.resource.data.slug)).data.slot == request.resource.data.slot;
+      allow update, delete: if false;
+    }
+
     match /member_communities/{slug} {
       allow read: if signedIn();
       allow create: if signedIn() &&
-        slug.matches('^[a-z0-9]+(-[a-z0-9]+)*
+        slug.matches('^[a-z0-9]+(-[a-z0-9]+)*$') &&
+        slug.size() >= 3 && slug.size() <= 40 &&
+        !(slug in ['women', 'moms', 'relationships', 'wellness', 'faith',
+          'men', 'friendship', 'career', 'grief', 'new-beginnings',
+          'caregivers', 'empty-nest']) &&
+        request.resource.data.keys().hasOnly([
+          'name', 'description', 'purpose', 'creatorUid', 'slot', 'createdAt', 'status'
+        ]) &&
+        request.resource.data.creatorUid == request.auth.uid &&
+        request.resource.data.slot is int &&
+        request.resource.data.slot >= 0 && request.resource.data.slot < 3 &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() >= 3 &&
+        request.resource.data.name.size() <= 50 &&
+        request.resource.data.description is string &&
+        request.resource.data.description.size() >= 15 &&
+        request.resource.data.description.size() <= 180 &&
+        request.resource.data.purpose is string &&
+        request.resource.data.purpose.size() >= 15 &&
+        request.resource.data.purpose.size() <= 300 &&
+        request.resource.data.status == 'active' &&
+        request.resource.data.createdAt == request.time &&
+        getAfter(/databases/$(database)/documents/member_community_slots/$(request.auth.uid + '_' + string(request.resource.data.slot))).data.slug == slug;
+      allow update, delete: if false;
+    }
+
+    match /admin_communities/{itemId} {
       allow get, list: if signedIn() &&
         (isAdmin() || resource.data.published == true);
       allow create, update, delete: if isAdmin();
