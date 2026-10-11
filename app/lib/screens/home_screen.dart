@@ -1976,6 +1976,7 @@ class _MoodHistoryScreenState extends State<MoodHistoryScreen> {
       backgroundColor: _HomeScreenState.cream,
       appBar: AppBar(
         backgroundColor: _HomeScreenState.cream,
+        automaticallyImplyLeading: false,
         titleSpacing: 0,
         leadingWidth: 0,
         title: Center(
