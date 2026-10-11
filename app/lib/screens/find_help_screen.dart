@@ -4,6 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../services/admin_content_service.dart';
 import 'resource_category_browser.dart';
@@ -1244,6 +1246,12 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       const SizedBox(height: 10),
       const Text('Not enough community feedback yet',
         style: TextStyle(fontSize: 11, color: ink)),
+      Row(children: [
+        TextButton.icon(onPressed: () => _voteResource(resource, true),
+          icon: const Icon(Icons.thumb_up_outlined, size: 16), label: const Text('Helpful')),
+        TextButton.icon(onPressed: () => _voteResource(resource, false),
+          icon: const Icon(Icons.thumb_down_outlined, size: 16), label: const Text('Not helpful')),
+      ]),
       const SizedBox(height: 10),
       Row(children: [
         Expanded(child: OutlinedButton.icon(
@@ -1280,9 +1288,53 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             child: Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Text(issue))),
       ]));
     if (!mounted || reason == null) return;
-    // Reporting requires authenticated, moderated Firestore persistence before enabling submission.
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Reporting is being set up. No report has been submitted yet.')));
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign in to report a resource.')));
+      return;
+    }
+    try {
+      await FirebaseFirestore.instance.collection('resource_reports').add({
+        'resourceId': resource.id,
+        'reporterUid': uid,
+        'reason': reason,
+        'status': 'open',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Report submitted for review. Thank you.')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Report could not be submitted. Please try again.')));
+    }
+  }
+
+  Future<void> _voteResource(HelpResource resource, bool helpful) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    String reason = '';
+    if (!helpful) {
+      final selected = await showDialog<String>(context: context, builder: (dialogContext) =>
+        SimpleDialog(title: const Text('Why was it not helpful?'), children: [
+          for (final issue in ['Unavailable', 'Ineligible', 'No response', 'Incorrect information'])
+            SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, issue),
+              child: Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Text(issue))),
+        ]));
+      if (selected == null) return;
+      reason = selected;
+    }
+    try {
+      await FirebaseFirestore.instance.collection('resource_votes')
+        .doc(resource.id).collection('members').doc(uid).set({
+          'uid': uid, 'helpful': helpful, 'reason': reason,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your feedback has been saved.')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to save feedback. Please try again.')));
+    }
   }
 
 }
