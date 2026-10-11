@@ -1059,6 +1059,8 @@ class _CheckInSheet extends StatefulWidget {
 class _CheckInSheetState extends State<_CheckInSheet> {
   String? selectedMood;
   bool periodStarted = false;
+  bool healthExpanded = true;
+  bool cycleExpanded = false;
   late final TextEditingController detailsController;
   late final TextEditingController healthNotesController;
 
@@ -1067,6 +1069,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     super.initState();
     selectedMood = widget.initialMood ?? widget.existing?.mood;
     periodStarted = widget.existing?.periodStarted ?? false;
+    cycleExpanded = periodStarted;
     detailsController = TextEditingController(
       text: widget.existing?.details ?? '',
     );
@@ -1169,74 +1172,78 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                   ),
               ],
             ),
-            const SizedBox(height: 20),
-            if (widget.showPeriodTracking) ...[
-              CheckboxListTile(
-                value: periodStarted,
-                onChanged: (value) {
-                  setState(() => periodStarted = value ?? false);
-                },
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                activeColor: _HomeScreenState.sage,
-                title: Text(
-                  'My period started today',
-                  style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Saving the start date helps estimate your next period.',
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-            Text(
-              'Health notes (optional)',
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: healthNotesController,
-              minLines: 2,
-              maxLines: 4,
-              maxLength: 500,
-              decoration: InputDecoration(
-                hintText: 'Symptoms, sleep, pain, medication, or anything else…',
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: .55),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
+            const SizedBox(height: 18),
+            Text('Today I’m feeling… (optional)',
+                style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Wrap(spacing: 7, runSpacing: 6,
+              children: ['Calm', 'Happy', 'Anxious', 'Stressed', 'Tired', 'Motivated', 'Overwhelmed', 'Irritable']
+                .map((feeling) => ActionChip(
+                  label: Text(feeling, style: const TextStyle(fontSize: 12)),
+                  onPressed: () {
+                    final current = detailsController.text.trim();
+                    detailsController.text = current.isEmpty ? feeling : '$'+'{current}, $'+'{feeling}';
+                    setState(() {});
+                  },
+                  backgroundColor: detailsController.text.split(', ').contains(feeling)
+                      ? _HomeScreenState.paleSage : _HomeScreenState.cream,
+                  side: BorderSide(color: _HomeScreenState.line),
+                )).toList()),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: .55),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: _HomeScreenState.line)),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                ListTile(contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.note_alt_outlined, color: _HomeScreenState.sage),
+                  title: Text('Health Notes (optional)', style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Sleep, energy, medication, symptoms, or anything to remember.', style: TextStyle(fontSize: 12)),
+                  trailing: Icon(healthExpanded ? Icons.expand_less : Icons.expand_more),
+                  onTap: () => setState(() => healthExpanded = !healthExpanded)),
+                if (healthExpanded) TextField(controller: healthNotesController, minLines: 2, maxLines: 4, maxLength: 500,
+                  decoration: InputDecoration(hintText: 'Add a note…',
+                    filled: true, fillColor: _HomeScreenState.cream,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(13)))),
+              ]),
             ),
             const SizedBox(height: 12),
-            Text(
-              'Personal notes (optional)',
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
+            if (widget.showPeriodTracking) ...[
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(color: _HomeScreenState.paleSage.withValues(alpha: .55),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: _HomeScreenState.line)),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  ListTile(contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.water_drop_outlined, color: Color(0xFFB56E74)),
+                    title: Text('My Cycle (optional)', style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
+                    subtitle: const Text('Track your period and view your next period estimate.', style: TextStyle(fontSize: 12)),
+                    trailing: Icon(cycleExpanded ? Icons.expand_less : Icons.expand_more),
+                    onTap: () => setState(() => cycleExpanded = !cycleExpanded)),
+                  if (cycleExpanded) ...[
+                    CheckboxListTile(contentPadding: EdgeInsets.zero,
+                      value: periodStarted,
+                      onChanged: (value) => setState(() => periodStarted = value ?? false),
+                      activeColor: _HomeScreenState.sage,
+                      title: const Text('My period started today'),
+                      subtitle: const Text('This date helps estimate your next period.')),
+                    const Text('Ovulation estimates are not yet available. Period predictions are approximate and not contraception guidance.',
+                      style: TextStyle(fontSize: 12)),
+                  ],
+                ]),
               ),
-            ),
+              const SizedBox(height: 12),
+            ],
+            Text('Personal Notes (optional)',
+              style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
-            TextField(
-              controller: detailsController,
-              minLines: 2,
-              maxLines: 4,
-              maxLength: 500,
-              decoration: InputDecoration(
-                hintText: 'Write what’s on your mind…',
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: .55),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-            ),
+            TextField(controller: detailsController, minLines: 2, maxLines: 4, maxLength: 500,
+              decoration: InputDecoration(hintText: 'Write what’s on your mind…',
+                filled: true, fillColor: Colors.white.withValues(alpha: .55),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)))),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Icon(
