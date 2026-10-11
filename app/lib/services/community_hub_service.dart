@@ -141,21 +141,34 @@ class CommunityHubService {
     }
     final uid = FirebaseAuth.instance.currentUser!.uid;
     final collection = FirebaseFirestore.instance.collection('member_communities');
-    final own = await collection.where('creatorUid', isEqualTo: uid).limit(11).get();
-    if (own.docs.length >= 3) {
-      throw StateError('You can create up to 3 communities for now.');
-    }
     final ref = collection.doc(slug);
+    final slots = List.generate(3, (index) => FirebaseFirestore.instance
+        .collection('member_community_slots').doc('${uid}_$index'));
     await FirebaseFirestore.instance.runTransaction((transaction) async {
       final existing = await transaction.get(ref);
       if (existing.exists) {
         throw StateError('This community already exists. Join it instead.');
       }
+      final usedSlots = <bool>[];
+      for (final slot in slots) {
+        usedSlots.add((await transaction.get(slot)).exists);
+      }
+      final available = usedSlots.indexOf(false);
+      if (available == -1) {
+        throw StateError('You can create up to 3 communities for now.');
+      }
+      transaction.set(slots[available], {
+        'uid': uid,
+        'slug': slug,
+        'slot': available,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
       transaction.set(ref, {
         'name': name.trim(),
         'description': description.trim(),
         'purpose': purpose.trim(),
         'creatorUid': uid,
+        'slot': available,
         'createdAt': FieldValue.serverTimestamp(),
         'status': 'active',
       });
