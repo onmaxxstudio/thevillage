@@ -1001,8 +1001,26 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          subtitle: Text(
-                            '${post.author}  •  ${post.replies.length} ${post.replies.length == 1 ? 'reply' : 'replies'}',
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${post.author}  •  ${post.replies.length} ${post.replies.length == 1 ? 'reply' : 'replies'}',
+                              ),
+                              if (DateTime.now().difference(
+                                post.replies.fold<DateTime>(
+                                  post.createdAt,
+                                  (latest, reply) => reply.createdAt.isAfter(latest)
+                                      ? reply.createdAt : latest,
+                                ),
+                              ).inDays >= 60)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 6),
+                                  child: Text('🌱 Revive This Conversation',
+                                    style: TextStyle(color: sage,
+                                      fontWeight: FontWeight.w700)),
+                                ),
+                            ],
                           ),
                           trailing: const Icon(Icons.chevron_right_rounded),
                         ),
