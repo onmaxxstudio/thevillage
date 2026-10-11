@@ -28,6 +28,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
 
   final admin = AdminContentService();
   final zipController = TextEditingController();
+  final directorySearchController = TextEditingController();
+  String directoryQuery = '';
   int view = 0;
   bool guidedHelp = false;
   String? selectedState;
@@ -838,6 +840,52 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ),
       );
 
+  void _submitDirectorySearch() {
+    final query = directorySearchController.text.trim();
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      directoryQuery = query;
+      selectedNeed = null;
+      selectedPathId = null;
+      showAllResources = true;
+    });
+  }
+
+  Widget _directorySearchResults() {
+    return StreamBuilder<List<ManagedContentItem>>(
+      stream: admin.cloudReady
+          ? admin.watchPublished('resources')
+          : Stream.value(const <ManagedContentItem>[]),
+      builder: (context, snapshot) {
+        final query = directoryQuery.toLowerCase();
+        final items = _visible(_managed(snapshot.data ?? const <ManagedContentItem>[]))
+            .where((resource) => query.isEmpty ||
+                resource.title.toLowerCase().contains(query) ||
+                resource.description.toLowerCase().contains(query) ||
+                resource.needs.any((need) => need.toLowerCase().contains(query)))
+            .toList();
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Expanded(child: Text(directoryQuery.isEmpty ? 'Featured Resources' : 'Search Results',
+                style: GoogleFonts.playfairDisplay(fontSize: 23, fontWeight: FontWeight.w700, color: ink))),
+            TextButton(onPressed: () => setState(() {
+              selectedNeed = null;
+              selectedPathId = null;
+              directoryQuery = '';
+              directorySearchController.clear();
+              showAllResources = true;
+            }), child: Text(directoryQuery.isEmpty ? 'View all results →' : 'Clear search')),
+          ]),
+          const SizedBox(height: 10),
+          if (items.isEmpty)
+            const Padding(padding: EdgeInsets.symmetric(vertical: 20),
+                child: Text('No matching resources found. Try another keyword or category.'))
+          else _resourceGrid(items.take(directoryQuery.isEmpty ? 3 : 30).toList()),
+        ]);
+      },
+    );
+  }
+
   Widget _helpStart() => guidedHelp
       ? ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 32), children: [
           TextButton.icon(
@@ -917,7 +965,15 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                             ],
                           ),
                           child: TextField(
+                            controller: directorySearchController,
+                            textInputAction: TextInputAction.search,
+                            onSubmitted: (_) => _submitDirectorySearch(),
                             decoration: InputDecoration(
+                              suffixIcon: IconButton(
+                                tooltip: 'Search resources',
+                                icon: const Icon(Icons.arrow_forward_rounded, color: sage),
+                                onPressed: _submitDirectorySearch,
+                              ),
                               hintText: 'What do you need help with?',
                               prefixIcon: const Icon(Icons.search_rounded, color: ink),
                               border: InputBorder.none,
@@ -955,6 +1011,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ),
             const SizedBox(height: 22),
             ResourceCategoryBrowser(onExplore: _exploreCategory),
+            const SizedBox(height: 22),
+            _directorySearchResults(),
             const SizedBox(height: 16),
             TextButton.icon(
               onPressed: () => setState(() => guidedHelp = true),
@@ -1074,6 +1132,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   }
 
   void _exploreCategory(String category) {
+    directoryQuery = '';
+    directorySearchController.clear();
     // Existing resource data supports nine broad needs. Do not falsely label
     // unmatched listings as category-specific until tags are migrated.
     const mapping = <String, String>{
