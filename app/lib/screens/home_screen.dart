@@ -171,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isScrollControlled: true,
       backgroundColor: cream,
       showDragHandle: true,
-      builder: (_) => _CheckInSheet(existing: today, initialMood: initialMood, showPeriodTracking: showPeriodTracking, history: history),
+      builder: (_) => _CheckInSheet(existing: today, initialMood: initialMood, showPeriodTracking: showPeriodTracking, history: history, onPeriodTrackingChanged: (enabled) async { final value = await PersonalizationService().load(); await PersonalizationService().save(VillagePersonalization(identity: value.identity, interests: value.interests, periodTracking: enabled, completed: value.completed)); }),
     );
     if (result == null) return;
     final saved = await checkInService.saveToday(
@@ -1062,12 +1062,13 @@ class _CheckInResult {
 }
 
 class _CheckInSheet extends StatefulWidget {
-  const _CheckInSheet({this.existing, this.initialMood, required this.showPeriodTracking, required this.history});
+  const _CheckInSheet({this.existing, this.initialMood, required this.showPeriodTracking, required this.history, required this.onPeriodTrackingChanged});
 
   final MoodCheckIn? existing;
   final String? initialMood;
   final bool showPeriodTracking;
   final List<MoodCheckIn> history;
+  final Future<void> Function(bool enabled) onPeriodTrackingChanged;
 
   @override
   State<_CheckInSheet> createState() => _CheckInSheetState();
@@ -1082,6 +1083,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
   final Set<String> symptoms = {};
   bool healthExpanded = true;
   bool cycleExpanded = false;
+  late bool cycleEnabled;
   late final TextEditingController detailsController;
   late final TextEditingController healthNotesController;
 
@@ -1095,6 +1097,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     flowLevel = widget.existing?.flowLevel ?? '';
     symptoms.addAll(widget.existing?.symptoms ?? const []);
     cycleExpanded = periodStarted;
+    cycleEnabled = widget.showPeriodTracking;
     detailsController = TextEditingController(
       text: widget.existing?.details ?? '',
     );
@@ -1238,7 +1241,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
               ]),
             ),
             const SizedBox(height: 12),
-            if (widget.showPeriodTracking) ...[
+            ...[
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(color: _HomeScreenState.paleSage.withValues(alpha: .55),
@@ -1251,7 +1254,19 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                     subtitle: const Text('Track your period and view your next period estimate.', style: TextStyle(fontSize: 12)),
                     trailing: Icon(cycleExpanded ? Icons.expand_less : Icons.expand_more),
                     onTap: () => setState(() => cycleExpanded = !cycleExpanded)),
-                  if (cycleExpanded) ...[
+                  if (!cycleEnabled && cycleExpanded)
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      value: cycleEnabled,
+                      activeColor: _HomeScreenState.sage,
+                      title: const Text('Turn on My Cycle'),
+                      subtitle: const Text('Period details and estimates stay private to your account.'),
+                      onChanged: (value) async {
+                        setState(() => cycleEnabled = value);
+                        await widget.onPeriodTrackingChanged(value);
+                      },
+                    ),
+                  if (cycleEnabled && cycleExpanded) ...[
                     CheckboxListTile(contentPadding: EdgeInsets.zero,
                       value: periodStarted,
                       onChanged: (value) => setState(() => periodStarted = value ?? false),
@@ -1305,7 +1320,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    widget.showPeriodTracking
+                    cycleEnabled
                         ? 'Your mood, period start date, and health notes stay private to your account.'
                         : 'Your mood and health notes stay private to your account.',
                     style: TextStyle(fontSize: 12),
