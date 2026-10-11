@@ -477,15 +477,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                TextSpan(
-                                  text: ' ♡',
-                                  style: GoogleFonts.playfairDisplay(
-                                    color: sage,
-                                    fontSize: 21,
-                                    height: 1.1,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
                               ],
                             ),
                           ),
