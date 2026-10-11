@@ -2030,15 +2030,24 @@ class _MoodHistoryScreenState extends State<MoodHistoryScreen> {
           child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: [
-              for (var i = 0; i < shownTabs.length; i++) ...[
-                _HistoryTab(label: shownTabs[i], selected: tab == shownTabs[i],
-                  onTap: () => setState(() => tab = shownTabs[i])),
-                if (i != shownTabs.length - 1) const SizedBox(width: 8),
-              ],
-            ]),
+          LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var i = 0; i < shownTabs.length; i++) ...[
+                      _HistoryTab(label: shownTabs[i], selected: tab == shownTabs[i],
+                        onTap: () => setState(() => tab = shownTabs[i])),
+                      if (i != shownTabs.length - 1) const SizedBox(width: 8),
+                    ],
+                  ],
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 14),
           if (entries.isEmpty) _empty()
