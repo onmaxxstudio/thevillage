@@ -249,173 +249,114 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     final joinedCommunities = communities
         .where((community) => joined.contains(community.id))
         .toList();
-    final spotlight = _communityById(communities, features.spotlightId) ??
-        _communityById(communities, 'new_beginnings') ??
-        (communities.isEmpty ? null : communities.first);
-    final selectedPosts = <VillagePost>[
-      for (final id in features.pulsePostIds)
-        ...pulsePosts.where((post) => post.id == id),
-    ];
-    final latestPosts = [...pulsePosts]
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final visiblePosts = <VillagePost>[
-      ...selectedPosts,
-      ...latestPosts.where((post) =>
-          !selectedPosts.any((selected) => selected.id == post.id)),
-    ].take(2).toList();
-    ManagedContentItem? featuredItem(
-        List<ManagedContentItem> items, String id) {
-      for (final item in items) {
-        if (item.id == id) return item;
-      }
-      return items.isEmpty ? null : items.first;
-    }
-    final resourceItems =
-        resources.where((item) => item.text('kind') != 'question').toList();
-    final featuredResource = featuredItem(resourceItems, features.resourceId);
-    final featuredEvent = featuredItem(events, features.eventId);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 36),
       children: [
         TextField(
           controller: searchController,
           onChanged: (value) => setState(() => query = value.trim().toLowerCase()),
           decoration: InputDecoration(
-            hintText: 'What are you navigating right now?',
+            hintText: 'Search communities...',
             prefixIcon: const Icon(Icons.search_rounded, color: sage),
-            suffixIcon: IconButton(
-              tooltip: 'Trust & Safety',
-              onPressed: _showTrustSafety,
-              icon: const Icon(Icons.shield_outlined, color: sage),
-            ),
             filled: true,
-            fillColor: Colors.white.withValues(alpha: .72),
-            contentPadding: const EdgeInsets.symmetric(vertical: 15),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: const BorderSide(color: line),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: const BorderSide(color: line),
-            ),
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: line)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: line)),
           ),
         ),
-        const SizedBox(height: 24),
-        _premiumSectionHeader('Your Village',
-            joinedCommunities.isEmpty ? null : 'Manage',
-            onAction: joinedCommunities.isEmpty ? null : _showAll),
-        const SizedBox(height: 4),
-        const Text('Joined communities that support your journey.',
-            style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
-        const SizedBox(height: 12),
-        if (joinedCommunities.isEmpty)
-          _joinFirstCard()
-        else
-          SizedBox(
-            height: 154,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: joinedCommunities.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 11),
-              itemBuilder: (_, index) =>
-                  _joinedPremiumCard(joinedCommunities[index]),
-            ),
-          ),
-        const SizedBox(height: 27),
-        _premiumSectionHeader('Community Pulse', 'See All',
-            onAction: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                builder: (_) => const VillageFeedScreen())).then((_) => _loadPosts())),
-        const SizedBox(height: 4),
-        const Text('Real questions. Real people. Real support.',
-            style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
-        const SizedBox(height: 12),
-        if (visiblePosts.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: line),
-            ),
-            child: const Text('Conversations will appear here when neighbors start sharing.'),
-          )
-        else
-          for (final post in visiblePosts) ...[
-            _pulseCard(post),
-            const SizedBox(height: 10),
-          ],
-        if (spotlight != null) ...[
-          const SizedBox(height: 27),
-          _premiumSectionHeader('Community Spotlight', 'See All',
-              onAction: _showAll),
+        const SizedBox(height: 16),
+        Row(children: [
+          Expanded(child: OutlinedButton.icon(
+            onPressed: () => _createCommunity(communities),
+            icon: const Icon(Icons.group_add_outlined),
+            label: const Text('Create a Community', maxLines: 2, textAlign: TextAlign.center),
+            style: OutlinedButton.styleFrom(foregroundColor: sage, side: const BorderSide(color: sage), padding: const EdgeInsets.symmetric(vertical: 16)),
+          )),
+          const SizedBox(width: 10),
+          Expanded(child: FilledButton.icon(
+            onPressed: _showAll,
+            icon: const Icon(Icons.groups_outlined),
+            label: const Text('Browse All', maxLines: 2, textAlign: TextAlign.center),
+            style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.symmetric(vertical: 16)),
+          )),
+        ]),
+        if (joinedCommunities.isNotEmpty) ...[
+          const SizedBox(height: 25),
+          _premiumSectionHeader('My Communities', null),
           const SizedBox(height: 12),
-          _spotlightCard(spotlight),
+          SizedBox(height: 145, child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: joinedCommunities.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (_, i) => _joinedPremiumCard(joinedCommunities[i]),
+          )),
         ],
-        const SizedBox(height: 27),
-        _premiumSectionHeader('Explore Communities', 'See All',
-            onAction: _showAll),
-        const SizedBox(height: 12),
-        _communityChips(communities),
-        const SizedBox(height: 18),
-        Row(
-          children: [
-            Expanded(
-              child: _previewCard(
-                icon: Icons.auto_stories_outlined,
-                eyebrow: featuredResource == null
-                    ? 'RESOURCES'
-                    : 'FEATURED RESOURCE',
-                title: featuredResource?.text('title') ?? 'Explore helpful resources',
-                action: 'Read now',
-                onTap: () => setState(() => selected = 1),
+        const SizedBox(height: 26),
+        _premiumSectionHeader(query.isEmpty ? 'Explore Communities' : 'Search Results', 'See All', onAction: _showAll),
+        const SizedBox(height: 14),
+        if (communities.isEmpty)
+          const Padding(padding: EdgeInsets.all(20), child: Text('No communities found. Try another search or create your own.'))
+        else
+          LayoutBuilder(builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 850 ? 4 : 2;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: communities.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: constraints.maxWidth < 420 ? .65 : .78,
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _previewCard(
-                icon: Icons.calendar_month_outlined,
-                eyebrow: featuredEvent == null ? 'EVENTS' : 'FEATURED EVENT',
-                title: featuredEvent?.text('title') ?? 'See upcoming events',
-                action: 'View event',
-                onTap: () => setState(() => selected = 2),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 18),
-        FilledButton.icon(
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const AskVillageScreen()),
-          ),
-          style: FilledButton.styleFrom(
-            backgroundColor: sage,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-          ),
-          icon: const Icon(Icons.add_circle_outline_rounded),
-          label: const Text('Ask a Community',
-              style: TextStyle(fontWeight: FontWeight.w800)),
-        ),
-        const SizedBox(height: 10),
-        OutlinedButton.icon(
-          onPressed: () => _createCommunity(communities),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: sage,
-            side: const BorderSide(color: line),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-          ),
-          icon: const Icon(Icons.add_home_work_outlined),
-          label: const Text('Can’t find your community? Create one',
-              style: TextStyle(fontWeight: FontWeight.w800)),
+              itemBuilder: (_, i) => _directoryCard(communities[i]),
+            );
+          }),
+        const SizedBox(height: 22),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(color: const Color(0xFFF0EFE3), borderRadius: BorderRadius.circular(22)),
+          child: Column(children: [
+            Text('Can’t find what you’re looking for?', textAlign: TextAlign.center, style: GoogleFonts.playfairDisplay(fontSize: 21, fontWeight: FontWeight.w700, color: ink)),
+            const SizedBox(height: 6),
+            const Text('Create a public or private community for your people.', textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            FilledButton.icon(onPressed: () => _createCommunity(communities), icon: const Icon(Icons.add_circle_outline), label: const Text('Create a Community'), style: FilledButton.styleFrom(backgroundColor: sage)),
+          ]),
         ),
       ],
+    );
+  }
+
+  Widget _directoryCard(_Community community) {
+    final isJoined = joined.contains(community.id);
+    final count = memberCounts[community.id] ?? 0;
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: line)),
+      clipBehavior: Clip.antiAlias,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Expanded(flex: 5, child: InkWell(
+          onTap: () => _open(community),
+          child: community.imageUrl.isEmpty
+              ? _fallback()
+              : Image.network(community.imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallback()),
+        )),
+        Expanded(flex: 6, child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(community.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.playfairDisplay(fontSize: 16, height: 1.1, fontWeight: FontWeight.w700, color: ink)),
+            const SizedBox(height: 4),
+            Text('$count ${count == 1 ? 'member' : 'members'}', style: const TextStyle(color: sage, fontSize: 11)),
+            const SizedBox(height: 5),
+            Expanded(child: Text(community.description, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, height: 1.25))),
+            SizedBox(width: double.infinity, height: 34, child: OutlinedButton(
+              onPressed: isJoined ? () => _open(community) : () => _toggleJoin(community),
+              style: OutlinedButton.styleFrom(foregroundColor: sage, padding: EdgeInsets.zero, side: const BorderSide(color: sage)),
+              child: Text(isJoined ? 'Open' : 'Join'),
+            )),
+          ]),
+        )),
+      ]),
     );
   }
 
