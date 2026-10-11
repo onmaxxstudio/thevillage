@@ -1948,136 +1948,308 @@ class _CheckInSheetState extends State<_CheckInSheet> {
   }
 }
 
-class MoodHistoryScreen extends StatelessWidget {
+class MoodHistoryScreen extends StatefulWidget {
   const MoodHistoryScreen({super.key, required this.history, required this.showPeriodTracking});
-
   final List<MoodCheckIn> history;
   final bool showPeriodTracking;
 
   @override
+  State<MoodHistoryScreen> createState() => _MoodHistoryScreenState();
+}
+
+class _MoodHistoryScreenState extends State<MoodHistoryScreen> {
+  String tab = 'Overview';
+  String range = 'Last 30 days';
+  static const tabNames = ['Overview', 'Mood', 'Cycle', 'Health Notes'];
+
+  List<MoodCheckIn> get entries {
+    if (range == 'All time') return widget.history;
+    final days = range == 'Last 7 days' ? 7 : range == 'Last 90 days' ? 90 : 30;
+    final since = DateTime.now().subtract(Duration(days: days));
+    return widget.history.where((e) => !e.createdAt.isBefore(since)).toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final shownTabs = widget.showPeriodTracking ? tabNames : tabNames.where((t) => t != 'Cycle').toList();
     return Scaffold(
       backgroundColor: _HomeScreenState.cream,
       appBar: AppBar(
         backgroundColor: _HomeScreenState.cream,
-        title: Text(
-          'My Check-In History',
-          style: GoogleFonts.playfairDisplay(
-            color: _HomeScreenState.sage,
-            fontWeight: FontWeight.w600,
+        leading: IconButton(onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.arrow_back_rounded, color: _HomeScreenState.ink)),
+        title: Text('My Check-In History', style: GoogleFonts.playfairDisplay(
+          color: _HomeScreenState.ink, fontWeight: FontWeight.w600, fontSize: 22)),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: range,
+                items: const [
+                  DropdownMenuItem(value: 'Last 7 days', child: Text('Last 7 days')),
+                  DropdownMenuItem(value: 'Last 30 days', child: Text('Last 30 days')),
+                  DropdownMenuItem(value: 'Last 90 days', child: Text('Last 90 days')),
+                  DropdownMenuItem(value: 'All time', child: Text('All time')),
+                ],
+                onChanged: (v) { if (v != null) setState(() => range = v); },
+              ),
+            ),
           ),
-        ),
+        ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
         children: [
-          if (showPeriodTracking) ...[
-            _PeriodPredictionCard(history: history),
-            const SizedBox(height: 14),
-          ],
-          _MoodTrendChart(history: history),
-          const SizedBox(height: 22),
-          Text(
-            'Monthly Health Summary',
-            style: GoogleFonts.playfairDisplay(
-              color: _HomeScreenState.ink,
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-            ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [
+              for (var i = 0; i < shownTabs.length; i++) ...[
+                _HistoryTab(label: shownTabs[i], selected: tab == shownTabs[i],
+                  onTap: () => setState(() => tab = shownTabs[i])),
+                if (i != shownTabs.length - 1) const SizedBox(width: 8),
+              ],
+            ]),
           ),
-          const Text(
-            'A private overview based only on your saved check-ins.',
-            style: TextStyle(fontSize: 12),
-          ),
-          const SizedBox(height: 10),
-          _MonthlyHealthSummary(history: history),
-          const SizedBox(height: 22),
-          Text(
-            'Recent Check-Ins',
-            style: GoogleFonts.playfairDisplay(
-              color: _HomeScreenState.ink,
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 10),
-          if (history.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 36),
-              child: Center(
-                child: Text('Your saved check-ins will appear here.'),
-              ),
-            )
-          else
-            for (final entry in history) ...[
-              Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .55),
-                    border: Border.all(color: _HomeScreenState.line),
-                    borderRadius: BorderRadius.circular(17),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const CircleAvatar(
-                        backgroundColor: _HomeScreenState.paleSage,
-                        child: Icon(
-                          Icons.favorite_outline_rounded,
-                          color: _HomeScreenState.sage,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              entry.mood,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              '${entry.createdAt.month}/${entry.createdAt.day}/${entry.createdAt.year}',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            if (entry.feelingTags.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text('Feeling: ${entry.feelingTags.join(', ')}'),
-                            ],
-                            if (entry.periodStarted) ...[
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Period started',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                            if (entry.healthNotes.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text('Health notes: ${entry.healthNotes}'),
-                            ],
-                            if (entry.details.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text('Personal note: ${entry.details}'),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-              ),
-              const SizedBox(height: 10),
-            ],
+          const SizedBox(height: 14),
+          if (entries.isEmpty) _empty()
+          else if (tab == 'Overview') _overview(entries)
+          else if (tab == 'Mood') _mood(entries)
+          else if (tab == 'Cycle') _cycle(entries)
+          else _health(entries),
         ],
       ),
     );
   }
+
+  Widget _overview(List<MoodCheckIn> data) {
+    final now = DateTime.now();
+    final month = data.where((e) => e.createdAt.year == now.year && e.createdAt.month == now.month).toList();
+    final recent = data.take(5).toList();
+    final mood = _topMood(month);
+    final notes = month.where((e) => e.healthNotes.trim().isNotEmpty).length;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      if (widget.showPeriodTracking) ...[
+        _PeriodPredictionCard(history: data), const SizedBox(height: 12),
+      ],
+      _panel('Your Mood Trend', subtitle: 'Your saved check-ins over time', child: Column(children: [
+        _MoodTrendChart(history: data),
+        const SizedBox(height: 12),
+        _counts(data),
+      ])),
+      const SizedBox(height: 12),
+      _panel('This Month at a Glance', subtitle: _month(now.month) + ' ' + now.year.toString(),
+        child: Wrap(spacing: 8, runSpacing: 8, children: [
+          _glance(Icons.calendar_month_outlined, month.length.toString(), 'Check-ins'),
+          _glance(Icons.sentiment_satisfied_alt_rounded, mood, 'Most common mood'),
+          if (widget.showPeriodTracking)
+            _glance(Icons.water_drop_outlined, month.where((e) => e.periodStarted).length.toString(), 'Period starts'),
+          _glance(Icons.description_outlined, notes.toString(), 'Health-note days'),
+        ])),
+      if (widget.showPeriodTracking) ...[
+        const SizedBox(height: 12),
+        _panel('Cycle Overview', trailing: 'View Calendar', child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Period dates and cycle predictions are estimates.'),
+            const SizedBox(height: 8),
+            _CycleCalendar(history: data),
+          ],
+        )),
+      ],
+      const SizedBox(height: 12),
+      _panel('Recent Check-Ins', trailing: 'View All', child: Column(children: [
+        for (var i = 0; i < recent.length; i++) ...[
+          _entry(recent[i]),
+          if (i < recent.length - 1) Divider(height: 1, color: _HomeScreenState.line),
+        ],
+      ])),
+    ]);
+  }
+
+  Widget _mood(List<MoodCheckIn> data) => Column(children: [
+    _panel('Your Mood Journey', subtitle: 'See how your mood has changed over time.',
+      child: Column(children: [_MoodTrendChart(history: data), const SizedBox(height: 12), _counts(data)])),
+    const SizedBox(height: 12),
+    _panel('Mood Patterns', child: Row(children: [
+      const Icon(Icons.lightbulb_outline_rounded, color: _HomeScreenState.gold),
+      const SizedBox(width: 10),
+      Expanded(child: Text(data.length < 3
+        ? 'Keep checking in to see patterns in your mood.'
+        : 'Your mood history reflects the check-ins you have saved.')),
+    ])),
+    const SizedBox(height: 12),
+    for (final e in data) _entry(e),
+  ]);
+
+  Widget _cycle(List<MoodCheckIn> data) => _panel(
+    'Cycle Insights',
+    trailing: 'View Calendar',
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _PeriodPredictionCard(history: data),
+      const SizedBox(height: 10),
+      const Text('These dates are estimates and can vary. They are not reliable contraception guidance.',
+        style: TextStyle(fontSize: 12)),
+      const SizedBox(height: 10),
+      _CycleCalendar(history: data),
+    ]),
+  );
+
+  Widget _health(List<MoodCheckIn> data) {
+    final notes = data.where((e) => e.healthNotes.trim().isNotEmpty).toList();
+    return _panel('Health Notes', trailing: 'Saved notes', child: notes.isEmpty
+      ? const Text('Health notes saved with your check-ins will appear here.')
+      : Column(children: [
+          for (var i = 0; i < notes.length; i++) ...[
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const CircleAvatar(radius: 20, backgroundColor: _HomeScreenState.paleSage,
+                child: Icon(Icons.description_outlined, color: _HomeScreenState.sage)),
+              const SizedBox(width: 10),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(_month(notes[i].createdAt.month) + ' ' + notes[i].createdAt.day.toString() +
+                  ', ' + notes[i].createdAt.year.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 3),
+                Text(notes[i].healthNotes),
+              ])),
+              const Icon(Icons.chevron_right_rounded),
+            ]),
+            if (i < notes.length - 1) Divider(height: 20, color: _HomeScreenState.line),
+          ],
+        ]));
+  }
+
+  Widget _entry(MoodCheckIn e) {
+    final color = _color(e.mood);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(width: 48, padding: const EdgeInsets.symmetric(vertical: 7),
+          decoration: BoxDecoration(color: _HomeScreenState.paleSage.withValues(alpha: .6),
+            borderRadius: BorderRadius.circular(13)),
+          child: Column(children: [
+            Text(_shortMonth(e.createdAt.month), style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700)),
+            Text(e.createdAt.day.toString(), style: GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w700)),
+          ])),
+        const SizedBox(width: 9),
+        CircleAvatar(radius: 18, backgroundColor: color.withValues(alpha: .2),
+          child: Icon(_icon(e.mood), size: 21, color: color)),
+        const SizedBox(width: 9),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Mood: ' + e.mood, style: const TextStyle(fontWeight: FontWeight.w600)),
+          if (e.feelingTags.isNotEmpty) Text(e.feelingTags.join(' · '), style: const TextStyle(fontSize: 12)),
+          if (e.healthNotes.isNotEmpty) Text(e.healthNotes, maxLines: 2, overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12)),
+          if (e.details.isNotEmpty) Text(e.details, maxLines: 2, overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12)),
+          if (e.periodStarted) const Text('Period started', style: TextStyle(fontSize: 11, color: _HomeScreenState.sage)),
+        ])),
+        const Icon(Icons.chevron_right_rounded),
+      ]),
+    );
+  }
+
+  Widget _counts(List<MoodCheckIn> data) {
+    const moods = ['Great', 'Good', 'Okay', 'Struggling', 'Not good'];
+    return Wrap(alignment: WrapAlignment.spaceBetween, runSpacing: 8, children: [
+      for (final mood in moods)
+        Container(width: 62, padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 3),
+          decoration: BoxDecoration(color: Colors.white.withValues(alpha: .45), borderRadius: BorderRadius.circular(14)),
+          child: Column(children: [
+            Icon(_icon(mood), color: _color(mood), size: 24),
+            Text(data.where((e) => e.mood == mood).length.toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(mood, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10)),
+          ])),
+    ]);
+  }
+
+  Widget _glance(IconData icon, String value, String label) => Container(
+    width: 145, padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(color: const Color(0xFFF6F2E9), borderRadius: BorderRadius.circular(17)),
+    child: Row(children: [
+      Icon(icon, color: _HomeScreenState.sage, size: 23),
+      const SizedBox(width: 8),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(value, style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: _HomeScreenState.ink)),
+        Text(label, style: const TextStyle(fontSize: 11)),
+      ])),
+    ]),
+  );
+
+  Widget _empty() => Container(
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .62),
+      border: Border.all(color: _HomeScreenState.line), borderRadius: BorderRadius.circular(20)),
+    child: const Column(children: [
+      Icon(Icons.spa_outlined, color: _HomeScreenState.sage, size: 34),
+      SizedBox(height: 8),
+      Text('Your saved check-ins will appear here.'),
+    ]),
+  );
+
+  Widget _panel(String title, {String? subtitle, String? trailing, required Widget child}) => Container(
+    width: double.infinity,
+    margin: const EdgeInsets.only(bottom: 0),
+    padding: const EdgeInsets.all(15),
+    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .65),
+      border: Border.all(color: _HomeScreenState.line), borderRadius: BorderRadius.circular(21)),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(child: Text(title, style: GoogleFonts.playfairDisplay(color: _HomeScreenState.ink,
+          fontSize: 21, height: 1.1, fontWeight: FontWeight.w600))),
+        if (trailing != null) Text(trailing, style: const TextStyle(fontSize: 11, color: _HomeScreenState.sage)),
+      ]),
+      if (subtitle != null) ...[const SizedBox(height: 3), Text(subtitle, style: const TextStyle(fontSize: 12))],
+      const SizedBox(height: 10),
+      child,
+    ]),
+  );
+
+  String _topMood(List<MoodCheckIn> data) {
+    if (data.isEmpty) return '—';
+    final counts = <String, int>{};
+    for (final e in data) { counts.update(e.mood, (n) => n + 1, ifAbsent: () => 1); }
+    return counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+  }
+
+  IconData _icon(String mood) => switch (mood) {
+    'Great' => Icons.sentiment_very_satisfied_rounded,
+    'Good' => Icons.sentiment_satisfied_alt_rounded,
+    'Okay' => Icons.sentiment_neutral_rounded,
+    'Struggling' => Icons.sentiment_dissatisfied_rounded,
+    _ => Icons.sentiment_very_dissatisfied_rounded,
+  };
+
+  Color _color(String mood) => switch (mood) {
+    'Great' => const Color(0xFF56835A),
+    'Good' => const Color(0xFF76A96F),
+    'Okay' => const Color(0xFFE8AD3C),
+    'Struggling' => const Color(0xFFE77D92),
+    _ => const Color(0xFFB44C7B),
+  };
+
+  String _month(int n) => const ['January','February','March','April','May','June',
+    'July','August','September','October','November','December'][n - 1];
+  String _shortMonth(int n) => const ['JAN','FEB','MAR','APR','MAY','JUN',
+    'JUL','AUG','SEP','OCT','NOV','DEC'][n - 1];
 }
 
+class _HistoryTab extends StatelessWidget {
+  const _HistoryTab({required this.label, required this.selected, required this.onTap});
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: selected ? _HomeScreenState.sage : Colors.white.withValues(alpha: .62),
+    borderRadius: BorderRadius.circular(24),
+    child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(24),
+      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 10),
+        child: Text(label, style: TextStyle(color: selected ? Colors.white : _HomeScreenState.ink,
+          fontSize: 13, fontWeight: selected ? FontWeight.w600 : FontWeight.w400)))),
+  );
+}
 
 class _CycleCalendar extends StatefulWidget {
   const _CycleCalendar({required this.history});
