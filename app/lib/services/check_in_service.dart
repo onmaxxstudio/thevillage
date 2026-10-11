@@ -16,6 +16,7 @@ class MoodCheckIn {
     this.spotting = false,
     this.flowLevel = '',
     this.symptoms = const [],
+    this.feelingTags = const [],
   });
 
   final String mood;
@@ -27,6 +28,7 @@ class MoodCheckIn {
   final bool spotting;
   final String flowLevel;
   final List<String> symptoms;
+  final List<String> feelingTags;
 
   Map<String, Object> toJson() => {
         'mood': mood,
@@ -38,6 +40,7 @@ class MoodCheckIn {
         'spotting': spotting,
         'flowLevel': flowLevel,
         'symptoms': symptoms,
+        'feelingTags': feelingTags,
       };
 
   factory MoodCheckIn.fromJson(Map<String, dynamic> json) {
@@ -53,6 +56,7 @@ class MoodCheckIn {
       spotting: json['spotting'] == true,
       flowLevel: json['flowLevel'] as String? ?? '',
       symptoms: (json['symptoms'] as List<dynamic>? ?? const []).whereType<String>().toList(),
+      feelingTags: (json['feelingTags'] as List<dynamic>? ?? const []).whereType<String>().toList(),
     );
   }
 }
@@ -131,6 +135,7 @@ class CheckInService {
     bool spotting = false,
     String flowLevel = '',
     List<String> symptoms = const [],
+    List<String> feelingTags = const [],
   }) async {
     final history = await load();
     final now = DateTime.now();
@@ -147,6 +152,7 @@ class CheckInService {
         spotting: spotting,
         flowLevel: flowLevel,
         symptoms: symptoms,
+        feelingTags: feelingTags,
       ),
     );
     await _saveLocal(history);
@@ -165,6 +171,7 @@ class CheckInService {
           'spotting': spotting,
           'flowLevel': flowLevel,
           'symptoms': symptoms,
+          'feelingTags': feelingTags,
           'createdAt': Timestamp.fromDate(now),
           'updatedAt': FieldValue.serverTimestamp(),
         });
