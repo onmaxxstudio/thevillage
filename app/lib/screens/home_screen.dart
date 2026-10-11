@@ -14,6 +14,7 @@ import '../widgets/daily_village_census_card.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
+import 'my_space_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -223,6 +224,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 14),
                             _buildAskCard(),
                             const SizedBox(height: 14),
+                            _buildMySpaceCard(),
+                            const SizedBox(height: 14),
                             const DailyVillageCensusCard(),
                             const SizedBox(height: 18),
                             _buildCommunityHubCard(),
@@ -238,6 +241,52 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMySpaceCard() {
+    return Material(
+      color: const Color(0xFFE8EBDD),
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const MySpaceScreen()),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 26,
+                backgroundColor: sage,
+                child: Icon(Icons.edit_note_rounded, color: Colors.white, size: 29),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      Expanded(child: Text('My Space', style: GoogleFonts.playfairDisplay(
+                        color: ink, fontSize: 23, fontWeight: FontWeight.w600,
+                      ))),
+                      const Icon(Icons.lock_outline, color: sage, size: 16),
+                      const SizedBox(width: 4),
+                      const Text('Private', style: TextStyle(color: sage, fontSize: 12)),
+                    ]),
+                    const SizedBox(height: 4),
+                    const Text('A private place to write, reflect, and clear your mind.',
+                      style: TextStyle(color: ink, fontSize: 13)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.chevron_right_rounded, color: sage),
+            ],
+          ),
         ),
       ),
     );
