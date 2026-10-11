@@ -65,7 +65,8 @@ service cloud.firestore {
         slug.size() >= 3 && slug.size() <= 40 &&
         !(slug in ['women', 'moms', 'relationships', 'wellness', 'faith',
           'men', 'friendship', 'career', 'grief', 'new-beginnings',
-          'caregivers', 'empty-nest']) &&
+          'caregivers', 'empty-nest', 'life-after-the-kids',
+          'faith-spirituality', 'career-purpose', 'grief-healing']) &&
         request.resource.data.keys().hasOnly([
           'name', 'description', 'purpose', 'creatorUid', 'slot', 'createdAt', 'status'
         ]) &&
