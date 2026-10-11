@@ -551,6 +551,34 @@ service cloud.firestore {
       }
     }
 
+    // Member-only resource feedback; no public access to individual votes.
+    match /resource_votes/{resourceId}/members/{uid} {
+      allow get: if isSelf(uid) || isAdmin();
+      allow list: if isAdmin();
+      allow create, update: if isSelf(uid) &&
+        resourceId.size() > 0 && resourceId.size() <= 180 &&
+        request.resource.data.keys().hasOnly(['uid', 'helpful', 'reason', 'updatedAt']) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.helpful is bool &&
+        request.resource.data.reason in ['', 'Unavailable', 'Ineligible', 'No response', 'Incorrect information'] &&
+        (request.resource.data.helpful == false || request.resource.data.reason == '') &&
+        request.resource.data.updatedAt == request.time;
+      allow delete: if isSelf(uid);
+    }
+
+    match /resource_reports/{reportId} {
+      allow get, list, update, delete: if isAdmin();
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly(['resourceId', 'reporterUid', 'reason', 'status', 'createdAt']) &&
+        request.resource.data.reporterUid == request.auth.uid &&
+        request.resource.data.resourceId is string &&
+        request.resource.data.resourceId.size() > 0 &&
+        request.resource.data.resourceId.size() <= 180 &&
+        request.resource.data.reason in ['Outdated information', 'Broken link', 'Program closed', 'Incorrect details', 'Other'] &&
+        request.resource.data.status == 'open' &&
+        request.resource.data.createdAt == request.time;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

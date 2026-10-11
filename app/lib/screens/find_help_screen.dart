@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../services/admin_content_service.dart';
 import 'resource_category_browser.dart';
@@ -77,7 +80,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://www.211.org/',
       phone: '211',
       label: 'Free • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'usa-benefits',
@@ -86,7 +89,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Food','Rent & Housing','Utilities','Healthcare','Childcare','Employment'],
       url: 'https://www.usa.gov/benefit-finder',
       label: 'Official government resource',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'food-help',
@@ -95,7 +98,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Food'],
       url: 'https://www.usa.gov/food-help',
       label: 'Official • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'rent-help',
@@ -104,7 +107,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Rent & Housing'],
       url: 'https://www.usa.gov/emergency-pay-rent',
       label: 'Official • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'utility-help',
@@ -113,7 +116,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Utilities'],
       url: 'https://www.usa.gov/help-with-utility-bills',
       label: 'Official • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'housing-help',
@@ -122,7 +125,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Rent & Housing'],
       url: 'https://www.usa.gov/housing-help',
       label: 'Official • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'state-social-services',
@@ -131,7 +134,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Food','Rent & Housing','Utilities','Healthcare','Childcare','Employment'],
       url: 'https://www.usa.gov/state-social-services',
       label: 'Official government directory',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'emergency-food',
@@ -141,7 +144,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://www.usa.gov/emergency-food-assistance',
       phone: '1-866-348-6479',
       label: 'Official • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'health-center',
@@ -150,7 +153,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Healthcare'],
       url: 'https://findahealthcenter.hrsa.gov/',
       label: 'Official • Local locator',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'childcare-referral',
@@ -159,7 +162,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Childcare'],
       url: 'https://www.childcareaware.org/resources/ccrr-search/',
       label: 'Nationwide local locator',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'jobs-local',
@@ -169,7 +172,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://www.careeronestop.org/LocalHelp/AmericanJobCenters/find-american-job-centers.aspx',
       phone: '1-877-872-5627',
       label: 'Official • Local locator',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'legal-aid',
@@ -178,7 +181,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Legal Help'],
       url: 'https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help',
       label: 'Nationwide nonprofit network',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: '988',
@@ -188,7 +191,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://988lifeline.org/get-help/',
       phone: '988',
       label: 'Free • 24/7',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'local-programs',
@@ -197,7 +200,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Food','Rent & Housing','Utilities','Healthcare','Childcare','Transportation','Employment','Legal Help','Crisis & Safety'],
       url: 'https://www.findhelp.org/',
       label: 'Local nonprofit directory',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'fl-benefits',
@@ -208,7 +211,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://www.myflfamilies.com/services/public-assistance',
       phone: '(850) 300-4323',
       label: 'Florida official resource',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'fl-homelessness',
@@ -219,7 +222,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://www.myflfamilies.com/services/abuse/homelessness',
       phone: '(850) 300-4323',
       label: 'Florida official resource',
-      verified: 'September 2026',
+      verified: '',
     ),
   ];
 
@@ -292,7 +295,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         url: 'https://www.211.org/get-help/food-programs-food-benefits',
         phone: '211',
         label: 'Local help in $name',
-        verified: 'September 2026',
+        verified: '',
       ),
       HelpResource(
         id: 'local_housing_$state',
@@ -303,7 +306,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         url: 'https://www.211.org/get-help/housing-expenses',
         phone: '211',
         label: 'Local help in $name',
-        verified: 'September 2026',
+        verified: '',
       ),
       HelpResource(
         id: 'local_health_$state',
@@ -314,7 +317,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         url: 'https://www.211.org/get-help/healthcare-expenses',
         phone: '211',
         label: 'Local help in $name',
-        verified: 'September 2026',
+        verified: '',
       ),
       HelpResource(
         id: 'local_work_$state',
@@ -325,7 +328,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         url: 'https://www.211.org/',
         phone: '211',
         label: 'Local help in $name',
-        verified: 'September 2026',
+        verified: '',
       ),
     ];
   }
@@ -424,26 +427,17 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               const SizedBox(height: 4),
               const Text('Local and state-specific options come first.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
               const SizedBox(height: 10),
-              for (final resource in localResults) ...[
-                _resourceCard(resource),
-                const SizedBox(height: 11),
-              ],
+              _resourceGrid(localResults),
               if (nationwideResults.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text('Nationwide programs', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
                 const SizedBox(height: 4),
                 const Text('More trusted options available across the country.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
                 const SizedBox(height: 10),
-                for (final resource in nationwideResults) ...[
-                  _resourceCard(resource),
-                  const SizedBox(height: 11),
-                ],
+                _resourceGrid(nationwideResults),
               ],
             ] else ...[
-              for (final resource in (showAllResources ? visible : visible.take(6))) ...[
-                _resourceCard(resource),
-                const SizedBox(height: 11),
-              ],
+              _resourceGrid((showAllResources ? visible : visible.take(6)).toList()),
               if (!showAllResources && visible.length > 6)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
@@ -1199,35 +1193,157 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ]),
       );
 
+  Widget _resourceGrid(List<HelpResource> resources) =>
+      LayoutBuilder(builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 1080 ? 3 : constraints.maxWidth >= 690 ? 2 : 1;
+        const gap = 14.0;
+        final cardWidth = (constraints.maxWidth - gap * (columns - 1)) / columns;
+        return Wrap(
+          spacing: gap, runSpacing: gap,
+          children: [
+            for (final resource in resources)
+              SizedBox(width: cardWidth, child: _resourceCard(resource)),
+          ],
+        );
+      });
+
   Widget _resourceCard(HelpResource resource) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Container(width: 43, height: 43, decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.volunteer_activism_outlined, color: sage)),
-            const SizedBox(width: 11),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(resource.title, style: GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w700, color: ink)),
-              const SizedBox(height: 3),
-              Text(resource.label, style: const TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w900)),
-            ])),
-            IconButton(onPressed: () => _toggleSaved(resource.id), icon: Icon(saved.contains(resource.id) ? Icons.bookmark_rounded : Icons.bookmark_border_rounded, color: sage), tooltip: 'Save resource'),
-          ]),
-          const SizedBox(height: 9),
-          Text(resource.description, style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: ink)),
-          const SizedBox(height: 10),
-          Wrap(spacing: 6, runSpacing: 5, children: [
-            for (final need in resource.needs.take(3))
-              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(12)), child: Text(need, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700))),
-          ]),
-          const SizedBox(height: 11),
-          Row(children: [
-            Expanded(child: Text('Verified: ${resource.verified}', style: const TextStyle(fontSize: 10.5, color: Color(0xFF697069)))),
-            if (resource.phone.isNotEmpty) TextButton.icon(onPressed: () => _call(resource.phone), icon: const Icon(Icons.call_outlined, size: 17), label: const Text('Call')),
-            if (resource.url.isNotEmpty) FilledButton(onPressed: () => _open(resource.url), style: FilledButton.styleFrom(backgroundColor: sage, visualDensity: VisualDensity.compact), child: const Text('Visit')),
-          ]),
-        ]),
-      );
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: line),
+      boxShadow: [BoxShadow(color: sage.withValues(alpha: 0.06), blurRadius: 14, offset: const Offset(0, 5))],
+    ),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        Expanded(child: Wrap(spacing: 6, runSpacing: 6, children: [
+          for (final need in resource.needs.take(2))
+            Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
+              child: Text(need, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: sage))),
+        ])),
+        const SizedBox(width: 8),
+        Text(resource.states.isEmpty ? 'Nationwide' : 'Regional',
+          style: const TextStyle(fontSize: 11, color: ink)),
+      ]),
+      const SizedBox(height: 12),
+      Container(height: 76, width: double.infinity,
+        decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(13)),
+        child: const Icon(Icons.volunteer_activism_outlined, color: sage, size: 34)),
+      const SizedBox(height: 12),
+      Text(resource.title, style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
+      const SizedBox(height: 6),
+      Text(resource.description, style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: ink)),
+      const SizedBox(height: 10),
+      Text(resource.label, style: const TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w800)),
+      if (resource.verified.isNotEmpty && resource.verified != 'Check availability') ...[
+        const SizedBox(height: 10),
+        Container(width: double.infinity, padding: const EdgeInsets.all(9),
+          decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(9)),
+          child: Row(children: [
+            const Icon(Icons.verified_outlined, color: sage, size: 17),
+            const SizedBox(width: 7),
+            Expanded(child: Text('Verification on record: ${resource.verified}',
+              style: const TextStyle(fontSize: 11, color: sage, fontWeight: FontWeight.w700))),
+          ])),
+      ],
+      const SizedBox(height: 10),
+      // Individual votes are private; aggregate counts require trusted
+      // server-side calculation before they can be displayed publicly.
+      const Text('Not enough community feedback yet',
+        style: TextStyle(fontSize: 11, color: ink)),
+      Row(children: [
+        TextButton.icon(onPressed: () => _voteResource(resource, true),
+          icon: const Icon(Icons.thumb_up_outlined, size: 16), label: const Text('Helpful')),
+        TextButton.icon(onPressed: () => _voteResource(resource, false),
+          icon: const Icon(Icons.thumb_down_outlined, size: 16), label: const Text('Not helpful')),
+      ]),
+      const SizedBox(height: 10),
+      Row(children: [
+        Expanded(child: OutlinedButton.icon(
+          onPressed: () => _toggleSaved(resource.id),
+          icon: Icon(saved.contains(resource.id) ? Icons.bookmark : Icons.bookmark_border, size: 17),
+          label: Text(saved.contains(resource.id) ? 'Saved' : 'Save'))),
+        const SizedBox(width: 6),
+        Expanded(child: OutlinedButton.icon(
+          onPressed: resource.url.isEmpty ? null : () => Share.share(resource.url, subject: resource.title),
+          icon: const Icon(Icons.share_outlined, size: 17), label: const Text('Share'))),
+        const SizedBox(width: 6),
+        Expanded(child: OutlinedButton.icon(
+          onPressed: () => _reportResource(resource),
+          icon: const Icon(Icons.flag_outlined, size: 17), label: const Text('Report'))),
+      ]),
+      const SizedBox(height: 8),
+      SizedBox(width: double.infinity, child: FilledButton.icon(
+        onPressed: resource.url.isEmpty ? null : () => _open(resource.url),
+        style: FilledButton.styleFrom(backgroundColor: sage),
+        icon: const Icon(Icons.open_in_new_rounded, size: 17),
+        label: const Text('View Program Details'))),
+      if (resource.phone.isNotEmpty)
+        Align(alignment: Alignment.centerRight, child: TextButton.icon(
+          onPressed: () => _call(resource.phone),
+          icon: const Icon(Icons.call_outlined, size: 17), label: const Text('Call'))),
+    ]),
+  );
+
+  Future<void> _reportResource(HelpResource resource) async {
+    final reason = await showDialog<String>(context: context, builder: (dialogContext) =>
+      SimpleDialog(title: Text('Report ${resource.title}'), children: [
+        for (final issue in ['Outdated information', 'Broken link', 'Program closed', 'Incorrect details', 'Other'])
+          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, issue),
+            child: Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Text(issue))),
+      ]));
+    if (!mounted || reason == null) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign in to report a resource.')));
+      return;
+    }
+    try {
+      await FirebaseFirestore.instance.collection('resource_reports').add({
+        'resourceId': resource.id,
+        'reporterUid': uid,
+        'reason': reason,
+        'status': 'open',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Report submitted for review. Thank you.')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Report could not be submitted. Please try again.')));
+    }
+  }
+
+  Future<void> _voteResource(HelpResource resource, bool helpful) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    String reason = '';
+    if (!helpful) {
+      final selected = await showDialog<String>(context: context, builder: (dialogContext) =>
+        SimpleDialog(title: const Text('Why was it not helpful?'), children: [
+          for (final issue in ['Unavailable', 'Ineligible', 'No response', 'Incorrect information'])
+            SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, issue),
+              child: Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Text(issue))),
+        ]));
+      if (selected == null) return;
+      reason = selected;
+    }
+    try {
+      await FirebaseFirestore.instance.collection('resource_votes')
+        .doc(resource.id).collection('members').doc(uid).set({
+          'uid': uid, 'helpful': helpful, 'reason': reason,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your feedback has been saved.')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to save feedback. Please try again.')));
+    }
+  }
+
 }
 
 class HelpPath {
