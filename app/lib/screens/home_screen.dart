@@ -460,13 +460,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: 1,
                         ),
                       ),
-                      Text(
-                        '$currentUsername ♡',
-                        style: GoogleFonts.playfairDisplay(
-                          color: sage,
-                          fontSize: 34,
-                          height: 1.1,
-                          fontWeight: FontWeight.w600,
+                      SizedBox(
+                        width: double.infinity,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            currentUsername,
+                            maxLines: 1,
+                            softWrap: false,
+                            style: GoogleFonts.playfairDisplay(
+                              color: sage,
+                              fontSize: 34,
+                              height: 1.1,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 10),
