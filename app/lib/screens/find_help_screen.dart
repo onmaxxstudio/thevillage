@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../services/admin_content_service.dart';
 import 'resource_category_browser.dart';
@@ -1200,34 +1201,90 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       );
 
   Widget _resourceCard(HelpResource resource) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Container(width: 43, height: 43, decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.volunteer_activism_outlined, color: sage)),
-            const SizedBox(width: 11),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(resource.title, style: GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w700, color: ink)),
-              const SizedBox(height: 3),
-              Text(resource.label, style: const TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w900)),
-            ])),
-            IconButton(onPressed: () => _toggleSaved(resource.id), icon: Icon(saved.contains(resource.id) ? Icons.bookmark_rounded : Icons.bookmark_border_rounded, color: sage), tooltip: 'Save resource'),
-          ]),
-          const SizedBox(height: 9),
-          Text(resource.description, style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: ink)),
-          const SizedBox(height: 10),
-          Wrap(spacing: 6, runSpacing: 5, children: [
-            for (final need in resource.needs.take(3))
-              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(12)), child: Text(need, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700))),
-          ]),
-          const SizedBox(height: 11),
-          Row(children: [
-            Expanded(child: Text('Verified: ${resource.verified}', style: const TextStyle(fontSize: 10.5, color: Color(0xFF697069)))),
-            if (resource.phone.isNotEmpty) TextButton.icon(onPressed: () => _call(resource.phone), icon: const Icon(Icons.call_outlined, size: 17), label: const Text('Call')),
-            if (resource.url.isNotEmpty) FilledButton(onPressed: () => _open(resource.url), style: FilledButton.styleFrom(backgroundColor: sage, visualDensity: VisualDensity.compact), child: const Text('Visit')),
-          ]),
-        ]),
-      );
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: line),
+      boxShadow: [BoxShadow(color: sage.withValues(alpha: 0.06), blurRadius: 14, offset: const Offset(0, 5))],
+    ),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        Expanded(child: Wrap(spacing: 6, runSpacing: 6, children: [
+          for (final need in resource.needs.take(2))
+            Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
+              child: Text(need, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: sage))),
+        ])),
+        const SizedBox(width: 8),
+        Text(resource.states.isEmpty ? 'Nationwide' : 'Regional',
+          style: const TextStyle(fontSize: 11, color: ink)),
+      ]),
+      const SizedBox(height: 12),
+      Container(height: 76, width: double.infinity,
+        decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(13)),
+        child: const Icon(Icons.volunteer_activism_outlined, color: sage, size: 34)),
+      const SizedBox(height: 12),
+      Text(resource.title, style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
+      const SizedBox(height: 6),
+      Text(resource.description, style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: ink)),
+      const SizedBox(height: 10),
+      Text(resource.label, style: const TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w800)),
+      if (resource.verified.isNotEmpty && resource.verified != 'Check availability') ...[
+        const SizedBox(height: 10),
+        Container(width: double.infinity, padding: const EdgeInsets.all(9),
+          decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(9)),
+          child: Row(children: [
+            const Icon(Icons.verified_outlined, color: sage, size: 17),
+            const SizedBox(width: 7),
+            Expanded(child: Text('Verification on record: ${resource.verified}',
+              style: const TextStyle(fontSize: 11, color: sage, fontWeight: FontWeight.w700))),
+          ])),
+      ],
+      const SizedBox(height: 10),
+      const Text('Not enough community feedback yet',
+        style: TextStyle(fontSize: 11, color: ink)),
+      const SizedBox(height: 10),
+      Row(children: [
+        Expanded(child: OutlinedButton.icon(
+          onPressed: () => _toggleSaved(resource.id),
+          icon: Icon(saved.contains(resource.id) ? Icons.bookmark : Icons.bookmark_border, size: 17),
+          label: Text(saved.contains(resource.id) ? 'Saved' : 'Save'))),
+        const SizedBox(width: 6),
+        Expanded(child: OutlinedButton.icon(
+          onPressed: resource.url.isEmpty ? null : () => Share.share(resource.url, subject: resource.title),
+          icon: const Icon(Icons.share_outlined, size: 17), label: const Text('Share'))),
+        const SizedBox(width: 6),
+        Expanded(child: OutlinedButton.icon(
+          onPressed: () => _reportResource(resource),
+          icon: const Icon(Icons.flag_outlined, size: 17), label: const Text('Report'))),
+      ]),
+      const SizedBox(height: 8),
+      SizedBox(width: double.infinity, child: FilledButton.icon(
+        onPressed: resource.url.isEmpty ? null : () => _open(resource.url),
+        style: FilledButton.styleFrom(backgroundColor: sage),
+        icon: const Icon(Icons.open_in_new_rounded, size: 17),
+        label: const Text('View Program Details'))),
+      if (resource.phone.isNotEmpty)
+        Align(alignment: Alignment.centerRight, child: TextButton.icon(
+          onPressed: () => _call(resource.phone),
+          icon: const Icon(Icons.call_outlined, size: 17), label: const Text('Call'))),
+    ]),
+  );
+
+  Future<void> _reportResource(HelpResource resource) async {
+    final reason = await showDialog<String>(context: context, builder: (dialogContext) =>
+      SimpleDialog(title: Text('Report ${resource.title}'), children: [
+        for (final issue in ['Outdated information', 'Broken link', 'Program closed', 'Incorrect details', 'Other'])
+          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, issue),
+            child: Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Text(issue))),
+      ]));
+    if (!mounted || reason == null) return;
+    // Reporting requires authenticated, moderated Firestore persistence before enabling submission.
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Reporting is being set up. No report has been submitted yet.')));
+  }
+
 }
 
 class HelpPath {
