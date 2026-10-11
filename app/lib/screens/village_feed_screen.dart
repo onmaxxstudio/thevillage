@@ -160,6 +160,18 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     });
   }
 
+  // A reply revives a conversation without altering its original date or history.
+  DateTime _lastConversationActivity(VillagePost post) {
+    var latest = post.createdAt;
+    for (final reply in post.replies) {
+      if (reply.createdAt.isAfter(latest)) latest = reply.createdAt;
+    }
+    return latest;
+  }
+
+  bool _canRevive(VillagePost post) =>
+      DateTime.now().difference(_lastConversationActivity(post)).inDays >= 60;
+
   List<VillagePost> get visiblePosts {
     final query = searchController.text.trim().toLowerCase();
     final visible = posts.where((post) {
@@ -182,7 +194,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
         (a, b) => b.supportCount.compareTo(a.supportCount),
       'Most Replies' =>
         (a, b) => b.replies.length.compareTo(a.replies.length),
-      _ => (a, b) => b.createdAt.compareTo(a.createdAt),
+      _ => (a, b) => _lastConversationActivity(b).compareTo(_lastConversationActivity(a)),
     });
     return visible;
   }
@@ -1382,12 +1394,16 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
               ),
               TextButton.icon(
                 onPressed: () => _openReplies(post),
-                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                label: Text(
-                  post.replies.isEmpty
-                      ? 'Be first to reply'
-                      : 'Reply (${post.replies.length})',
-                ),
+                icon: Icon(_canRevive(post)
+                    ? Icons.eco_outlined
+                    : Icons.chat_bubble_outline_rounded, size: 18),
+                label: Text(_canRevive(post)
+                    ? 'Revive This Conversation'
+                    : post.replies.isEmpty
+                        ? 'Be first to reply'
+                        : 'Reply (${post.replies.length})',
+                  maxLines: 1, softWrap: false,
+                  overflow: TextOverflow.ellipsis),
               ),
               const Spacer(),
               IconButton(
