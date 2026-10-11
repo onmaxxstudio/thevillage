@@ -171,7 +171,27 @@ class _HomeScreenState extends State<HomeScreen> {
       isScrollControlled: true,
       backgroundColor: cream,
       showDragHandle: true,
-      builder: (_) => _CheckInSheet(existing: today, initialMood: initialMood, showPeriodTracking: showPeriodTracking, history: history, onPeriodTrackingChanged: (enabled) async { final value = await PersonalizationService().load(); await PersonalizationService().save(VillagePersonalization(identity: value.identity, interests: value.interests, periodTracking: enabled, completed: value.completed)); }),
+      builder: (sheetContext) => _CheckInSheet(
+        existing: today,
+        initialMood: initialMood,
+        showPeriodTracking: showPeriodTracking,
+        history: history,
+        onPeriodTrackingChanged: (enabled) async {
+          final value = await PersonalizationService().load();
+          await PersonalizationService().save(VillagePersonalization(
+            identity: value.identity,
+            interests: value.interests,
+            periodTracking: enabled,
+            completed: value.completed,
+          ));
+        },
+        onHistory: () {
+          Navigator.of(sheetContext).pop();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) openHistory();
+          });
+        },
+      ),
     );
     if (result == null) return;
     final saved = await checkInService.saveToday(
@@ -183,6 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
       spotting: result.spotting,
       flowLevel: result.flowLevel,
       symptoms: result.symptoms,
+      feelingTags: result.feelingTags,
     );
     if (!mounted) return;
     setState(() => history = saved);
@@ -1043,6 +1064,7 @@ class _CheckInResult {
   const _CheckInResult({
     required this.mood,
     required this.details,
+    required this.feelingTags,
     required this.periodStarted,
     required this.healthNotes,
     required this.periodEnded,
@@ -1053,6 +1075,7 @@ class _CheckInResult {
 
   final String mood;
   final String details;
+  final List<String> feelingTags;
   final bool periodStarted;
   final String healthNotes;
   final bool periodEnded;
@@ -1062,20 +1085,41 @@ class _CheckInResult {
 }
 
 class _CheckInSheet extends StatefulWidget {
-  const _CheckInSheet({this.existing, this.initialMood, required this.showPeriodTracking, required this.history, required this.onPeriodTrackingChanged});
+  const _CheckInSheet({
+    this.existing,
+    this.initialMood,
+    required this.showPeriodTracking,
+    required this.history,
+    required this.onPeriodTrackingChanged,
+    required this.onHistory,
+  });
 
   final MoodCheckIn? existing;
   final String? initialMood;
   final bool showPeriodTracking;
   final List<MoodCheckIn> history;
   final Future<void> Function(bool enabled) onPeriodTrackingChanged;
+  final VoidCallback onHistory;
 
   @override
   State<_CheckInSheet> createState() => _CheckInSheetState();
 }
 
 class _CheckInSheetState extends State<_CheckInSheet> {
+  static const feelings = <String>[
+    'Calm', 'Happy', 'Anxious', 'Stressed', 'Tired',
+    'Motivated', 'Overwhelmed', 'Irritable',
+  ];
+  static const symptomsOptions = <String>[
+    'Cramps', 'Bloating', 'Headache', 'Mood changes', 'Back pain', 'Fatigue',
+  ];
+  static const monthShort = <String>[
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
   String? selectedMood;
+  final Set<String> selectedFeelings = {};
   bool periodStarted = false;
   bool periodEnded = false;
   bool spotting = false;
@@ -1091,13 +1135,14 @@ class _CheckInSheetState extends State<_CheckInSheet> {
   void initState() {
     super.initState();
     selectedMood = widget.initialMood ?? widget.existing?.mood;
+    selectedFeelings.addAll(widget.existing?.feelingTags ?? const []);
     periodStarted = widget.existing?.periodStarted ?? false;
     periodEnded = widget.existing?.periodEnded ?? false;
     spotting = widget.existing?.spotting ?? false;
     flowLevel = widget.existing?.flowLevel ?? '';
     symptoms.addAll(widget.existing?.symptoms ?? const []);
-    cycleExpanded = periodStarted;
     cycleEnabled = widget.showPeriodTracking;
+    cycleExpanded = cycleEnabled;
     detailsController = TextEditingController(
       text: widget.existing?.details ?? '',
     );
@@ -1113,7 +1158,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     super.dispose();
   }
 
-  void save({required bool includeDetails}) {
+  void save() {
     if (selectedMood == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Choose how you’re feeling first.')),
@@ -1124,231 +1169,780 @@ class _CheckInSheetState extends State<_CheckInSheet> {
       context,
       _CheckInResult(
         mood: selectedMood!,
-        details: includeDetails ? detailsController.text : '',
-        periodStarted: periodStarted,
-        healthNotes: includeDetails ? healthNotesController.text : '',
-        periodEnded: periodEnded,
-        spotting: spotting,
-        flowLevel: flowLevel,
-        symptoms: symptoms.toList(),
+        details: detailsController.text,
+        feelingTags: selectedFeelings.toList(),
+        periodStarted: cycleEnabled
+            ? periodStarted
+            : widget.existing?.periodStarted ?? false,
+        healthNotes: healthNotesController.text,
+        periodEnded: cycleEnabled
+            ? periodEnded
+            : widget.existing?.periodEnded ?? false,
+        spotting: cycleEnabled ? spotting : widget.existing?.spotting ?? false,
+        flowLevel:
+            cycleEnabled ? flowLevel : widget.existing?.flowLevel ?? '',
+        symptoms:
+            cycleEnabled ? symptoms.toList() : widget.existing?.symptoms ?? const [],
+      ),
+    );
+  }
+
+  String _dateLabel(DateTime value) =>
+      '${monthShort[value.month - 1]} ${value.day}';
+
+  List<DateTime> _periodStarts() {
+    final values = widget.history
+        .where((entry) => entry.periodStarted)
+        .map((entry) => DateTime(
+              entry.createdAt.year,
+              entry.createdAt.month,
+              entry.createdAt.day,
+            ))
+        .toList();
+    if (periodStarted) {
+      final now = DateTime.now();
+      values.add(DateTime(now.year, now.month, now.day));
+    }
+    values.sort();
+    final unique = <DateTime>[];
+    for (final value in values) {
+      if (unique.isEmpty || unique.last != value) unique.add(value);
+    }
+    return unique;
+  }
+
+  DateTime? _nextPeriodEstimate(List<DateTime> starts, int cycleLength) {
+    if (starts.isEmpty) return null;
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    var estimate = starts.last.add(Duration(days: cycleLength));
+    while (estimate.isBefore(todayOnly)) {
+      estimate = estimate.add(Duration(days: cycleLength));
+    }
+    return estimate;
+  }
+
+  Future<void> _addFeeling() async {
+    final controller = TextEditingController();
+    final value = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: _HomeScreenState.cream,
+        title: const Text('Add a feeling'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 24,
+          decoration: const InputDecoration(hintText: 'Type a feeling'),
+          onSubmitted: (text) => Navigator.pop(dialogContext, text.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    final tag = value?.trim();
+    if (tag == null || tag.isEmpty) return;
+    setState(() {
+      if (selectedFeelings.contains(tag)) {
+        selectedFeelings.remove(tag);
+      } else {
+        selectedFeelings.add(tag);
+      }
+    });
+  }
+
+  Future<void> _addSymptom() async {
+    final controller = TextEditingController();
+    final value = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: _HomeScreenState.cream,
+        title: const Text('Add a symptom'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 32,
+          decoration: const InputDecoration(hintText: 'Type a symptom'),
+          onSubmitted: (text) => Navigator.pop(dialogContext, text.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    final symptom = value?.trim();
+    if (symptom == null || symptom.isEmpty) return;
+    setState(() {
+      if (symptoms.contains(symptom)) {
+        symptoms.remove(symptom);
+      } else {
+        symptoms.add(symptom);
+      }
+    });
+  }
+
+  Widget _tag({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+    IconData? icon,
+    Color? selectedColor,
+    Color? selectedTextColor,
+  }) {
+    final fill = selectedColor ?? _HomeScreenState.sage;
+    return ChoiceChip(
+      avatar: icon == null
+          ? null
+          : Icon(icon, size: 17, color: selected ? (selectedTextColor ?? Colors.white) : _HomeScreenState.sage),
+      label: Text(label),
+      selected: selected,
+      showCheckmark: false,
+      onSelected: (_) => onTap(),
+      selectedColor: fill,
+      backgroundColor: Colors.white.withValues(alpha: .62),
+      side: BorderSide(
+        color: selected ? fill : _HomeScreenState.line,
+      ),
+      labelStyle: TextStyle(
+        color: selected ? (selectedTextColor ?? Colors.white) : _HomeScreenState.ink,
+        fontSize: 13,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      shape: const StadiumBorder(),
+    );
+  }
+
+  Widget _sectionCard({
+    required Widget child,
+    Color? color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color ?? Colors.white.withValues(alpha: .48),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: _HomeScreenState.line.withValues(alpha: .8)),
+        boxShadow: const [
+          BoxShadow(color: Color(0x08000000), blurRadius: 12, offset: Offset(0, 3)),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildCycleSection() {
+    final starts = _periodStarts();
+    final intervals = <int>[];
+    for (var index = 1; index < starts.length; index++) {
+      final days = starts[index].difference(starts[index - 1]).inDays;
+      if (days >= 21 && days <= 45) intervals.add(days);
+    }
+    final cycleLength = intervals.isEmpty
+        ? 28
+        : (intervals.reduce((a, b) => a + b) / intervals.length)
+            .round()
+            .clamp(21, 45);
+    final nextPeriod = _nextPeriodEstimate(starts, cycleLength);
+    final ovulation = nextPeriod?.subtract(const Duration(days: 14));
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    String relative(DateTime? date) {
+      if (date == null) return 'Log a start date';
+      final days = date.difference(todayOnly).inDays;
+      return days == 0 ? 'around today' : days > 0 ? 'in $days days' : '${days.abs()} days ago';
+    }
+
+    return _sectionCard(
+      color: const Color(0xFFFFF9F1),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF9E5E3),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.water_drop_rounded,
+                    color: Color(0xFFD8505B), size: 30),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: InkWell(
+                  onTap: () => setState(() => cycleExpanded = !cycleExpanded),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'My Cycle ',
+                              style: GoogleFonts.playfairDisplay(
+                                color: _HomeScreenState.ink,
+                                fontSize: 23,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const TextSpan(
+                              text: '(optional)',
+                              style: TextStyle(fontSize: 13, color: _HomeScreenState.sage),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        cycleEnabled
+                            ? 'Track your period, symptoms, and view estimated ovulation.'
+                            : 'Turn on to track dates, symptoms, and calendar estimates.',
+                        style: const TextStyle(fontSize: 13, height: 1.25),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Switch.adaptive(
+                value: cycleEnabled,
+                activeColor: _HomeScreenState.sage,
+                onChanged: (value) async {
+                  setState(() {
+                    cycleEnabled = value;
+                    if (!value) cycleExpanded = false;
+                  });
+                  await widget.onPeriodTrackingChanged(value);
+                },
+              ),
+              IconButton(
+                tooltip: cycleExpanded ? 'Collapse My Cycle' : 'Expand My Cycle',
+                onPressed: () => setState(() => cycleExpanded = !cycleExpanded),
+                icon: Icon(cycleExpanded ? Icons.expand_less : Icons.expand_more),
+              ),
+            ],
+          ),
+          if (cycleEnabled && cycleExpanded) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 7,
+              runSpacing: 4,
+              children: [
+                _tag(
+                  label: 'Period started',
+                  selected: periodStarted,
+                  icon: Icons.water_drop_rounded,
+                  selectedColor: _HomeScreenState.sage,
+                  onTap: () => setState(() {
+                    periodStarted = !periodStarted;
+                    if (periodStarted) {
+                      periodEnded = false;
+                      spotting = false;
+                    }
+                  }),
+                ),
+                _tag(
+                  label: 'Period ended',
+                  selected: periodEnded,
+                  icon: Icons.water_drop_outlined,
+                  onTap: () => setState(() {
+                    periodEnded = !periodEnded;
+                    if (periodEnded) {
+                      periodStarted = false;
+                      spotting = false;
+                    }
+                  }),
+                ),
+                _tag(
+                  label: 'Spotting',
+                  selected: spotting,
+                  icon: Icons.water_drop_outlined,
+                  selectedColor: const Color(0xFFF6DADB),
+                  selectedTextColor: const Color(0xFF5F2930),
+                  onTap: () => setState(() {
+                    spotting = !spotting;
+                    if (spotting) {
+                      periodStarted = false;
+                      periodEnded = false;
+                    }
+                  }),
+                ),
+                _tag(
+                  label: 'None',
+                  selected: !periodStarted && !periodEnded && !spotting,
+                  icon: Icons.block_outlined,
+                  onTap: () => setState(() {
+                    periodStarted = false;
+                    periodEnded = false;
+                    spotting = false;
+                  }),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text.rich(
+                  TextSpan(children: [
+                    TextSpan(text: 'Flow level '),
+                    TextSpan(text: '(optional)', style: TextStyle(color: _HomeScreenState.sage, fontSize: 12)),
+                  ]),
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 5),
+                Wrap(
+                  spacing: 5,
+                  runSpacing: 3,
+                  children: [
+                    for (final level in ['Light', 'Medium', 'Heavy'])
+                      _tag(
+                        label: level,
+                        selected: flowLevel == level,
+                        icon: Icons.water_drop_rounded,
+                        selectedColor: level == 'Medium'
+                            ? const Color(0xFFF5DDDC)
+                            : _HomeScreenState.paleSage,
+                        selectedTextColor: _HomeScreenState.ink,
+                        onTap: () => setState(() => flowLevel = flowLevel == level ? '' : level),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text.rich(
+                    TextSpan(children: [
+                      TextSpan(text: 'Symptoms '),
+                      TextSpan(text: '(optional)', style: TextStyle(color: _HomeScreenState.sage, fontSize: 12)),
+                    ]),
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                for (final symptom in [...symptomsOptions, ...symptoms.difference(symptomsOptions.toSet())])
+                  _tag(
+                    label: symptom,
+                    selected: symptoms.contains(symptom),
+                    onTap: () => setState(() {
+                      symptoms.contains(symptom) ? symptoms.remove(symptom) : symptoms.add(symptom);
+                    }),
+                  ),
+                ActionChip(
+                  avatar: const Icon(Icons.add, size: 17),
+                  label: const Text('Add'),
+                  onPressed: _addSymptom,
+                  side: BorderSide(color: _HomeScreenState.line),
+                  backgroundColor: Colors.white.withValues(alpha: .62),
+                  shape: const StadiumBorder(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _predictionCard(
+                    icon: Icons.calendar_month_outlined,
+                    title: 'Next Period',
+                    date: nextPeriod == null ? '—' : _dateLabel(nextPeriod),
+                    sub: relative(nextPeriod),
+                    color: const Color(0xFFF9E5E3),
+                    iconColor: const Color(0xFFD8505B),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _predictionCard(
+                    icon: Icons.eco_outlined,
+                    title: 'Ovulation (Est.)',
+                    date: ovulation == null ? '—' : _dateLabel(ovulation),
+                    sub: relative(ovulation),
+                    color: _HomeScreenState.paleSage,
+                    iconColor: _HomeScreenState.sage,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _predictionCard(
+                    icon: Icons.autorenew_rounded,
+                    title: 'Cycle Length',
+                    date: '${cycleLength} days',
+                    sub: intervals.isEmpty ? '(typical estimate)' : '(avg)',
+                    color: const Color(0xFFF6F0E5),
+                    iconColor: _HomeScreenState.sage,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Predictions are estimates and can vary. They are not reliable contraception guidance.',
+              style: TextStyle(fontSize: 11, height: 1.3),
+            ),
+            const SizedBox(height: 8),
+            _CycleCalendar(history: widget.history),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _predictionCard({
+    required IconData icon,
+    required String title,
+    required String date,
+    required String sub,
+    required Color color,
+    required Color iconColor,
+  }) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 114),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .72),
+        borderRadius: BorderRadius.circular(17),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(icon, color: iconColor, size: 17),
+            const SizedBox(width: 4),
+            Expanded(child: Text(title, maxLines: 2, style: const TextStyle(fontSize: 10, height: 1.1))),
+          ]),
+          const SizedBox(height: 8),
+          Text(date, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.playfairDisplay(fontSize: 15, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 2),
+          Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 10)),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final weekdays = const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final date = '${weekdays[now.weekday - 1]}, ${monthShort[now.month - 1]} ${now.day}';
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        22,
-        2,
-        22,
-        MediaQuery.viewInsetsOf(context).bottom + 24,
+        20,
+        0,
+        20,
+        MediaQuery.viewInsetsOf(context).bottom + 22,
       ),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Daily Check-In',
-              style: GoogleFonts.playfairDisplay(
-                color: _HomeScreenState.sage,
-                fontSize: 31,
-                fontWeight: FontWeight.w600,
-              ),
+            Row(
+              children: [
+                IconButton(
+                  tooltip: 'Close Daily Check-In',
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Image.asset('assets/images/welcome_branch.png', height: 18),
+                      Text('Ask the Village',
+                          maxLines: 1,
+                          style: GoogleFonts.playfairDisplay(
+                            color: _HomeScreenState.sage,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          )),
+                    ],
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: widget.onHistory,
+                  icon: const Icon(Icons.calendar_month_outlined, size: 18),
+                  label: const Text('My History', style: TextStyle(fontSize: 12)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: _HomeScreenState.sage,
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                  ),
+                ),
+              ],
             ),
-            const Text(
-              'How are you showing up for yourself today?',
-              style: TextStyle(fontSize: 15),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Daily Check-In',
+                        style: GoogleFonts.playfairDisplay(
+                          color: _HomeScreenState.ink,
+                          fontSize: 35,
+                          height: 1,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text('How are you today?', style: TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4EDE2),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_month_outlined, size: 16, color: _HomeScreenState.sage),
+                      const SizedBox(width: 5),
+                      Text(date, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 18),
             Row(
               children: [
-                for (final mood in _HomeScreenState.moods)
+                for (var index = 0; index < _HomeScreenState.moods.length; index++)
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: InkWell(
-                        onTap: () => setState(() => selectedMood = mood.$2),
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 2,
+                    child: _moodOption(_HomeScreenState.moods[index], index),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _sectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text.rich(
+                    TextSpan(children: [
+                      TextSpan(
+                        text: 'What are you feeling today? ',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: _HomeScreenState.ink,
+                        ),
+                      ),
+                      const TextSpan(
+                        text: '(optional)',
+                        style: TextStyle(fontSize: 12, color: _HomeScreenState.sage),
+                      ),
+                    ]),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 5,
+                    runSpacing: 3,
+                    children: [
+                      for (final feeling in [
+                        ...feelings,
+                        ...selectedFeelings.difference(feelings.toSet()),
+                      ])
+                        _tag(
+                          label: feeling,
+                          selected: selectedFeelings.contains(feeling),
+                          onTap: () => setState(() {
+                            selectedFeelings.contains(feeling)
+                                ? selectedFeelings.remove(feeling)
+                                : selectedFeelings.add(feeling);
+                          }),
+                          selectedColor: _HomeScreenState.sage,
+                        ),
+                      ActionChip(
+                        avatar: const Icon(Icons.add, size: 17),
+                        label: const Text('Add another'),
+                        onPressed: _addFeeling,
+                        side: BorderSide(color: _HomeScreenState.line),
+                        backgroundColor: Colors.white.withValues(alpha: .62),
+                        shape: const StadiumBorder(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _sectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  InkWell(
+                    onTap: () => setState(() => healthExpanded = !healthExpanded),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 54,
+                          height: 54,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF6E8D5),
+                            shape: BoxShape.circle,
                           ),
-                          decoration: BoxDecoration(
-                            color: selectedMood == mood.$2
-                                ? _HomeScreenState.paleSage
-                                : _HomeScreenState.cream,
-                            border: Border.all(
-                              color: selectedMood == mood.$2
-                                  ? _HomeScreenState.sage
-                                  : _HomeScreenState.line,
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
+                          child: const Icon(Icons.edit_note_rounded,
+                              color: _HomeScreenState.sage, size: 30),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(mood.$1, color: _HomeScreenState.sage),
-                              const SizedBox(height: 3),
-                              FittedBox(
-                                child: Text(
-                                  mood.$2,
-                                  style: const TextStyle(fontSize: 10),
-                                ),
+                              Text.rich(
+                                TextSpan(children: [
+                                  TextSpan(
+                                    text: 'Health Notes ',
+                                    style: GoogleFonts.playfairDisplay(
+                                      fontSize: 21,
+                                      fontWeight: FontWeight.w700,
+                                      color: _HomeScreenState.ink,
+                                    ),
+                                  ),
+                                  const TextSpan(
+                                    text: '(optional)',
+                                    style: TextStyle(fontSize: 12, color: _HomeScreenState.sage),
+                                  ),
+                                ]),
+                              ),
+                              const Text(
+                                'Write anything you want to remember about your health, energy, sleep, medication, or symptoms.',
+                                style: TextStyle(fontSize: 12, height: 1.25),
                               ),
                             ],
                           ),
                         ),
-                      ),
+                        Icon(healthExpanded ? Icons.expand_less : Icons.expand_more),
+                      ],
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Text('Today I’m feeling… (optional)',
-                style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Wrap(spacing: 7, runSpacing: 6,
-              children: ['Calm', 'Happy', 'Anxious', 'Stressed', 'Tired', 'Motivated', 'Overwhelmed', 'Irritable']
-                .map((feeling) => ActionChip(
-                  label: Text(feeling, style: const TextStyle(fontSize: 12)),
-                  onPressed: () {
-                    final current = detailsController.text.trim();
-                    detailsController.text = current.isEmpty ? feeling : '\${current}, \${feeling}';
-                    setState(() {});
-                  },
-                  backgroundColor: detailsController.text.split(', ').contains(feeling)
-                      ? _HomeScreenState.paleSage : _HomeScreenState.cream,
-                  side: BorderSide(color: _HomeScreenState.line),
-                )).toList()),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: Colors.white.withValues(alpha: .55),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: _HomeScreenState.line)),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                ListTile(contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.note_alt_outlined, color: _HomeScreenState.sage),
-                  title: Text('Health Notes (optional)', style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
-                  subtitle: const Text('Sleep, energy, medication, symptoms, or anything to remember.', style: TextStyle(fontSize: 12)),
-                  trailing: Icon(healthExpanded ? Icons.expand_less : Icons.expand_more),
-                  onTap: () => setState(() => healthExpanded = !healthExpanded)),
-                if (healthExpanded) TextField(controller: healthNotesController, minLines: 2, maxLines: 4, maxLength: 500,
-                  decoration: InputDecoration(hintText: 'Add a note…',
-                    filled: true, fillColor: _HomeScreenState.cream,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(13)))),
-              ]),
+                  if (healthExpanded) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: healthNotesController,
+                      minLines: 2,
+                      maxLines: 3,
+                      maxLength: 300,
+                      decoration: InputDecoration(
+                        hintText: 'Add a note...',
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: .55),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: _HomeScreenState.line),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: _HomeScreenState.line),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
             const SizedBox(height: 12),
-            ...[
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: _HomeScreenState.paleSage.withValues(alpha: .55),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: _HomeScreenState.line)),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  ListTile(contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.water_drop_outlined, color: Color(0xFFB56E74)),
-                    title: Text('My Cycle (optional)', style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
-                    subtitle: const Text('Track your period and view your next period estimate.', style: TextStyle(fontSize: 12)),
-                    trailing: Icon(cycleExpanded ? Icons.expand_less : Icons.expand_more),
-                    onTap: () => setState(() => cycleExpanded = !cycleExpanded)),
-                  if (!cycleEnabled && cycleExpanded)
-                    SwitchListTile.adaptive(
-                      contentPadding: EdgeInsets.zero,
-                      value: cycleEnabled,
-                      activeColor: _HomeScreenState.sage,
-                      title: const Text('Turn on My Cycle'),
-                      subtitle: const Text('Period details and estimates stay private to your account.'),
-                      onChanged: (value) async {
-                        setState(() => cycleEnabled = value);
-                        await widget.onPeriodTrackingChanged(value);
-                      },
-                    ),
-                  if (cycleEnabled && cycleExpanded) ...[
-                    CheckboxListTile(contentPadding: EdgeInsets.zero,
-                      value: periodStarted,
-                      onChanged: (value) => setState(() => periodStarted = value ?? false),
-                      activeColor: _HomeScreenState.sage,
-                      title: const Text('My period started today'),
-                      subtitle: const Text('This date helps estimate your next period.')),
-                    Wrap(spacing: 7, runSpacing: 6, children: [
-                      for (final option in ['Period ended', 'Spotting'])
-                        FilterChip(label: Text(option), selected: option == 'Period ended' ? periodEnded : spotting,
-                          onSelected: (v) => setState(() { if (option == 'Period ended') { periodEnded = v; } else { spotting = v; } })),
-                    ]),
-                    const SizedBox(height: 8),
-                    const Text('Flow level (optional)'),
-                    Wrap(spacing: 7, children: [
-                      for (final level in ['Light', 'Medium', 'Heavy'])
-                        ChoiceChip(label: Text(level), selected: flowLevel == level,
-                          onSelected: (v) => setState(() => flowLevel = v ? level : '')),
-                    ]),
-                    const SizedBox(height: 8),
-                    const Text('Symptoms (optional)'),
-                    Wrap(spacing: 7, runSpacing: 5, children: [
-                      for (final symptom in ['Cramps', 'Bloating', 'Headache', 'Mood changes', 'Back pain', 'Fatigue'])
-                        FilterChip(label: Text(symptom), selected: symptoms.contains(symptom),
-                          onSelected: (v) => setState(() { if (v) { symptoms.add(symptom); } else { symptoms.remove(symptom); } })),
-                    ]),
-                    const SizedBox(height: 10),
-                    _CycleCalendar(history: widget.history),
-                    const SizedBox(height: 8),
-                    const Text('Ovulation and fertile-window dates are calendar estimates, not confirmed ovulation. Do not use these predictions for contraception.',
-                      style: TextStyle(fontSize: 12)),
-                  ],
-                ]),
-              ),
-              const SizedBox(height: 12),
-            ],
-            Text('Personal Notes (optional)',
-              style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 6),
-            TextField(controller: detailsController, minLines: 2, maxLines: 4, maxLength: 500,
-              decoration: InputDecoration(hintText: 'Write what’s on your mind…',
-                filled: true, fillColor: Colors.white.withValues(alpha: .55),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)))),
+            _buildCycleSection(),
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(
-                  Icons.lock_outline_rounded,
-                  color: _HomeScreenState.sage,
-                  size: 17,
-                ),
-                SizedBox(width: 6),
+                const Icon(Icons.lock_outline_rounded, color: _HomeScreenState.sage, size: 17),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     cycleEnabled
-                        ? 'Your mood, period start date, and health notes stay private to your account.'
+                        ? 'Your mood, period details, and health notes stay private to your account.'
                         : 'Your mood and health notes stay private to your account.',
-                    style: TextStyle(fontSize: 12),
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => save(includeDetails: true),
+                onPressed: save,
                 style: FilledButton.styleFrom(
                   backgroundColor: _HomeScreenState.sage,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(vertical: 17),
+                  shape: const StadiumBorder(),
                 ),
-                child: const Text('Save Check-In'),
-              ),
-            ),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () => save(includeDetails: false),
-                child: const Text('Save Without Notes'),
+                child: const Text('Save Check-In', style: TextStyle(fontSize: 16)),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _moodOption((IconData, String) mood, int index) {
+    const moodColors = [
+      Color(0xFFE6EFE1),
+      Color(0xFFE6EFE1),
+      Color(0xFFF8EDD5),
+      Color(0xFFF5DEDB),
+      Color(0xFFF5DEDB),
+    ];
+    final isSelected = selectedMood == mood.$2;
+    final iconColor = index == 2 ? const Color(0xFFB87914) : _HomeScreenState.sage;
+    final label = mood.$2 == 'Not good' ? 'Tough' : mood.$2;
+    return InkWell(
+      onTap: () => setState(() => selectedMood = mood.$2),
+      borderRadius: BorderRadius.circular(20),
+      child: Column(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 140),
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              color: moodColors[index],
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isSelected ? iconColor : Colors.transparent,
+                width: isSelected ? 3 : 0,
+              ),
+            ),
+            child: Icon(mood.$1, color: iconColor, size: 31),
+          ),
+          const SizedBox(height: 4),
+          Text(label, maxLines: 1, style: const TextStyle(fontSize: 11)),
+        ],
       ),
     );
   }
@@ -1449,6 +2043,10 @@ class MoodHistoryScreen extends StatelessWidget {
                               '${entry.createdAt.month}/${entry.createdAt.day}/${entry.createdAt.year}',
                               style: const TextStyle(fontSize: 12),
                             ),
+                            if (entry.feelingTags.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text('Feeling: ${entry.feelingTags.join(', ')}'),
+                            ],
                             if (entry.periodStarted) ...[
                               const SizedBox(height: 8),
                               const Text(
@@ -1495,15 +2093,19 @@ class _CycleCalendarState extends State<_CycleCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    final starts = widget.history.where((e) => e.periodStarted)
-        .map((e) => DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day)).toList()..sort();
+    final starts = widget.history
+        .where((entry) => entry.periodStarted)
+        .map((entry) => DateTime(entry.createdAt.year, entry.createdAt.month, entry.createdAt.day))
+        .toList()
+      ..sort();
     final intervals = <int>[];
     for (var i = 1; i < starts.length; i++) {
-      final d = starts[i].difference(starts[i - 1]).inDays;
-      if (d >= 21 && d <= 45) intervals.add(d);
+      final days = starts[i].difference(starts[i - 1]).inDays;
+      if (days >= 21 && days <= 45) intervals.add(days);
     }
-    final cycleLength = intervals.isEmpty ? 28 :
-        (intervals.reduce((a, b) => a + b) / intervals.length).round().clamp(21, 45);
+    final cycleLength = intervals.isEmpty
+        ? 28
+        : (intervals.reduce((a, b) => a + b) / intervals.length).round().clamp(21, 45);
     DateTime? nextPeriod;
     DateTime? ovulation;
     if (starts.isNotEmpty) {
@@ -1515,21 +2117,26 @@ class _CycleCalendarState extends State<_CycleCalendar> {
       }
       ovulation = nextPeriod.subtract(const Duration(days: 14));
     }
-    String dateLabel(DateTime? date) => date == null ? 'Not enough data' : '${date.month}/${date.day}';
     final startOffset = DateTime(month.year, month.month, 1).weekday % 7;
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Wrap(spacing: 10, runSpacing: 6, children: [
-        Text('Next period: ${dateLabel(nextPeriod)}', style: const TextStyle(fontWeight: FontWeight.w600)),
-        Text('Ovulation estimate: ${dateLabel(ovulation)}', style: const TextStyle(fontWeight: FontWeight.w600)),
-      ]),
-      if (starts.length < 2) const Padding(padding: EdgeInsets.only(top: 5),
-        child: Text('Early estimate based on a 28-day cycle; more start dates improve personalization.',
-          style: TextStyle(fontSize: 11))),
-      TextButton.icon(
-        onPressed: () => setState(() => expanded = !expanded),
-        icon: Icon(expanded ? Icons.expand_less : Icons.calendar_month_outlined),
-        label: Text(expanded ? 'Hide My Cycle Calendar' : 'View My Cycle Calendar'),
+      InkWell(
+        onTap: () => setState(() => expanded = !expanded),
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          decoration: BoxDecoration(
+            color: _HomeScreenState.paleSage.withValues(alpha: .62),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Row(children: [
+            const Icon(Icons.calendar_month_outlined, color: _HomeScreenState.sage),
+            const SizedBox(width: 10),
+            Expanded(child: Text(expanded ? 'Hide My Cycle Calendar' : 'View My Cycle Calendar',
+              style: const TextStyle(color: _HomeScreenState.sage, fontWeight: FontWeight.w600))),
+            Icon(expanded ? Icons.expand_less : Icons.chevron_right, color: _HomeScreenState.sage),
+          ]),
+        ),
       ),
       if (expanded) ...[
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
