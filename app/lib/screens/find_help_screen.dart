@@ -1249,8 +1249,21 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           ])),
       ],
       const SizedBox(height: 10),
-      const Text('Not enough community feedback yet',
-        style: TextStyle(fontSize: 11, color: ink)),
+      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance.collection('resource_votes')
+            .doc(resource.id).collection('members').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) return const Text('Community feedback unavailable',
+            style: TextStyle(fontSize: 11, color: ink));
+          final votes = snapshot.data?.docs ?? [];
+          if (votes.length < 5) return const Text('Not enough community feedback yet',
+            style: TextStyle(fontSize: 11, color: ink));
+          final positive = votes.where((doc) => doc.data()['helpful'] == true).length;
+          final percent = (positive * 100 / votes.length).round();
+          return Text('$percent% helpful (${votes.length} responses)',
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: sage));
+        },
+      ),
       Row(children: [
         TextButton.icon(onPressed: () => _voteResource(resource, true),
           icon: const Icon(Icons.thumb_up_outlined, size: 16), label: const Text('Helpful')),
