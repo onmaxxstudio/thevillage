@@ -29,6 +29,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   final admin = AdminContentService();
   final zipController = TextEditingController();
   final directorySearchController = TextEditingController();
+  final directoryResultsKey = GlobalKey();
   String directoryQuery = '';
   int view = 0;
   bool guidedHelp = false;
@@ -849,6 +850,16 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       selectedPathId = null;
       showAllResources = true;
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final resultsContext = directoryResultsKey.currentContext;
+      if (resultsContext != null) {
+        Scrollable.ensureVisible(resultsContext,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOut,
+            alignment: 0.05);
+      }
+    });
   }
 
   Widget _directorySearchResults() {
@@ -912,7 +923,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               child: Stack(
                 children: [
                   SizedBox(
-                    height: 280,
+                    height: 340,
                     width: double.infinity,
                     child: Image.asset(
                       'assets/images/home_breathing_hero_v2.jpg',
@@ -922,7 +933,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                     ),
                   ),
                   Container(
-                    height: 280,
+                    height: 340,
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
@@ -968,23 +979,29 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                             controller: directorySearchController,
                             textInputAction: TextInputAction.search,
                             onSubmitted: (_) => _submitDirectorySearch(),
+                            onChanged: (value) => setState(() {
+                              directoryQuery = value.trim();
+                              showAllResources = value.trim().isNotEmpty;
+                            }),
                             decoration: InputDecoration(
-                              suffixIcon: Padding(
-                                padding: const EdgeInsets.all(5),
-                                child: FilledButton(
-                                  onPressed: _submitDirectorySearch,
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: sage,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    minimumSize: const Size(75, 42),
-                                  ),
-                                  child: const Text('Search', style: TextStyle(fontSize: 12)),
-                                ),
-                              ),
                               hintText: 'What do you need help with?',
                               prefixIcon: const Icon(Icons.search_rounded, color: ink),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _submitDirectorySearch,
+                            icon: const Icon(Icons.search_rounded),
+                            label: const Text('Search Resources'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: sage,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size.fromHeight(44),
                             ),
                           ),
                         ),
@@ -1017,9 +1034,11 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               ),
             ),
             const SizedBox(height: 22),
-            _directorySearchResults(),
-            const SizedBox(height: 22),
-            ResourceCategoryBrowser(onExplore: _exploreCategory),
+            KeyedSubtree(key: directoryResultsKey, child: _directorySearchResults()),
+            if (directoryQuery.isEmpty) ...[
+              const SizedBox(height: 22),
+              ResourceCategoryBrowser(onExplore: _exploreCategory),
+            ],
             const SizedBox(height: 16),
             TextButton.icon(
               onPressed: () => setState(() => guidedHelp = true),
