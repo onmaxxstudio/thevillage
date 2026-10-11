@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'ask_village_screen.dart';
 
 class MySpaceScreen extends StatefulWidget {
   const MySpaceScreen({super.key});
@@ -64,6 +65,28 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     try { await entries?.doc(id).delete(); }
     catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not delete entry.'))); }
   }
+  Future<void> shareExcerpt(String body) async {
+    final controller = TextEditingController(text: body.length > 1500 ? body.substring(0, 1500) : body);
+    final excerpt = await showDialog<String>(context: context, builder: (dialogContext) => AlertDialog(
+      title: const Text('Share with the Village?'),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Text('Your original journal entry stays private. Only the text you choose below will be copied into a new Village post. Posting is anonymous by default.'),
+        const SizedBox(height: 12),
+        TextField(controller: controller, maxLength: 1500, minLines: 3, maxLines: 7,
+          decoration: const InputDecoration(labelText: 'Edit what you want to share', border: OutlineInputBorder())),
+      ]),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Keep private')),
+        FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: const Text('Review post')),
+      ],
+    ));
+    controller.dispose();
+    if (!mounted || excerpt == null || excerpt.length < 10) return;
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => AskVillageScreen(initialQuestion: excerpt, defaultAnonymous: true, initialCategory: 'Mental Wellness'),
+    ));
+  }
+
   void choosePrompt(String value) => setState(() { prompt = value; editingId = null; text.clear(); });
   @override
   Widget build(BuildContext context) {
@@ -114,7 +137,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                     title: Text((data['prompt'] as String? ?? '').isEmpty ? 'Personal reflection' : data['prompt'] as String, maxLines: 2),
                     subtitle: Text(data['body'] as String? ?? '', maxLines: 3, overflow: TextOverflow.ellipsis),
                     onTap: () { setState(() { editingId = doc.id; prompt = data['prompt'] as String? ?? ''; text.text = data['body'] as String? ?? ''; }); },
-                    trailing: IconButton(tooltip: 'Delete entry', icon: const Icon(Icons.delete_outline), onPressed: () => remove(doc.id)),
+                    trailing: PopupMenuButton<String>(tooltip: 'Entry actions', onSelected: (action) { if (action == 'delete') remove(doc.id); if (action == 'share') shareExcerpt(data['body'] as String? ?? ''); }, itemBuilder: (_) => const [PopupMenuItem(value: 'share', child: Text('Review excerpt to share')), PopupMenuItem(value: 'delete', child: Text('Delete private entry'))]),
                   ));
                 }).toList());
               },
