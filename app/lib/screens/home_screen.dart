@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -82,6 +83,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _connectRealProfileData() {
+    // The sign-in screen offers a guest preview. Avoid user-scoped Firebase
+    // services until a member is authenticated; check-ins still use local storage.
+    if (FirebaseAuth.instance.currentUser == null) return;
     ProfileService.usernameNotifier.addListener(_usernameChanged);
     ProfileService.currentUsername().then((username) {
       if (!mounted || username == null || username.trim().isEmpty) return;
