@@ -1461,6 +1461,99 @@ class MoodHistoryScreen extends StatelessWidget {
   }
 }
 
+
+class _CycleCalendar extends StatefulWidget {
+  const _CycleCalendar({required this.history});
+  final List<MoodCheckIn> history;
+
+  @override
+  State<_CycleCalendar> createState() => _CycleCalendarState();
+}
+
+class _CycleCalendarState extends State<_CycleCalendar> {
+  bool expanded = false;
+  DateTime month = DateTime(DateTime.now().year, DateTime.now().month);
+
+  @override
+  Widget build(BuildContext context) {
+    final starts = widget.history.where((e) => e.periodStarted)
+        .map((e) => DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day)).toList()..sort();
+    final intervals = <int>[];
+    for (var i = 1; i < starts.length; i++) {
+      final d = starts[i].difference(starts[i - 1]).inDays;
+      if (d >= 21 && d <= 45) intervals.add(d);
+    }
+    final cycleLength = intervals.isEmpty ? 28 :
+        (intervals.reduce((a, b) => a + b) / intervals.length).round().clamp(21, 45);
+    DateTime? nextPeriod;
+    DateTime? ovulation;
+    if (starts.isNotEmpty) {
+      nextPeriod = starts.last.add(Duration(days: cycleLength));
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      while (nextPeriod.isBefore(today)) {
+        nextPeriod = nextPeriod.add(Duration(days: cycleLength));
+      }
+      ovulation = nextPeriod.subtract(const Duration(days: 14));
+    }
+    String dateLabel(DateTime? date) => date == null ? 'Not enough data' : '${date.month}/${date.day}';
+    final startOffset = DateTime(month.year, month.month, 1).weekday % 7;
+    final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Wrap(spacing: 10, runSpacing: 6, children: [
+        Text('Next period: ${dateLabel(nextPeriod)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+        Text('Ovulation estimate: ${dateLabel(ovulation)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+      ]),
+      if (starts.length < 2) const Padding(padding: EdgeInsets.only(top: 5),
+        child: Text('Early estimate based on a 28-day cycle; more start dates improve personalization.',
+          style: TextStyle(fontSize: 11))),
+      TextButton.icon(
+        onPressed: () => setState(() => expanded = !expanded),
+        icon: Icon(expanded ? Icons.expand_less : Icons.calendar_month_outlined),
+        label: Text(expanded ? 'Hide My Cycle Calendar' : 'View My Cycle Calendar'),
+      ),
+      if (expanded) ...[
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          IconButton(onPressed: () => setState(() => month = DateTime(month.year, month.month - 1)),
+            icon: const Icon(Icons.chevron_left)),
+          Text('${month.month}/${month.year}', style: const TextStyle(fontWeight: FontWeight.bold)),
+          IconButton(onPressed: () => setState(() => month = DateTime(month.year, month.month + 1)),
+            icon: const Icon(Icons.chevron_right)),
+        ]),
+        const Row(children: [
+          for (final day in ['S','M','T','W','T','F','S'])
+            Expanded(child: Center(child: Text(day, style: TextStyle(fontSize: 11)))),
+        ]),
+        GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+          itemCount: startOffset + daysInMonth,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
+          itemBuilder: (context, index) {
+            if (index < startOffset) return const SizedBox.shrink();
+            final date = DateTime(month.year, month.month, index - startOffset + 1);
+            final period = widget.history.any((e) =>
+                (e.periodStarted || e.spotting || e.flowLevel.isNotEmpty) &&
+                e.createdAt.year == date.year && e.createdAt.month == date.month && e.createdAt.day == date.day);
+            final fertile = ovulation != null &&
+                !date.isBefore(ovulation.subtract(const Duration(days: 5))) &&
+                !date.isAfter(ovulation);
+            final estimatedOvulation = ovulation != null &&
+                date.year == ovulation.year && date.month == ovulation.month && date.day == ovulation.day;
+            return Container(margin: const EdgeInsets.all(2),
+              decoration: BoxDecoration(shape: BoxShape.circle,
+                color: period ? const Color(0xFFF3B9BD) :
+                    estimatedOvulation ? const Color(0xFF355C3B) :
+                    fertile ? const Color(0xFFDDE7C9) : null),
+              alignment: Alignment.center,
+              child: Text('${date.day}', style: TextStyle(
+                fontSize: 12, color: estimatedOvulation ? Colors.white : Colors.black87)));
+          }),
+        const Text('Pink: logged period  •  Light green: estimated fertile days  •  Dark green: estimated ovulation',
+          style: TextStyle(fontSize: 10)),
+      ],
+    ]);
+  }
+}
+
 class _PeriodPredictionCard extends StatelessWidget {
   const _PeriodPredictionCard({required this.history});
 
