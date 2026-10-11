@@ -167,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isScrollControlled: true,
       backgroundColor: cream,
       showDragHandle: true,
-      builder: (_) => _CheckInSheet(existing: today, initialMood: initialMood, showPeriodTracking: showPeriodTracking),
+      builder: (_) => _CheckInSheet(existing: today, initialMood: initialMood, showPeriodTracking: showPeriodTracking, history: history),
     );
     if (result == null) return;
     final saved = await checkInService.saveToday(
@@ -175,6 +175,10 @@ class _HomeScreenState extends State<HomeScreen> {
       details: result.details,
       periodStarted: result.periodStarted,
       healthNotes: result.healthNotes,
+      periodEnded: result.periodEnded,
+      spotting: result.spotting,
+      flowLevel: result.flowLevel,
+      symptoms: result.symptoms,
     );
     if (!mounted) return;
     setState(() => history = saved);
@@ -1037,20 +1041,29 @@ class _CheckInResult {
     required this.details,
     required this.periodStarted,
     required this.healthNotes,
+    required this.periodEnded,
+    required this.spotting,
+    required this.flowLevel,
+    required this.symptoms,
   });
 
   final String mood;
   final String details;
   final bool periodStarted;
   final String healthNotes;
+  final bool periodEnded;
+  final bool spotting;
+  final String flowLevel;
+  final List<String> symptoms;
 }
 
 class _CheckInSheet extends StatefulWidget {
-  const _CheckInSheet({this.existing, this.initialMood, required this.showPeriodTracking});
+  const _CheckInSheet({this.existing, this.initialMood, required this.showPeriodTracking, required this.history});
 
   final MoodCheckIn? existing;
   final String? initialMood;
   final bool showPeriodTracking;
+  final List<MoodCheckIn> history;
 
   @override
   State<_CheckInSheet> createState() => _CheckInSheetState();
@@ -1059,6 +1072,12 @@ class _CheckInSheet extends StatefulWidget {
 class _CheckInSheetState extends State<_CheckInSheet> {
   String? selectedMood;
   bool periodStarted = false;
+  bool periodEnded = false;
+  bool spotting = false;
+  String flowLevel = '';
+  final Set<String> symptoms = {};
+  bool healthExpanded = true;
+  bool cycleExpanded = false;
   late final TextEditingController detailsController;
   late final TextEditingController healthNotesController;
 
@@ -1067,6 +1086,11 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     super.initState();
     selectedMood = widget.initialMood ?? widget.existing?.mood;
     periodStarted = widget.existing?.periodStarted ?? false;
+    periodEnded = widget.existing?.periodEnded ?? false;
+    spotting = widget.existing?.spotting ?? false;
+    flowLevel = widget.existing?.flowLevel ?? '';
+    symptoms.addAll(widget.existing?.symptoms ?? const []);
+    cycleExpanded = periodStarted;
     detailsController = TextEditingController(
       text: widget.existing?.details ?? '',
     );
@@ -1096,6 +1120,10 @@ class _CheckInSheetState extends State<_CheckInSheet> {
         details: includeDetails ? detailsController.text : '',
         periodStarted: periodStarted,
         healthNotes: includeDetails ? healthNotesController.text : '',
+        periodEnded: periodEnded,
+        spotting: spotting,
+        flowLevel: flowLevel,
+        symptoms: symptoms.toList(),
       ),
     );
   }
@@ -1169,74 +1197,100 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                   ),
               ],
             ),
-            const SizedBox(height: 20),
-            if (widget.showPeriodTracking) ...[
-              CheckboxListTile(
-                value: periodStarted,
-                onChanged: (value) {
-                  setState(() => periodStarted = value ?? false);
-                },
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                activeColor: _HomeScreenState.sage,
-                title: Text(
-                  'My period started today',
-                  style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Saving the start date helps estimate your next period.',
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-            Text(
-              'Health notes (optional)',
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: healthNotesController,
-              minLines: 2,
-              maxLines: 4,
-              maxLength: 500,
-              decoration: InputDecoration(
-                hintText: 'Symptoms, sleep, pain, medication, or anything else…',
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: .55),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
+            const SizedBox(height: 18),
+            Text('Today I’m feeling… (optional)',
+                style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Wrap(spacing: 7, runSpacing: 6,
+              children: ['Calm', 'Happy', 'Anxious', 'Stressed', 'Tired', 'Motivated', 'Overwhelmed', 'Irritable']
+                .map((feeling) => ActionChip(
+                  label: Text(feeling, style: const TextStyle(fontSize: 12)),
+                  onPressed: () {
+                    final current = detailsController.text.trim();
+                    detailsController.text = current.isEmpty ? feeling : '\${current}, \${feeling}';
+                    setState(() {});
+                  },
+                  backgroundColor: detailsController.text.split(', ').contains(feeling)
+                      ? _HomeScreenState.paleSage : _HomeScreenState.cream,
+                  side: BorderSide(color: _HomeScreenState.line),
+                )).toList()),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: .55),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: _HomeScreenState.line)),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                ListTile(contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.note_alt_outlined, color: _HomeScreenState.sage),
+                  title: Text('Health Notes (optional)', style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Sleep, energy, medication, symptoms, or anything to remember.', style: TextStyle(fontSize: 12)),
+                  trailing: Icon(healthExpanded ? Icons.expand_less : Icons.expand_more),
+                  onTap: () => setState(() => healthExpanded = !healthExpanded)),
+                if (healthExpanded) TextField(controller: healthNotesController, minLines: 2, maxLines: 4, maxLength: 500,
+                  decoration: InputDecoration(hintText: 'Add a note…',
+                    filled: true, fillColor: _HomeScreenState.cream,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(13)))),
+              ]),
             ),
             const SizedBox(height: 12),
-            Text(
-              'Personal notes (optional)',
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
+            if (widget.showPeriodTracking) ...[
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(color: _HomeScreenState.paleSage.withValues(alpha: .55),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: _HomeScreenState.line)),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  ListTile(contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.water_drop_outlined, color: Color(0xFFB56E74)),
+                    title: Text('My Cycle (optional)', style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
+                    subtitle: const Text('Track your period and view your next period estimate.', style: TextStyle(fontSize: 12)),
+                    trailing: Icon(cycleExpanded ? Icons.expand_less : Icons.expand_more),
+                    onTap: () => setState(() => cycleExpanded = !cycleExpanded)),
+                  if (cycleExpanded) ...[
+                    CheckboxListTile(contentPadding: EdgeInsets.zero,
+                      value: periodStarted,
+                      onChanged: (value) => setState(() => periodStarted = value ?? false),
+                      activeColor: _HomeScreenState.sage,
+                      title: const Text('My period started today'),
+                      subtitle: const Text('This date helps estimate your next period.')),
+                    Wrap(spacing: 7, runSpacing: 6, children: [
+                      for (final option in ['Period ended', 'Spotting'])
+                        FilterChip(label: Text(option), selected: option == 'Period ended' ? periodEnded : spotting,
+                          onSelected: (v) => setState(() { if (option == 'Period ended') { periodEnded = v; } else { spotting = v; } })),
+                    ]),
+                    const SizedBox(height: 8),
+                    const Text('Flow level (optional)'),
+                    Wrap(spacing: 7, children: [
+                      for (final level in ['Light', 'Medium', 'Heavy'])
+                        ChoiceChip(label: Text(level), selected: flowLevel == level,
+                          onSelected: (v) => setState(() => flowLevel = v ? level : '')),
+                    ]),
+                    const SizedBox(height: 8),
+                    const Text('Symptoms (optional)'),
+                    Wrap(spacing: 7, runSpacing: 5, children: [
+                      for (final symptom in ['Cramps', 'Bloating', 'Headache', 'Mood changes', 'Back pain', 'Fatigue'])
+                        FilterChip(label: Text(symptom), selected: symptoms.contains(symptom),
+                          onSelected: (v) => setState(() { if (v) { symptoms.add(symptom); } else { symptoms.remove(symptom); } })),
+                    ]),
+                    const SizedBox(height: 10),
+                    _CycleCalendar(history: widget.history),
+                    const SizedBox(height: 8),
+                    const Text('Ovulation and fertile-window dates are calendar estimates, not confirmed ovulation. Do not use these predictions for contraception.',
+                      style: TextStyle(fontSize: 12)),
+                  ],
+                ]),
               ),
-            ),
+              const SizedBox(height: 12),
+            ],
+            Text('Personal Notes (optional)',
+              style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
-            TextField(
-              controller: detailsController,
-              minLines: 2,
-              maxLines: 4,
-              maxLength: 500,
-              decoration: InputDecoration(
-                hintText: 'Write what’s on your mind…',
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: .55),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-            ),
+            TextField(controller: detailsController, minLines: 2, maxLines: 4, maxLength: 500,
+              decoration: InputDecoration(hintText: 'Write what’s on your mind…',
+                filled: true, fillColor: Colors.white.withValues(alpha: .55),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)))),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Icon(
@@ -1404,6 +1458,99 @@ class MoodHistoryScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+
+class _CycleCalendar extends StatefulWidget {
+  const _CycleCalendar({required this.history});
+  final List<MoodCheckIn> history;
+
+  @override
+  State<_CycleCalendar> createState() => _CycleCalendarState();
+}
+
+class _CycleCalendarState extends State<_CycleCalendar> {
+  bool expanded = false;
+  DateTime month = DateTime(DateTime.now().year, DateTime.now().month);
+
+  @override
+  Widget build(BuildContext context) {
+    final starts = widget.history.where((e) => e.periodStarted)
+        .map((e) => DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day)).toList()..sort();
+    final intervals = <int>[];
+    for (var i = 1; i < starts.length; i++) {
+      final d = starts[i].difference(starts[i - 1]).inDays;
+      if (d >= 21 && d <= 45) intervals.add(d);
+    }
+    final cycleLength = intervals.isEmpty ? 28 :
+        (intervals.reduce((a, b) => a + b) / intervals.length).round().clamp(21, 45);
+    DateTime? nextPeriod;
+    DateTime? ovulation;
+    if (starts.isNotEmpty) {
+      nextPeriod = starts.last.add(Duration(days: cycleLength));
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      while (nextPeriod!.isBefore(today)) {
+        nextPeriod = nextPeriod.add(Duration(days: cycleLength));
+      }
+      ovulation = nextPeriod.subtract(const Duration(days: 14));
+    }
+    String dateLabel(DateTime? date) => date == null ? 'Not enough data' : '${date.month}/${date.day}';
+    final startOffset = DateTime(month.year, month.month, 1).weekday % 7;
+    final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Wrap(spacing: 10, runSpacing: 6, children: [
+        Text('Next period: ${dateLabel(nextPeriod)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+        Text('Ovulation estimate: ${dateLabel(ovulation)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+      ]),
+      if (starts.length < 2) const Padding(padding: EdgeInsets.only(top: 5),
+        child: Text('Early estimate based on a 28-day cycle; more start dates improve personalization.',
+          style: TextStyle(fontSize: 11))),
+      TextButton.icon(
+        onPressed: () => setState(() => expanded = !expanded),
+        icon: Icon(expanded ? Icons.expand_less : Icons.calendar_month_outlined),
+        label: Text(expanded ? 'Hide My Cycle Calendar' : 'View My Cycle Calendar'),
+      ),
+      if (expanded) ...[
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          IconButton(onPressed: () => setState(() => month = DateTime(month.year, month.month - 1)),
+            icon: const Icon(Icons.chevron_left)),
+          Text('${month.month}/${month.year}', style: const TextStyle(fontWeight: FontWeight.bold)),
+          IconButton(onPressed: () => setState(() => month = DateTime(month.year, month.month + 1)),
+            icon: const Icon(Icons.chevron_right)),
+        ]),
+        Row(children: [
+          for (final day in ['S','M','T','W','T','F','S'])
+            Expanded(child: Center(child: Text(day, style: TextStyle(fontSize: 11)))),
+        ]),
+        GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+          itemCount: startOffset + daysInMonth,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
+          itemBuilder: (context, index) {
+            if (index < startOffset) return const SizedBox.shrink();
+            final date = DateTime(month.year, month.month, index - startOffset + 1);
+            final period = widget.history.any((e) =>
+                (e.periodStarted || e.spotting || e.flowLevel.isNotEmpty) &&
+                e.createdAt.year == date.year && e.createdAt.month == date.month && e.createdAt.day == date.day);
+            final fertile = ovulation != null &&
+                !date.isBefore(ovulation.subtract(const Duration(days: 5))) &&
+                !date.isAfter(ovulation);
+            final estimatedOvulation = ovulation != null &&
+                date.year == ovulation.year && date.month == ovulation.month && date.day == ovulation.day;
+            return Container(margin: const EdgeInsets.all(2),
+              decoration: BoxDecoration(shape: BoxShape.circle,
+                color: period ? const Color(0xFFF3B9BD) :
+                    estimatedOvulation ? const Color(0xFF355C3B) :
+                    fertile ? const Color(0xFFDDE7C9) : null),
+              alignment: Alignment.center,
+              child: Text('${date.day}', style: TextStyle(
+                fontSize: 12, color: estimatedOvulation ? Colors.white : Colors.black87)));
+          }),
+        const Text('Pink: logged period  •  Light green: estimated fertile days  •  Dark green: estimated ovulation',
+          style: TextStyle(fontSize: 10)),
+      ],
+    ]);
   }
 }
 

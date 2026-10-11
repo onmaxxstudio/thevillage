@@ -539,6 +539,10 @@ service cloud.firestore {
           'mood',
           'details',
           'periodStarted',
+          'periodEnded',
+          'spotting',
+          'flowLevel',
+          'symptoms',
           'healthNotes',
           'createdAt',
           'updatedAt'
@@ -548,11 +552,17 @@ service cloud.firestore {
           'Good',
           'Okay',
           'Low',
-          'Struggling'
+          'Struggling',
+          'Not good'
         ] &&
         request.resource.data.details is string &&
         request.resource.data.details.size() <= 500 &&
         request.resource.data.periodStarted is bool &&
+        request.resource.data.periodEnded is bool &&
+        request.resource.data.spotting is bool &&
+        request.resource.data.flowLevel in ['', 'Light', 'Medium', 'Heavy'] &&
+        request.resource.data.symptoms is list &&
+        request.resource.data.symptoms.size() <= 6 &&
         request.resource.data.healthNotes is string &&
         request.resource.data.healthNotes.size() <= 500 &&
         request.resource.data.createdAt is timestamp;

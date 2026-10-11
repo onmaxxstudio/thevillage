@@ -12,6 +12,10 @@ class MoodCheckIn {
     this.details = '',
     this.periodStarted = false,
     this.healthNotes = '',
+    this.periodEnded = false,
+    this.spotting = false,
+    this.flowLevel = '',
+    this.symptoms = const [],
   });
 
   final String mood;
@@ -19,6 +23,10 @@ class MoodCheckIn {
   final String details;
   final bool periodStarted;
   final String healthNotes;
+  final bool periodEnded;
+  final bool spotting;
+  final String flowLevel;
+  final List<String> symptoms;
 
   Map<String, Object> toJson() => {
         'mood': mood,
@@ -26,6 +34,10 @@ class MoodCheckIn {
         'details': details,
         'periodStarted': periodStarted,
         'healthNotes': healthNotes,
+        'periodEnded': periodEnded,
+        'spotting': spotting,
+        'flowLevel': flowLevel,
+        'symptoms': symptoms,
       };
 
   factory MoodCheckIn.fromJson(Map<String, dynamic> json) {
@@ -37,6 +49,10 @@ class MoodCheckIn {
       periodStarted: json['periodStarted'] as bool? ??
           json['periodStatus'] == 'Started today',
       healthNotes: json['healthNotes'] as String? ?? '',
+      periodEnded: json['periodEnded'] == true,
+      spotting: json['spotting'] == true,
+      flowLevel: json['flowLevel'] as String? ?? '',
+      symptoms: (json['symptoms'] as List<dynamic>? ?? const []).whereType<String>().toList(),
     );
   }
 }
@@ -111,6 +127,10 @@ class CheckInService {
     required String details,
     required bool periodStarted,
     required String healthNotes,
+    bool periodEnded = false,
+    bool spotting = false,
+    String flowLevel = '',
+    List<String> symptoms = const [],
   }) async {
     final history = await load();
     final now = DateTime.now();
@@ -123,6 +143,10 @@ class CheckInService {
         details: details.trim(),
         periodStarted: periodStarted,
         healthNotes: healthNotes.trim(),
+        periodEnded: periodEnded,
+        spotting: spotting,
+        flowLevel: flowLevel,
+        symptoms: symptoms,
       ),
     );
     await _saveLocal(history);
@@ -137,6 +161,10 @@ class CheckInService {
           'details': details.trim(),
           'periodStarted': periodStarted,
           'healthNotes': healthNotes.trim(),
+          'periodEnded': periodEnded,
+          'spotting': spotting,
+          'flowLevel': flowLevel,
+          'symptoms': symptoms,
           'createdAt': Timestamp.fromDate(now),
           'updatedAt': FieldValue.serverTimestamp(),
         });
