@@ -36,6 +36,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   int featuredIndex = 1;
   String query = '';
   Set<String> joined = {};
+  List<_Community> memberCommunities = [];
   Map<String, int> memberCounts = {};
   List<VillagePost> pulsePosts = const [];
   VillagePersonalization personalization = const VillagePersonalization.empty();
@@ -69,6 +70,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     featurePager = PageController(initialPage: 1, viewportFraction: .76);
     _loadMemberships();
     _loadPosts();
+    _loadMemberCommunities();
   }
 
   @override
@@ -93,6 +95,30 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
       });
     } on Object {
       // Community discovery remains usable if membership data is unavailable.
+    }
+  }
+
+  Future<void> _loadMemberCommunities() async {
+    try {
+      final rows = await hub.memberCommunities();
+      final values = rows.map((item) {
+        final id = (item['id'] ?? '').toString();
+        final name = (item['name'] ?? '').toString();
+        if (id.isEmpty || name.isEmpty) return null;
+        return _Community(
+          id,
+          name,
+          (item['description'] ?? '').toString(),
+          name,
+          '',
+        );
+      }).whereType<_Community>().toList();
+      if (!mounted) return;
+      setState(() => memberCommunities = values);
+      final counts = await hub.memberCounts(values.map((community) => community.id));
+      if (mounted) setState(() => memberCounts.addAll(counts));
+    } on Object {
+      // Existing community discovery stays available if member spaces cannot load.
     }
   }
 
@@ -374,8 +400,166 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
           label: const Text('Ask a Community',
               style: TextStyle(fontWeight: FontWeight.w800)),
         ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: () => _createCommunity(communities),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: sage,
+            side: const BorderSide(color: line),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          icon: const Icon(Icons.add_home_work_outlined),
+          label: const Text('Can’t find your community? Create one',
+              style: TextStyle(fontWeight: FontWeight.w800)),
+        ),
       ],
     );
+  }
+
+  Future<void> _createCommunity(List<_Community> existing) async {
+    final name = TextEditingController();
+    final description = TextEditingController();
+    final purpose = TextEditingController();
+    String? error;
+    var saving = false;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, update) {
+          final slug = CommunityHubService.communitySlug(name.text);
+          final matches = existing.where((community) {
+            final candidate = CommunityHubService.communitySlug(community.name);
+            return slug.isNotEmpty &&
+                (candidate == slug ||
+                    candidate.contains(slug) ||
+                    slug.contains(candidate));
+          }).toList();
+          final exact = matches.any((community) =>
+              CommunityHubService.communitySlug(community.name) == slug);
+          return AlertDialog(
+            backgroundColor: cream,
+            title: Text('Create your community',
+                style: GoogleFonts.playfairDisplay(color: sage)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Look for a similar space first, or create a unique community. You can create up to 3.'),
+                  TextField(
+                    controller: name,
+                    maxLength: 50,
+                    onChanged: (_) => update(() {}),
+                    decoration: const InputDecoration(labelText: 'Community name'),
+                  ),
+                  if (matches.isNotEmpty) ...[
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Similar communities',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                    for (final match in matches.take(5))
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(match.name),
+                        subtitle: Text(match.description, maxLines: 2,
+                            overflow: TextOverflow.ellipsis),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () {
+                          Navigator.pop(dialogContext);
+                          _open(match);
+                        },
+                      ),
+                  ],
+                  TextField(
+                    controller: description,
+                    maxLength: 180,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                        labelText: 'Community description'),
+                  ),
+                  TextField(
+                    controller: purpose,
+                    maxLength: 300,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                        labelText: 'What makes this space unique?'),
+                  ),
+                  if (error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(error!,
+                          style: const TextStyle(color: Colors.red)),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: saving ? null : () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: saving || exact
+                    ? null
+                    : () async {
+                        if (name.text.trim().length < 3 ||
+                            description.text.trim().length < 15 ||
+                            purpose.text.trim().length < 15) {
+                          update(() => error =
+                              'Add a name and descriptions of at least 15 characters.');
+                          return;
+                        }
+                        update(() {
+                          saving = true;
+                          error = null;
+                        });
+                        try {
+                          await hub.createMemberCommunity(
+                            name: name.text,
+                            description: description.text,
+                            purpose: purpose.text,
+                            reservedSlugs: existing
+                                .map((community) =>
+                                    CommunityHubService.communitySlug(
+                                        community.name))
+                                .toSet(),
+                          );
+                          if (!dialogContext.mounted) return;
+                          Navigator.pop(dialogContext);
+                          await _loadMemberCommunities();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Your community is ready to explore.')),
+                            );
+                          }
+                        } on Object catch (exception) {
+                          update(() => error = exception
+                              .toString()
+                              .replaceFirst('Bad state: ', ''));
+                        } finally {
+                          if (dialogContext.mounted) {
+                            update(() => saving = false);
+                          }
+                        }
+                      },
+                child: Text(exact
+                    ? 'Already exists'
+                    : saving
+                        ? 'Creating…'
+                        : 'Create community'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    name.dispose();
+    description.dispose();
+    purpose.dispose();
   }
 
   Widget _premiumSectionHeader(String title, String? action,
@@ -1179,10 +1363,15 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _communityStream() {
-    if (!admin.cloudReady) return _twoRows(_filter(builtIns));
+    if (!admin.cloudReady) {
+      return _twoRows(_filter([...builtIns, ...memberCommunities]));
+    }
     return StreamBuilder<List<ManagedContentItem>>(
       stream: admin.watchPublished('communities'),
-      builder: (context, snapshot) => _twoRows(_filter(_merge(snapshot.data ?? const <ManagedContentItem>[]))),
+      builder: (context, snapshot) => _twoRows(_filter([
+        ..._merge(snapshot.data ?? const <ManagedContentItem>[]),
+        ...memberCommunities,
+      ])),
     );
   }
 
@@ -1251,7 +1440,12 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
       builder: (sheetContext) => StreamBuilder<List<ManagedContentItem>>(
         stream: admin.cloudReady ? admin.watchPublished('communities') : const Stream<List<ManagedContentItem>>.empty(),
         builder: (context, snapshot) {
-          final all = admin.cloudReady ? _merge(snapshot.data ?? const <ManagedContentItem>[]) : builtIns;
+          final all = [
+            ...(admin.cloudReady
+                ? _merge(snapshot.data ?? const <ManagedContentItem>[])
+                : builtIns),
+            ...memberCommunities,
+          ];
           return SizedBox(height: MediaQuery.sizeOf(context).height * .82, child: Padding(padding: const EdgeInsets.fromLTRB(20, 4, 20, 20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('All Communities', style: GoogleFonts.playfairDisplay(fontSize: 28, fontWeight: FontWeight.w700, color: ink)), const SizedBox(height: 4), Text('${all.length} spaces to find your people'), const SizedBox(height: 12), Expanded(child: ListView.separated(itemCount: all.length, separatorBuilder: (context, index) => const Divider(color: line), itemBuilder: (context, index) { final c = all[index]; return ListTile(contentPadding: EdgeInsets.zero, title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(c.description, maxLines: 2, overflow: TextOverflow.ellipsis), trailing: const Icon(Icons.chevron_right_rounded, color: sage), onTap: () { Navigator.pop(sheetContext); _open(c); }); }))])));
         },
       ),
