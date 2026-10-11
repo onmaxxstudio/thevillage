@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/check_in_service.dart';
+import '../services/daily_encouragement.dart';
 import '../services/circle_service.dart';
 import '../services/notification_service.dart';
 import '../services/profile_service.dart';
@@ -35,6 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final CheckInService checkInService = CheckInService();
   final CircleService circleService = CircleService();
   StreamSubscription<List<CirclePerson>>? circleSubscription;
+  Timer? _dailyMessageTimer;
+  int? _shownDay;
   List<MoodCheckIn> history = [];
   List<CirclePerson> circleMembers = [];
   String currentUsername = 'Village member';
@@ -48,19 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
     (Icons.sentiment_very_dissatisfied_outlined, 'Not good'),
   ];
 
-  static const breathingLessons = [
-    'Breathe in for 4. Hold for 4. Exhale for 6.',
-    'Inhale calm. Exhale what you cannot control.',
-    'Take three slow breaths, making each exhale longer.',
-    'Breathe in for 4. Hold for 4. Breathe out for 4.',
-    'Drop your shoulders and breathe into the pause.',
-    'Place a hand on your heart and breathe slowly for one minute.',
-    'Inhale possibility. Exhale pressure.',
-  ];
-
-  String get breathingLesson {
-    return breathingLessons[DateTime.now().weekday - 1];
-  }
+  String get breathingLesson => DailyEncouragement.forDate(DateTime.now());
 
   MoodCheckIn? get today {
     final now = DateTime.now();
@@ -77,6 +68,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _shownDay = DailyEncouragement.dayNumber(DateTime.now());
+    _dailyMessageTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (!mounted) return;
+      final day = DailyEncouragement.dayNumber(DateTime.now());
+      if (day != _shownDay) setState(() => _shownDay = day);
+    });
     loadHistory();
     PersonalizationService.notifier.addListener(_personalizationChanged);
     _loadPersonalization();
@@ -111,6 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ProfileService.usernameNotifier.removeListener(_usernameChanged);
     PersonalizationService.notifier.removeListener(_personalizationChanged);
     circleSubscription?.cancel();
+    _dailyMessageTimer?.cancel();
     super.dispose();
   }
 
@@ -495,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 10),
                       const Text(
-                        'TODAY’S BREATH',
+                        'TODAY’S ENCOURAGEMENT',
                         style: TextStyle(
                           color: gold,
                           fontSize: 10,
