@@ -465,15 +465,30 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: Text(
-                            currentUsername,
+                          child: RichText(
                             maxLines: 1,
                             softWrap: false,
-                            style: GoogleFonts.playfairDisplay(
-                              color: sage,
-                              fontSize: 34,
-                              height: 1.1,
-                              fontWeight: FontWeight.w600,
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: currentUsername,
+                                  style: GoogleFonts.playfairDisplay(
+                                    color: sage,
+                                    fontSize: 34,
+                                    height: 1.1,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' ♡',
+                                  style: GoogleFonts.playfairDisplay(
+                                    color: sage,
+                                    fontSize: 21,
+                                    height: 1.1,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
