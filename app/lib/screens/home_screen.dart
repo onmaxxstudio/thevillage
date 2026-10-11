@@ -1182,7 +1182,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                   label: Text(feeling, style: const TextStyle(fontSize: 12)),
                   onPressed: () {
                     final current = detailsController.text.trim();
-                    detailsController.text = current.isEmpty ? feeling : '$'+'{current}, $'+'{feeling}';
+                    detailsController.text = current.isEmpty ? feeling : '\${current}, \${feeling}';
                     setState(() {});
                   },
                   backgroundColor: detailsController.text.split(', ').contains(feeling)
