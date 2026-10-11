@@ -1976,29 +1976,53 @@ class _MoodHistoryScreenState extends State<MoodHistoryScreen> {
       backgroundColor: _HomeScreenState.cream,
       appBar: AppBar(
         backgroundColor: _HomeScreenState.cream,
-        leading: IconButton(onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.arrow_back_rounded, color: _HomeScreenState.ink)),
-        title: Text('My Check-In History', style: GoogleFonts.playfairDisplay(
-          color: _HomeScreenState.ink, fontWeight: FontWeight.w600, fontSize: 22)),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: range,
-                items: const [
-                  DropdownMenuItem(value: 'Last 7 days', child: Text('Last 7 days')),
-                  DropdownMenuItem(value: 'Last 30 days', child: Text('Last 30 days')),
-                  DropdownMenuItem(value: 'Last 90 days', child: Text('Last 90 days')),
-                  DropdownMenuItem(value: 'All time', child: Text('All time')),
-                ],
-                onChanged: (v) { if (v != null) setState(() => range = v); },
-              ),
+        titleSpacing: 0,
+        leading: IconButton(
+          tooltip: 'Back',
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.arrow_back_rounded, color: _HomeScreenState.ink),
+        ),
+        title: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'My Check-In History',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.playfairDisplay(
+                      color: _HomeScreenState.ink,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: range,
+                    isDense: true,
+                    iconSize: 18,
+                    style: const TextStyle(color: _HomeScreenState.ink, fontSize: 12),
+                    items: const [
+                      DropdownMenuItem(value: 'Last 7 days', child: Text('Last 7 days')),
+                      DropdownMenuItem(value: 'Last 30 days', child: Text('Last 30 days')),
+                      DropdownMenuItem(value: 'Last 90 days', child: Text('Last 90 days')),
+                      DropdownMenuItem(value: 'All time', child: Text('All time')),
+                    ],
+                    onChanged: (v) { if (v != null) setState(() => range = v); },
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
-      body: ListView(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620),
+          child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
         children: [
           SingleChildScrollView(
@@ -2018,6 +2042,8 @@ class _MoodHistoryScreenState extends State<MoodHistoryScreen> {
           else if (tab == 'Cycle') _cycle(entries)
           else _health(entries),
         ],
+          ),
+        ),
       ),
     );
   }
