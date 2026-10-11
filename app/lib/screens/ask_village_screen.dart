@@ -14,6 +14,7 @@ class AskVillageScreen extends StatefulWidget {
   const AskVillageScreen({
     super.key,
     this.initialQuestion,
+    this.defaultAnonymous = false,
     this.initialCategory,
     this.initialSupportIntent,
     this.initialCommunityId,
@@ -24,6 +25,7 @@ class AskVillageScreen extends StatefulWidget {
   });
 
   final String? initialQuestion;
+  final bool defaultAnonymous;
   final String? initialCategory;
   final String? initialSupportIntent;
   final String? initialCommunityId;
@@ -104,6 +106,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   void initState() {
     super.initState();
     questionController.text = widget.initialQuestion ?? '';
+    anonymous = widget.defaultAnonymous;
     category = _normalizedCategory(widget.initialCategory) ?? category;
     if (widget.firstQuestionFlow) {
       anonymous = true;
