@@ -1260,19 +1260,42 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           icon: const Icon(Icons.thumb_down_outlined, size: 16), label: const Text('Not helpful')),
       ]),
       const SizedBox(height: 10),
+      // Keep all three actions on one line, including the Saved state,
+      // without changing the resource card's existing appearance.
       Row(children: [
         Expanded(child: OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+            minimumSize: const Size(0, 42),
+            textStyle: const TextStyle(fontSize: 12),
+          ),
           onPressed: () => _toggleSaved(resource.id),
-          icon: Icon(saved.contains(resource.id) ? Icons.bookmark : Icons.bookmark_border, size: 17),
-          label: Text(saved.contains(resource.id) ? 'Saved' : 'Save'))),
+          icon: Icon(saved.contains(resource.id) ? Icons.bookmark : Icons.bookmark_border, size: 15),
+          label: FittedBox(fit: BoxFit.scaleDown,
+            child: Text(saved.contains(resource.id) ? 'Saved' : 'Save',
+              maxLines: 1, softWrap: false)))),
         const SizedBox(width: 6),
         Expanded(child: OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+            minimumSize: const Size(0, 42),
+            textStyle: const TextStyle(fontSize: 12),
+          ),
           onPressed: resource.url.isEmpty ? null : () => Share.share(resource.url, subject: resource.title),
-          icon: const Icon(Icons.share_outlined, size: 17), label: const Text('Share'))),
+          icon: const Icon(Icons.share_outlined, size: 15),
+          label: const FittedBox(fit: BoxFit.scaleDown,
+            child: Text('Share', maxLines: 1, softWrap: false)))),
         const SizedBox(width: 6),
         Expanded(child: OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+            minimumSize: const Size(0, 42),
+            textStyle: const TextStyle(fontSize: 12),
+          ),
           onPressed: () => _reportResource(resource),
-          icon: const Icon(Icons.flag_outlined, size: 17), label: const Text('Report'))),
+          icon: const Icon(Icons.flag_outlined, size: 15),
+          label: const FittedBox(fit: BoxFit.scaleDown,
+            child: Text('Report', maxLines: 1, softWrap: false)))),
       ]),
       const SizedBox(height: 8),
       SizedBox(width: double.infinity, child: FilledButton.icon(
