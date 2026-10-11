@@ -167,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isScrollControlled: true,
       backgroundColor: cream,
       showDragHandle: true,
-      builder: (_) => _CheckInSheet(existing: today, initialMood: initialMood, showPeriodTracking: showPeriodTracking),
+      builder: (_) => _CheckInSheet(existing: today, initialMood: initialMood, showPeriodTracking: showPeriodTracking, history: history),
     );
     if (result == null) return;
     final saved = await checkInService.saveToday(
@@ -175,6 +175,10 @@ class _HomeScreenState extends State<HomeScreen> {
       details: result.details,
       periodStarted: result.periodStarted,
       healthNotes: result.healthNotes,
+      periodEnded: result.periodEnded,
+      spotting: result.spotting,
+      flowLevel: result.flowLevel,
+      symptoms: result.symptoms,
     );
     if (!mounted) return;
     setState(() => history = saved);
@@ -1037,20 +1041,29 @@ class _CheckInResult {
     required this.details,
     required this.periodStarted,
     required this.healthNotes,
+    required this.periodEnded,
+    required this.spotting,
+    required this.flowLevel,
+    required this.symptoms,
   });
 
   final String mood;
   final String details;
   final bool periodStarted;
   final String healthNotes;
+  final bool periodEnded;
+  final bool spotting;
+  final String flowLevel;
+  final List<String> symptoms;
 }
 
 class _CheckInSheet extends StatefulWidget {
-  const _CheckInSheet({this.existing, this.initialMood, required this.showPeriodTracking});
+  const _CheckInSheet({this.existing, this.initialMood, required this.showPeriodTracking, required this.history});
 
   final MoodCheckIn? existing;
   final String? initialMood;
   final bool showPeriodTracking;
+  final List<MoodCheckIn> history;
 
   @override
   State<_CheckInSheet> createState() => _CheckInSheetState();
@@ -1059,6 +1072,10 @@ class _CheckInSheet extends StatefulWidget {
 class _CheckInSheetState extends State<_CheckInSheet> {
   String? selectedMood;
   bool periodStarted = false;
+  bool periodEnded = false;
+  bool spotting = false;
+  String flowLevel = '';
+  final Set<String> symptoms = {};
   bool healthExpanded = true;
   bool cycleExpanded = false;
   late final TextEditingController detailsController;
@@ -1069,6 +1086,10 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     super.initState();
     selectedMood = widget.initialMood ?? widget.existing?.mood;
     periodStarted = widget.existing?.periodStarted ?? false;
+    periodEnded = widget.existing?.periodEnded ?? false;
+    spotting = widget.existing?.spotting ?? false;
+    flowLevel = widget.existing?.flowLevel ?? '';
+    symptoms.addAll(widget.existing?.symptoms ?? const []);
     cycleExpanded = periodStarted;
     detailsController = TextEditingController(
       text: widget.existing?.details ?? '',
@@ -1099,6 +1120,10 @@ class _CheckInSheetState extends State<_CheckInSheet> {
         details: includeDetails ? detailsController.text : '',
         periodStarted: periodStarted,
         healthNotes: includeDetails ? healthNotesController.text : '',
+        periodEnded: periodEnded,
+        spotting: spotting,
+        flowLevel: flowLevel,
+        symptoms: symptoms.toList(),
       ),
     );
   }
@@ -1229,7 +1254,29 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                       activeColor: _HomeScreenState.sage,
                       title: const Text('My period started today'),
                       subtitle: const Text('This date helps estimate your next period.')),
-                    const Text('Ovulation estimates are not yet available. Period predictions are approximate and not contraception guidance.',
+                    Wrap(spacing: 7, runSpacing: 6, children: [
+                      for (final option in ['Period ended', 'Spotting'])
+                        FilterChip(label: Text(option), selected: option == 'Period ended' ? periodEnded : spotting,
+                          onSelected: (v) => setState(() { if (option == 'Period ended') { periodEnded = v; } else { spotting = v; } })),
+                    ]),
+                    const SizedBox(height: 8),
+                    const Text('Flow level (optional)'),
+                    Wrap(spacing: 7, children: [
+                      for (final level in ['Light', 'Medium', 'Heavy'])
+                        ChoiceChip(label: Text(level), selected: flowLevel == level,
+                          onSelected: (v) => setState(() => flowLevel = v ? level : '')),
+                    ]),
+                    const SizedBox(height: 8),
+                    const Text('Symptoms (optional)'),
+                    Wrap(spacing: 7, runSpacing: 5, children: [
+                      for (final symptom in ['Cramps', 'Bloating', 'Headache', 'Mood changes', 'Back pain', 'Fatigue'])
+                        FilterChip(label: Text(symptom), selected: symptoms.contains(symptom),
+                          onSelected: (v) => setState(() { if (v) { symptoms.add(symptom); } else { symptoms.remove(symptom); } })),
+                    ]),
+                    const SizedBox(height: 10),
+                    _CycleCalendar(history: widget.history),
+                    const SizedBox(height: 8),
+                    const Text('Ovulation and fertile-window dates are calendar estimates, not confirmed ovulation. Do not use these predictions for contraception.',
                       style: TextStyle(fontSize: 12)),
                   ],
                 ]),
