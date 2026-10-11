@@ -633,6 +633,30 @@ service cloud.firestore {
         request.resource.data.createdAt == request.time;
     }
 
+    // My Space journal: entries are readable and writable only by their owner.
+    // No admin, public, or community access to private reflections.
+    match /private_journals/{uid}/entries/{entryId} {
+      allow get, list, delete: if isSelf(uid);
+      allow create: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly(['body', 'prompt', 'createdAt', 'updatedAt']) &&
+        request.resource.data.body is string &&
+        request.resource.data.body.size() > 0 &&
+        request.resource.data.body.size() <= 10000 &&
+        request.resource.data.prompt is string &&
+        request.resource.data.prompt.size() <= 500 &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time;
+      allow update: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly(['body', 'prompt', 'createdAt', 'updatedAt']) &&
+        request.resource.data.body is string &&
+        request.resource.data.body.size() > 0 &&
+        request.resource.data.body.size() <= 10000 &&
+        request.resource.data.prompt is string &&
+        request.resource.data.prompt.size() <= 500 &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.updatedAt == request.time;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

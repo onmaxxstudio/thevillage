@@ -14,6 +14,7 @@ class AskVillageScreen extends StatefulWidget {
   const AskVillageScreen({
     super.key,
     this.initialQuestion,
+    this.defaultAnonymous = false,
     this.initialCategory,
     this.initialSupportIntent,
     this.initialCommunityId,
@@ -24,6 +25,7 @@ class AskVillageScreen extends StatefulWidget {
   });
 
   final String? initialQuestion;
+  final bool defaultAnonymous;
   final String? initialCategory;
   final String? initialSupportIntent;
   final String? initialCommunityId;
@@ -104,6 +106,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   void initState() {
     super.initState();
     questionController.text = widget.initialQuestion ?? '';
+    anonymous = widget.defaultAnonymous;
     category = _normalizedCategory(widget.initialCategory) ?? category;
     if (widget.firstQuestionFlow) {
       anonymous = true;
@@ -141,6 +144,22 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     ProfileService.usernameNotifier.removeListener(_usernameChanged);
     questionController.dispose();
     super.dispose();
+  }
+
+  Future<void> setAnonymousForJournalShare(bool value) async {
+    if (value || !widget.defaultAnonymous) {
+      setState(() => anonymous = value);
+      return;
+    }
+    final showName = await showDialog<bool>(context: context, builder: (dialogContext) => AlertDialog(
+      title: const Text('Share using your username?'),
+      content: const Text('This post will show your Village username instead of Anonymous. Your original My Space entry will remain private.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Stay anonymous')),
+        FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Show my username')),
+      ],
+    ));
+    if (mounted && showName == true) setState(() => anonymous = false);
   }
 
   Future<void> preview() async {
@@ -255,7 +274,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                   const SizedBox(height: 10),
                   SwitchListTile.adaptive(
                     value: anonymous,
-                    onChanged: (value) => setState(() => anonymous = value),
+                    onChanged: setAnonymousForJournalShare,
                     secondary: const Icon(Icons.visibility_off_outlined, color: sage),
                     title: const Text('Post anonymously', style: TextStyle(fontWeight: FontWeight.w800)),
                     subtitle: const Text('Your name will not be shown.'),
