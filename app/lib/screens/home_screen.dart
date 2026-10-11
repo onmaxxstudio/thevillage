@@ -1491,7 +1491,7 @@ class _CycleCalendarState extends State<_CycleCalendar> {
       nextPeriod = starts.last.add(Duration(days: cycleLength));
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      while (nextPeriod.isBefore(today)) {
+      while (nextPeriod!.isBefore(today)) {
         nextPeriod = nextPeriod.add(Duration(days: cycleLength));
       }
       ovulation = nextPeriod.subtract(const Duration(days: 14));
@@ -1520,7 +1520,7 @@ class _CycleCalendarState extends State<_CycleCalendar> {
           IconButton(onPressed: () => setState(() => month = DateTime(month.year, month.month + 1)),
             icon: const Icon(Icons.chevron_right)),
         ]),
-        const Row(children: [
+        Row(children: [
           for (final day in ['S','M','T','W','T','F','S'])
             Expanded(child: Center(child: Text(day, style: TextStyle(fontSize: 11)))),
         ]),
