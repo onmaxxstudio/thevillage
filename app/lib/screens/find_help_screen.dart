@@ -427,26 +427,17 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               const SizedBox(height: 4),
               const Text('Local and state-specific options come first.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
               const SizedBox(height: 10),
-              for (final resource in localResults) ...[
-                _resourceCard(resource),
-                const SizedBox(height: 11),
-              ],
+              _resourceGrid(localResults),
               if (nationwideResults.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text('Nationwide programs', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
                 const SizedBox(height: 4),
                 const Text('More trusted options available across the country.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
                 const SizedBox(height: 10),
-                for (final resource in nationwideResults) ...[
-                  _resourceCard(resource),
-                  const SizedBox(height: 11),
-                ],
+                _resourceGrid(nationwideResults),
               ],
             ] else ...[
-              for (final resource in (showAllResources ? visible : visible.take(6))) ...[
-                _resourceCard(resource),
-                const SizedBox(height: 11),
-              ],
+              _resourceGrid((showAllResources ? visible : visible.take(6)).toList()),
               if (!showAllResources && visible.length > 6)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
@@ -1201,6 +1192,20 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           const Text('Try another need or use 211 to find local help.', textAlign: TextAlign.center),
         ]),
       );
+
+  Widget _resourceGrid(List<HelpResource> resources) =>
+      LayoutBuilder(builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 1080 ? 3 : constraints.maxWidth >= 690 ? 2 : 1;
+        const gap = 14.0;
+        final cardWidth = (constraints.maxWidth - gap * (columns - 1)) / columns;
+        return Wrap(
+          spacing: gap, runSpacing: gap,
+          children: [
+            for (final resource in resources)
+              SizedBox(width: cardWidth, child: _resourceCard(resource)),
+          ],
+        );
+      });
 
   Widget _resourceCard(HelpResource resource) => Container(
     padding: const EdgeInsets.all(16),
