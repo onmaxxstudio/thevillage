@@ -80,7 +80,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://www.211.org/',
       phone: '211',
       label: 'Free • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'usa-benefits',
@@ -89,7 +89,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Food','Rent & Housing','Utilities','Healthcare','Childcare','Employment'],
       url: 'https://www.usa.gov/benefit-finder',
       label: 'Official government resource',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'food-help',
@@ -98,7 +98,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Food'],
       url: 'https://www.usa.gov/food-help',
       label: 'Official • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'rent-help',
@@ -107,7 +107,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Rent & Housing'],
       url: 'https://www.usa.gov/emergency-pay-rent',
       label: 'Official • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'utility-help',
@@ -116,7 +116,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Utilities'],
       url: 'https://www.usa.gov/help-with-utility-bills',
       label: 'Official • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'housing-help',
@@ -125,7 +125,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Rent & Housing'],
       url: 'https://www.usa.gov/housing-help',
       label: 'Official • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'state-social-services',
@@ -134,7 +134,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Food','Rent & Housing','Utilities','Healthcare','Childcare','Employment'],
       url: 'https://www.usa.gov/state-social-services',
       label: 'Official government directory',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'emergency-food',
@@ -144,7 +144,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://www.usa.gov/emergency-food-assistance',
       phone: '1-866-348-6479',
       label: 'Official • Nationwide',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'health-center',
@@ -153,7 +153,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Healthcare'],
       url: 'https://findahealthcenter.hrsa.gov/',
       label: 'Official • Local locator',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'childcare-referral',
@@ -162,7 +162,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Childcare'],
       url: 'https://www.childcareaware.org/resources/ccrr-search/',
       label: 'Nationwide local locator',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'jobs-local',
@@ -172,7 +172,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://www.careeronestop.org/LocalHelp/AmericanJobCenters/find-american-job-centers.aspx',
       phone: '1-877-872-5627',
       label: 'Official • Local locator',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'legal-aid',
@@ -181,7 +181,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Legal Help'],
       url: 'https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help',
       label: 'Nationwide nonprofit network',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: '988',
@@ -191,7 +191,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://988lifeline.org/get-help/',
       phone: '988',
       label: 'Free • 24/7',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'local-programs',
@@ -200,7 +200,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       needs: ['Food','Rent & Housing','Utilities','Healthcare','Childcare','Transportation','Employment','Legal Help','Crisis & Safety'],
       url: 'https://www.findhelp.org/',
       label: 'Local nonprofit directory',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'fl-benefits',
@@ -211,7 +211,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://www.myflfamilies.com/services/public-assistance',
       phone: '(850) 300-4323',
       label: 'Florida official resource',
-      verified: 'September 2026',
+      verified: '',
     ),
     HelpResource(
       id: 'fl-homelessness',
@@ -222,7 +222,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       url: 'https://www.myflfamilies.com/services/abuse/homelessness',
       phone: '(850) 300-4323',
       label: 'Florida official resource',
-      verified: 'September 2026',
+      verified: '',
     ),
   ];
 
@@ -295,7 +295,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         url: 'https://www.211.org/get-help/food-programs-food-benefits',
         phone: '211',
         label: 'Local help in $name',
-        verified: 'September 2026',
+        verified: '',
       ),
       HelpResource(
         id: 'local_housing_$state',
@@ -306,7 +306,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         url: 'https://www.211.org/get-help/housing-expenses',
         phone: '211',
         label: 'Local help in $name',
-        verified: 'September 2026',
+        verified: '',
       ),
       HelpResource(
         id: 'local_health_$state',
@@ -317,7 +317,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         url: 'https://www.211.org/get-help/healthcare-expenses',
         phone: '211',
         label: 'Local help in $name',
-        verified: 'September 2026',
+        verified: '',
       ),
       HelpResource(
         id: 'local_work_$state',
@@ -328,7 +328,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         url: 'https://www.211.org/',
         phone: '211',
         label: 'Local help in $name',
-        verified: 'September 2026',
+        verified: '',
       ),
     ];
   }
@@ -1249,21 +1249,10 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           ])),
       ],
       const SizedBox(height: 10),
-      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance.collection('resource_votes')
-            .doc(resource.id).collection('members').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return const Text('Community feedback unavailable',
-            style: TextStyle(fontSize: 11, color: ink));
-          final votes = snapshot.data?.docs ?? [];
-          if (votes.length < 5) return const Text('Not enough community feedback yet',
-            style: TextStyle(fontSize: 11, color: ink));
-          final positive = votes.where((doc) => doc.data()['helpful'] == true).length;
-          final percent = (positive * 100 / votes.length).round();
-          return Text('$percent% helpful (${votes.length} responses)',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: sage));
-        },
-      ),
+      // Individual votes are private; aggregate counts require trusted
+      // server-side calculation before they can be displayed publicly.
+      const Text('Not enough community feedback yet',
+        style: TextStyle(fontSize: 11, color: ink)),
       Row(children: [
         TextButton.icon(onPressed: () => _voteResource(resource, true),
           icon: const Icon(Icons.thumb_up_outlined, size: 16), label: const Text('Helpful')),
