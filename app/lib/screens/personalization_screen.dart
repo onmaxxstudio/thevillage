@@ -32,6 +32,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
   int step = 0;
   bool loading = true;
   bool saving = false;
+  bool periodTracking = false;
   final Set<String> goals = {};
   final Set<String> topics = {};
 
@@ -64,6 +65,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
     final saved = await service.load();
     if (!mounted) return;
     if (saved.completed) topics.addAll(saved.interests);
+    periodTracking = saved.periodTracking;
     setState(() => loading = false);
   }
 
@@ -93,7 +95,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
     await service.save(VillagePersonalization(
       identity: '',
       interests: topics.toList(),
-      periodTracking: false,
+      periodTracking: periodTracking,
       completed: true,
     ));
     if (!mounted) return;
@@ -251,7 +253,27 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
               ),
           ],
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 18),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .72),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: line),
+          ),
+          child: SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: periodTracking,
+            activeColor: sage,
+            onChanged: saving ? null : (value) => setState(() => periodTracking = value),
+            title: const Text('My Cycle (optional)', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: const Text(
+              'Turn on period dates, spotting, flow, symptoms, and calendar estimates. Estimates are not reliable contraception guidance.',
+              style: TextStyle(fontSize: 12, height: 1.35),
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
         SizedBox(
           height: 54,
           child: FilledButton(
