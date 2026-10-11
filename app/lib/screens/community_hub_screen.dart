@@ -496,6 +496,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
   List<VillagePost> _questionsFor(_CommunityInfo community) {
     return villagePosts.where((post) {
       if (post.communityId != null) return post.communityId == community.id;
+      if (memberCommunities.any((item) => item.id == community.id)) return false;
       final normalizedPost = _normalizedQuestion(post.question);
       final matchesSuggestedQuestion = communities.any(
         (item) => item.prompts.any(
