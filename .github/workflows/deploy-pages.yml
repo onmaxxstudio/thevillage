@@ -37,6 +37,10 @@ jobs:
         working-directory: app
         run: flutter test test/auth_attempt_state_test.dart
 
+      - name: Analyze Flutter app
+        working-directory: app
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
       - name: Build website without stale PWA cache
         working-directory: app
         run: |
