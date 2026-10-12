@@ -654,10 +654,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         final textWidth = textConstraints.maxWidth * .54;
                         return SizedBox(
                           width: textWidth,
-                          child: Column(
+                          child: Transform.translate(
+                            offset: const Offset(0, -10),
+                            child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
+                            // Lift the welcome copy slightly toward the photo's upper edge.
                             children: [
                               FittedBox(
                                 fit: BoxFit.scaleDown,
@@ -718,6 +721,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ],
+                          ),
                           ),
                         );
                       },
