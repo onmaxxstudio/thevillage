@@ -352,10 +352,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           CircleAvatar(
                             radius: iconRadius,
                             backgroundColor: iconBackground,
-                            child: Icon(
-                              icon,
-                              color: iconColor,
-                              size: 32 * scale,
+                            child: Transform.scale(
+                              scale: icon == Icons.edit_note_rounded ? .88 : 1,
+                              child: Icon(
+                                icon,
+                                color: iconColor,
+                                size: 32 * scale,
+                              ),
                             ),
                           ),
                           SizedBox(width: 12 * scale),
