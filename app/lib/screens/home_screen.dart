@@ -709,7 +709,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDashboardRow() {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(child: _buildCheckInCard()),
         const SizedBox(width: 10),
@@ -726,30 +726,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const _RoundIcon(
-                icon: Icons.wb_sunny_outlined,
-                gold: true,
-                radius: 16,
-              ),
-              const SizedBox(width: 7),
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Daily Check-In',
-                    maxLines: 1,
-                    style: GoogleFonts.playfairDisplay(
-                      color: ink,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          const _DashboardCardHeader(
+            title: 'Daily Check-In',
+            icon: Icons.wb_sunny_outlined,
+            gold: true,
           ),
           const SizedBox(height: 4),
           Row(
@@ -783,37 +763,42 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const Spacer(),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final diameter = ((constraints.maxWidth - 8) / 5)
-                  .clamp(21, 28)
-                  .toDouble();
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  for (final mood in moods)
-                    InkWell(
-                      onTap: () => openCheckIn(initialMood: mood.$2),
-                      borderRadius: BorderRadius.circular(30),
-                      child: Container(
-                        width: diameter,
-                        height: diameter,
-                        decoration: BoxDecoration(
-                          color: entry?.mood == mood.$2
-                              ? sage
-                              : _moodColor(mood.$2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          mood.$1,
-                          size: diameter * .58,
-                          color: entry?.mood == mood.$2 ? Colors.white : ink,
+          SizedBox(
+            height: 30,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final diameter = ((constraints.maxWidth - 8) / 5)
+                    .clamp(21, 28)
+                    .toDouble();
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    for (final mood in moods)
+                      InkWell(
+                        onTap: () => openCheckIn(initialMood: mood.$2),
+                        borderRadius: BorderRadius.circular(30),
+                        child: Container(
+                          width: diameter,
+                          height: diameter,
+                          decoration: BoxDecoration(
+                            color: entry?.mood == mood.$2
+                                ? sage
+                                : _moodColor(mood.$2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            mood.$1,
+                            size: diameter * .58,
+                            color: entry?.mood == mood.$2
+                                ? Colors.white
+                                : ink,
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              );
-            },
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -827,34 +812,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const _RoundIcon(
-                icon: Icons.groups_2_outlined,
-                radius: 16,
-              ),
-              const SizedBox(width: 7),
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'My Circle',
-                    maxLines: 1,
-                    style: GoogleFonts.playfairDisplay(
-                      color: ink,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: sage,
-                size: 20,
-              ),
-            ],
+          const _DashboardCardHeader(
+            title: 'My Circle',
+            icon: Icons.groups_2_outlined,
+            trailingIcon: Icons.chevron_right_rounded,
           ),
           const SizedBox(height: 4),
           Text(
@@ -866,33 +827,40 @@ class _HomeScreenState extends State<HomeScreen> {
             style: const TextStyle(fontSize: 10.5),
           ),
           const Spacer(),
-          Row(
-            children: [
-              if (circleMembers.isEmpty) ...[
-                const Icon(Icons.person_add_alt_1_rounded, color: sage, size: 22),
-                const SizedBox(width: 7),
-                const Text(
-                  'Invite someone',
-                  style: TextStyle(color: sage, fontWeight: FontWeight.w700),
-                ),
-              ] else ...[
-                for (final member in circleMembers.take(4))
-                  Align(
-                    widthFactor: .76,
-                    child: VillageAvatar(uid: member.uid, radius: 15),
+          SizedBox(
+            height: 30,
+            child: Row(
+              children: [
+                if (circleMembers.isEmpty) ...[
+                  const Icon(Icons.person_add_alt_1_rounded, color: sage, size: 22),
+                  const SizedBox(width: 7),
+                  const Flexible(
+                    child: Text(
+                      'Invite someone',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: sage, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ] else ...[
+                  for (final member in circleMembers.take(4))
+                    Align(
+                      widthFactor: .76,
+                      child: VillageAvatar(uid: member.uid, radius: 15),
+                    ),
+                ],
+                const Spacer(),
+                if (circleMembers.isNotEmpty)
+                  Text(
+                    '${circleMembers.length}',
+                    style: const TextStyle(
+                      color: sage,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
                   ),
               ],
-              const Spacer(),
-              if (circleMembers.isNotEmpty)
-                Text(
-                  '${circleMembers.length}',
-                  style: const TextStyle(
-                    color: sage,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-            ],
+            ),
           ),
         ],
       ),
@@ -1177,6 +1145,56 @@ class _FeatureCardLeafPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _FeatureCardLeafPainter oldDelegate) {
     return oldDelegate.color != color;
+  }
+}
+
+class _DashboardCardHeader extends StatelessWidget {
+  const _DashboardCardHeader({
+    required this.title,
+    required this.icon,
+    this.gold = false,
+    this.trailingIcon,
+  });
+
+  final String title;
+  final IconData icon;
+  final bool gold;
+  final IconData? trailingIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _RoundIcon(icon: icon, gold: gold, radius: 16),
+        const SizedBox(width: 7),
+        Expanded(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              title,
+              maxLines: 1,
+              softWrap: false,
+              style: GoogleFonts.playfairDisplay(
+                color: _HomeScreenState.ink,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 20,
+          child: trailingIcon == null
+              ? null
+              : Icon(
+                  trailingIcon,
+                  color: _HomeScreenState.sage,
+                  size: 20,
+                ),
+        ),
+      ],
+    );
   }
 }
 
