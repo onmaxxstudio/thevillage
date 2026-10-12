@@ -16,6 +16,7 @@ import '../widgets/daily_village_census_card.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
+import 'find_help_screen.dart';
 import 'my_space_screen.dart';
 import 'plan_my_week_screen.dart';
 
@@ -32,6 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
   static const paleSage = Color(0xFFE8EBDD);
   static const gold = Color(0xFFB78943);
   static const blush = Color(0xFFF3E2DD);
+  static const peach = Color(0xFFF3D6C9);
+  static const butter = Color(0xFFF4E4BD);
+  static const sky = Color(0xFFDDEAF0);
+  static const lavender = Color(0xFFE8E0F0);
   static const ink = Color(0xFF172019);
   static const line = Color(0xFFE3D8C9);
 
@@ -252,13 +257,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 14),
                             _buildAskCard(),
                             const SizedBox(height: 14),
-                            _buildMySpaceCard(),
+                            _buildFeaturePair(
+                              _buildMySpaceCard(),
+                              _buildPlanMyWeekCard(),
+                            ),
                             const SizedBox(height: 14),
-                            _buildPlanMyWeekCard(),
+                            _buildFeaturePair(
+                              _buildCommunityHubCard(),
+                              _buildResourceDirectoryCard(),
+                            ),
                             const SizedBox(height: 14),
                             const DailyVillageCensusCard(),
-                            const SizedBox(height: 18),
-                            _buildCommunityHubCard(),
                             const SizedBox(height: 14),
                             _buildTrendingCard(),
                           ],
@@ -277,94 +286,91 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildMySpaceCard() {
-    return Material(
-      color: const Color(0xFFE8EBDD),
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const MySpaceScreen()),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          child: Row(
-            children: [
-              const CircleAvatar(
-                radius: 26,
-                backgroundColor: sage,
-                child: Icon(Icons.edit_note_rounded, color: Colors.white, size: 29),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(children: [
-                      Expanded(child: Text('My Space', style: GoogleFonts.playfairDisplay(
-                        color: ink, fontSize: 23, fontWeight: FontWeight.w600,
-                      ))),
-                      const Icon(Icons.lock_outline, color: sage, size: 16),
-                      const SizedBox(width: 4),
-                      const Text('Private', style: TextStyle(color: sage, fontSize: 12)),
-                    ]),
-                    const SizedBox(height: 4),
-                    const Text('A private place to write, reflect, and clear your mind.',
-                      style: TextStyle(color: ink, fontSize: 13)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 6),
-              const Icon(Icons.chevron_right_rounded, color: sage),
-            ],
-          ),
-        ),
+    return _buildHomeFeatureCard(
+      title: 'My Space',
+      subtitle: 'Journal, reflect, and track your wellness.',
+      icon: Icons.edit_note_rounded,
+      color: sage,
+      foreground: Colors.white,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const MySpaceScreen()),
       ),
     );
   }
 
   Widget _buildPlanMyWeekCard() {
+    return _buildHomeFeatureCard(
+      title: 'Plan My Week',
+      subtitle: 'Set goals, organize tasks, and find meals.',
+      icon: Icons.calendar_month_outlined,
+      color: peach,
+      foreground: ink,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const PlanMyWeekScreen()),
+      ),
+    );
+  }
+
+  Widget _buildFeaturePair(Widget first, Widget second) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: SizedBox(height: 156, child: first)),
+        const SizedBox(width: 10),
+        Expanded(child: SizedBox(height: 156, child: second)),
+      ],
+    );
+  }
+
+  Widget _buildHomeFeatureCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required Color foreground,
+    required VoidCallback onTap,
+  }) {
     return Material(
-      color: const Color(0xFFF6E9E4),
+      color: color,
       borderRadius: BorderRadius.circular(22),
       child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(22),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const PlanMyWeekScreen(),
-          ),
-        ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          child: Row(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const CircleAvatar(
-                radius: 26,
-                backgroundColor: Color(0xFFE8D5CB),
-                child: Icon(Icons.calendar_month_outlined, color: sage, size: 28),
+              Row(
+                children: [
+                  Icon(icon, color: foreground, size: 24),
+                  const Spacer(),
+                  Icon(Icons.chevron_right_rounded,
+                      color: foreground, size: 22),
+                ],
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Plan My Week',
-                      style: GoogleFonts.playfairDisplay(
-                        color: ink,
-                        fontSize: 23,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Set goals, plan tasks, and organize meals for the week.',
-                      style: TextStyle(color: ink, fontSize: 13),
-                    ),
-                  ],
+              const Spacer(),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.playfairDisplay(
+                  color: foreground,
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 6),
-              const Icon(Icons.chevron_right_rounded, color: sage),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  color: foreground,
+                  fontSize: 10.5,
+                  height: 1.25,
+                ),
+              ),
             ],
           ),
         ),
@@ -608,7 +614,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCheckInCard() {
     final entry = today;
     return _DashboardCard(
-      color: const Color(0xFFF1F4E9),
+      color: const Color(0xFFFFF1D5),
       onTap: () => openCheckIn(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -709,7 +715,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildCircleCard() {
     return _DashboardCard(
-      color: const Color(0xFFFFF7ED),
+      color: lavender,
       onTap: openCircle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -952,7 +958,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(17),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: .6),
+          color: sky,
           border: Border.all(color: line),
           borderRadius: BorderRadius.circular(21),
           boxShadow: const [
@@ -979,7 +985,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Visit the Village',
+                    'Today in the Village',
                     style: GoogleFonts.playfairDisplay(
                       color: ink,
                       fontSize: 22,
@@ -1001,54 +1007,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCommunityHubCard() {
-    return InkWell(
+    return _buildHomeFeatureCard(
+      title: 'Community Hub',
+      subtitle: 'Join groups, ask questions, and share experiences.',
+      icon: Icons.groups_rounded,
+      color: paleSage,
+      foreground: sage,
       onTap: openCommunityHub,
-      borderRadius: BorderRadius.circular(23),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: paleSage,
-          border: Border.all(color: line),
-          borderRadius: BorderRadius.circular(23),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x10172019),
-              blurRadius: 12,
-              offset: Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 30,
-              backgroundColor: cream,
-              child: Icon(Icons.diversity_3_outlined, color: sage, size: 29),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Community Hub',
-                    style: GoogleFonts.playfairDisplay(
-                      color: ink,
-                      fontSize: 23,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Find your people, explore resources, and gather for live events.',
-                    style: TextStyle(fontSize: 14.5, height: 1.35),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: sage),
-          ],
-        ),
+    );
+  }
+
+  Widget _buildResourceDirectoryCard() {
+    return _buildHomeFeatureCard(
+      title: 'Resource Directory',
+      subtitle: 'Find local help, services, and opportunities.',
+      icon: Icons.location_on_rounded,
+      color: butter,
+      foreground: ink,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const FindHelpScreen()),
       ),
     );
   }
