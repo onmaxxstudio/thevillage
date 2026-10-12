@@ -302,6 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color iconColor,
     required VoidCallback onTap,
     Color? borderColor,
+    double borderWidth = 1,
     Color? leafColor,
     double? glyphSize,
   }) {
@@ -353,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   border: borderColor == null
                       ? null
-                      : Border.all(color: borderColor),
+                      : Border.all(color: borderColor, width: borderWidth),
                 ),
                 child: Stack(
                   clipBehavior: Clip.hardEdge,
@@ -1109,10 +1110,11 @@ class _HomeScreenState extends State<HomeScreen> {
       title: 'Visit the Village',
       description: 'Read real questions, offer support, or start a conversation.',
       icon: Icons.chat_bubble_outline_rounded,
-      cardColor: Colors.white.withValues(alpha: .6),
+      cardColor: const Color(0xFFFFFCF7),
       iconBackground: blush,
       iconColor: gold,
-      borderColor: line,
+      borderColor: const Color(0xFFD4C5B2),
+      borderWidth: 1.4,
       leafColor: const Color(0xFFAD9684),
       onTap: openVillage,
     );
