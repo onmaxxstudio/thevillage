@@ -614,9 +614,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final heroHeight = width < 360 ? 320.0 : width < 500 ? 326.0 : 330.0;
+        final heroHeight = width < 360 ? 176.0 : width < 500 ? 180.0 : 185.0;
         final horizontalPadding = width < 400 ? 18.0 : 22.0;
-        final verticalPadding = width < 400 ? 18.0 : 20.0;
+        final verticalPadding = width < 400 ? 10.0 : 12.0;
 
         return ClipRRect(
           borderRadius: BorderRadius.circular(25),
@@ -668,7 +668,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   softWrap: false,
                                   style: GoogleFonts.playfairDisplay(
                                     color: ink,
-                                    fontSize: 28,
+                                    fontSize: 23,
                                     height: 1,
                                   ),
                                 ),
@@ -687,8 +687,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           text: currentUsername,
                                           style: GoogleFonts.playfairDisplay(
                                             color: sage,
-                                            fontSize: 34,
-                                            height: 1.1,
+                                            fontSize: 28,
+                                            height: 1.05,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -697,23 +697,23 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 5),
+                              const SizedBox(height: 3),
                               const Text(
                                 'TODAY’S ENCOURAGEMENT',
                                 style: TextStyle(
                                   color: gold,
-                                  fontSize: 10,
+                                  fontSize: 9,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 1.5,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 1),
                               Text(
                                 breathingLesson,
                                 softWrap: true,
                                 style: GoogleFonts.inter(
-                                  fontSize: textWidth < 155 ? 12 : 13,
-                                  height: 1.22,
+                                  fontSize: textWidth < 155 ? 10.5 : 11.5,
+                                  height: 1.18,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
