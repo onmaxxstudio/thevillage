@@ -668,7 +668,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   softWrap: false,
                                   style: GoogleFonts.playfairDisplay(
                                     color: ink,
-                                    fontSize: 23,
+                                    fontSize: 21,
                                     height: 1,
                                   ),
                                 ),
@@ -687,7 +687,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           text: currentUsername,
                                           style: GoogleFonts.playfairDisplay(
                                             color: sage,
-                                            fontSize: 28,
+                                            fontSize: 25,
                                             height: 1.05,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -702,7 +702,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 'TODAY’S ENCOURAGEMENT',
                                 style: TextStyle(
                                   color: gold,
-                                  fontSize: 9,
+                                  fontSize: 8.5,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 1.5,
                                 ),
@@ -712,7 +712,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 breathingLesson,
                                 softWrap: true,
                                 style: GoogleFonts.inter(
-                                  fontSize: textWidth < 155 ? 10.5 : 11.5,
+                                  fontSize: textWidth < 155 ? 9.5 : 10.5,
                                   height: 1.18,
                                   fontWeight: FontWeight.w600,
                                 ),
