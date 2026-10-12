@@ -1028,7 +1028,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(width: compact ? 8 : 14),
                   if (compact)
                     SizedBox(
-                      width: (constraints.maxWidth * .22).clamp(64.0, 90.0),
+                      width: (constraints.maxWidth * .22).clamp(64.0, 90.0).toDouble(),
                       child: tagline,
                     )
                   else
