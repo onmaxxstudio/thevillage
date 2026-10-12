@@ -303,6 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onTap,
     Color? borderColor,
     Color? leafColor,
+    double? glyphSize,
   }) {
     final cardRadius = BorderRadius.circular(22);
 
@@ -345,62 +346,59 @@ class _HomeScreenState extends State<HomeScreen> {
                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 13 * scale,
-                        vertical: 12 * scale,
+                        vertical: 10 * scale,
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(
-                            radius: iconRadius,
-                            backgroundColor: iconBackground,
-                            child: Icon(
-                              icon,
-                              color: iconColor,
-                              size: 32 * scale,
-                            ),
-                          ),
-                          SizedBox(width: 12 * scale),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          title,
-                                          maxLines: 1,
-                                          softWrap: false,
-                                          style: GoogleFonts.playfairDisplay(
-                                            color: ink,
-                                            fontSize: 19,
-                                            height: 1.05,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 2 * scale),
-                                    Icon(
-                                      Icons.chevron_right_rounded,
-                                      color: sage,
-                                      size: 24 * scale,
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 5 * scale),
-                                Text(
-                                  description,
-                                  maxLines: 4,
-                                  overflow: TextOverflow.visible,
-                                  style: GoogleFonts.inter(
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  title,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  style: GoogleFonts.playfairDisplay(
                                     color: ink,
-                                    fontSize: 13.4 * scale,
-                                    height: 1.22,
+                                    fontSize: 19 * scale,
+                                    height: 1.05,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 2 * scale),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                color: sage,
+                                size: 24 * scale,
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8 * scale),
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                CircleAvatar(
+                                  radius: iconRadius,
+                                  backgroundColor: iconBackground,
+                                  child: Icon(
+                                    icon,
+                                    color: iconColor,
+                                    size: (glyphSize ?? 32) * scale,
+                                  ),
+                                ),
+                                SizedBox(width: 10 * scale),
+                                Expanded(
+                                  child: Text(
+                                    description,
+                                    maxLines: 4,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.inter(
+                                      color: ink,
+                                      fontSize: 13.0 * scale,
+                                      height: 1.18,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -423,7 +421,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return _buildSquareFeatureCard(
       title: 'My Space',
       description: 'A private place to write, reflect, and clear your mind.',
-      icon: Icons.edit_note_rounded,
+      icon: Icons.edit_note_rounded,\n      glyphSize: 26,
       cardColor: const Color(0xFFE8EBDD),
       iconBackground: sage,
       iconColor: Colors.white,
