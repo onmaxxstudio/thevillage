@@ -17,6 +17,7 @@ import 'profile_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
 import 'my_space_screen.dart';
+import 'plan_my_week_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -253,6 +254,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 14),
                             _buildMySpaceCard(),
                             const SizedBox(height: 14),
+                            _buildPlanMyWeekCard(),
+                            const SizedBox(height: 14),
                             const DailyVillageCensusCard(),
                             const SizedBox(height: 18),
                             _buildCommunityHubCard(),
@@ -307,6 +310,56 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 4),
                     const Text('A private place to write, reflect, and clear your mind.',
                       style: TextStyle(color: ink, fontSize: 13)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.chevron_right_rounded, color: sage),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlanMyWeekCard() {
+    return Material(
+      color: const Color(0xFFF6E9E4),
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const PlanMyWeekScreen(),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 26,
+                backgroundColor: Color(0xFFE8D5CB),
+                child: Icon(Icons.calendar_month_outlined, color: sage, size: 28),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Plan My Week',
+                      style: GoogleFonts.playfairDisplay(
+                        color: ink,
+                        fontSize: 23,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Set goals, plan tasks, and organize meals for the week.',
+                      style: TextStyle(color: ink, fontSize: 13),
+                    ),
                   ],
                 ),
               ),
