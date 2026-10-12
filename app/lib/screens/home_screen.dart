@@ -313,6 +313,33 @@ class _HomeScreenState extends State<HomeScreen> {
         final iconRadius = 27.0 * scale;
         final cardWidth = 92.0 * scale;
         final cardHeight = 96.0 * scale;
+        final titleStyle = GoogleFonts.playfairDisplay(
+          color: ink,
+          height: 1.05,
+          fontWeight: FontWeight.w700,
+        );
+        final titleMaxWidth = constraints.maxWidth -
+            (26 * scale) -
+            (24 * scale) -
+            (13 * scale * 2);
+        var titleFontSize = 19.0 * scale;
+        final longestTitlePainter = TextPainter(
+          text: TextSpan(
+            text: 'Community Hub',
+            style: titleStyle.copyWith(fontSize: titleFontSize),
+          ),
+          maxLines: 1,
+          textDirection: Directionality.of(context),
+        )..layout();
+        while (longestTitlePainter.width > titleMaxWidth &&
+            titleFontSize > 10 * scale) {
+          titleFontSize -= .25 * scale;
+          longestTitlePainter.text = TextSpan(
+            text: 'Community Hub',
+            style: titleStyle.copyWith(fontSize: titleFontSize),
+          );
+          longestTitlePainter.layout();
+        }
 
         return Material(
           color: cardColor,
@@ -351,28 +378,35 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  title,
-                                  maxLines: 1,
-                                  softWrap: false,
-                                  style: GoogleFonts.playfairDisplay(
-                                    color: ink,
-                                    fontSize: 19 * scale,
-                                    height: 1.05,
-                                    fontWeight: FontWeight.w700,
+                          SizedBox(
+                            height: 24 * scale,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(right: 24 * scale),
+                                  child: Center(
+                                    child: Text(
+                                      title,
+                                      maxLines: 1,
+                                      softWrap: false,
+                                      textAlign: TextAlign.center,
+                                      style: titleStyle.copyWith(
+                                        fontSize: titleFontSize,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              SizedBox(width: 2 * scale),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                color: sage,
-                                size: 24 * scale,
-                              ),
-                            ],
+                                Positioned(
+                                  right: 0,
+                                  child: Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: sage,
+                                    size: 24 * scale,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           SizedBox(height: 8 * scale),
                           Expanded(
