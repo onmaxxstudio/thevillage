@@ -421,7 +421,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return _buildSquareFeatureCard(
       title: 'My Space',
       description: 'A private place to write, reflect, and clear your mind.',
-      icon: Icons.edit_note_rounded,\n      glyphSize: 26,
+      icon: Icons.edit_note_rounded,
+      glyphSize: 26,
       cardColor: const Color(0xFFE8EBDD),
       iconBackground: sage,
       iconColor: Colors.white,
