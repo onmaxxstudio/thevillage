@@ -778,19 +778,25 @@ class _HomeScreenState extends State<HomeScreen> {
             gold: true,
           ),
           const SizedBox(height: 4),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 230;
-              return Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      entry == null ? 'How are you today?' : 'Today: ${entry.mood}',
-                      maxLines: compact ? 2 : 1,
-                      softWrap: compact,
-                      style: const TextStyle(fontSize: 10.5),
+          SizedBox(
+            height: 24,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 230;
+                return Row(
+                  children: [
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          entry == null ? 'How are you today?' : 'Today: ${entry.mood}',
+                          maxLines: 1,
+                          softWrap: false,
+                          style: const TextStyle(fontSize: 10.5),
+                        ),
+                      ),
                     ),
-                  ),
                   if (compact)
                     Tooltip(
                       message: 'My History',
@@ -821,9 +827,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                ],
-              );
-            },
+                  ],
+                );
+              },
+            ),
           ),
           const Spacer(),
           SizedBox(
@@ -881,13 +888,19 @@ class _HomeScreenState extends State<HomeScreen> {
             trailingIcon: Icons.chevron_right_rounded,
           ),
           const SizedBox(height: 4),
-          Text(
-            circleMembers.isEmpty
-                ? 'No people added yet'
-                : '${circleMembers.length} people in your Circle',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 10.5),
+          SizedBox(
+            height: 24,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                circleMembers.isEmpty
+                    ? 'No people added yet'
+                    : '${circleMembers.length} people in your Circle',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10.5),
+              ),
+            ),
           ),
           const Spacer(),
           SizedBox(
@@ -895,7 +908,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               children: [
                 if (circleMembers.isEmpty) ...[
-                  const Icon(Icons.person_add_alt_1_rounded, color: sage, size: 22),
+                  const Icon(Icons.person_add_alt_1_rounded, color: sage, size: 28),
                   const SizedBox(width: 7),
                   const Flexible(
                     child: FittedBox(
