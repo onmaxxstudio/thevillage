@@ -271,20 +271,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFeatureGrid() {
-    return GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 1,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.zero,
-      children: [
-        _buildMySpaceCard(),
-        _buildPlanMyWeekCard(),
-        _buildCommunityHubCard(),
-        _buildTrendingCard(),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth < 320 ? 1 : 2;
+        return GridView.count(
+          crossAxisCount: columns,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: columns == 1 ? 2.05 : 1.78,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          children: [
+            _buildMySpaceCard(),
+            _buildPlanMyWeekCard(),
+            _buildCommunityHubCard(),
+            _buildTrendingCard(),
+          ],
+        );
+      },
     );
   }
 
@@ -297,97 +302,134 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color iconColor,
     required VoidCallback onTap,
     Color? borderColor,
+    Color? leafColor,
   }) {
     final cardRadius = BorderRadius.circular(22);
 
-    return Material(
-      color: cardColor,
-      borderRadius: cardRadius,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: cardRadius,
-        child: ClipRRect(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 220;
+        final iconRadius = compact ? 21.0 : 27.0;
+        final horizontalPadding = compact ? 9.0 : 18.0;
+        final verticalPadding = compact ? 7.0 : 14.0;
+        final cardWidth = compact ? 62.0 : 92.0;
+        final cardHeight = compact ? 68.0 : 96.0;
+
+        return Material(
+          color: cardColor,
           borderRadius: cardRadius,
-          child: Container(
-            decoration: BoxDecoration(
-              border: borderColor == null ? null : Border.all(color: borderColor),
-            ),
-            child: Stack(
-              clipBehavior: Clip.hardEdge,
-              children: [
-                Positioned(
-                  right: -13,
-                  bottom: -19,
-                  child: IgnorePointer(
-                    child: Icon(
-                      Icons.spa_rounded,
-                      size: 76,
-                      color: iconColor.withValues(alpha: .13),
-                    ),
-                  ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: cardRadius,
+            child: ClipRRect(
+              borderRadius: cardRadius,
+              child: Container(
+                decoration: BoxDecoration(
+                  border: borderColor == null
+                      ? null
+                      : Border.all(color: borderColor),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 12),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 25,
-                        backgroundColor: iconBackground,
-                        child: Icon(icon, color: iconColor, size: 27),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.playfairDisplay(
-                                color: ink,
-                                fontSize: 14,
-                                height: 1.05,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              description,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                color: ink,
-                                fontSize: 10.5,
-                                height: 1.2,
-                              ),
-                            ),
-                          ],
+                child: Stack(
+                  clipBehavior: Clip.hardEdge,
+                  children: [
+                    Positioned(
+                      right: -7,
+                      bottom: -10,
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          size: Size(cardWidth, cardHeight),
+                          painter: _FeatureCardLeafPainter(
+                            (leafColor ?? sage).withValues(alpha: .16),
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 2),
-                      Icon(Icons.chevron_right_rounded, color: sage, size: 21),
-                    ],
-                  ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding,
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: iconRadius,
+                            backgroundColor: iconBackground,
+                            child: Icon(
+                              icon,
+                              color: iconColor,
+                              size: compact ? 25 : 32,
+                            ),
+                          ),
+                          SizedBox(width: compact ? 8 : 14),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          title,
+                                          maxLines: 1,
+                                          softWrap: false,
+                                          style: GoogleFonts.playfairDisplay(
+                                            color: ink,
+                                            fontSize: compact ? 14 : 21,
+                                            height: 1.05,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Icon(
+                                      Icons.chevron_right_rounded,
+                                      color: sage,
+                                      size: compact ? 20 : 26,
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: compact ? 4 : 7),
+                                Text(
+                                  description,
+                                  maxLines: compact ? 3 : 4,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    color: ink,
+                                    fontSize: compact ? 10.5 : 15.5,
+                                    height: 1.25,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _buildMySpaceCard() {
     return _buildSquareFeatureCard(
       title: 'My Space',
-      description: 'Write and reflect.',
+      description: 'A private place to write, reflect, and clear your mind.',
       icon: Icons.edit_note_rounded,
       cardColor: const Color(0xFFE8EBDD),
       iconBackground: sage,
       iconColor: Colors.white,
+      leafColor: sage,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => const MySpaceScreen()),
       ),
@@ -397,11 +439,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPlanMyWeekCard() {
     return _buildSquareFeatureCard(
       title: 'Plan My Week',
-      description: 'Plan goals and meals.',
+      description: 'Set goals, plan tasks, and organize meals for the week.',
       icon: Icons.calendar_month_outlined,
       cardColor: const Color(0xFFF6E9E4),
       iconBackground: const Color(0xFFE8D5CB),
       iconColor: sage,
+      leafColor: const Color(0xFF9C8879),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => const PlanMyWeekScreen(),
@@ -986,12 +1029,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTrendingCard() {
     return _buildSquareFeatureCard(
       title: 'Visit the Village',
-      description: 'Ask and connect.',
+      description: 'Read real questions, offer support, or start a conversation.',
       icon: Icons.chat_bubble_outline_rounded,
       cardColor: Colors.white.withValues(alpha: .6),
       iconBackground: blush,
       iconColor: gold,
       borderColor: line,
+      leafColor: const Color(0xFFAD9684),
       onTap: openVillage,
     );
   }
@@ -999,18 +1043,109 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCommunityHubCard() {
     return _buildSquareFeatureCard(
       title: 'Community Hub',
-      description: 'Find your people.',
+      description: 'Find your people, explore resources, and gather for live events.',
       icon: Icons.diversity_3_outlined,
       cardColor: paleSage,
       iconBackground: cream,
       iconColor: sage,
       borderColor: line,
+      leafColor: sage,
       onTap: openCommunityHub,
     );
   }
 
 
 
+}
+
+class _FeatureCardLeafPainter extends CustomPainter {
+  const _FeatureCardLeafPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final stemPaint = Paint()
+      ..color = color.withValues(alpha: color.a * .72)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width < 70 ? 1.2 : 1.8
+      ..strokeCap = StrokeCap.round;
+    final stem = Path()
+      ..moveTo(size.width * .14, size.height * 1.02)
+      ..cubicTo(
+        size.width * .40,
+        size.height * .73,
+        size.width * .63,
+        size.height * .37,
+        size.width * .88,
+        size.height * -.04,
+      );
+    canvas.drawPath(stem, stemPaint);
+
+    final leafPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final veinPaint = Paint()
+      ..color = color.withValues(alpha: color.a * .72)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width < 70 ? .8 : 1.2
+      ..strokeCap = StrokeCap.round;
+
+    void leaf(Offset base, Offset tip, double width) {
+      final delta = tip - base;
+      final length = delta.distance;
+      if (length == 0) return;
+      final normal = Offset(-delta.dy / length, delta.dx / length);
+      final middle = Offset.lerp(base, tip, .52)!;
+      final path = Path()
+        ..moveTo(base.dx, base.dy)
+        ..quadraticBezierTo(
+          middle.dx + normal.dx * width,
+          middle.dy + normal.dy * width,
+          tip.dx,
+          tip.dy,
+        )
+        ..quadraticBezierTo(
+          middle.dx - normal.dx * width,
+          middle.dy - normal.dy * width,
+          base.dx,
+          base.dy,
+        );
+      canvas.drawPath(path, leafPaint);
+      canvas.drawLine(base, tip, veinPaint);
+    }
+
+    leaf(
+      Offset(size.width * .32, size.height * .80),
+      Offset(size.width * .02, size.height * .62),
+      size.width * .12,
+    );
+    leaf(
+      Offset(size.width * .44, size.height * .68),
+      Offset(size.width * .77, size.height * .52),
+      size.width * .13,
+    );
+    leaf(
+      Offset(size.width * .57, size.height * .49),
+      Offset(size.width * .26, size.height * .33),
+      size.width * .12,
+    );
+    leaf(
+      Offset(size.width * .70, size.height * .29),
+      Offset(size.width * .96, size.height * .15),
+      size.width * .11,
+    );
+    leaf(
+      Offset(size.width * .79, size.height * .12),
+      Offset(size.width * .56, size.height * .01),
+      size.width * .09,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _FeatureCardLeafPainter oldDelegate) {
+    return oldDelegate.color != color;
+  }
 }
 
 class _DashboardCard extends StatelessWidget {
