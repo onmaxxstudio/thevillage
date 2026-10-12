@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisCount: columns,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: columns == 1 ? 2.05 : 1.78,
+          childAspectRatio: columns == 1 ? 2.05 : 1.45,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
@@ -309,11 +309,118 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 220;
-        final iconRadius = compact ? 17.0 : 27.0;
-        final horizontalPadding = compact ? 4.0 : 18.0;
+        final iconRadius = compact ? 14.0 : 27.0;
+        final horizontalPadding = compact ? 8.0 : 18.0;
         final verticalPadding = compact ? 7.0 : 14.0;
         final cardWidth = compact ? 62.0 : 92.0;
         final cardHeight = compact ? 68.0 : 96.0;
+
+        final compactContent = Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: CircleAvatar(
+                radius: iconRadius,
+                backgroundColor: iconBackground,
+                child: Icon(icon, color: iconColor, size: 18),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.clip,
+                    style: GoogleFonts.playfairDisplay(
+                      color: ink,
+                      fontSize: 13.5,
+                      height: 1.05,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: sage,
+                  size: 16,
+                ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            Text(
+              description,
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(
+                color: ink,
+                fontSize: 11.5,
+                height: 1.2,
+              ),
+            ),
+          ],
+        );
+
+        final regularContent = Row(
+          children: [
+            CircleAvatar(
+              radius: iconRadius,
+              backgroundColor: iconBackground,
+              child: Icon(icon, color: iconColor, size: 32),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.clip,
+                          style: GoogleFonts.playfairDisplay(
+                            color: ink,
+                            fontSize: 21,
+                            height: 1.05,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: sage,
+                        size: 26,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    description,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      color: ink,
+                      fontSize: 15.5,
+                      height: 1.25,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
 
         return Material(
           color: cardColor,
@@ -349,64 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         horizontal: horizontalPadding,
                         vertical: verticalPadding,
                       ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: iconRadius,
-                            backgroundColor: iconBackground,
-                            child: Icon(
-                              icon,
-                              color: iconColor,
-                              size: compact ? 22 : 32,
-                            ),
-                          ),
-                          SizedBox(width: compact ? 5 : 14),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        title,
-                                        maxLines: 1,
-                                        softWrap: false,
-                                        overflow: TextOverflow.clip,
-                                        style: GoogleFonts.playfairDisplay(
-                                          color: ink,
-                                          fontSize: compact ? 12.5 : 21,
-                                          height: 1.05,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: compact ? 2 : 3),
-                                    Icon(
-                                      Icons.chevron_right_rounded,
-                                      color: sage,
-                                      size: compact ? 16 : 26,
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: compact ? 4 : 7),
-                                Text(
-                                  description,
-                                  maxLines: 4,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.inter(
-                                    color: ink,
-                                    fontSize: compact ? 10.5 : 15.5,
-                                    height: 1.25,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                      child: compact ? compactContent : regularContent,
                     ),
                   ],
                 ),
