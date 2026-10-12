@@ -309,8 +309,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 220;
-        final iconRadius = compact ? 20.0 : 27.0;
-        final horizontalPadding = compact ? 6.0 : 18.0;
+        final iconRadius = compact ? 17.0 : 27.0;
+        final horizontalPadding = compact ? 4.0 : 18.0;
         final verticalPadding = compact ? 7.0 : 14.0;
         final cardWidth = compact ? 62.0 : 92.0;
         final cardHeight = compact ? 68.0 : 96.0;
@@ -357,10 +357,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Icon(
                               icon,
                               color: iconColor,
-                              size: compact ? 25 : 32,
+                              size: compact ? 22 : 32,
                             ),
                           ),
-                          SizedBox(width: compact ? 6 : 14),
+                          SizedBox(width: compact ? 5 : 14),
                           Expanded(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -383,18 +383,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 3),
+                                    SizedBox(width: compact ? 2 : 3),
                                     Icon(
                                       Icons.chevron_right_rounded,
                                       color: sage,
-                                      size: compact ? 18 : 26,
+                                      size: compact ? 16 : 26,
                                     ),
                                   ],
                                 ),
                                 SizedBox(height: compact ? 4 : 7),
                                 Text(
                                   description,
-                                  maxLines: compact ? 3 : 4,
+                                  maxLines: 4,
                                   overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.inter(
                                     color: ink,
