@@ -252,15 +252,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 14),
                             _buildAskCard(),
                             const SizedBox(height: 14),
-                            _buildMySpaceCard(),
-                            const SizedBox(height: 14),
-                            _buildPlanMyWeekCard(),
+                            _buildFeatureGrid(),
                             const SizedBox(height: 14),
                             const DailyVillageCensusCard(),
-                            const SizedBox(height: 18),
-                            _buildCommunityHubCard(),
-                            const SizedBox(height: 14),
-                            _buildTrendingCard(),
                           ],
                         ),
                       ),
@@ -276,45 +270,79 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildMySpaceCard() {
+  Widget _buildFeatureGrid() {
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      children: [
+        _buildMySpaceCard(),
+        _buildPlanMyWeekCard(),
+        _buildCommunityHubCard(),
+        _buildTrendingCard(),
+      ],
+    );
+  }
+
+  Widget _buildSquareFeatureCard({
+    required String title,
+    required String description,
+    required IconData icon,
+    required Color cardColor,
+    required Color iconBackground,
+    required Color iconColor,
+    required VoidCallback onTap,
+    Color? borderColor,
+  }) {
     return Material(
-      color: const Color(0xFFE8EBDD),
+      color: cardColor,
       borderRadius: BorderRadius.circular(22),
       child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(22),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const MySpaceScreen()),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          child: Row(
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: borderColor == null ? null : Border.all(color: borderColor),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const CircleAvatar(
-                radius: 26,
-                backgroundColor: sage,
-                child: Icon(Icons.edit_note_rounded, color: Colors.white, size: 29),
+              CircleAvatar(
+                radius: 21,
+                backgroundColor: iconBackground,
+                child: Icon(icon, color: iconColor, size: 24),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(children: [
-                      Expanded(child: Text('My Space', style: GoogleFonts.playfairDisplay(
-                        color: ink, fontSize: 23, fontWeight: FontWeight.w600,
-                      ))),
-                      const Icon(Icons.lock_outline, color: sage, size: 16),
-                      const SizedBox(width: 4),
-                      const Text('Private', style: TextStyle(color: sage, fontSize: 12)),
-                    ]),
-                    const SizedBox(height: 4),
-                    const Text('A private place to write, reflect, and clear your mind.',
-                      style: TextStyle(color: ink, fontSize: 13)),
-                  ],
+              const SizedBox(height: 7),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.playfairDisplay(
+                  color: ink,
+                  fontSize: 16,
+                  height: 1.05,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 6),
-              const Icon(Icons.chevron_right_rounded, color: sage),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  color: ink,
+                  fontSize: 10.5,
+                  height: 1.2,
+                ),
+              ),
             ],
           ),
         ),
@@ -322,51 +350,31 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildMySpaceCard() {
+    return _buildSquareFeatureCard(
+      title: 'My Space',
+      description: 'Write and reflect privately.',
+      icon: Icons.edit_note_rounded,
+      cardColor: const Color(0xFFE8EBDD),
+      iconBackground: sage,
+      iconColor: Colors.white,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const MySpaceScreen()),
+      ),
+    );
+  }
+
   Widget _buildPlanMyWeekCard() {
-    return Material(
-      color: const Color(0xFFF6E9E4),
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const PlanMyWeekScreen(),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          child: Row(
-            children: [
-              const CircleAvatar(
-                radius: 26,
-                backgroundColor: Color(0xFFE8D5CB),
-                child: Icon(Icons.calendar_month_outlined, color: sage, size: 28),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Plan My Week',
-                      style: GoogleFonts.playfairDisplay(
-                        color: ink,
-                        fontSize: 23,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Set goals, plan tasks, and organize meals for the week.',
-                      style: TextStyle(color: ink, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 6),
-              const Icon(Icons.chevron_right_rounded, color: sage),
-            ],
-          ),
+    return _buildSquareFeatureCard(
+      title: 'Plan My Week',
+      description: 'Set goals, tasks, and meals.',
+      icon: Icons.calendar_month_outlined,
+      cardColor: const Color(0xFFF6E9E4),
+      iconBackground: const Color(0xFFE8D5CB),
+      iconColor: sage,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const PlanMyWeekScreen(),
         ),
       ),
     );
@@ -946,112 +954,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTrendingCard() {
-    return InkWell(
+    return _buildSquareFeatureCard(
+      title: 'Visit the Village',
+      description: 'Read questions and join in.',
+      icon: Icons.chat_bubble_outline_rounded,
+      cardColor: Colors.white.withValues(alpha: .6),
+      iconBackground: blush,
+      iconColor: gold,
+      borderColor: line,
       onTap: openVillage,
-      borderRadius: BorderRadius.circular(21),
-      child: Container(
-        padding: const EdgeInsets.all(17),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: .6),
-          border: Border.all(color: line),
-          borderRadius: BorderRadius.circular(21),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x10172019),
-              blurRadius: 12,
-              offset: Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 29,
-              backgroundColor: blush,
-              child: Icon(
-                Icons.chat_bubble_outline_rounded,
-                color: gold,
-              ),
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Visit the Village',
-                    style: GoogleFonts.playfairDisplay(
-                      color: ink,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Text(
-                    'Read real questions, offer support, or start a conversation.',
-                    style: TextStyle(fontSize: 14.5),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: sage),
-          ],
-        ),
-      ),
     );
   }
 
   Widget _buildCommunityHubCard() {
-    return InkWell(
+    return _buildSquareFeatureCard(
+      title: 'Community Hub',
+      description: 'Join groups and share.',
+      icon: Icons.diversity_3_outlined,
+      cardColor: paleSage,
+      iconBackground: cream,
+      iconColor: sage,
+      borderColor: line,
       onTap: openCommunityHub,
-      borderRadius: BorderRadius.circular(23),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: paleSage,
-          border: Border.all(color: line),
-          borderRadius: BorderRadius.circular(23),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x10172019),
-              blurRadius: 12,
-              offset: Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 30,
-              backgroundColor: cream,
-              child: Icon(Icons.diversity_3_outlined, color: sage, size: 29),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Community Hub',
-                    style: GoogleFonts.playfairDisplay(
-                      color: ink,
-                      fontSize: 23,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Find your people, explore resources, and gather for live events.',
-                    style: TextStyle(fontSize: 14.5, height: 1.35),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: sage),
-          ],
-        ),
-      ),
     );
   }
+
 
 
 }
