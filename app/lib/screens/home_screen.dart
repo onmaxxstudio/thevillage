@@ -298,52 +298,82 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onTap,
     Color? borderColor,
   }) {
+    final cardRadius = BorderRadius.circular(22);
+
     return Material(
       color: cardColor,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: cardRadius,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: borderColor == null ? null : Border.all(color: borderColor),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                radius: 21,
-                backgroundColor: iconBackground,
-                child: Icon(icon, color: iconColor, size: 24),
-              ),
-              const SizedBox(height: 7),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.playfairDisplay(
-                  color: ink,
-                  fontSize: 16,
-                  height: 1.05,
-                  fontWeight: FontWeight.w700,
+        borderRadius: cardRadius,
+        child: ClipRRect(
+          borderRadius: cardRadius,
+          child: Container(
+            decoration: BoxDecoration(
+              border: borderColor == null ? null : Border.all(color: borderColor),
+            ),
+            child: Stack(
+              clipBehavior: Clip.hardEdge,
+              children: [
+                Positioned(
+                  right: -13,
+                  bottom: -19,
+                  child: IgnorePointer(
+                    child: Icon(
+                      Icons.spa_rounded,
+                      size: 76,
+                      color: iconColor.withValues(alpha: .13),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  color: ink,
-                  fontSize: 10.5,
-                  height: 1.2,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 12),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 25,
+                        backgroundColor: iconBackground,
+                        child: Icon(icon, color: iconColor, size: 27),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.playfairDisplay(
+                                color: ink,
+                                fontSize: 14,
+                                height: 1.05,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                color: ink,
+                                fontSize: 10.5,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(Icons.chevron_right_rounded, color: sage, size: 21),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -353,7 +383,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildMySpaceCard() {
     return _buildSquareFeatureCard(
       title: 'My Space',
-      description: 'Write and reflect privately.',
+      description: 'Write and reflect.',
       icon: Icons.edit_note_rounded,
       cardColor: const Color(0xFFE8EBDD),
       iconBackground: sage,
@@ -367,7 +397,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPlanMyWeekCard() {
     return _buildSquareFeatureCard(
       title: 'Plan My Week',
-      description: 'Set goals, tasks, and meals.',
+      description: 'Plan goals and meals.',
       icon: Icons.calendar_month_outlined,
       cardColor: const Color(0xFFF6E9E4),
       iconBackground: const Color(0xFFE8D5CB),
@@ -956,7 +986,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTrendingCard() {
     return _buildSquareFeatureCard(
       title: 'Visit the Village',
-      description: 'Read questions and join in.',
+      description: 'Ask and connect.',
       icon: Icons.chat_bubble_outline_rounded,
       cardColor: Colors.white.withValues(alpha: .6),
       iconBackground: blush,
@@ -969,7 +999,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCommunityHubCard() {
     return _buildSquareFeatureCard(
       title: 'Community Hub',
-      description: 'Join groups and share.',
+      description: 'Find your people.',
       icon: Icons.diversity_3_outlined,
       cardColor: paleSage,
       iconBackground: cream,
