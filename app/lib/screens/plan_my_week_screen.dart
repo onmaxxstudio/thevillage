@@ -210,13 +210,13 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   Widget _statGrid(int total, int goalCount, int groceryCount) {
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final availableWidth = MediaQuery.sizeOf(context).width.clamp(0, 620);
-    final columns = textScale >= 1.2 || availableWidth < 500 ? 2 : 4;
+    const columns = 2;
     return GridView(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: columns,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
-        mainAxisExtent: textScale >= 1.2 ? 96 : 72,
+        mainAxisExtent: textScale >= 1.2 ? 104 : 88,
       ),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -249,9 +249,13 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       'Plan together with someone in your circle', 'Reflect and prepare for next week'];
     const icons = [Icons.track_changes, Icons.assignment_outlined, Icons.restaurant,
       Icons.shopping_basket_outlined, Icons.people_outline, Icons.bar_chart];
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final screenWidth = MediaQuery.sizeOf(context).width.clamp(0, 620);
+    final cardWidth = (screenWidth - 56) / 2;
+    final cardHeight = textScale >= 1.2 ? 190.0 : 158.0;
     return Wrap(spacing: 10, runSpacing: 10, children: [
       for (var i = 0; i < labels.length; i++)
-        SizedBox(width: ((MediaQuery.sizeOf(context).width.clamp(0, 620) - 56) / 2).toDouble(),
+        SizedBox(width: cardWidth, height: cardHeight,
           child: Material(color: colors[i], borderRadius: BorderRadius.circular(18),
             child: InkWell(borderRadius: BorderRadius.circular(18),
               onTap: () => setState(() => section = labels[i]),
