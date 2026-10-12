@@ -308,123 +308,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 400;
-        final iconRadius = compact ? 16.0 : 27.0;
-        final horizontalPadding = compact ? 5.0 : 18.0;
-        final verticalPadding = compact ? 7.0 : 14.0;
-        final cardWidth = compact ? 62.0 : 92.0;
-        final cardHeight = compact ? 68.0 : 96.0;
-
-        final compactContent = Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: iconRadius,
-              backgroundColor: iconBackground,
-              child: Icon(icon, color: iconColor, size: 22),
-            ),
-            const SizedBox(width: 5),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.visible,
-                          style: GoogleFonts.playfairDisplay(
-                            color: ink,
-                            fontSize: 12.5,
-                            height: 1.05,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: sage,
-                        size: 16,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    description,
-                    maxLines: 4,
-                    overflow: TextOverflow.visible,
-                    style: GoogleFonts.inter(
-                      color: ink,
-                      fontSize: 10.0,
-                      height: 1.18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-
-        final regularContent = Row(
-          children: [
-            CircleAvatar(
-              radius: iconRadius,
-              backgroundColor: iconBackground,
-              child: Icon(icon, color: iconColor, size: 32),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.clip,
-                          style: GoogleFonts.playfairDisplay(
-                            color: ink,
-                            fontSize: 21,
-                            height: 1.05,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 3),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: sage,
-                        size: 26,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 7),
-                  Text(
-                    description,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      color: ink,
-                      fontSize: 15.5,
-                      height: 1.25,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
+        final scale = (constraints.maxWidth / 300).clamp(.78, 1.0);
+        final iconRadius = 27.0 * scale;
+        final cardWidth = 92.0 * scale;
+        final cardHeight = 96.0 * scale;
 
         return Material(
           color: cardColor,
@@ -457,10 +344,70 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                        vertical: verticalPadding,
+                        horizontal: 13 * scale,
+                        vertical: 12 * scale,
                       ),
-                      child: compact ? compactContent : regularContent,
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: iconRadius,
+                            backgroundColor: iconBackground,
+                            child: Icon(
+                              icon,
+                              color: iconColor,
+                              size: 32 * scale,
+                            ),
+                          ),
+                          SizedBox(width: 12 * scale),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          title,
+                                          maxLines: 1,
+                                          softWrap: false,
+                                          style: GoogleFonts.playfairDisplay(
+                                            color: ink,
+                                            fontSize: 19,
+                                            height: 1.05,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 2 * scale),
+                                    Icon(
+                                      Icons.chevron_right_rounded,
+                                      color: sage,
+                                      size: 24 * scale,
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 5 * scale),
+                                Text(
+                                  description,
+                                  maxLines: 4,
+                                  overflow: TextOverflow.visible,
+                                  style: GoogleFonts.inter(
+                                    color: ink,
+                                    fontSize: 13.4 * scale,
+                                    height: 1.22,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
