@@ -651,7 +651,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     alignment: Alignment.centerLeft,
                     child: LayoutBuilder(
                       builder: (context, textConstraints) {
-                        final textWidth = textConstraints.maxWidth * .54;
+                        final textWidth = textConstraints.maxWidth * .58;
                         return SizedBox(
                           width: textWidth,
                           child: Transform.translate(
