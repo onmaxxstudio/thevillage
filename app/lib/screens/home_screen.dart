@@ -308,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 220;
+        final compact = constraints.maxWidth < 400;
         final iconRadius = compact ? 14.0 : 27.0;
         final horizontalPadding = compact ? 8.0 : 18.0;
         final verticalPadding = compact ? 7.0 : 14.0;
