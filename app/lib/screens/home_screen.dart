@@ -904,13 +904,11 @@ class _HomeScreenState extends State<HomeScreen> {
         final compact = constraints.maxWidth < 440;
 
         final callToAction = Column(
-          crossAxisAlignment:
-              compact ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             FittedBox(
               fit: BoxFit.scaleDown,
-              alignment:
-                  compact ? Alignment.centerLeft : Alignment.center,
+              alignment: Alignment.center,
               child: Text(
                 'Ask the Village',
                 style: GoogleFonts.playfairDisplay(
