@@ -639,18 +639,25 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(22),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: SizedBox(
-                  width: 220,
-                  child: Column(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => SizedBox(
+                    width: constraints.maxWidth * .54,
+                    child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Welcome home,',
-                        style: GoogleFonts.playfairDisplay(
-                          color: ink,
-                          fontSize: 28,
-                          height: 1,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Welcome home,',
+                          maxLines: 1,
+                          softWrap: false,
+                          style: GoogleFonts.playfairDisplay(
+                            color: ink,
+                            fontSize: 28,
+                            height: 1,
+                          ),
                         ),
                       ),
                       SizedBox(
@@ -697,6 +704,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ],
+                    ),
                   ),
                 ),
               ),
