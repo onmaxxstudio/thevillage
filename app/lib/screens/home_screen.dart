@@ -358,7 +358,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   title,
                                   maxLines: 1,
                                   softWrap: false,
-                                  overflow: TextOverflow.scaleDown,
                                   style: GoogleFonts.playfairDisplay(
                                     color: ink,
                                     fontSize: 19 * scale,
