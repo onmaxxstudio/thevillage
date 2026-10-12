@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisCount: columns,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: columns == 1 ? 2.05 : 1.3,
+          childAspectRatio: columns == 1 ? 2.05 : 1.45,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
@@ -340,7 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           overflow: TextOverflow.visible,
                           style: GoogleFonts.playfairDisplay(
                             color: ink,
-                            fontSize: 13.5,
+                            fontSize: 11.5,
                             height: 1.05,
                             fontWeight: FontWeight.w700,
                           ),
@@ -357,12 +357,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 3),
                   Text(
                     description,
-                    maxLines: 5,
+                    maxLines: 4,
                     overflow: TextOverflow.visible,
                     style: GoogleFonts.inter(
                       color: ink,
-                      fontSize: 11.5,
-                      height: 1.2,
+                      fontSize: 10.5,
+                      height: 1.18,
                     ),
                   ),
                 ],
