@@ -913,7 +913,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 440;
-
         final callToAction = Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -929,35 +928,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            const Text(
-              'Real People. Real Support. Real Answers.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white, fontSize: 13),
-            ),
-            if (compact) ...[
-              const SizedBox(height: 10),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.diversity_1_outlined,
-                    color: Color(0xFFE4C48A),
-                    size: 24,
-                  ),
-                  SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      'Real questions. Brighter days.',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        letterSpacing: .7,
-                      ),
-                    ),
-                  ),
-                ],
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: const Text(
+                'Real People. Real Support. Real Answers.',
+                maxLines: 1,
+                softWrap: false,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 13),
               ),
-            ],
+            ),
             const Spacer(),
             SizedBox(
               width: double.infinity,
@@ -977,6 +957,28 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+              ),
+            ),
+          ],
+        );
+
+        final tagline = Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.diversity_1_outlined,
+              color: const Color(0xFFE4C48A),
+              size: compact ? 30 : 44,
+            ),
+            SizedBox(height: compact ? 5 : 8),
+            Text(
+              'REAL\\nQUESTIONS.\\nBRIGHTER\\nDAYS.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: compact ? 8 : 10,
+                height: compact ? 1.4 : 1.55,
+                letterSpacing: compact ? 1.1 : 2,
               ),
             ),
           ],
@@ -1011,44 +1013,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              if (compact)
-                callToAction
-              else
-                Row(
-                  children: [
-                    Expanded(flex: 3, child: callToAction),
-                    const SizedBox(width: 16),
-                    Container(
-                      width: 1,
-                      height: 120,
-                      color: const Color(0x99E4C48A),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: callToAction,
+                  ),
+                  SizedBox(width: compact ? 10 : 16),
+                  Container(
+                    width: 1,
+                    height: compact ? 126 : 120,
+                    color: const Color(0x99E4C48A),
+                  ),
+                  SizedBox(width: compact ? 8 : 14),
+                  if (compact)
+                    SizedBox(
+                      width: (constraints.maxWidth * .22).clamp(64.0, 90.0),
+                      child: tagline,
+                    )
+                  else
+                    Expanded(
+                      child: tagline,
                     ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.diversity_1_outlined,
-                            color: Color(0xFFE4C48A),
-                            size: 44,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'REAL\nQUESTIONS.\nBRIGHTER\nDAYS.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              height: 1.55,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                ],
+              ),
             ],
           ),
         );
