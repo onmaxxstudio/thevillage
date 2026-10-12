@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisCount: columns,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: columns == 1 ? 2.05 : 1.45,
+          childAspectRatio: columns == 1 ? 2.05 : 1.78,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
@@ -309,8 +309,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 400;
-        final iconRadius = compact ? 17.0 : 27.0;
-        final horizontalPadding = compact ? 8.0 : 18.0;
+        final iconRadius = compact ? 16.0 : 27.0;
+        final horizontalPadding = compact ? 5.0 : 18.0;
         final verticalPadding = compact ? 7.0 : 14.0;
         final cardWidth = compact ? 62.0 : 92.0;
         final cardHeight = compact ? 68.0 : 96.0;
@@ -323,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: iconBackground,
               child: Icon(icon, color: iconColor, size: 22),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 5),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -335,12 +335,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: Text(
                           title,
-                          maxLines: 2,
-                          softWrap: true,
+                          maxLines: 1,
+                          softWrap: false,
                           overflow: TextOverflow.visible,
                           style: GoogleFonts.playfairDisplay(
                             color: ink,
-                            fontSize: 11.5,
+                            fontSize: 12.5,
                             height: 1.05,
                             fontWeight: FontWeight.w700,
                           ),
@@ -361,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     overflow: TextOverflow.visible,
                     style: GoogleFonts.inter(
                       color: ink,
-                      fontSize: 10.5,
+                      fontSize: 10.0,
                       height: 1.18,
                     ),
                   ),
