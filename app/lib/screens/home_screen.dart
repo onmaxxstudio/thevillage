@@ -385,12 +385,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Padding(
                                   padding: EdgeInsets.only(right: 24 * scale),
-                                  child: Center(
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
                                     child: Text(
                                       title,
                                       maxLines: 1,
                                       softWrap: false,
-                                      textAlign: TextAlign.center,
+                                      textAlign: TextAlign.left,
                                       style: titleStyle.copyWith(
                                         fontSize: titleFontSize,
                                       ),
