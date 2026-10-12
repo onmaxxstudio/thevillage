@@ -162,7 +162,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       body: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 620),
         child: loading ? const Center(child: CircularProgressIndicator(color: sage))
-          : ListView(padding: const EdgeInsets.fromLTRB(18, 8, 18, 32), children: [
+          : ListView(padding: const EdgeInsets.fromLTRB(18, 8, 18, 16), children: [
             _weekBar(),
             if (section == 'Overview') ...[
               const Text('Create a more organized, balanced week with less stress.'),
@@ -194,28 +194,49 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   ]);
 
   Widget _summary(int done, int total) => _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Text('This Week at a Glance', style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)),
+    SizedBox(width: double.infinity, child: FittedBox(
+      fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
+      child: Text('This Week at a Glance', maxLines: 1, softWrap: false,
+        style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w600)))),
     const SizedBox(height: 5), Text('$done of $total tasks completed'),
     const SizedBox(height: 9),
     ClipRRect(borderRadius: BorderRadius.circular(8), child: LinearProgressIndicator(
       value: total == 0 ? 0 : done / total, minHeight: 8, color: sage,
       backgroundColor: const Color(0xFFECE8DE))),
     const SizedBox(height: 12),
-    Wrap(spacing: 8, runSpacing: 8, children: [
-      _stat(Icons.check_circle_outline, '$total', 'Tasks'),
-      _stat(Icons.restaurant_outlined, '${meals.length}', 'Meals planned'),
-      _stat(Icons.flag_outlined, '${goals.length}', 'Goals'),
-      _stat(Icons.shopping_cart_outlined, '${groceries.length}', 'Groceries'),
-    ]),
+    _statGrid(total, goals.length, groceries.length),
   ]));
 
+  Widget _statGrid(int total, int goalCount, int groceryCount) {
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final availableWidth = MediaQuery.sizeOf(context).width.clamp(0, 620);
+    final columns = textScale >= 1.2 || availableWidth < 500 ? 2 : 4;
+    return GridView.count(
+      crossAxisCount: columns,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      mainAxisExtent: textScale >= 1.2 ? 96 : 72,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        _stat(Icons.check_circle_outline, '$total', 'Tasks'),
+        _stat(Icons.restaurant_outlined, '${meals.length}', 'Meals planned'),
+        _stat(Icons.flag_outlined, '$goalCount', 'Goals'),
+        _stat(Icons.shopping_cart_outlined, '$groceryCount', 'Groceries'),
+      ],
+    );
+  }
+
   Widget _stat(IconData icon, String value, String label) => Container(
-    width: 128, padding: const EdgeInsets.all(10),
+    width: double.infinity, height: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
     decoration: BoxDecoration(color: colors[0], borderRadius: BorderRadius.circular(13)),
-    child: Row(children: [Icon(icon, color: sage, size: 18), const SizedBox(width: 7),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    child: Row(children: [Icon(icon, color: sage, size: 20), const SizedBox(width: 8),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center, children: [
         Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
-        Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10)),
+        Text(label, maxLines: 2, overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 10)),
       ]))]));
 
   Widget _tiles() {
@@ -224,8 +245,8 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     const desc = ['Set priorities for the week', 'Plan to-dos, appointments, and reminders',
       'Plan meals and build a grocery list', 'Keep shopping items together',
       'Plan together with someone in your circle', 'Reflect and prepare for next week'];
-    const icons = [Icons.track_changes, Icons.assignment_outlined, Icons.restaurant_menu,
-      Icons.shopping_cart_outlined, Icons.people_alt_outlined, Icons.insights_outlined];
+    const icons = [Icons.track_changes, Icons.assignment_outlined, Icons.restaurant,
+      Icons.shopping_basket_outlined, Icons.people_outline, Icons.bar_chart];
     return Wrap(spacing: 10, runSpacing: 10, children: [
       for (var i = 0; i < labels.length; i++)
         SizedBox(width: ((MediaQuery.sizeOf(context).width.clamp(0, 620) - 56) / 2).toDouble(),
@@ -234,7 +255,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
               onTap: () => setState(() => section = labels[i]),
               child: Padding(padding: const EdgeInsets.all(13), child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  CircleAvatar(radius: 18, backgroundColor: Colors.white70,
+                  CircleAvatar(radius: 18, backgroundColor: Colors.white,
                     child: Icon(icons[i], color: sage, size: 20)),
                   const SizedBox(height: 8),
                   Text(labels[i], style: GoogleFonts.playfairDisplay(fontSize: 16,
@@ -265,7 +286,9 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
 
   Widget _preview() {
     final todayTasks = tasks.where((t) => t['day'] == _key(selectedDay)).toList();
-    return _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return _card(ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 230),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [Expanded(child: Text('${_weekday(selectedDay)}, ${_month(selectedDay.month)} ${selectedDay.day}',
         style: GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w600))),
         IconButton(onPressed: () => _add(tasks, 'Add a task', task: true),
@@ -277,7 +300,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
         _meal),
       _link(Icons.notes_outlined, (notes[_key(selectedDay)] as String?) ?? 'Add a note',
         _note),
-    ]));
+    ])));
   }
 
   Widget _section() {
