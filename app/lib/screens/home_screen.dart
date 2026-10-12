@@ -611,110 +611,124 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWelcomeHero() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(25),
-      child: SizedBox(
-        height: 218,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(
-              'assets/images/home_breathing_hero_v2.jpg',
-              fit: BoxFit.cover,
-              alignment: Alignment.center,
-            ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFFDF8EE),
-                    Color(0xE8FDF8EE),
-                    Color(0x00FDF8EE),
-                  ],
-                  stops: [0, .42, .72],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final heroHeight = width < 360 ? 320.0 : width < 500 ? 326.0 : 330.0;
+        final horizontalPadding = width < 400 ? 18.0 : 22.0;
+        final verticalPadding = width < 400 ? 18.0 : 20.0;
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(25),
+          child: SizedBox(
+            height: heroHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/images/home_breathing_hero_v2.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(22),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final textWidth = constraints.maxWidth * .54;
-                    return SizedBox(
-                      width: textWidth,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Welcome home,',
-                              maxLines: 1,
-                              softWrap: false,
-                              style: GoogleFonts.playfairDisplay(
-                                color: ink,
-                                fontSize: 28,
-                                height: 1,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: RichText(
-                                maxLines: 1,
-                                softWrap: false,
-                                text: TextSpan(
-                                  children: [
-                                    TextSpan(
-                                      text: currentUsername,
-                                      style: GoogleFonts.playfairDisplay(
-                                        color: sage,
-                                        fontSize: 34,
-                                        height: 1.1,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFFFDF8EE),
+                        Color(0xE8FDF8EE),
+                        Color(0x00FDF8EE),
+                      ],
+                      stops: [0, .42, .72],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: verticalPadding,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: LayoutBuilder(
+                      builder: (context, textConstraints) {
+                        final textWidth = textConstraints.maxWidth * .54;
+                        return SizedBox(
+                          width: textWidth,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Welcome home,',
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  style: GoogleFonts.playfairDisplay(
+                                    color: ink,
+                                    fontSize: 28,
+                                    height: 1,
+                                  ),
                                 ),
                               ),
-                            ),
+                              SizedBox(
+                                width: double.infinity,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: RichText(
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: currentUsername,
+                                          style: GoogleFonts.playfairDisplay(
+                                            color: sage,
+                                            fontSize: 34,
+                                            height: 1.1,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              const Text(
+                                'TODAY’S ENCOURAGEMENT',
+                                style: TextStyle(
+                                  color: gold,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                breathingLesson,
+                                softWrap: true,
+                                style: GoogleFonts.inter(
+                                  fontSize: textWidth < 155 ? 12 : 13,
+                                  height: 1.22,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'TODAY’S ENCOURAGEMENT',
-                            style: TextStyle(
-                              color: gold,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            breathingLesson,
-                            style: GoogleFonts.inter(
-                              fontSize: textWidth < 155 ? 12 : 13,
-                              height: 1.3,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                        );
+                      },
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
