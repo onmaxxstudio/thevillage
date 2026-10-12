@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisCount: columns,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: columns == 1 ? 2.05 : 1.45,
+          childAspectRatio: columns == 1 ? 2.05 : 1.3,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
@@ -309,59 +309,63 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 400;
-        final iconRadius = compact ? 14.0 : 27.0;
+        final iconRadius = compact ? 17.0 : 27.0;
         final horizontalPadding = compact ? 8.0 : 18.0;
         final verticalPadding = compact ? 7.0 : 14.0;
         final cardWidth = compact ? 62.0 : 92.0;
         final cardHeight = compact ? 68.0 : 96.0;
 
-        final compactContent = Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
+        final compactContent = Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: CircleAvatar(
-                radius: iconRadius,
-                backgroundColor: iconBackground,
-                child: Icon(icon, color: iconColor, size: 18),
-              ),
+            CircleAvatar(
+              radius: iconRadius,
+              backgroundColor: iconBackground,
+              child: Icon(icon, color: iconColor, size: 22),
             ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.clip,
-                    style: GoogleFonts.playfairDisplay(
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 2,
+                          softWrap: true,
+                          overflow: TextOverflow.visible,
+                          style: GoogleFonts.playfairDisplay(
+                            color: ink,
+                            fontSize: 13.5,
+                            height: 1.05,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: sage,
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    description,
+                    maxLines: 5,
+                    overflow: TextOverflow.visible,
+                    style: GoogleFonts.inter(
                       color: ink,
-                      fontSize: 13.5,
-                      height: 1.05,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 11.5,
+                      height: 1.2,
                     ),
                   ),
-                ),
-                const SizedBox(width: 2),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: sage,
-                  size: 16,
-                ),
-              ],
-            ),
-            const SizedBox(height: 3),
-            Text(
-              description,
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(
-                color: ink,
-                fontSize: 11.5,
-                height: 1.2,
+                ],
               ),
             ),
           ],
