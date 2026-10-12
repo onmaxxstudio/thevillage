@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisCount: columns,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: columns == 1 ? 2.05 : 1.78,
+          childAspectRatio: columns == 1 ? 1.7 : 1.4,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
@@ -312,6 +312,27 @@ class _HomeScreenState extends State<HomeScreen> {
         final iconRadius = 27.0 * scale;
         final cardWidth = 92.0 * scale;
         final cardHeight = 96.0 * scale;
+        final titleAvailableWidth = constraints.maxWidth -
+            (13 * scale * 2) -
+            (iconRadius * 2) -
+            (12 * scale) -
+            (24 * scale) -
+            (2 * scale);
+        var featureTitleFontSize = 19.0;
+        while (featureTitleFontSize > 10.0) {
+          final titleMeasure = TextPainter(
+            text: TextSpan(
+              text: 'Visit the Village',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: featureTitleFontSize,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            textDirection: Directionality.of(context),
+          )..layout();
+          if (titleMeasure.width <= titleAvailableWidth) break;
+          featureTitleFontSize -= .5;
+        }
 
         return Material(
           color: cardColor,
@@ -371,19 +392,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Row(
                                   children: [
                                     Expanded(
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          title,
-                                          maxLines: 1,
-                                          softWrap: false,
-                                          style: GoogleFonts.playfairDisplay(
-                                            color: ink,
-                                            fontSize: 19,
-                                            height: 1.05,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                      child: Text(
+                                        title,
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        overflow: TextOverflow.visible,
+                                        style: GoogleFonts.playfairDisplay(
+                                          color: ink,
+                                          fontSize: featureTitleFontSize,
+                                          height: 1.05,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                     ),
@@ -398,12 +416,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 SizedBox(height: 5 * scale),
                                 Text(
                                   description,
-                                  maxLines: 4,
+                                  maxLines: 5,
                                   overflow: TextOverflow.visible,
                                   style: GoogleFonts.inter(
                                     color: ink,
-                                    fontSize: 13.4 * scale,
-                                    height: 1.22,
+                                    fontSize: 12.6,
+                                    height: 1.18,
                                   ),
                                 ),
                               ],
