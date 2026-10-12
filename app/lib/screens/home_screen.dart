@@ -697,7 +697,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 3),
+                              const SizedBox(height: 6),
                               const Text(
                                 'TODAY’S ENCOURAGEMENT',
                                 style: TextStyle(
