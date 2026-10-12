@@ -309,8 +309,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 220;
-        final iconRadius = compact ? 21.0 : 27.0;
-        final horizontalPadding = compact ? 9.0 : 18.0;
+        final iconRadius = compact ? 20.0 : 27.0;
+        final horizontalPadding = compact ? 6.0 : 18.0;
         final verticalPadding = compact ? 7.0 : 14.0;
         final cardWidth = compact ? 62.0 : 92.0;
         final cardHeight = compact ? 68.0 : 96.0;
@@ -360,7 +360,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               size: compact ? 25 : 32,
                             ),
                           ),
-                          SizedBox(width: compact ? 8 : 14),
+                          SizedBox(width: compact ? 6 : 14),
                           Expanded(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -370,19 +370,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Row(
                                   children: [
                                     Expanded(
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          title,
-                                          maxLines: 1,
-                                          softWrap: false,
-                                          style: GoogleFonts.playfairDisplay(
-                                            color: ink,
-                                            fontSize: compact ? 14 : 21,
-                                            height: 1.05,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                      child: Text(
+                                        title,
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        overflow: TextOverflow.clip,
+                                        style: GoogleFonts.playfairDisplay(
+                                          color: ink,
+                                          fontSize: compact ? 12.5 : 21,
+                                          height: 1.05,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                     ),
@@ -390,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Icon(
                                       Icons.chevron_right_rounded,
                                       color: sage,
-                                      size: compact ? 20 : 26,
+                                      size: compact ? 18 : 26,
                                     ),
                                   ],
                                 ),
