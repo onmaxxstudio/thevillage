@@ -667,6 +667,28 @@ service cloud.firestore {
         request.resource.data.updatedAt == request.time;
     }
 
+    // Weekly plans contain private schedules, tasks, meals, and reflections.
+    // Only the signed-in owner can read or change their weekly documents.
+    match /weekly_plans/{uid}/weeks/{weekId} {
+      allow get, list: if isSelf(uid);
+      allow create, update: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly([
+          'goals', 'tasks', 'groceries', 'meals', 'notes', 'review', 'updatedAt'
+        ]) &&
+        request.resource.data.goals is list &&
+        request.resource.data.goals.size() <= 20 &&
+        request.resource.data.tasks is list &&
+        request.resource.data.tasks.size() <= 200 &&
+        request.resource.data.groceries is list &&
+        request.resource.data.groceries.size() <= 300 &&
+        request.resource.data.meals is map &&
+        request.resource.data.notes is map &&
+        request.resource.data.review is string &&
+        request.resource.data.review.size() <= 2000 &&
+        request.resource.data.updatedAt == request.time;
+      allow delete: if isSelf(uid);
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
