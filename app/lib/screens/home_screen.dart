@@ -709,7 +709,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDashboardRow() {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(child: _buildCheckInCard()),
         const SizedBox(width: 10),
