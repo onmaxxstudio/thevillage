@@ -211,11 +211,13 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final availableWidth = MediaQuery.sizeOf(context).width.clamp(0, 620);
     final columns = textScale >= 1.2 || availableWidth < 500 ? 2 : 4;
-    return GridView.count(
-      crossAxisCount: columns,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      mainAxisExtent: textScale >= 1.2 ? 96 : 72,
+    return GridView(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        mainAxisExtent: textScale >= 1.2 ? 96 : 72,
+      ),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
