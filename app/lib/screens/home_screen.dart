@@ -732,35 +732,52 @@ class _HomeScreenState extends State<HomeScreen> {
             gold: true,
           ),
           const SizedBox(height: 4),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  entry == null ? 'How are you today?' : 'Today: ${entry.mood}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 10.5),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: openHistory,
-                style: TextButton.styleFrom(
-                  foregroundColor: sage,
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  minimumSize: const Size(0, 24),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
-                ),
-                icon: const Icon(Icons.history_rounded, size: 14),
-                label: const Text(
-                  'My History',
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 230;
+              return Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      entry == null ? 'How are you today?' : 'Today: ${entry.mood}',
+                      maxLines: compact ? 2 : 1,
+                      softWrap: compact,
+                      style: const TextStyle(fontSize: 10.5),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                  if (compact)
+                    Tooltip(
+                      message: 'My History',
+                      child: IconButton(
+                        onPressed: openHistory,
+                        constraints: const BoxConstraints.tightFor(width: 24, height: 24),
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(Icons.history_rounded, size: 16, color: sage),
+                      ),
+                    )
+                  else
+                    TextButton.icon(
+                      onPressed: openHistory,
+                      style: TextButton.styleFrom(
+                        foregroundColor: sage,
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        minimumSize: const Size(0, 24),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      icon: const Icon(Icons.history_rounded, size: 14),
+                      label: const Text(
+                        'My History',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           const Spacer(),
           SizedBox(
@@ -1167,37 +1184,55 @@ class _DashboardCardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _RoundIcon(icon: icon, gold: gold, radius: 16),
-        const SizedBox(width: 7),
-        Expanded(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              title,
-              maxLines: 1,
-              softWrap: false,
-              style: GoogleFonts.playfairDisplay(
-                color: _HomeScreenState.ink,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final titleWidth = (constraints.maxWidth - 59).clamp(0.0, constraints.maxWidth);
+        var titleFontSize = 18.0;
+        final titleStyle = GoogleFonts.playfairDisplay(
+          color: _HomeScreenState.ink,
+          fontSize: titleFontSize,
+          fontWeight: FontWeight.w600,
+        );
+        final titlePainter = TextPainter(
+          text: TextSpan(text: 'Daily Check-In', style: titleStyle),
+          maxLines: 1,
+          textDirection: Directionality.of(context),
+        )..layout();
+        while (titlePainter.width > titleWidth && titleFontSize > 10) {
+          titleFontSize -= .25;
+          titlePainter.text = TextSpan(
+            text: 'Daily Check-In',
+            style: titleStyle.copyWith(fontSize: titleFontSize),
+          );
+          titlePainter.layout();
+        }
+
+        return Row(
+          children: [
+            _RoundIcon(icon: icon, gold: gold, radius: 16),
+            const SizedBox(width: 7),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.clip,
+                style: titleStyle.copyWith(fontSize: titleFontSize),
               ),
             ),
-          ),
-        ),
-        SizedBox(
-          width: 20,
-          child: trailingIcon == null
-              ? null
-              : Icon(
-                  trailingIcon,
-                  color: _HomeScreenState.sage,
-                  size: 20,
-                ),
-        ),
-      ],
+            SizedBox(
+              width: 20,
+              child: trailingIcon == null
+                  ? null
+                  : Icon(
+                      trailingIcon,
+                      color: _HomeScreenState.sage,
+                      size: 20,
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
