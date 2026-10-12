@@ -640,72 +640,75 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: LayoutBuilder(
-                  builder: (context, constraints) => SizedBox(
-                    width: constraints.maxWidth * .54,
-                    child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Welcome home,',
-                          maxLines: 1,
-                          softWrap: false,
-                          style: GoogleFonts.playfairDisplay(
-                            color: ink,
-                            fontSize: 28,
-                            height: 1,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: RichText(
-                            maxLines: 1,
-                            softWrap: false,
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: currentUsername,
-                                  style: GoogleFonts.playfairDisplay(
-                                    color: sage,
-                                    fontSize: 34,
-                                    height: 1.1,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
+                  builder: (context, constraints) {
+                    final textWidth = constraints.maxWidth * .54;
+                    return SizedBox(
+                      width: textWidth,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Welcome home,',
+                              maxLines: 1,
+                              softWrap: false,
+                              style: GoogleFonts.playfairDisplay(
+                                color: ink,
+                                fontSize: 28,
+                                height: 1,
+                              ),
                             ),
                           ),
-                        ),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: RichText(
+                                maxLines: 1,
+                                softWrap: false,
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: currentUsername,
+                                      style: GoogleFonts.playfairDisplay(
+                                        color: sage,
+                                        fontSize: 34,
+                                        height: 1.1,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'TODAY’S ENCOURAGEMENT',
+                            style: TextStyle(
+                              color: gold,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            breathingLesson,
+                            style: GoogleFonts.inter(
+                              fontSize: textWidth < 155 ? 12 : 13,
+                              height: 1.3,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'TODAY’S ENCOURAGEMENT',
-                        style: TextStyle(
-                          color: gold,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        breathingLesson,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          height: 1.3,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
             ),
