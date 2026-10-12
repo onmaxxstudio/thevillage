@@ -655,7 +655,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return SizedBox(
                           width: textWidth,
                           child: Transform.translate(
-                            offset: const Offset(0, -10),
+                            offset: const Offset(0, -45),
                             child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
