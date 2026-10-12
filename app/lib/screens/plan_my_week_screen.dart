@@ -209,7 +209,6 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
 
   Widget _statGrid(int total, int goalCount, int groceryCount) {
     final textScale = MediaQuery.textScalerOf(context).scale(1);
-    final availableWidth = MediaQuery.sizeOf(context).width.clamp(0, 620);
     const columns = 2;
     return GridView(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -251,7 +250,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       Icons.shopping_basket_outlined, Icons.people_outline, Icons.bar_chart];
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final screenWidth = MediaQuery.sizeOf(context).width.clamp(0, 620);
-    final cardWidth = (screenWidth - 56) / 2;
+    final cardWidth = ((screenWidth - 56) / 2).toDouble();
     final cardHeight = textScale >= 1.2 ? 190.0 : 158.0;
     return Wrap(spacing: 10, runSpacing: 10, children: [
       for (var i = 0; i < labels.length; i++)
