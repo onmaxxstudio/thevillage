@@ -835,11 +835,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Icon(Icons.person_add_alt_1_rounded, color: sage, size: 22),
                   const SizedBox(width: 7),
                   const Flexible(
-                    child: Text(
-                      'Invite someone',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: sage, fontWeight: FontWeight.w700),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Invite someone',
+                        maxLines: 1,
+                        softWrap: false,
+                        style: TextStyle(color: sage, fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ),
                 ] else ...[
@@ -1212,12 +1216,12 @@ class _DashboardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 160,
+      height: 124,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(22),
         child: Container(
-          padding: const EdgeInsets.all(15),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
           decoration: BoxDecoration(
             color: color,
             border: Border.all(color: _HomeScreenState.line),
