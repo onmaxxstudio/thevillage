@@ -651,7 +651,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     alignment: Alignment.centerLeft,
                     child: LayoutBuilder(
                       builder: (context, textConstraints) {
-                        final textWidth = textConstraints.maxWidth * .58;
+                        final textWidth = textConstraints.maxWidth * .54;
+                        final messageFontSize = textWidth < 155 ? 9.5 : 10.5;
+                        final messageStyle = GoogleFonts.inter(
+                          fontSize: messageFontSize,
+                          height: 1.18,
+                          fontWeight: FontWeight.w600,
+                        );
+                        final firstLinePainter = TextPainter(
+                          text: TextSpan(
+                            text: breathingLesson,
+                            style: messageStyle,
+                          ),
+                          textDirection: Directionality.of(context),
+                        )..layout(maxWidth: textWidth);
+                        final messageWidth = firstLinePainter
+                            .computeLineMetrics()
+                            .first
+                            .width
+                            .clamp(1.0, textWidth);
                         return SizedBox(
                           width: textWidth,
                           child: Transform.translate(
@@ -711,13 +729,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               const SizedBox(height: 1),
-                              Text(
-                                breathingLesson,
-                                softWrap: true,
-                                style: GoogleFonts.inter(
-                                  fontSize: textWidth < 155 ? 9.5 : 10.5,
-                                  height: 1.18,
-                                  fontWeight: FontWeight.w600,
+                              SizedBox(
+                                width: messageWidth,
+                                child: Text(
+                                  breathingLesson,
+                                  softWrap: true,
+                                  style: messageStyle,
                                 ),
                               ),
                             ],
