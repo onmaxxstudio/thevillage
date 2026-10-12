@@ -1186,7 +1186,9 @@ class _DashboardCardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final titleWidth = (constraints.maxWidth - 59).clamp(0.0, constraints.maxWidth);
+        // Reserve a little extra width for device rounding and inherited text scaling.
+        final titleWidth = (constraints.maxWidth - 65).clamp(0.0, constraints.maxWidth);
+        final textScaler = MediaQuery.textScalerOf(context);
         var titleFontSize = 18.0;
         final titleStyle = GoogleFonts.playfairDisplay(
           color: _HomeScreenState.ink,
@@ -1195,6 +1197,7 @@ class _DashboardCardHeader extends StatelessWidget {
         );
         final titlePainter = TextPainter(
           text: TextSpan(text: 'Daily Check-In', style: titleStyle),
+          textScaler: textScaler,
           maxLines: 1,
           textDirection: Directionality.of(context),
         )..layout();
@@ -1212,12 +1215,15 @@ class _DashboardCardHeader extends StatelessWidget {
             _RoundIcon(icon: icon, gold: gold, radius: 16),
             const SizedBox(width: 7),
             Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.clip,
-                style: titleStyle.copyWith(fontSize: titleFontSize),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: titleStyle.copyWith(fontSize: titleFontSize),
+                ),
               ),
             ),
             SizedBox(
