@@ -474,10 +474,10 @@ class _HomeScreenState extends State<HomeScreen> {
       title: 'Plan My Week',
       description: 'Set goals, plan tasks, and organize meals for the week.',
       icon: Icons.calendar_month_outlined,
-      cardColor: const Color(0xFFF6E9E4),
-      iconBackground: const Color(0xFFE8D5CB),
-      iconColor: sage,
-      leafColor: const Color(0xFF9C8879),
+      cardColor: paleSage,
+      iconBackground: sage,
+      iconColor: Colors.white,
+      leafColor: sage,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => const PlanMyWeekScreen(),
@@ -1110,12 +1110,10 @@ class _HomeScreenState extends State<HomeScreen> {
       title: 'Visit the Village',
       description: 'Read real questions, offer support, or start a conversation.',
       icon: Icons.chat_bubble_outline_rounded,
-      cardColor: const Color(0xFFFFFCF7),
-      iconBackground: blush,
-      iconColor: gold,
-      borderColor: const Color(0xFFD4C5B2),
-      borderWidth: 1.4,
-      leafColor: const Color(0xFFAD9684),
+      cardColor: paleSage,
+      iconBackground: sage,
+      iconColor: Colors.white,
+      leafColor: sage,
       onTap: openVillage,
     );
   }
@@ -1126,9 +1124,8 @@ class _HomeScreenState extends State<HomeScreen> {
       description: 'Find your people, explore resources, and gather for live events.',
       icon: Icons.diversity_3_outlined,
       cardColor: paleSage,
-      iconBackground: cream,
-      iconColor: sage,
-      borderColor: line,
+      iconBackground: sage,
+      iconColor: Colors.white,
       leafColor: sage,
       onTap: openCommunityHub,
     );
