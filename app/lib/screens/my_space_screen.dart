@@ -21,7 +21,6 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
 
   final text = TextEditingController();
   final search = TextEditingController();
-  final editorKey = GlobalKey();
   final libraryKey = GlobalKey();
   String prompt = '';
   String? editingId;
@@ -88,6 +87,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         writing = false;
         text.clear();
       });
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Saved privately to My Space.')),
       );
@@ -203,16 +203,25 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       writing = true;
       text.text = entry?.data()['body'] as String? ?? '';
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final target = editorKey.currentContext;
-      if (target != null) {
-        Scrollable.ensureVisible(
-          target,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOut,
-          alignment: .08,
-        );
-      }
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: cream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+          child: _editorCard(),
+        ),
+      ),
+    ).whenComplete(() {
+      if (mounted && writing) setState(() => writing = false);
     });
   }
 
@@ -367,10 +376,6 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                       children: [
                         _heroBanner(),
-                        if (writing) ...[
-                          const SizedBox(height: 12),
-                          _editorCard(),
-                        ],
                         const SizedBox(height: 12),
                         _continueCard(docs),
                         const SizedBox(height: 10),
@@ -491,14 +496,14 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
               left: 105,
               top: 0,
               bottom: 0,
-              width: 130,
+              width: 178,
               child: Image.asset('assets/images/my_space_books.jpg', fit: BoxFit.cover),
             ),
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFFE5E8D4), Color(0xCCE5E8D4), Color(0x00E5E8D4)],
-                  stops: [0, .6, 1],
+                  colors: [Color(0xFFE5E8D4), Color(0xF2E5E8D4), Color(0x80E5E8D4), Color(0x00E5E8D4)],
+                  stops: [0, .34, .62, 1],
                 ),
               ),
             ),
@@ -590,7 +595,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 1.37,
+        childAspectRatio: 1.75,
       ),
       itemBuilder: (context, index) => _featureCard(features[index]),
     );
@@ -608,9 +613,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
           children: [
             Positioned(
               right: 0,
+              top: 0,
               bottom: 0,
-              width: 88,
-              height: 84,
+              width: 98,
               child: Image.asset(feature.image, fit: BoxFit.cover, alignment: Alignment.center),
             ),
             DecoratedBox(
@@ -618,8 +623,8 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
-                  stops: const [.35, .82, 1],
-                  colors: [feature.color, feature.color.withValues(alpha: .93), feature.color.withValues(alpha: .06)],
+                  stops: const [.34, .56, .78, 1],
+                  colors: [feature.color, feature.color.withValues(alpha: .94), feature.color.withValues(alpha: .42), feature.color.withValues(alpha: .06)],
                 ),
               ),
             ),
@@ -690,7 +695,6 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
 
   Widget _editorCard() {
     return Container(
-      key: editorKey,
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFDF8),
@@ -714,12 +718,15 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
               ),
               IconButton(
                 tooltip: 'Close editor',
-                onPressed: () => setState(() {
-                  writing = false;
-                  editingId = null;
-                  prompt = '';
-                  text.clear();
-                }),
+                onPressed: () {
+                  setState(() {
+                    writing = false;
+                    editingId = null;
+                    prompt = '';
+                    text.clear();
+                  });
+                  Navigator.of(context).pop();
+                },
                 icon: const Icon(Icons.close_rounded),
               ),
             ],
