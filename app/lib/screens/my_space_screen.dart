@@ -2,23 +2,34 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'ask_village_screen.dart';
+import 'settings_screen.dart';
 
 class MySpaceScreen extends StatefulWidget {
   const MySpaceScreen({super.key});
+
   @override
   State<MySpaceScreen> createState() => _MySpaceScreenState();
 }
 
 class _MySpaceScreenState extends State<MySpaceScreen> {
-  static const green = Color(0xFF355C3B);
   static const cream = Color(0xFFFFFAF1);
+  static const green = Color(0xFF355C3B);
+  static const ink = Color(0xFF172019);
+  static const line = Color(0xFFE7DED1);
+
   final text = TextEditingController();
   final search = TextEditingController();
+  final editorKey = GlobalKey();
+  final libraryKey = GlobalKey();
   String prompt = '';
   String? editingId;
   bool saving = false;
-  String filter = '';
+  bool writing = false;
+  String searchText = '';
+  String selectedFilter = 'All';
+
   static const prompts = <String, List<String>>{
     'Stress': ['What is weighing on you today?', 'What can you set down for now?'],
     'Anxiety': ['What is in your control today?', 'What would you tell a worried friend?'],
@@ -29,122 +40,1005 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     'Gratitude': ['What small moment mattered today?'],
     'Self-worth': ['What strength have you overlooked?'],
   };
+
   CollectionReference<Map<String, dynamic>>? get entries {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    return uid == null ? null : FirebaseFirestore.instance.collection('private_journals').doc(uid).collection('entries');
+    return uid == null
+        ? null
+        : FirebaseFirestore.instance
+            .collection('private_journals')
+            .doc(uid)
+            .collection('entries');
   }
+
   @override
-  void dispose() { text.dispose(); search.dispose(); super.dispose(); }
+  void dispose() {
+    text.dispose();
+    search.dispose();
+    super.dispose();
+  }
+
   Future<void> save() async {
     final collection = entries;
     if (collection == null || text.text.trim().isEmpty || saving) return;
     setState(() => saving = true);
     try {
-      final data = <String, dynamic>{'body': text.text.trim(), 'prompt': prompt, 'updatedAt': FieldValue.serverTimestamp()};
+      final entryType = prompt.toLowerCase().contains('letter')
+          ? 'letter'
+          : prompt.isEmpty
+              ? 'journal'
+              : 'guided';
+      final data = <String, dynamic>{
+        'body': text.text.trim(),
+        'prompt': prompt,
+        'entryType': entryType,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
       if (editingId == null) {
         data['createdAt'] = FieldValue.serverTimestamp();
+        data['favorite'] = false;
         await collection.add(data);
       } else {
         await collection.doc(editingId).update(data);
       }
       if (!mounted) return;
-      setState(() { editingId = null; prompt = ''; text.clear(); });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved privately to My Space.')));
+      setState(() {
+        editingId = null;
+        prompt = '';
+        writing = false;
+        text.clear();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Saved privately to My Space.')),
+      );
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not save. Please try again.')));
-    } finally { if (mounted) setState(() => saving = false); }
-  }
-  Future<void> remove(String id) async {
-    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-      title: const Text('Delete this reflection?'),
-      content: const Text('This cannot be undone.'),
-      actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-        TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete'))],
-    ));
-    if (confirmed != true) return;
-    try { await entries?.doc(id).delete(); }
-    catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not delete entry.'))); }
-  }
-  Future<void> shareExcerpt(String body) async {
-    final controller = TextEditingController(text: body.length > 1500 ? body.substring(0, 1500) : body);
-    final excerpt = await showDialog<String>(context: context, builder: (dialogContext) => AlertDialog(
-      title: const Text('Share with the Village?'),
-      content: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Text('Your original journal entry stays private. Only the text you choose below will be copied into a new Village post. Posting is anonymous by default.'),
-        const SizedBox(height: 12),
-        TextField(controller: controller, maxLength: 1500, minLines: 3, maxLines: 7,
-          decoration: const InputDecoration(labelText: 'Edit what you want to share', border: OutlineInputBorder())),
-      ]),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Keep private')),
-        FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: const Text('Review post')),
-      ],
-    ));
-    controller.dispose();
-    if (!mounted || excerpt == null || excerpt.length < 10) return;
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => AskVillageScreen(initialQuestion: excerpt, defaultAnonymous: true, initialCategory: 'Mental Wellness'),
-    ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save. Please try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
   }
 
-  void choosePrompt(String value) => setState(() { prompt = value; editingId = null; text.clear(); });
+  Future<void> remove(String id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete this reflection?'),
+        content: const Text('This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await entries?.doc(id).delete();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not delete entry.')),
+        );
+      }
+    }
+  }
+
+  Future<void> toggleFavorite(String id, bool favorite) async {
+    try {
+      await entries?.doc(id).update({'favorite': !favorite});
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not update favorite.')),
+        );
+      }
+    }
+  }
+
+  Future<void> shareExcerpt(String body) async {
+    final controller = TextEditingController(
+      text: body.length > 1500 ? body.substring(0, 1500) : body,
+    );
+    final excerpt = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Share with the Village?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Your original journal entry stays private. Only the text you choose below will be copied into a new Village post. Posting is anonymous by default.',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              maxLength: 1500,
+              minLines: 3,
+              maxLines: 7,
+              decoration: const InputDecoration(
+                labelText: 'Edit what you want to share',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Keep private'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Review post'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (!mounted || excerpt == null || excerpt.length < 10) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AskVillageScreen(
+          initialQuestion: excerpt,
+          defaultAnonymous: true,
+          initialCategory: 'Mental Wellness',
+        ),
+      ),
+    );
+  }
+
+  void startWriting(String value, {QueryDocumentSnapshot<Map<String, dynamic>>? entry}) {
+    setState(() {
+      prompt = value;
+      editingId = entry?.id;
+      writing = true;
+      text.text = entry?.data()['body'] as String? ?? '';
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = editorKey.currentContext;
+      if (target != null) {
+        Scrollable.ensureVisible(
+          target,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOut,
+          alignment: .08,
+        );
+      }
+    });
+  }
+
+  void showPromptPicker({String? category}) {
+    final available = category == null
+        ? prompts.entries.toList()
+        : prompts.entries.where((item) => item.key == category).toList();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: .72,
+          minChildSize: .42,
+          builder: (context, controller) => ListView(
+            controller: controller,
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: line,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                category == null ? 'Find a prompt' : '$category reflections',
+                style: GoogleFonts.playfairDisplay(
+                  color: green,
+                  fontSize: 25,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              for (final group in available) ...[
+                if (category == null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12, bottom: 4),
+                    child: Text(
+                      group.key,
+                      style: const TextStyle(
+                        color: green,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                for (final question in group.value)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(question),
+                    trailing: const Icon(Icons.arrow_forward_rounded, color: green),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      startWriting(question);
+                    },
+                  ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  DateTime? entryDate(Map<String, dynamic> data) {
+    final value = data['createdAt'];
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    return null;
+  }
+
+  String entryKind(Map<String, dynamic> data) {
+    final kind = data['entryType'] as String?;
+    if (kind != null) return kind;
+    final value = (data['prompt'] as String? ?? '').toLowerCase();
+    if (value.contains('letter')) return 'letter';
+    return value.isEmpty ? 'journal' : 'guided';
+  }
+
+  String monthLabel(DateTime? date) {
+    if (date == null) return 'NEW';
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    return months[date.month - 1];
+  }
+
+  Future<void> scrollTo(GlobalKey key) async {
+    final target = key.currentContext;
+    if (target != null) {
+      await Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final collection = entries;
     return Scaffold(
       backgroundColor: cream,
-      appBar: AppBar(backgroundColor: cream, foregroundColor: green, title: Text('My Space', style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600))),
-      body: collection == null ? const Center(child: Text('Sign in to open your private journal.')) : Center(
-        child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 680), child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Text('Your thoughts. Your space. Your story.', style: GoogleFonts.playfairDisplay(fontSize: 25, color: green)),
-            const SizedBox(height: 8),
-            const Row(children: [Icon(Icons.lock_outline, size: 16, color: green), SizedBox(width: 6), Expanded(child: Text('Private by default. Only you can see your journal entries.'))]),
-            const SizedBox(height: 22),
-            Text("What's on your mind today?", style: GoogleFonts.playfairDisplay(fontSize: 23)),
-            const SizedBox(height: 12),
-            Wrap(spacing: 8, children: [
-              OutlinedButton.icon(onPressed: () => choosePrompt(''), icon: const Icon(Icons.edit_outlined), label: const Text('Write Freely')),
-              OutlinedButton.icon(onPressed: () => showModalBottomSheet<void>(context: context, isScrollControlled: true, builder: (sheetContext) => SafeArea(child: ListView(shrinkWrap: true, children: [
-                const ListTile(title: Text('Find a prompt')),
-                ...prompts.entries.expand((group) => [Padding(padding: const EdgeInsets.all(12), child: Text(group.key, style: const TextStyle(fontWeight: FontWeight.bold))), ...group.value.map((p) => ListTile(title: Text(p), onTap: () { choosePrompt(p); Navigator.pop(sheetContext); }))]),
-              ]))), icon: const Icon(Icons.lightbulb_outline), label: const Text('Find a Prompt')),
-            ]),
-            if (prompt.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 16), child: Text(prompt, style: const TextStyle(fontWeight: FontWeight.w600, color: green))),
-            const SizedBox(height: 12),
-            TextField(controller: text, minLines: 6, maxLines: 12, maxLength: 10000, decoration: InputDecoration(
-              hintText: 'Start writing here…', filled: true, fillColor: Colors.white,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
-            )),
-            const SizedBox(height: 8),
-            FilledButton.icon(onPressed: saving ? null : save, icon: const Icon(Icons.lock_outline), label: Text(saving ? 'Saving…' : editingId == null ? 'Save privately' : 'Update private entry'), style: FilledButton.styleFrom(backgroundColor: green)),
-            const SizedBox(height: 26),
-            Text('Your journal history', style: GoogleFonts.playfairDisplay(fontSize: 22, color: green)),
-            const SizedBox(height: 10),
-            TextField(controller: search, onChanged: (value) => setState(() => filter = value.toLowerCase()), decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search your reflections', border: OutlineInputBorder())),
-            const SizedBox(height: 12),
-            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      appBar: AppBar(
+        backgroundColor: cream,
+        foregroundColor: green,
+        centerTitle: true,
+        title: Text(
+          'My Space',
+          style: GoogleFonts.playfairDisplay(
+            color: green,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.maybePop(context),
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+      body: collection == null
+          ? const Center(child: Text('Sign in to open your private journal.'))
+          : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: collection.orderBy('createdAt', descending: true).snapshots(),
               builder: (context, snapshot) {
-                if (snapshot.hasError) return const Text('Unable to load private entries.');
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                final docs = snapshot.data!.docs.where((doc) => ('${doc.data()['body'] ?? ''} ${doc.data()['prompt'] ?? ''}').toLowerCase().contains(filter)).toList();
-                if (docs.isEmpty) return const Padding(padding: EdgeInsets.all(12), child: Text('No reflections yet. Your space is ready whenever you are.'));
-                return Column(children: docs.map((doc) {
-                  final data = doc.data();
-                  return Card(color: Colors.white, child: ListTile(
-                    title: Text((data['prompt'] as String? ?? '').isEmpty ? 'Personal reflection' : data['prompt'] as String, maxLines: 2),
-                    subtitle: Text(data['body'] as String? ?? '', maxLines: 3, overflow: TextOverflow.ellipsis),
-                    onTap: () { setState(() { editingId = doc.id; prompt = data['prompt'] as String? ?? ''; text.text = data['body'] as String? ?? ''; }); },
-                    trailing: PopupMenuButton<String>(tooltip: 'Entry actions', onSelected: (action) { if (action == 'delete') remove(doc.id); if (action == 'share') shareExcerpt(data['body'] as String? ?? ''); }, itemBuilder: (_) => const [PopupMenuItem(value: 'share', child: Text('Review excerpt to share')), PopupMenuItem(value: 'delete', child: Text('Delete private entry'))]),
-                  ));
-                }).toList());
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Unable to load private entries.'));
+                }
+                final docs = snapshot.data?.docs ??
+                    <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 760),
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                      children: [
+                        _heroBanner(),
+                        if (writing) ...[
+                          const SizedBox(height: 12),
+                          _editorCard(),
+                        ],
+                        const SizedBox(height: 12),
+                        _continueCard(docs),
+                        const SizedBox(height: 10),
+                        _featureGrid(),
+                        const SizedBox(height: 14),
+                        _journalLibrary(docs),
+                        const SizedBox(height: 12),
+                        _closingQuote(),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  ),
+                );
               },
             ),
+    );
+  }
+
+  Widget _heroBanner() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: SizedBox(
+        height: 190,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const ColoredBox(color: Color(0xFFF5E7DA)),
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: 205,
+              child: Image.asset(
+                'assets/images/my_space_hero.jpg',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
+            ),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  stops: [.45, .72, 1],
+                  colors: [Color(0xFFF5E7DA), Color(0xCFF5E7DA), Color(0x00F5E7DA)],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 8, 14),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  width: 235,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'A little space,\njust for you.',
+                        style: GoogleFonts.playfairDisplay(
+                          color: green,
+                          fontWeight: FontWeight.w500,
+                          height: .98,
+                          fontSize: 30,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Write. Reflect. Heal. Grow.',
+                        style: TextStyle(fontSize: 13, color: ink),
+                      ),
+                      const SizedBox(height: 6),
+                      const Row(
+                        children: [
+                          Icon(Icons.lock_rounded, size: 14, color: green),
+                          SizedBox(width: 5),
+                          Flexible(
+                            child: Text(
+                              'Your thoughts stay yours. Private by default.',
+                              maxLines: 2,
+                              style: TextStyle(fontSize: 11.5, height: 1.15, color: ink),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
-        )),
+        ),
       ),
     );
   }
+
+  Widget _continueCard(List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    final latest = docs.isEmpty ? null : docs.first;
+    final data = latest?.data();
+    final title = data == null
+        ? 'Your story starts here'
+        : ((data['prompt'] as String? ?? '').trim().isEmpty
+            ? 'Your latest reflection'
+            : data['prompt'] as String);
+    final detail = data == null
+        ? 'A quiet place for everything on your mind.'
+        : (data['body'] as String? ?? '').replaceAll('\n', ' ');
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: SizedBox(
+        height: 112,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const ColoredBox(color: Color(0xFFE5E8D4)),
+            Positioned(
+              left: 105,
+              top: 0,
+              bottom: 0,
+              width: 130,
+              child: Image.asset('assets/images/my_space_books.jpg', fit: BoxFit.cover),
+            ),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFE5E8D4), Color(0xCCE5E8D4), Color(0x00E5E8D4)],
+                  stops: [0, .6, 1],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Continue where you left off',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.playfairDisplay(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 17,
+                            color: ink,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.playfairDisplay(fontSize: 15, color: ink),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          detail,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 11.5, color: ink),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () => startWriting(
+                      data?['prompt'] as String? ?? '',
+                      entry: latest,
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Continue', style: TextStyle(fontSize: 12)),
+                        SizedBox(width: 4),
+                        Icon(Icons.arrow_forward_rounded, size: 16),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _featureGrid() {
+    final features = <_SpaceFeature>[
+      _SpaceFeature('Write Freely', 'Let your thoughts flow, no rules.', Icons.edit_rounded,
+          'assets/images/my_space_writing.jpg', const Color(0xFFE4EAD8), () => startWriting('')),
+      _SpaceFeature('Guided Journaling', 'Thoughtful prompts for every season.', Icons.menu_book_rounded,
+          'assets/images/my_space_books.jpg', const Color(0xFFF6E1D9), showPromptPicker),
+      _SpaceFeature('Choose Your Journey', 'Self-growth series at your own pace.', Icons.alt_route_rounded,
+          'assets/images/my_space_journey.jpg', const Color(0xFFEDE4F0), () => showPromptPicker(category: 'Self-worth')),
+      _SpaceFeature('Reflection Room', 'Deeper questions for new perspectives.', Icons.lightbulb_outline_rounded,
+          'assets/images/my_space_reflection.jpg', const Color(0xFFF0E4CF), () => showPromptPicker(category: 'Gratitude')),
+      _SpaceFeature('Letters to Myself', 'Write to your past, present or future self.', Icons.mail_outline_rounded,
+          'assets/images/my_space_letters.jpg', const Color(0xFFF7DEDA), () => startWriting('A letter to myself')),
+      _SpaceFeature('My Growth Story', 'Look back and celebrate how far you have come.', Icons.spa_outlined,
+          'assets/images/my_space_growth.jpg', const Color(0xFFE5EBE3), () => scrollTo(libraryKey)),
+    ];
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: features.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 1.37,
+      ),
+      itemBuilder: (context, index) => _featureCard(features[index]),
+    );
+  }
+
+  Widget _featureCard(_SpaceFeature feature) {
+    return Material(
+      color: feature.color,
+      borderRadius: BorderRadius.circular(17),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: feature.onTap,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned(
+              right: 0,
+              bottom: 0,
+              width: 88,
+              height: 84,
+              child: Image.asset(feature.image, fit: BoxFit.cover, alignment: Alignment.center),
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  stops: const [.35, .82, 1],
+                  colors: [feature.color, feature.color.withValues(alpha: .93), feature.color.withValues(alpha: .06)],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 7, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: feature.accent,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(feature.icon, color: Colors.white, size: 20),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            feature.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.playfairDisplay(
+                              color: ink,
+                              fontSize: 13,
+                              height: 1.02,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 40),
+                    child: Text(
+                      feature.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: ink, fontSize: 10.5, height: 1.15),
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: 31,
+                    height: 31,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .86),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.arrow_forward_rounded, size: 18, color: ink),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _editorCard() {
+    return Container(
+      key: editorKey,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFDF8),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  editingId == null ? 'Write freely' : 'Continue your reflection',
+                  style: GoogleFonts.playfairDisplay(
+                    color: green,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Close editor',
+                onPressed: () => setState(() {
+                  writing = false;
+                  editingId = null;
+                  prompt = '';
+                  text.clear();
+                }),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
+          ),
+          if (prompt.isNotEmpty) ...[
+            Text(prompt, style: const TextStyle(color: green, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+          ],
+          TextField(
+            controller: text,
+            autofocus: false,
+            minLines: 5,
+            maxLines: 10,
+            maxLength: 10000,
+            decoration: InputDecoration(
+              hintText: 'Start writing here…',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+          ),
+          const SizedBox(height: 5),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: saving ? null : save,
+              icon: const Icon(Icons.lock_outline_rounded, size: 18),
+              label: Text(saving ? 'Saving…' : 'Save privately'),
+              style: FilledButton.styleFrom(backgroundColor: green, foregroundColor: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _journalLibrary(List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    final visible = docs.where((doc) {
+      final data = doc.data();
+      final body = data['body'] as String? ?? '';
+      final promptText = data['prompt'] as String? ?? '';
+      final queryMatch = '$body $promptText'.toLowerCase().contains(searchText);
+      final kind = entryKind(data);
+      final filterMatch = switch (selectedFilter) {
+        'Journal Entries' => kind == 'journal',
+        'Guided Prompts' => kind == 'guided',
+        'Letters' => kind == 'letter',
+        'Favorites' => data['favorite'] == true,
+        _ => true,
+      };
+      return queryMatch && filterMatch;
+    }).toList();
+    return Container(
+      key: libraryKey,
+      padding: const EdgeInsets.fromLTRB(13, 13, 13, 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFDF9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF0E8DC)),
+        boxShadow: [BoxShadow(color: ink.withValues(alpha: .035), blurRadius: 12, offset: const Offset(0, 3))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.menu_book_rounded, color: green, size: 30),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'My Journal Library',
+                      style: GoogleFonts.playfairDisplay(
+                        color: ink,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Text(
+                      'All your entries, letters and reflections in one place.',
+                      maxLines: 2,
+                      style: TextStyle(color: Color(0xFF5F625D), fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () => setState(() => selectedFilter = 'All'),
+                style: TextButton.styleFrom(foregroundColor: ink, padding: const EdgeInsets.symmetric(horizontal: 5)),
+                child: const Text('View All  →', style: TextStyle(fontSize: 11.5)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 11),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: search,
+                  onChanged: (value) => setState(() => searchText = value.toLowerCase()),
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                    hintText: 'Search your reflections…',
+                    hintStyle: const TextStyle(fontSize: 13),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    filled: true,
+                    fillColor: cream,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(13), borderSide: BorderSide(color: line)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(13), borderSide: BorderSide(color: line)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 7),
+              Container(
+                height: 43,
+                width: 43,
+                decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(12), border: Border.all(color: line)),
+                child: IconButton(
+                  tooltip: 'Show favorites',
+                  onPressed: () => setState(() => selectedFilter = selectedFilter == 'Favorites' ? 'All' : 'Favorites'),
+                  icon: Icon(selectedFilter == 'Favorites' ? Icons.filter_list_off_rounded : Icons.filter_list_rounded, size: 20, color: ink),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 9),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: ['All', 'Journal Entries', 'Guided Prompts', 'Letters', 'Favorites'].map((label) {
+                final selected = selectedFilter == label;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text(label, style: TextStyle(fontSize: 11, color: selected ? Colors.white : ink)),
+                    selected: selected,
+                    showCheckmark: false,
+                    onSelected: (_) => setState(() => selectedFilter = label),
+                    selectedColor: green,
+                    backgroundColor: cream,
+                    side: BorderSide(color: selected ? green : line),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text('Recent Entries', style: GoogleFonts.playfairDisplay(fontSize: 17, fontWeight: FontWeight.w700)),
+              const Spacer(),
+              TextButton(
+                onPressed: () => setState(() => selectedFilter = 'All'),
+                style: TextButton.styleFrom(foregroundColor: ink, padding: EdgeInsets.zero),
+                child: const Text('See All →', style: TextStyle(fontSize: 11)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          if (visible.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 4),
+              child: Text(
+                docs.isEmpty ? 'Your journal is ready whenever you are.' : 'No entries match this view yet.',
+                style: const TextStyle(color: Color(0xFF686B65), fontSize: 12),
+              ),
+            )
+          else
+            SizedBox(
+              height: 126,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: visible.length > 6 ? 6 : visible.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 7),
+                itemBuilder: (context, index) => _entryCard(visible[index]),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _entryCard(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final date = entryDate(data);
+    final title = (data['prompt'] as String? ?? '').trim().isEmpty
+        ? 'Personal reflection'
+        : data['prompt'] as String;
+    final kind = entryKind(data);
+    final tag = kind == 'letter' ? 'Letter' : kind == 'guided' ? 'Growth' : 'Reflection';
+    final tagColor = kind == 'letter' ? const Color(0xFFC15F61) : kind == 'guided' ? green : const Color(0xFFB77C29);
+    return InkWell(
+      onTap: () => startWriting(data['prompt'] as String? ?? '', entry: doc),
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        width: 147,
+        padding: const EdgeInsets.fromLTRB(9, 7, 7, 7),
+        decoration: BoxDecoration(
+          color: kind == 'letter' ? const Color(0xFFFFEFEB) : const Color(0xFFFFF8ED),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: const Color(0xFFF0E5D8)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 31,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(monthLabel(date), style: const TextStyle(fontSize: 8, letterSpacing: .4, color: Color(0xFF62645F))),
+                  Text('${date?.day ?? '—'}', style: GoogleFonts.playfairDisplay(fontSize: 22, fontWeight: FontWeight.w700, height: 1.1)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 5),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    heightFactor: .8,
+                    child: PopupMenuButton<String>(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 140),
+                      iconSize: 16,
+                      onSelected: (action) {
+                        if (action == 'favorite') toggleFavorite(doc.id, data['favorite'] == true);
+                        if (action == 'share') shareExcerpt(data['body'] as String? ?? '');
+                        if (action == 'delete') remove(doc.id);
+                      },
+                      itemBuilder: (_) => [
+                        PopupMenuItem(value: 'favorite', child: Text(data['favorite'] == true ? 'Remove favorite' : 'Add to favorites')),
+                        const PopupMenuItem(value: 'share', child: Text('Review excerpt to share')),
+                        const PopupMenuItem(value: 'delete', child: Text('Delete private entry')),
+                      ],
+                    ),
+                  ),
+                  Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.playfairDisplay(fontSize: 11, height: 1.05, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 3),
+                  Expanded(
+                    child: Text(data['body'] as String? ?? '', maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, height: 1.12, color: Color(0xFF53564F))),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    decoration: BoxDecoration(color: tagColor.withValues(alpha: .12), borderRadius: BorderRadius.circular(12)),
+                    child: Text(tag, style: TextStyle(fontSize: 9, color: tagColor, fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _closingQuote() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(17),
+      child: SizedBox(
+        height: 92,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Row(
+              children: [
+                Expanded(child: Image.asset('assets/images/my_space_quote_leaves.jpg', fit: BoxFit.cover)),
+                Expanded(child: Image.asset('assets/images/my_space_quote_mountains.jpg', fit: BoxFit.cover)),
+              ],
+            ),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [Color(0x004B5C41), Color(0xAFFFFAF1), Color(0x004B5C41)]),
+              ),
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  '“Your story is still unfolding,\nand every chapter matters.”',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 17,
+                    height: 1.15,
+                    fontStyle: FontStyle.italic,
+                    color: ink,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SpaceFeature {
+  const _SpaceFeature(this.title, this.description, this.icon, this.image, this.color, this.onTap);
+
+  final String title;
+  final String description;
+  final IconData icon;
+  final String image;
+  final Color color;
+  final VoidCallback onTap;
+
+  Color get accent => switch (title) {
+        'Write Freely' => const Color(0xFF355C3B),
+        'Guided Journaling' => const Color(0xFFB56054),
+        'Choose Your Journey' => const Color(0xFF454A64),
+        'Reflection Room' => const Color(0xFFAA7C35),
+        'Letters to Myself' => const Color(0xFFC15F61),
+        _ => const Color(0xFF355C3B),
+      };
 }
