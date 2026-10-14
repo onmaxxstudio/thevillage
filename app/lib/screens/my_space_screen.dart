@@ -510,7 +510,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'A little space,\\njust for you.',
+                            'A little space,\njust for you.',
                             style: GoogleFonts.playfairDisplay(
                               color: green,
                               fontWeight: FontWeight.w500,
