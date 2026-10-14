@@ -201,7 +201,12 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
         try { await widget.journal.deleteImage(path); } catch (_) { /* saved entry no longer references this image */ }
       }
       if (!mounted) return;
-      final entries = await widget.journal.loadEntries();
+      var entries = <PrivateJournalEntry>[saved];
+      try {
+        entries = await widget.journal.loadEntries();
+      } catch (_) {
+        // The saved document is confirmed; show it even if refreshing the list fails.
+      }
       final index = entries.indexWhere((item) => item.id == saved.id);
       Navigator.of(context).pushReplacement(MaterialPageRoute<void>(
         builder: (_) => SavedJournalEntryScreen(

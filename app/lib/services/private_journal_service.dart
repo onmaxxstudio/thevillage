@@ -156,7 +156,8 @@ class PrivateJournalService {
     } else if (originalCreatedAt == null && priorCreatedAt is DateTime) {
       originalCreatedAt = priorCreatedAt;
     }
-    await reference.set({
+    final batch = _firestore.batch();
+    batch.set(reference, {
       'title': title.trim(),
       'body': body,
       'tags': tags,
@@ -169,8 +170,9 @@ class PrivateJournalService {
           : Timestamp.fromDate(originalCreatedAt),
       'updatedAt': FieldValue.serverTimestamp(),
     });
-    await clearDraft();
-    final saved = await reference.get(const GetOptions(source: Source.server));
+    batch.delete(_draft);
+    await batch.commit();
+    final saved = await reference.get();
     return PrivateJournalEntry(
       id: entryId,
       title: title.trim(),
@@ -186,9 +188,10 @@ class PrivateJournalService {
   Future<void> clearDraft() => _draft.delete();
 
   Future<void> deleteEntry(String id) async {
-    await _entries.doc(id).delete();
-    final draft = await loadDraft();
-    if (draft?.entryId == id) await clearDraft();
+    final draftSnapshot = await _draft.get();
+    final batch = _firestore.batch()..delete(_entries.doc(id));
+    if (draftSnapshot.data()?['entryId'] == id) batch.delete(_draft);
+    await batch.commit();
   }
 
   Future<String> uploadImage(Uint8List bytes, String fileName) async {
