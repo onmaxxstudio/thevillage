@@ -43,67 +43,22 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <style>
-    html, body { min-height: 100%; margin: 0; background: #fffaf1; }
-    #startup-status {
-      min-height: 100vh; display: grid; place-content: center; gap: 12px;
-      padding: 24px; box-sizing: border-box; text-align: center;
-      color: #355c3b; font: 16px system-ui, sans-serif;
-    }
-    #startup-status[hidden] { display: none; }
-    #startup-status button {
-      justify-self: center; border: 0; border-radius: 999px;
-      padding: 12px 24px; background: #355c3b; color: white;
-      font: inherit; cursor: pointer;
-    }
-  </style>
-  <div id="startup-status" role="status" aria-live="polite">
-    <strong>Opening Ask the Village…</strong>
-    <span id="startup-help" hidden>The app is taking longer than expected.</span>
-    <button id="startup-retry" type="button" hidden onclick="location.reload()">Try again</button>
-  </div>
   <script>
-    (() => {
-      const status = document.getElementById('startup-status');
-      const help = document.getElementById('startup-help');
-      const retry = document.getElementById('startup-retry');
-      let started = false;
-      let startupTimer;
-
-      function startFlutter() {
-        if (started) return;
-        started = true;
-        const bootstrap = document.createElement('script');
-        bootstrap.src = 'flutter_bootstrap.js';
-        bootstrap.async = true;
-        bootstrap.onerror = () => {
-          help.hidden = false;
-          help.textContent = 'Ask the Village could not finish loading. Check your connection and try again.';
-          retry.hidden = false;
-        };
-        document.body.appendChild(bootstrap);
+    // Clear any older Flutter offline cache before loading the app.
+    // This makes published fixes visible on the first reload.
+    (async () => {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.unregister()));
       }
-
-      // Never let optional cache cleanup prevent Flutter from starting.
-      // This app is built without a PWA service worker; unregister old ones
-      // in the background and let the versioned app bundle bypass stale files.
-      try {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations()
-            .then((registrations) => Promise.all(registrations.map((r) => r.unregister())))
-            .catch(() => {});
-        }
-      } catch (_) {}
-
-      startupTimer = setTimeout(() => {
-        help.hidden = false;
-        retry.hidden = false;
-      }, 15000);
-      window.addEventListener('flutter-first-frame', () => {
-        clearTimeout(startupTimer);
-        status.hidden = true;
-      }, { once: true });
-      startFlutter();
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map((name) => caches.delete(name)));
+      }
+      const bootstrap = document.createElement('script');
+      bootstrap.src = 'flutter_bootstrap.js';
+      bootstrap.async = true;
+      document.body.appendChild(bootstrap);
     })();
   </script>
 </body>
