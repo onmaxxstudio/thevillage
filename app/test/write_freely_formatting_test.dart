@@ -14,7 +14,7 @@ void main() {
     ));
 
     final richText = tester.widgetList<RichText>(find.byType(RichText)).toList();
-    expect(richText, hasLength(2));
+    expect(richText, hasLength(3));
     final formattedSpans = (richText.first.text as TextSpan).children!;
     expect(formattedSpans.any((span) =>
         span is TextSpan &&
