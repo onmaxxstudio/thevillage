@@ -75,6 +75,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
   bool _savingEntry = false;
   bool _uploading = false;
   bool _speechReady = false;
+  bool _restoringDraft = false;
 
   bool get _hasExisting => widget.entry != null;
 
@@ -93,6 +94,11 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
     _bodyFocus.addListener(_onInputFocusChanged);
     _title.addListener(_scheduleDraftSave);
     _body.addListener(_scheduleDraftSave);
+    if (entry == null && draft == null) {
+      _restoringDraft = true;
+      _saveState = 'Checking for a saved draft…';
+      unawaited(_restoreDraft());
+    }
     if (draft?.hasContent == true && entry == null) {
       _saveState = 'Draft restored';
     }
@@ -131,13 +137,51 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
   }
 
   void _scheduleDraftSave() {
-    if (_savingEntry) return;
+    if (_savingEntry || _restoringDraft) return;
     _draftTimer?.cancel();
     setState(() {
       _saveError = null;
       _saveState = 'Unsaved changes';
     });
     _draftTimer = Timer(const Duration(milliseconds: 800), _persistDraft);
+  }
+
+  Future<void> _restoreDraft() async {
+    try {
+      final draft = await widget.journal
+          .loadDraft()
+          .timeout(const Duration(seconds: 3));
+      if (!mounted) return;
+      if (draft?.hasContent == true) {
+        _title.value = TextEditingValue(
+          text: draft!.title,
+          selection: TextSelection.collapsed(offset: draft.title.length),
+        );
+        _body.value = TextEditingValue(
+          text: draft.body,
+          selection: TextSelection.collapsed(offset: draft.body.length),
+        );
+        _tags
+          ..clear()
+          ..addAll(draft.tags);
+        _attachments
+          ..clear()
+          ..addAll(draft.attachments);
+        _entryId = draft.entryId;
+        _saveState = 'Draft restored';
+      } else {
+        _saveState = 'Your draft saves as you write.';
+      }
+    } catch (_) {
+      if (mounted) {
+        _saveState = 'Could not check for a saved draft';
+        _saveError = 'You can keep writing. Reconnect to save your changes.';
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _restoringDraft = false);
+      }
+    }
   }
 
   Future<void> _persistDraft() async {
@@ -406,6 +450,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
                 child: TextField(
                   controller: _title,
                   focusNode: _titleFocus,
+                  enabled: !_restoringDraft,
                   textCapitalization: TextCapitalization.sentences,
                   maxLength: 120,
                   decoration: const InputDecoration(
@@ -427,6 +472,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
                     child: TextField(
                       controller: _body,
                       focusNode: _bodyFocus,
+                      enabled: !_restoringDraft,
                       minLines: 15,
                       maxLines: null,
                       maxLength: 30000,
@@ -514,7 +560,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
               constraints: BoxConstraints(maxWidth: isWide ? 728 : 588),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 SizedBox(width: double.infinity, height: 50, child: FilledButton(
-                  onPressed: _savingEntry || _body.text.trim().isEmpty ? null : _saveEntry,
+                  onPressed: _savingEntry || _restoringDraft || _body.text.trim().isEmpty ? null : _saveEntry,
                   style: FilledButton.styleFrom(backgroundColor: _green, foregroundColor: Colors.white, disabledBackgroundColor: _green.withValues(alpha: .45), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
                   child: _savingEntry ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Save Entry', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 )),
