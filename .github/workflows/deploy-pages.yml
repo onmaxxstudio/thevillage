@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+      - 'codex/**'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -37,6 +41,10 @@ jobs:
         working-directory: app
         run: flutter test test/auth_attempt_state_test.dart
 
+      - name: Test saved journal formatting
+        working-directory: app
+        run: flutter test test/write_freely_formatting_test.dart
+
       - name: Analyze Flutter app
         working-directory: app
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
@@ -58,6 +66,7 @@ jobs:
           path: app/build/web
 
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
