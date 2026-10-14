@@ -149,10 +149,13 @@ class PrivateJournalService {
   }) async {
     final reference = _entries.doc(entryId);
     final prior = existing == null ? await reference.get() : null;
-    final originalCreatedAt = existing?.createdAt ??
-        (prior?.data()?['createdAt'] is Timestamp
-            ? (prior!.data()!['createdAt'] as Timestamp)
-            : null);
+    DateTime? originalCreatedAt = existing?.createdAt;
+    final priorCreatedAt = prior?.data()?['createdAt'];
+    if (originalCreatedAt == null && priorCreatedAt is Timestamp) {
+      originalCreatedAt = priorCreatedAt.toDate();
+    } else if (originalCreatedAt == null && priorCreatedAt is DateTime) {
+      originalCreatedAt = priorCreatedAt;
+    }
     await reference.set({
       'title': title.trim(),
       'body': body,
