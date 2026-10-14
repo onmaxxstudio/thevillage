@@ -460,81 +460,97 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   }
 
   Widget _heroBanner() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: SizedBox(
-        height: 190,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            const ColoredBox(color: Color(0xFFF5E7DA)),
-            Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: 205,
-              child: Image.asset(
-                'assets/images/my_space_hero.jpg',
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-              ),
-            ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  stops: [.45, .72, 1],
-                  colors: [Color(0xFFF5E7DA), Color(0xCFF5E7DA), Color(0x00F5E7DA)],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Preserve the phone composition while giving the hero image more
+        // presence on wider tablet and desktop layouts.
+        final isWide = constraints.maxWidth >= 600;
+        final imageWidth = isWide ? constraints.maxWidth * .42 : 205.0;
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: SizedBox(
+            height: isWide ? 210 : 190,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const ColoredBox(color: Color(0xFFF5E7DA)),
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: imageWidth,
+                  child: Image.asset(
+                    'assets/images/my_space_hero.jpg',
+                    fit: BoxFit.cover,
+                    alignment: isWide ? Alignment.center : Alignment.topCenter,
+                  ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 8, 14),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: SizedBox(
-                  width: 235,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'A little space,\njust for you.',
-                        style: GoogleFonts.playfairDisplay(
-                          color: green,
-                          fontWeight: FontWeight.w500,
-                          height: .98,
-                          fontSize: 30,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Write. Reflect. Heal. Grow.',
-                        style: TextStyle(fontSize: 13, color: ink),
-                      ),
-                      const SizedBox(height: 6),
-                      const Row(
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      stops: isWide ? [.38, .66, 1] : [.45, .72, 1],
+                      colors: const [
+                        Color(0xFFF5E7DA),
+                        Color(0xCFF5E7DA),
+                        Color(0x00F5E7DA),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 8, 14),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: SizedBox(
+                      width: isWide ? constraints.maxWidth * .54 : 235,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.lock_rounded, size: 14, color: green),
-                          SizedBox(width: 5),
-                          Flexible(
-                            child: Text(
-                              'Your thoughts stay yours. Private by default.',
-                              maxLines: 2,
-                              style: TextStyle(fontSize: 11.5, height: 1.15, color: ink),
+                          Text(
+                            'A little space,\\njust for you.',
+                            style: GoogleFonts.playfairDisplay(
+                              color: green,
+                              fontWeight: FontWeight.w500,
+                              height: .98,
+                              fontSize: isWide ? 34 : 30,
                             ),
+                          ),
+                          SizedBox(height: isWide ? 10 : 8),
+                          Text(
+                            'Write. Reflect. Heal. Grow.',
+                            style: TextStyle(fontSize: isWide ? 14 : 13, color: ink),
+                          ),
+                          const SizedBox(height: 6),
+                          const Row(
+                            children: [
+                              Icon(Icons.lock_rounded, size: 14, color: green),
+                              SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  'Your thoughts stay yours. Private by default.',
+                                  maxLines: 2,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    height: 1.15,
+                                    color: ink,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
