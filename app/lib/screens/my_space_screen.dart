@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'ask_village_screen.dart';
 import 'settings_screen.dart';
+import 'write_freely_screen.dart';
+import '../services/private_journal_service.dart';
 
 class MySpaceScreen extends StatefulWidget {
   const MySpaceScreen({super.key});
@@ -48,6 +50,51 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
             .collection('private_journals')
             .doc(uid)
             .collection('entries');
+  }
+
+  Future<void> openWriteFreely({bool continueExisting = false}) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign in to use your private journal.')),
+      );
+      return;
+    }
+    final journal = PrivateJournalService(uid: uid);
+    try {
+      final draft = await journal.loadDraft();
+      if (!mounted) return;
+      if (draft?.hasContent == true) {
+        await Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => WriteFreelyEditorScreen(journal: journal, draft: draft),
+        ));
+        return;
+      }
+      if (continueExisting) {
+        final savedEntries = await journal.loadEntries();
+        if (!mounted) return;
+        if (savedEntries.isNotEmpty) {
+          await Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => SavedJournalEntryScreen(
+              journal: journal,
+              entry: savedEntries.first,
+              entries: savedEntries,
+              index: 0,
+            ),
+          ));
+          return;
+        }
+      }
+      await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => WriteFreelyEditorScreen(journal: journal),
+      ));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Your journal could not be opened. Check your connection and try again.')),
+        );
+      }
+    }
   }
 
   @override
@@ -545,10 +592,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
-                    onPressed: () => startWriting(
-                      data?['prompt'] as String? ?? '',
-                      entry: latest,
-                    ),
+                    onPressed: () => openWriteFreely(continueExisting: true),
                     style: FilledButton.styleFrom(
                       backgroundColor: green,
                       foregroundColor: Colors.white,
@@ -575,7 +619,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   Widget _featureGrid() {
     final features = <_SpaceFeature>[
       _SpaceFeature('Write Freely', 'Let your thoughts flow, no rules.', Icons.edit_rounded,
-          'assets/images/my_space_writing.jpg', const Color(0xFFE4EAD8), () => startWriting('')),
+          'assets/images/my_space_writing.jpg', const Color(0xFFE4EAD8), () => openWriteFreely()),
       _SpaceFeature('Guided Journaling', 'Thoughtful prompts for every season.', Icons.menu_book_rounded,
           'assets/images/my_space_books.jpg', const Color(0xFFF6E1D9), showPromptPicker),
       _SpaceFeature('Choose Your Journey', 'Self-growth series at your own pace.', Icons.alt_route_rounded,
