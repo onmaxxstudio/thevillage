@@ -61,8 +61,18 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       return;
     }
     final journal = PrivateJournalService(uid: uid);
+
+    // Opening the editor should never depend on a Firestore read finishing.
+    // The editor restores a draft in the background after its UI is visible.
+    if (!continueExisting) {
+      await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => WriteFreelyEditorScreen(journal: journal),
+      ));
+      return;
+    }
+
     try {
-      final draft = await journal.loadDraft();
+      final draft = await journal.loadDraft().timeout(const Duration(seconds: 3));
       if (!mounted) return;
       if (draft?.hasContent == true) {
         await Navigator.of(context).push(MaterialPageRoute<void>(
@@ -71,7 +81,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         return;
       }
       if (continueExisting) {
-        final savedEntries = await journal.loadEntries();
+        final savedEntries = await journal.loadEntries().timeout(const Duration(seconds: 3));
         if (!mounted) return;
         if (savedEntries.isNotEmpty) {
           await Navigator.of(context).push(MaterialPageRoute<void>(
@@ -86,13 +96,21 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         }
       }
       await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => WriteFreelyEditorScreen(journal: journal),
+        builder: (_) => WriteFreelyEditorScreen(
+          journal: journal,
+          draft: draft ?? const PrivateJournalDraft(
+            title: '', body: '', tags: [], attachments: [], entryId: null,
+          ),
+        ),
       ));
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Your journal could not be opened. Check your connection and try again.')),
+          const SnackBar(content: Text('Your saved journal could not be checked. The editor is opening so you can keep writing.')),
         );
+        await Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => WriteFreelyEditorScreen(journal: journal),
+        ));
       }
     }
   }
