@@ -59,6 +59,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
     with WidgetsBindingObserver {
   late final TextEditingController _title;
   late final TextEditingController _body;
+  final FocusNode _titleFocus = FocusNode();
   final FocusNode _bodyFocus = FocusNode();
   final ImagePicker _picker = ImagePicker();
   final SpeechToText _speech = SpeechToText();
@@ -88,6 +89,8 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
     _tags.addAll(entry?.tags ?? draft?.tags ?? const []);
     _attachments.addAll(entry?.attachments ?? draft?.attachments ?? const []);
     _entryId = entry?.id ?? draft?.entryId;
+    _titleFocus.addListener(_onInputFocusChanged);
+    _bodyFocus.addListener(_onInputFocusChanged);
     _title.addListener(_scheduleDraftSave);
     _body.addListener(_scheduleDraftSave);
     if (draft?.hasContent == true && entry == null) {
@@ -102,6 +105,9 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
     if (!_savingEntry && _hasAnyContent) unawaited(_persistDraft());
     _title.dispose();
     _body.dispose();
+    _titleFocus.removeListener(_onInputFocusChanged);
+    _bodyFocus.removeListener(_onInputFocusChanged);
+    _titleFocus.dispose();
     _bodyFocus.dispose();
     unawaited(_speech.stop());
     super.dispose();
@@ -109,6 +115,12 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
 
   bool get _hasAnyContent =>
       _title.text.trim().isNotEmpty || _body.text.trim().isNotEmpty || _tags.isNotEmpty || _attachments.isNotEmpty;
+
+  bool get _hasInputFocus => _titleFocus.hasFocus || _bodyFocus.hasFocus;
+
+  void _onInputFocusChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -362,9 +374,12 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.sizeOf(context).width > 720;
+    final keyboardInset = _hasInputFocus ? MediaQuery.viewInsetsOf(context).bottom : 0.0;
     return Scaffold(
       backgroundColor: _cream,
-      resizeToAvoidBottomInset: true,
+      // Safari can leave a stale keyboard inset after a nested route opens.
+      // Apply the inset only while one of this editor's fields has focus.
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: _cream,
         foregroundColor: _green,
@@ -390,6 +405,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
                 padding: const EdgeInsets.fromLTRB(15, 9, 15, 12),
                 child: TextField(
                   controller: _title,
+                  focusNode: _titleFocus,
                   textCapitalization: TextCapitalization.sentences,
                   maxLength: 120,
                   decoration: const InputDecoration(
@@ -486,7 +502,11 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
       ),
       bottomNavigationBar: SafeArea(
         top: false,
-        child: Container(
+        child: AnimatedPadding(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          padding: EdgeInsets.only(bottom: keyboardInset),
+          child: Container(
           color: _cream,
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
           child: Center(
@@ -504,6 +524,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
             ),
           ),
         ),
+      ),
       ),
     );
   }
