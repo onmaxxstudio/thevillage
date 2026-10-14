@@ -29,6 +29,6 @@ void main() {
         span.text == 'a link' &&
         span.recognizer != null), isTrue);
     expect(find.text('•  '), findsOneWidget);
-    expect(find.text('A list item'), findsOneWidget);
+    expect((richText[2].text as TextSpan).toPlainText(), 'A list item');
   });
 }
