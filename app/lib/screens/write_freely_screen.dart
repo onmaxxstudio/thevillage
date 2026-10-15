@@ -422,6 +422,9 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
     final isWide = MediaQuery.sizeOf(context).width > 720;
     return Scaffold(
       backgroundColor: _cream,
+      // Safari can retain a keyboard inset when this nested route opens.
+      // Keep the editor full-height; the list remains scrollable when typing.
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: _cream,
         foregroundColor: _green,
@@ -438,6 +441,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
           constraints: BoxConstraints(maxWidth: isWide ? 760 : 620),
           child: ListView(
             controller: _editorScrollController,
+            primary: false,
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
             children: [
               _WriteFreelyBanner(),
