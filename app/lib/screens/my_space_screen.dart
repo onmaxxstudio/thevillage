@@ -70,7 +70,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     // Opening the editor should never depend on a Firestore read finishing.
     // The editor restores a draft in the background after its UI is visible.
     if (!continueExisting) {
-      await Navigator.of(context).push(MaterialPageRoute<void>(
+      await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
         builder: (_) => WriteFreelyEditorScreen(journal: journal),
       ));
       return;
@@ -80,7 +80,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       final draft = await journal.loadDraft().timeout(const Duration(seconds: 3));
       if (!mounted) return;
       if (draft?.hasContent == true) {
-        await Navigator.of(context).push(MaterialPageRoute<void>(
+        await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
           builder: (_) => WriteFreelyEditorScreen(journal: journal, draft: draft),
         ));
         return;
@@ -89,7 +89,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         final savedEntries = await journal.loadEntries().timeout(const Duration(seconds: 3));
         if (!mounted) return;
         if (savedEntries.isNotEmpty) {
-          await Navigator.of(context).push(MaterialPageRoute<void>(
+          await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
             builder: (_) => SavedJournalEntryScreen(
               journal: journal,
               entry: savedEntries.first,
@@ -100,7 +100,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
           return;
         }
       }
-      await Navigator.of(context).push(MaterialPageRoute<void>(
+      await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
         builder: (_) => WriteFreelyEditorScreen(
           journal: journal,
           draft: draft ?? const PrivateJournalDraft(
@@ -113,7 +113,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Your saved journal could not be checked. The editor is opening so you can keep writing.')),
         );
-        await Navigator.of(context).push(MaterialPageRoute<void>(
+        await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
           builder: (_) => WriteFreelyEditorScreen(journal: journal),
         ));
       }
