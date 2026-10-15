@@ -61,6 +61,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
   late final TextEditingController _body;
   final FocusNode _titleFocus = FocusNode();
   final FocusNode _bodyFocus = FocusNode();
+  final ScrollController _editorScrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
   final SpeechToText _speech = SpeechToText();
   final List<String> _tags = [];
@@ -111,6 +112,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
     if (!_savingEntry && _hasAnyContent) unawaited(_persistDraft());
     _title.dispose();
     _body.dispose();
+    _editorScrollController.dispose();
     _titleFocus.removeListener(_onInputFocusChanged);
     _bodyFocus.removeListener(_onInputFocusChanged);
     _titleFocus.dispose();
@@ -418,12 +420,8 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.sizeOf(context).width > 720;
-    final keyboardInset = _hasInputFocus ? MediaQuery.viewInsetsOf(context).bottom : 0.0;
     return Scaffold(
       backgroundColor: _cream,
-      // Safari can leave a stale keyboard inset after a nested route opens.
-      // Apply the inset only while one of this editor's fields has focus.
-      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: _cream,
         foregroundColor: _green,
@@ -439,6 +437,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: isWide ? 760 : 620),
           child: ListView(
+            controller: _editorScrollController,
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
             children: [
               _WriteFreelyBanner(),
@@ -548,11 +547,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
       ),
       bottomNavigationBar: SafeArea(
         top: false,
-        child: AnimatedPadding(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: EdgeInsets.only(bottom: keyboardInset),
-          child: Container(
+        child: Container(
           color: _cream,
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
           child: Center(
@@ -569,8 +564,6 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
               ]),
             ),
           ),
-        ),
-      ),
       ),
     );
   }
