@@ -54,6 +54,20 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
             .collection('entries');
   }
 
+  Widget _buildEditorRoute(
+    BuildContext routeContext,
+    PrivateJournalService journal, {
+    PrivateJournalDraft? draft,
+  }) {
+    // iOS Safari can report a stale keyboard inset on a newly pushed route.
+    // That can collapse the editor viewport before the user focuses a field.
+    final mediaQuery = MediaQuery.of(routeContext);
+    return MediaQuery(
+      data: mediaQuery.copyWith(viewInsets: EdgeInsets.zero),
+      child: WriteFreelyEditorScreen(journal: journal, draft: draft),
+    );
+  }
+
   Future<void> openWriteFreely({bool continueExisting = false}) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
@@ -71,7 +85,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     // The editor restores a draft in the background after its UI is visible.
     if (!continueExisting) {
       await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
-        builder: (_) => WriteFreelyEditorScreen(journal: journal),
+        builder: (routeContext) => _buildEditorRoute(routeContext, journal),
       ));
       return;
     }
@@ -81,7 +95,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       if (!mounted) return;
       if (draft?.hasContent == true) {
         await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
-          builder: (_) => WriteFreelyEditorScreen(journal: journal, draft: draft),
+          builder: (routeContext) => _buildEditorRoute(routeContext, journal, draft: draft),
         ));
         return;
       }
@@ -101,8 +115,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         }
       }
       await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
-        builder: (_) => WriteFreelyEditorScreen(
-          journal: journal,
+        builder: (routeContext) => _buildEditorRoute(
+          routeContext,
+          journal,
           draft: draft ?? const PrivateJournalDraft(
             title: '', body: '', tags: [], attachments: [], entryId: null,
           ),
@@ -114,7 +129,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
           const SnackBar(content: Text('Your saved journal could not be checked. The editor is opening so you can keep writing.')),
         );
         await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
-          builder: (_) => WriteFreelyEditorScreen(journal: journal),
+          builder: (routeContext) => _buildEditorRoute(routeContext, journal),
         ));
       }
     }
