@@ -564,6 +564,7 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
               ]),
             ),
           ),
+        ),
       ),
     );
   }
