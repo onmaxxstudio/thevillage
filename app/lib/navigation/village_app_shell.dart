@@ -198,9 +198,11 @@ class _VillageAppShellState extends State<VillageAppShell> {
           drawer: _buildDrawer(),
           body: Stack(
             children: [
-              IndexedStack(
-                index: selectedIndex,
-                children: List.generate(rootPages.length, buildTabNavigator),
+              Positioned.fill(
+                child: IndexedStack(
+                  index: selectedIndex,
+                  children: List.generate(rootPages.length, buildTabNavigator),
+                ),
               ),
               if (selectedIndex != 0 &&
                   _tabRouteDepth[selectedIndex] == 0 &&
