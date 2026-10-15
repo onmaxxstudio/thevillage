@@ -63,6 +63,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       return;
     }
     final journal = PrivateJournalService(uid: uid);
+    // Clear focus from the previous page before pushing the editor. Safari can
+    // preserve a stale keyboard inset across nested Navigator routes.
+    FocusManager.instance.primaryFocus?.unfocus();
 
     // Opening the editor should never depend on a Firestore read finishing.
     // The editor restores a draft in the background after its UI is visible.
