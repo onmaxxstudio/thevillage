@@ -1147,7 +1147,7 @@ class _PromptLibraryState extends State<_PromptLibrary> {
                 const SizedBox(height: 6),
                 if (filtered.isEmpty)
                   _softCard(
-                    const Padding(
+                    child: const Padding(
                       padding: EdgeInsets.all(18),
                       child: Text(
                         'No prompts match these filters yet. Adjust your search or choose another category.',
