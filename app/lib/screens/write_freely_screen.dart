@@ -422,21 +422,39 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
     final isWide = MediaQuery.sizeOf(context).width > 720;
     return Scaffold(
       backgroundColor: _cream,
-      // Safari can retain a keyboard inset when this nested route opens.
-      // Keep the editor full-height; the list remains scrollable when typing.
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        backgroundColor: _cream,
-        foregroundColor: _green,
-        centerTitle: true,
-        leading: IconButton(tooltip: 'Back to My Space', icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19), onPressed: _goBack),
-        title: Text('Write Freely', style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, color: _green)),
-        actions: [
-          TextButton(onPressed: _openEntries, child: const Text('My Entries', style: TextStyle(color: _green, fontWeight: FontWeight.w600))),
-          const SizedBox(width: 6),
-        ],
-      ),
-      body: Center(
+      body: SafeArea(
+        child: Column(
+          children: [
+            AppBar(
+              primary: false,
+              backgroundColor: _cream,
+              foregroundColor: _green,
+              centerTitle: true,
+              leading: IconButton(
+                tooltip: 'Back to My Space',
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+                onPressed: _goBack,
+              ),
+              title: Text(
+                'Write Freely',
+                style: GoogleFonts.playfairDisplay(
+                  fontWeight: FontWeight.w600,
+                  color: _green,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: _openEntries,
+                  child: const Text(
+                    'My Entries',
+                    style: TextStyle(color: _green, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+            ),
+            Expanded(child: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: isWide ? 760 : 620),
           child: ListView(
@@ -548,8 +566,8 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: SafeArea(
+      )),
+            SafeArea(
         top: false,
         child: Container(
           color: _cream,
@@ -568,6 +586,9 @@ class _WriteFreelyEditorScreenState extends State<WriteFreelyEditorScreen>
               ]),
             ),
           ),
+        ),
+      )
+          ],
         ),
       ),
     );
