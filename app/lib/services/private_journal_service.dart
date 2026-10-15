@@ -13,6 +13,10 @@ class PrivateJournalEntry {
     required this.createdAt,
     required this.updatedAt,
     this.prompt = '',
+    this.entryType = 'journal',
+    this.favorite = false,
+    this.mood,
+    this.extraFields = const {},
   });
 
   final String id;
@@ -23,6 +27,10 @@ class PrivateJournalEntry {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final String prompt;
+  final String entryType;
+  final bool favorite;
+  final String? mood;
+  final Map<String, dynamic> extraFields;
 
   factory PrivateJournalEntry.fromDocument(
     QueryDocumentSnapshot<Map<String, dynamic>> document,
@@ -39,6 +47,13 @@ class PrivateJournalEntry {
       createdAt: _toDate(data['createdAt']),
       updatedAt: _toDate(data['updatedAt']),
       prompt: data['prompt'] as String? ?? '',
+      entryType: data['entryType'] as String? ?? 'journal',
+      favorite: data['favorite'] == true,
+      mood: data['mood'] as String?,
+      extraFields: {
+        for (final key in const ['linkedEntryId', 'milestoneDate', 'milestoneIcon', 'goalProgress', 'actionSteps'])
+          if (data.containsKey(key)) key: data[key],
+      },
     );
   }
 
@@ -163,8 +178,10 @@ class PrivateJournalService {
       'tags': tags,
       'attachments': attachments,
       'prompt': existing?.prompt ?? '',
-      'entryType': 'journal',
-      'favorite': false,
+      'entryType': existing?.entryType ?? 'journal',
+      if (existing?.mood != null) 'mood': existing!.mood,
+      ...?existing?.extraFields,
+      'favorite': existing?.favorite ?? false,
       'createdAt': originalCreatedAt == null
           ? FieldValue.serverTimestamp()
           : Timestamp.fromDate(originalCreatedAt),
@@ -182,10 +199,19 @@ class PrivateJournalService {
       createdAt: _timestamp(saved.data()?['createdAt']) ?? originalCreatedAt,
       updatedAt: _timestamp(saved.data()?['updatedAt']),
       prompt: existing?.prompt ?? '',
+      entryType: existing?.entryType ?? 'journal',
+      favorite: existing?.favorite ?? false,
+      mood: existing?.mood,
+      extraFields: existing?.extraFields ?? const {},
     );
   }
 
   Future<void> clearDraft() => _draft.delete();
+
+  Future<void> setFavorite(String id, bool favorite) => _entries.doc(id).update({
+        'favorite': favorite,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
 
   Future<void> deleteEntry(String id) async {
     final draftSnapshot = await _draft.get();

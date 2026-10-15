@@ -7,6 +7,7 @@ import 'ask_village_screen.dart';
 import 'settings_screen.dart';
 import 'write_freely_screen.dart';
 import '../services/private_journal_service.dart';
+import 'my_space_tools_screen.dart';
 
 class MySpaceScreen extends StatefulWidget {
   const MySpaceScreen({super.key});
@@ -28,6 +29,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   String? editingId;
   bool saving = false;
   bool writing = false;
+  String? editorEntryType;
   String searchText = '';
   String selectedFilter = 'All';
 
@@ -135,7 +137,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       final data = <String, dynamic>{
         'body': text.text.trim(),
         'prompt': prompt,
-        'entryType': entryType,
+        'entryType': editorEntryType ?? entryType,
         'updatedAt': FieldValue.serverTimestamp(),
       };
       if (editingId == null) {
@@ -150,6 +152,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         editingId = null;
         prompt = '';
         writing = false;
+        editorEntryType = null;
         text.clear();
       });
       Navigator.of(context).pop();
@@ -261,11 +264,12 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     );
   }
 
-  void startWriting(String value, {QueryDocumentSnapshot<Map<String, dynamic>>? entry}) {
+  void startWriting(String value, {QueryDocumentSnapshot<Map<String, dynamic>>? entry, String? entryType}) {
     setState(() {
       prompt = value;
       editingId = entry?.id;
       writing = true;
+      editorEntryType = entryType ?? entry?.data()['entryType'] as String?;
       text.text = entry?.data()['body'] as String? ?? '';
     });
     showModalBottomSheet<void>(
@@ -440,10 +444,16 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                       children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 3, bottom: 10),
+                          child: Column(children: [
+                            Text('My Space', style: GoogleFonts.playfairDisplay(fontSize: 24, color: green, fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 2),
+                            const Text('Your space. Your thoughts. Your growth.', style: TextStyle(color: ink, fontSize: 13)),
+                          ]),
+                        ),
                         _heroBanner(),
                         const SizedBox(height: 12),
-                        _continueCard(docs),
-                        const SizedBox(height: 10),
                         _featureGrid(),
                         const SizedBox(height: 14),
                         _journalLibrary(docs),
@@ -510,7 +520,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'A little space,\njust for you.',
+                            'A safe space\nto be you.',
                             style: GoogleFonts.playfairDisplay(
                               color: green,
                               fontWeight: FontWeight.w500,
@@ -520,7 +530,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                           ),
                           SizedBox(height: isWide ? 10 : 8),
                           Text(
-                            'Write. Reflect. Heal. Grow.',
+                            'Clearer thoughts. A calmer you.\nA brighter tomorrow.',
                             style: TextStyle(fontSize: isWide ? 14 : 13, color: ink),
                           ),
                           const SizedBox(height: 6),
@@ -652,31 +662,40 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
 
   Widget _featureGrid() {
     final features = <_SpaceFeature>[
-      _SpaceFeature('Write Freely', 'Let your thoughts flow, no rules.', Icons.edit_rounded,
-          'assets/images/my_space_writing.jpg', const Color(0xFFE4EAD8), () => openWriteFreely()),
-      _SpaceFeature('Guided Journaling', 'Thoughtful prompts for every season.', Icons.menu_book_rounded,
-          'assets/images/my_space_books.jpg', const Color(0xFFF6E1D9), showPromptPicker),
-      _SpaceFeature('Choose Your Journey', 'Self-growth series at your own pace.', Icons.alt_route_rounded,
-          'assets/images/my_space_journey.jpg', const Color(0xFFEDE4F0), () => showPromptPicker(category: 'Self-worth')),
-      _SpaceFeature('Reflection Room', 'Deeper questions for new perspectives.', Icons.lightbulb_outline_rounded,
-          'assets/images/my_space_reflection.jpg', const Color(0xFFF0E4CF), () => showPromptPicker(category: 'Gratitude')),
-      _SpaceFeature('Letters to Myself', 'Write to your past, present or future self.', Icons.mail_outline_rounded,
-          'assets/images/my_space_letters.jpg', const Color(0xFFF7DEDA), () => startWriting('A letter to myself')),
-      _SpaceFeature('My Growth Story', 'Look back and celebrate how far you have come.', Icons.spa_outlined,
-          'assets/images/my_space_growth.jpg', const Color(0xFFE5EBE3), () => scrollTo(libraryKey)),
+      _SpaceFeature('Write Freely', Icons.edit_note_rounded, const Color(0xFFF8E4DC), () => openWriteFreely()),
+      _SpaceFeature('Guided\nJournaling', Icons.spa_outlined, const Color(0xFFE5EBDD), () => _openTool('guided')),
+      _SpaceFeature('Journal\nPrompts', Icons.wb_sunny_outlined, const Color(0xFFF9EBD7), () => _openTool('prompts')),
+      _SpaceFeature('Gratitude', Icons.favorite_rounded, const Color(0xFFF8E4DC), () => _openTool('gratitude')),
+      _SpaceFeature('Mood\nReflections', Icons.sentiment_satisfied_alt_rounded, const Color(0xFFE5EBDD), () => _openTool('mood')),
+      _SpaceFeature('Milestones', Icons.emoji_events_rounded, const Color(0xFFF9EBD7), () => _openTool('milestones')),
+      _SpaceFeature('Vision &\nGoals', Icons.track_changes_rounded, const Color(0xFFF8E4DC), () => _openTool('goals')),
+      _SpaceFeature('Letters', Icons.mail_outline_rounded, const Color(0xFFE5EBDD), () => _openTool('letters')),
+      _SpaceFeature('Saved\nFavorites', Icons.bookmark_border_rounded, const Color(0xFFF9EBD7), () => _openTool('favorites')),
     ];
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: features.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 1.75,
+        crossAxisCount: 3,
+        crossAxisSpacing: 7,
+        mainAxisSpacing: 7,
+        childAspectRatio: .96,
       ),
       itemBuilder: (context, index) => _featureCard(features[index]),
     );
+  }
+
+  Future<void> _openTool(String mode) async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => MySpaceToolsScreen(
+        mode: mode,
+        onWritePrompt: (value, type) {
+          if (!mounted) return;
+          startWriting(value, entryType: type);
+        },
+      ),
+    ));
   }
 
   Widget _featureCard(_SpaceFeature feature) {
@@ -686,86 +705,14 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: feature.onTap,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: 98,
-              child: Image.asset(feature.image, fit: BoxFit.cover, alignment: Alignment.center),
-            ),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  stops: const [.34, .56, .78, 1],
-                  colors: [feature.color, feature.color.withValues(alpha: .94), feature.color.withValues(alpha: .42), feature.color.withValues(alpha: .06)],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 10, 7, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: feature.accent,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(feature.icon, color: Colors.white, size: 20),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            feature.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.playfairDisplay(
-                              color: ink,
-                              fontSize: 13,
-                              height: 1.02,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 40),
-                    child: Text(
-                      feature.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: ink, fontSize: 10.5, height: 1.15),
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: 31,
-                    height: 31,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .86),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.arrow_forward_rounded, size: 18, color: ink),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(feature.icon, color: feature.accent, size: 31),
+            const SizedBox(height: 8),
+            Text(feature.title, textAlign: TextAlign.center, maxLines: 2,
+              style: GoogleFonts.playfairDisplay(color: ink, fontSize: 12.5, height: 1.05, fontWeight: FontWeight.w700)),
+          ]),
         ),
       ),
     );
@@ -894,9 +841,11 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                 ),
               ),
               TextButton(
-                onPressed: () => setState(() => selectedFilter = 'All'),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => MyEntriesScreen(journal: PrivateJournalService(uid: FirebaseAuth.instance.currentUser!.uid)),
+                )),
                 style: TextButton.styleFrom(foregroundColor: ink, padding: const EdgeInsets.symmetric(horizontal: 5)),
-                child: const Text('View All  →', style: TextStyle(fontSize: 11.5)),
+                child: const Text('My Journal  →', style: TextStyle(fontSize: 11.5)),
               ),
             ],
           ),
@@ -961,7 +910,14 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
               Text('Recent Entries', style: GoogleFonts.playfairDisplay(fontSize: 17, fontWeight: FontWeight.w700)),
               const Spacer(),
               TextButton(
-                onPressed: () => setState(() => selectedFilter = 'All'),
+                onPressed: () => _openTool('insights'),
+                style: TextButton.styleFrom(foregroundColor: green, padding: const EdgeInsets.symmetric(horizontal: 4)),
+                child: const Text('Insights', style: TextStyle(fontSize: 11)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => MyEntriesScreen(journal: PrivateJournalService(uid: FirebaseAuth.instance.currentUser!.uid)),
+                )),
                 style: TextButton.styleFrom(foregroundColor: ink, padding: EdgeInsets.zero),
                 child: const Text('See All →', style: TextStyle(fontSize: 11)),
               ),
@@ -1109,21 +1065,22 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
 }
 
 class _SpaceFeature {
-  const _SpaceFeature(this.title, this.description, this.icon, this.image, this.color, this.onTap);
+  const _SpaceFeature(this.title, this.icon, this.color, this.onTap);
 
   final String title;
-  final String description;
   final IconData icon;
-  final String image;
   final Color color;
   final VoidCallback onTap;
 
-  Color get accent => switch (title) {
+  Color get accent => switch (title.replaceAll('\n', ' ')) {
         'Write Freely' => const Color(0xFF355C3B),
-        'Guided Journaling' => const Color(0xFFB56054),
-        'Choose Your Journey' => const Color(0xFF454A64),
-        'Reflection Room' => const Color(0xFFAA7C35),
-        'Letters to Myself' => const Color(0xFFC15F61),
+        'Guided Journaling' => const Color(0xFF527657),
+        'Journal Prompts' => const Color(0xFFB77C29),
+        'Gratitude' => const Color(0xFFBE615F),
+        'Mood Reflections' => const Color(0xFF39765D),
+        'Milestones' => const Color(0xFFB77C29),
+        'Vision & Goals' => const Color(0xFFB56054),
+        'Letters' => const Color(0xFF355C3B),
         _ => const Color(0xFF355C3B),
       };
 }
