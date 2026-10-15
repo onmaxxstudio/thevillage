@@ -596,6 +596,8 @@ class _MyEntriesScreenState extends State<MyEntriesScreen> {
   final TextEditingController _search = TextEditingController();
   String _query = '';
   bool _calendar = false;
+  bool _favoritesOnly = false;
+  String? _selectedTag;
   DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? _selectedDay;
 
@@ -642,7 +644,12 @@ class _MyEntriesScreenState extends State<MyEntriesScreen> {
             if (snapshot.hasError) return const Center(child: Text('Your entries could not be loaded. Check your connection and try again.'));
             if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: _green));
             final entries = snapshot.data!;
-            final filtered = entries.where((entry) => '${entry.title} ${entry.body} ${entry.tags.join(' ')}'.toLowerCase().contains(_query)).toList();
+            final allTags = entries.expand((entry) => entry.tags).toSet().toList()..sort();
+            final filtered = entries.where((entry) =>
+              '${entry.title} ${entry.body} ${entry.tags.join(' ')}'.toLowerCase().contains(_query) &&
+              (!_favoritesOnly || entry.favorite) &&
+              (_selectedTag == null || entry.tags.contains(_selectedTag))
+            ).toList();
             return Column(children: [
               Padding(padding: const EdgeInsets.fromLTRB(16, 3, 16, 10), child: Column(children: [
                 SegmentedButton<bool>(
@@ -668,6 +675,12 @@ class _MyEntriesScreenState extends State<MyEntriesScreen> {
                     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: _line)),
                   ),
                 ),
+                const SizedBox(height: 8),
+                Wrap(spacing: 7, runSpacing: 4, children: [
+                  FilterChip(label: const Text('Favorites'), selected: _favoritesOnly, onSelected: (value) => setState(() => _favoritesOnly = value), selectedColor: _sage),
+                  if (_selectedTag != null) InputChip(label: Text(_selectedTag!), onDeleted: () => setState(() => _selectedTag = null), backgroundColor: _sage),
+                  ...allTags.take(12).map((tag) => FilterChip(label: Text(tag), selected: _selectedTag == tag, onSelected: (value) => setState(() => _selectedTag = value ? tag : null), selectedColor: _sage)),
+                ]),
               ])),
               Expanded(child: entries.isEmpty
                   ? _emptyState(context, _newEntry)
@@ -808,6 +821,23 @@ class SavedJournalEntryScreen extends StatefulWidget {
 }
 
 class _SavedJournalEntryScreenState extends State<SavedJournalEntryScreen> {
+  bool _favorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _favorite = widget.entry.favorite;
+  }
+
+  Future<void> _toggleFavorite() async {
+    try {
+      await widget.journal.setFavorite(widget.entry.id, !_favorite);
+      if (mounted) setState(() => _favorite = !_favorite);
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not update favorite.')));
+    }
+  }
+
   Future<void> _edit() async {
     final draft = PrivateJournalDraft(title: widget.entry.title, body: widget.entry.body, tags: widget.entry.tags, attachments: widget.entry.attachments, entryId: widget.entry.id);
     await Navigator.of(context).pushReplacement(MaterialPageRoute<void>(builder: (_) => WriteFreelyEditorScreen(journal: widget.journal, draft: draft, entry: widget.entry)));
@@ -870,7 +900,7 @@ class _SavedJournalEntryScreenState extends State<SavedJournalEntryScreen> {
           _surface(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(entry.title.trim().isEmpty ? 'A page from your journal' : entry.title, style: GoogleFonts.playfairDisplay(fontSize: 25, color: _green, fontWeight: FontWeight.w700)),
+                Text(entry.title.trim().isEmpty ? (entry.prompt.trim().isEmpty ? 'A page from your journal' : entry.prompt) : entry.title, style: GoogleFonts.playfairDisplay(fontSize: 25, color: _green, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
                 Text(_dateLabel(entry.createdAt, includeTime: true), style: const TextStyle(color: Color(0xFF73776E), fontSize: 12)),
               ])),
@@ -889,6 +919,7 @@ class _SavedJournalEntryScreenState extends State<SavedJournalEntryScreen> {
             const Divider(height: 24, color: _line),
             Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
               _entryAction(Icons.edit_outlined, 'Edit', _edit),
+              _entryAction(_favorite ? Icons.bookmark_rounded : Icons.bookmark_border_rounded, _favorite ? 'Saved' : 'Favorite', _toggleFavorite),
               _entryAction(Icons.copy_rounded, 'Copy', _copy),
               _entryAction(Icons.delete_outline_rounded, 'Delete', _delete),
             ]),

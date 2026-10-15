@@ -649,7 +649,13 @@ service cloud.firestore {
         (!('prompt' in data) || (data.prompt is string && data.prompt.size() <= 500)) &&
         (!('tags' in data) || (data.tags is list && data.tags.size() <= 6)) &&
         (!('attachments' in data) || (data.attachments is list && data.attachments.size() <= 4)) &&
-        (!('entryType' in data) || data.entryType in ['journal', 'guided', 'letter']) &&
+        (!('entryType' in data) || data.entryType in ['journal', 'guided', 'letter', 'gratitude', 'mood', 'milestone', 'goal']) &&
+        (!('mood' in data) || data.mood in ['Happy', 'Calm', 'Grateful', 'Overwhelmed', 'Sad', 'Anxious', 'Motivated', 'Hopeful', 'Tired', 'Angry']) &&
+        (!('linkedEntryId' in data) || (data.linkedEntryId is string && data.linkedEntryId.size() <= 160)) &&
+        (!('milestoneDate' in data) || data.milestoneDate is timestamp) &&
+        (!('milestoneIcon' in data) || (data.milestoneIcon is string && data.milestoneIcon.size() <= 12)) &&
+        (!('goalProgress' in data) || (data.goalProgress is int && data.goalProgress >= 0 && data.goalProgress <= 100)) &&
+        (!('actionSteps' in data) || (data.actionSteps is list && data.actionSteps.size() <= 30)) &&
         (!('favorite' in data) || data.favorite is bool);
     }
 
@@ -658,13 +664,13 @@ service cloud.firestore {
     match /private_journals/{uid}/entries/{entryId} {
       allow get, list, delete: if isSelf(uid);
       allow create: if isSelf(uid) &&
-        request.resource.data.keys().hasOnly(['body', 'title', 'tags', 'attachments', 'prompt', 'entryType', 'favorite', 'createdAt', 'updatedAt']) &&
+        request.resource.data.keys().hasOnly(['body', 'title', 'tags', 'attachments', 'prompt', 'entryType', 'favorite', 'createdAt', 'updatedAt', 'mood', 'linkedEntryId', 'milestoneDate', 'milestoneIcon', 'goalProgress', 'actionSteps']) &&
         validPrivateJournalFields(request.resource.data) &&
         request.resource.data.body.size() > 0 &&
         request.resource.data.createdAt == request.time &&
         request.resource.data.updatedAt == request.time;
       allow update: if isSelf(uid) &&
-        request.resource.data.keys().hasOnly(['body', 'title', 'tags', 'attachments', 'prompt', 'entryType', 'favorite', 'createdAt', 'updatedAt']) &&
+        request.resource.data.keys().hasOnly(['body', 'title', 'tags', 'attachments', 'prompt', 'entryType', 'favorite', 'createdAt', 'updatedAt', 'mood', 'linkedEntryId', 'milestoneDate', 'milestoneIcon', 'goalProgress', 'actionSteps']) &&
         validPrivateJournalFields(request.resource.data) &&
         request.resource.data.body.size() > 0 &&
         request.resource.data.createdAt == resource.data.createdAt &&
@@ -682,6 +688,19 @@ service cloud.firestore {
         request.resource.data.entryId.size() <= 160 &&
         request.resource.data.updatedAt == request.time;
       allow delete: if isSelf(uid) && draftId == 'write_freely';
+    }
+
+    // Prompt bookmarks are private to the member, just like journal entries.
+    match /private_journals/{uid}/saved_prompts/{promptId} {
+      allow get, list, delete: if isSelf(uid);
+      allow create, update: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly(['prompt', 'category', 'savedAt']) &&
+        request.resource.data.prompt is string &&
+        request.resource.data.prompt.size() > 0 &&
+        request.resource.data.prompt.size() <= 300 &&
+        request.resource.data.category is string &&
+        request.resource.data.category.size() <= 60 &&
+        request.resource.data.savedAt == request.time;
     }
 
     // Weekly plans contain private schedules, tasks, meals, and reflections.
