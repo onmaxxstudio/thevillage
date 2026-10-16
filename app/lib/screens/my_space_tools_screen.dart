@@ -1521,7 +1521,7 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
     if (data['entryType'] != 'guided') return false;
     if (data['guidedJourneyCompleted'] == true) return true;
     final body = data['body'] as String? ?? '';
-    return body.isNotEmpty && !RegExp(r'\\n—(?:\\n|$)').hasMatch(body);
+    return body.isNotEmpty && !RegExp(r'\n—(?:\n|$)').hasMatch(body);
   }
 
   @override
