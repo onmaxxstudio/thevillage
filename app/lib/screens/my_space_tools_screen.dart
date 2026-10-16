@@ -1530,7 +1530,7 @@ class _GuidedJourneyLibrary extends StatelessWidget {
         ),
         const SizedBox(height: 7),
         const Text(
-          'Choose a topic that fits this season of your life. Each journey has four reflections, and you can move at your own pace.',
+          'Choose a topic for this season of your life. Each journey has four reflections you can explore at your own pace.',
           style: TextStyle(color: Color(0xFF5F625D), height: 1.4),
         ),
         const SizedBox(height: 18),
