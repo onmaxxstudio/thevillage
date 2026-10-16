@@ -1895,8 +1895,6 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
     ),
   );
 }
-
-}
 class _GuidedJourneyScreen extends StatefulWidget {
   const _GuidedJourneyScreen({
     required this.journey,
@@ -1942,7 +1940,8 @@ class _GuidedJourneyScreenState extends State<_GuidedJourneyScreen> {
       return;
     }
     setState(() => _saving = true);
-    final isComplete = _answers.every((answer) => answer.text.trim().isNotEmpty);\n    final body = List.generate(widget.journey.steps.length, (index) {
+    final isComplete = _answers.every((answer) => answer.text.trim().isNotEmpty);
+    final body = List.generate(widget.journey.steps.length, (index) {
       final answer = _answers[index].text.trim();
       return '${index + 1}. ${widget.journey.steps[index]}\n${answer.isEmpty ? '—' : answer}';
     }).join('\n\n');
@@ -1952,7 +1951,8 @@ class _GuidedJourneyScreenState extends State<_GuidedJourneyScreen> {
         'body': body,
         'prompt': 'Guided journey: ${widget.journey.title}',
         'entryType': 'guided',
-        'guidedJourneyId': widget.journey.id,\n        'guidedJourneyCompleted': isComplete,
+        'guidedJourneyId': widget.journey.id,
+        'guidedJourneyCompleted': isComplete,
         'tags': [widget.journey.category, 'Guided Journey'],
         'attachments': <String>[],
         'favorite': false,
