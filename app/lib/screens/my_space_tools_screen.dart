@@ -13,6 +13,7 @@ const _cream = Color(0xFFFFFAF1);
 const _paper = Color(0xFFFFFDF8);
 const _green = Color(0xFF355C3B);
 const _ink = Color(0xFF28332B);
+const _sage = Color(0xFFE7EBDD);
 const _line = Color(0xFFE7DED1);
 
 const _promptGroups = <String, List<String>>{
