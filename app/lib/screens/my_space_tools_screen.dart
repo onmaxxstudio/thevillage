@@ -1493,7 +1493,7 @@ const _guidedCategoryDetails = <String, (String, IconData)>{
   ),
 };
 
-class _GuidedJourneyLibrary extends StatelessWidget {
+class _GuidedJourneyLibrary extends StatefulWidget {
   const _GuidedJourneyLibrary({
     required this.entries,
     required this.journeys,
@@ -1503,51 +1503,212 @@ class _GuidedJourneyLibrary extends StatelessWidget {
   final List<_GuidedJourney> journeys;
 
   @override
+  State<_GuidedJourneyLibrary> createState() => _GuidedJourneyLibraryState();
+}
+
+class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs = TabController(length: 2, vsync: this);
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  bool _isCompleted(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    if (data['entryType'] != 'guided') return false;
+    if (data['guidedJourneyCompleted'] == true) return true;
+    final body = data['body'] as String? ?? '';
+    return body.isNotEmpty && !RegExp(r'\\n—(?:\\n|$)').hasMatch(body);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final grouped = <String, List<_GuidedJourney>>{
       for (final category in _guidedCategoryOrder) category: <_GuidedJourney>[],
     };
-    for (final journey in journeys) {
+    for (final journey in widget.journeys) {
       grouped.putIfAbsent(_guidedCategoryFor(journey), () => <_GuidedJourney>[]);
       grouped[_guidedCategoryFor(journey)]!.add(journey);
     }
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 26),
+    return Column(
       children: [
-        Text(
-          'Your Journey Starts Within',
-          style: GoogleFonts.playfairDisplay(
-            color: _green,
-            fontSize: 27,
-            fontWeight: FontWeight.w700,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Your Journey Starts Within',
+              style: GoogleFonts.playfairDisplay(
+                color: _green,
+                fontSize: 27,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 5),
-        const Text(
-          'A little guidance. A deeper understanding of yourself.',
-          style: TextStyle(color: Color(0xFF5F625D), height: 1.4),
-        ),
-        const SizedBox(height: 7),
-        const Text(
-          'Choose a topic for this season of your life. Each journey has four reflections you can explore at your own pace.',
-          style: TextStyle(color: Color(0xFF5F625D), height: 1.4),
-        ),
-        const SizedBox(height: 18),
-        for (var index = 0; index < _guidedCategoryOrder.length; index++)
-          _categorySection(
-            context,
-            _guidedCategoryOrder[index],
-            grouped[_guidedCategoryOrder[index]] ?? const <_GuidedJourney>[],
-            initiallyExpanded: false,
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 5, 16, 0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'A little guidance. A deeper understanding of yourself.',
+              style: TextStyle(color: Color(0xFF5F625D), height: 1.4),
+            ),
           ),
-        const SizedBox(height: 10),
-        const Text(
-          'Your reflections are private. Take only the questions that feel useful today.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Color(0xFF74766F), fontSize: 11, height: 1.4),
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 7, 16, 12),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Choose a topic for this season of your life. Each journey has four reflections you can explore at your own pace.',
+              style: TextStyle(color: Color(0xFF5F625D), height: 1.4),
+            ),
+          ),
+        ),
+        TabBar(
+          controller: _tabs,
+          labelColor: _green,
+          unselectedLabelColor: const Color(0xFF74766F),
+          indicatorColor: _green,
+          tabs: const [
+            Tab(text: 'In Progress'),
+            Tab(text: 'Completed'),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabs,
+            children: [
+              ListView(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+                children: [
+                  for (final category in _guidedCategoryOrder)
+                    _categorySection(
+                      context,
+                      category,
+                      grouped[category] ?? const <_GuidedJourney>[],
+                      initiallyExpanded: false,
+                    ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Your reflections are private. Take only the questions that feel useful today.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Color(0xFF74766F), fontSize: 11, height: 1.4),
+                  ),
+                ],
+              ),
+              _completedTab(),
+            ],
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _completedTab() {
+    final collection = widget.entries;
+    if (collection == null) return const Center(child: Text('Sign in to view completed journeys.'));
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: collection.orderBy('createdAt', descending: true).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(child: Text('Completed journeys could not be loaded. Check your connection and try again.'));
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator(color: _green));
+        }
+        final docs = snapshot.data!.docs.where(_isCompleted).toList();
+        if (docs.isEmpty) {
+          return ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: _paper,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: _line),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(Icons.auto_awesome_outlined, color: _green, size: 30),
+                    SizedBox(height: 9),
+                    Text(
+                      'Your completed journeys will be kept here.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: _ink, fontWeight: FontWeight.w600),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      'Finish all four reflections in a journey and it will appear in this tab.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xFF74766F), fontSize: 12, height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: Text(
+                'A place to revisit the thoughts and progress you have already put into words.',
+                style: TextStyle(color: Color(0xFF5F625D), height: 1.4),
+              ),
+            ),
+            for (final doc in docs)
+              _completedJourneyCard(doc),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _completedJourneyCard(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final title = data['title'] as String? ?? 'Completed journey';
+    final body = data['body'] as String? ?? '';
+    final stamp = data['createdAt'];
+    final date = stamp is Timestamp ? stamp.toDate() : null;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 9),
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _line),
+      ),
+      child: ExpansionTile(
+        leading: const CircleAvatar(
+          backgroundColor: _sage,
+          child: Icon(Icons.check_rounded, color: _green),
+        ),
+        title: Text(
+          title,
+          style: GoogleFonts.playfairDisplay(color: _ink, fontWeight: FontWeight.w700),
+        ),
+        subtitle: Text(
+          date == null ? 'Completed' : 'Completed · ${date.month}/${date.day}/${date.year}',
+          style: const TextStyle(color: _green, fontSize: 12),
+        ),
+        iconColor: _green,
+        collapsedIconColor: _green,
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(body, style: const TextStyle(color: Color(0xFF5F625D), height: 1.5)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1691,6 +1852,7 @@ class _GuidedJourneyLibrary extends StatelessWidget {
   );
 }
 
+}
 class _GuidedJourneyScreen extends StatefulWidget {
   const _GuidedJourneyScreen({
     required this.journey,
@@ -1736,7 +1898,7 @@ class _GuidedJourneyScreenState extends State<_GuidedJourneyScreen> {
       return;
     }
     setState(() => _saving = true);
-    final body = List.generate(widget.journey.steps.length, (index) {
+    final isComplete = _answers.every((answer) => answer.text.trim().isNotEmpty);\n    final body = List.generate(widget.journey.steps.length, (index) {
       final answer = _answers[index].text.trim();
       return '${index + 1}. ${widget.journey.steps[index]}\n${answer.isEmpty ? '—' : answer}';
     }).join('\n\n');
@@ -1746,7 +1908,7 @@ class _GuidedJourneyScreenState extends State<_GuidedJourneyScreen> {
         'body': body,
         'prompt': 'Guided journey: ${widget.journey.title}',
         'entryType': 'guided',
-        'guidedJourneyId': widget.journey.id,
+        'guidedJourneyId': widget.journey.id,\n        'guidedJourneyCompleted': isComplete,
         'tags': [widget.journey.category, 'Guided Journey'],
         'attachments': <String>[],
         'favorite': false,
