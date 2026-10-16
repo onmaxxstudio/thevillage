@@ -1726,16 +1726,21 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
         border: Border.all(color: _line),
       ),
       child: ExpansionTile(
-        leading: const CircleAvatar(
+        leading: CircleAvatar(
           backgroundColor: _sage,
-          child: Icon(Icons.check_rounded, color: _green),
+          child: Icon(
+            completed ? Icons.check_rounded : Icons.edit_outlined,
+            color: _green,
+          ),
         ),
         title: Text(
           title,
           style: GoogleFonts.playfairDisplay(color: _ink, fontWeight: FontWeight.w700),
         ),
         subtitle: Text(
-          date == null\n              ? (completed ? 'Completed' : 'In progress')\n              : '${completed ? 'Completed' : 'In progress'} · ${date.month}/${date.day}/${date.year}',
+          date == null
+              ? (completed ? 'Completed' : 'In progress')
+              : '${completed ? 'Completed' : 'In progress'} · ${date.month}/${date.day}/${date.year}',
           style: const TextStyle(color: _green, fontSize: 12),
         ),
         iconColor: _green,
