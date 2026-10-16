@@ -1539,7 +1539,7 @@ class _GuidedJourneyLibrary extends StatelessWidget {
             context,
             _guidedCategoryOrder[index],
             grouped[_guidedCategoryOrder[index]] ?? const <_GuidedJourney>[],
-            initiallyExpanded: index == 0,
+            initiallyExpanded: false,
           ),
         const SizedBox(height: 10),
         const Text(
