@@ -1835,7 +1835,7 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
         MaterialPageRoute<void>(
           builder: (_) => _GuidedJourneyScreen(
             journey: journey,
-            entries: entries,
+            entries: widget.entries,
           ),
         ),
       ),
