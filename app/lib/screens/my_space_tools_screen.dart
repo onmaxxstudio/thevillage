@@ -181,7 +181,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: wide ? 900 : 680),
                 child: switch (widget.mode) {
-                  'guided' => _promptExperience(guided: true),
+                  'guided' => _guidedJourneyLibrary(),
                   'prompts' => _promptExperience(guided: false),
                   'gratitude' => _gratitude(),
                   'mood' => _mood(),
@@ -215,6 +215,11 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
         height: 1.35,
       ),
     ),
+  );
+
+  Widget _guidedJourneyLibrary() => _GuidedJourneyLibrary(
+    entries: _entries,
+    journeys: _guidedJourneys,
   );
 
   Widget _promptExperience({required bool guided}) {
@@ -1026,6 +1031,473 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
   void _message(String text) {
     if (mounted)
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+}
+
+class _GuidedJourney {
+  const _GuidedJourney({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.category,
+    required this.icon,
+    required this.steps,
+  });
+
+  final String id;
+  final String title;
+  final String subtitle;
+  final String category;
+  final IconData icon;
+  final List<String> steps;
+}
+
+const _guidedJourneys = <_GuidedJourney>[
+  _GuidedJourney(
+    id: 'know-yourself',
+    title: 'Getting to Know Yourself',
+    subtitle: 'Reconnect with who you are and what you need.',
+    category: 'Self-Discovery',
+    icon: Icons.self_improvement_rounded,
+    steps: [
+      'When do you feel most like yourself?',
+      'What part of you has been asking for more attention?',
+      'What do you need more of in this season of your life?',
+      'What is one kind promise you can make to yourself this week?',
+    ],
+  ),
+  _GuidedJourney(
+    id: 'stress-reset',
+    title: 'A Gentle Stress Reset',
+    subtitle: 'Sort through what feels heavy and find one next step.',
+    category: 'Stress & Calm',
+    icon: Icons.spa_outlined,
+    steps: [
+      'What is taking up the most space in your mind right now?',
+      'Which part of this is within your control today?',
+      'What can wait, be shared, or be set down for now?',
+      'What is one small thing that would help you feel steadier?',
+    ],
+  ),
+  _GuidedJourney(
+    id: 'healing-release',
+    title: 'Making Room to Heal',
+    subtitle: 'Listen to what needs care, at your own pace.',
+    category: 'Healing',
+    icon: Icons.local_florist_outlined,
+    steps: [
+      'What feeling have you been carrying lately?',
+      'What do you wish someone understood about it?',
+      'What boundary, support, or comfort would help you feel safer?',
+      'What are you ready to release, even a little?',
+    ],
+  ),
+  _GuidedJourney(
+    id: 'relationship-clarity',
+    title: 'Relationship Clarity',
+    subtitle: 'Name what matters to you and what you want to communicate.',
+    category: 'Relationships',
+    icon: Icons.favorite_border_rounded,
+    steps: [
+      'When do you feel most seen and cared for in this relationship?',
+      'What need or concern have you been holding back?',
+      'What would you like the other person to understand?',
+      'What is one honest, respectful next step you can take?',
+    ],
+  ),
+  _GuidedJourney(
+    id: 'self-trust',
+    title: 'Building Self-Trust',
+    subtitle: 'Notice your strengths and practice listening to yourself.',
+    category: 'Confidence',
+    icon: Icons.verified_user_outlined,
+    steps: [
+      'What is a hard thing you have already made it through?',
+      'What did that experience show you about your strengths?',
+      'Where might you be ignoring your own needs or instincts?',
+      'What small choice could help you trust yourself more?',
+    ],
+  ),
+  _GuidedJourney(
+    id: 'next-chapter',
+    title: 'Imagining Your Next Chapter',
+    subtitle: 'Turn what matters to you into a gentle, realistic next step.',
+    category: 'Growth & Purpose',
+    icon: Icons.wb_sunny_outlined,
+    steps: [
+      'What do you want more room for in your life?',
+      'Which values do you want your choices to reflect?',
+      'What is one thing you would like to try, learn, or change?',
+      'What is the smallest first step you can take this week?',
+    ],
+  ),
+];
+
+class _GuidedJourneyLibrary extends StatelessWidget {
+  const _GuidedJourneyLibrary({
+    required this.entries,
+    required this.journeys,
+  });
+
+  final CollectionReference<Map<String, dynamic>>? entries;
+  final List<_GuidedJourney> journeys;
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.fromLTRB(16, 8, 16, 26),
+    children: [
+      Text(
+        'A little structure, plenty of room to be honest.',
+        style: GoogleFonts.playfairDisplay(
+          color: _green,
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      const SizedBox(height: 5),
+      const Text(
+        'Choose a guided path. Move through one reflection at a time, write in your own words, and save the whole journey privately when you finish.',
+        style: TextStyle(color: Color(0xFF5F625D), height: 1.4),
+      ),
+      const SizedBox(height: 16),
+      for (final journey in journeys)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Material(
+            color: _paper,
+            borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => _GuidedJourneyScreen(
+                    journey: journey,
+                    entries: entries,
+                  ),
+                ),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: _line),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: const BoxDecoration(
+                        color: _sage,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(journey.icon, color: _green, size: 24),
+                    ),
+                    const SizedBox(width: 13),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            journey.category.toUpperCase(),
+                            style: const TextStyle(
+                              color: _green,
+                              fontSize: 10,
+                              letterSpacing: .7,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            journey.title,
+                            style: GoogleFonts.playfairDisplay(
+                              color: _ink,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            journey.subtitle,
+                            style: const TextStyle(
+                              color: Color(0xFF656961),
+                              fontSize: 12,
+                              height: 1.3,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            '${journey.steps.length} reflection steps',
+                            style: const TextStyle(
+                              color: _green,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: _green),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+class _GuidedJourneyScreen extends StatefulWidget {
+  const _GuidedJourneyScreen({
+    required this.journey,
+    required this.entries,
+  });
+
+  final _GuidedJourney journey;
+  final CollectionReference<Map<String, dynamic>>? entries;
+
+  @override
+  State<_GuidedJourneyScreen> createState() => _GuidedJourneyScreenState();
+}
+
+class _GuidedJourneyScreenState extends State<_GuidedJourneyScreen> {
+  late final List<TextEditingController> _answers;
+  int _step = 0;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _answers = List.generate(
+      widget.journey.steps.length,
+      (_) => TextEditingController(),
+    );
+  }
+
+  @override
+  void dispose() {
+    for (final answer in _answers) {
+      answer.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _saveJourney() async {
+    final collection = widget.entries;
+    if (collection == null || _saving) return;
+    if (_answers.every((answer) => answer.text.trim().isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Add a few words before saving your journey.')),
+      );
+      return;
+    }
+    setState(() => _saving = true);
+    final body = List.generate(widget.journey.steps.length, (index) {
+      final answer = _answers[index].text.trim();
+      return '${index + 1}. ${widget.journey.steps[index]}\n${answer.isEmpty ? '—' : answer}';
+    }).join('\n\n');
+    try {
+      await collection.add({
+        'title': widget.journey.title,
+        'body': body,
+        'prompt': 'Guided journey: ${widget.journey.title}',
+        'entryType': 'guided',
+        'guidedJourneyId': widget.journey.id,
+        'tags': [widget.journey.category, 'Guided Journey'],
+        'attachments': <String>[],
+        'favorite': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your guided reflection was saved privately.')),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save your guided reflection. Please try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final total = widget.journey.steps.length;
+    final isLast = _step == total - 1;
+    return Scaffold(
+      backgroundColor: _cream,
+      appBar: AppBar(
+        backgroundColor: _cream,
+        foregroundColor: _green,
+        centerTitle: true,
+        leading: IconButton(
+          tooltip: 'Back to guided journaling',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+          onPressed: () => Navigator.maybePop(context),
+        ),
+        title: Text(
+          'Step ${_step + 1} of $total',
+          style: GoogleFonts.playfairDisplay(
+            color: _green,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
+              children: [
+                Text(
+                  widget.journey.title,
+                  style: GoogleFonts.playfairDisplay(
+                    color: _green,
+                    fontSize: 25,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  widget.journey.subtitle,
+                  style: const TextStyle(color: Color(0xFF5F625D), height: 1.35),
+                ),
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: (_step + 1) / total,
+                    minHeight: 7,
+                    backgroundColor: _sage,
+                    color: _green,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(17),
+                  decoration: BoxDecoration(
+                    color: _paper,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _line),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'REFLECTION ${(_step + 1).toString().padLeft(2, '0')}',
+                        style: const TextStyle(
+                          color: _green,
+                          fontSize: 10,
+                          letterSpacing: .9,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 9),
+                      Text(
+                        widget.journey.steps[_step],
+                        style: GoogleFonts.playfairDisplay(
+                          color: _ink,
+                          fontSize: 21,
+                          height: 1.25,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _answers[_step],
+                        minLines: 7,
+                        maxLines: 13,
+                        maxLength: 5000,
+                        textCapitalization: TextCapitalization.sentences,
+                        decoration: InputDecoration(
+                          hintText: 'Write whatever feels true. You can take your time.',
+                          alignLabelWithHint: true,
+                          filled: true,
+                          fillColor: _cream,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: const BorderSide(color: _line),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: const BorderSide(color: _line),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Row(
+                  children: [
+                    if (_step > 0)
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _saving ? null : () => setState(() => _step--),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _green,
+                            side: const BorderSide(color: _line),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                          ),
+                          child: const Text('Previous'),
+                        ),
+                      )
+                    else
+                      const Spacer(),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _saving
+                            ? null
+                            : isLast
+                                ? _saveJourney
+                                : () => setState(() => _step++),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                        ),
+                        child: _saving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : Text(isLast ? 'Save Reflection Privately' : 'Continue'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.lock_rounded, color: _green, size: 13),
+                    SizedBox(width: 5),
+                    Flexible(
+                      child: Text(
+                        'Your reflection stays private in My Entries.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Color(0xFF5F625D), fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
