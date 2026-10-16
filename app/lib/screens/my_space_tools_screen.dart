@@ -1587,6 +1587,45 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
               ListView(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
                 children: [
+                  StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: widget.entries?.orderBy('createdAt', descending: true).snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return const SizedBox.shrink();
+                      final unfinished = snapshot.data!.docs
+                          .where((doc) => doc.data()['entryType'] == 'guided' && !_isCompleted(doc))
+                          .toList();
+                      if (unfinished.isEmpty) return const SizedBox.shrink();
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Saved in progress',
+                            style: GoogleFonts.playfairDisplay(
+                              color: _green,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          for (final doc in unfinished)
+                            _completedJourneyCard(doc, completed: false),
+                          const SizedBox(height: 8),
+                        ],
+                      );
+                    },
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Explore journeys',
+                      style: GoogleFonts.playfairDisplay(
+                        color: _green,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   for (final category in _guidedCategoryOrder)
                     _categorySection(
                       context,
@@ -1666,14 +1705,14 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
               ),
             ),
             for (final doc in docs)
-              _completedJourneyCard(doc),
+              _completedJourneyCard(doc, completed: true),
           ],
         );
       },
     );
   }
 
-  Widget _completedJourneyCard(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+  Widget _completedJourneyCard(QueryDocumentSnapshot<Map<String, dynamic>> doc, {required bool completed}) {
     final data = doc.data();
     final title = data['title'] as String? ?? 'Completed journey';
     final body = data['body'] as String? ?? '';
@@ -1696,7 +1735,7 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
           style: GoogleFonts.playfairDisplay(color: _ink, fontWeight: FontWeight.w700),
         ),
         subtitle: Text(
-          date == null ? 'Completed' : 'Completed · ${date.month}/${date.day}/${date.year}',
+          date == null\n              ? (completed ? 'Completed' : 'In progress')\n              : '${completed ? 'Completed' : 'In progress'} · ${date.month}/${date.day}/${date.year}',
           style: const TextStyle(color: _green, fontSize: 12),
         ),
         iconColor: _green,
