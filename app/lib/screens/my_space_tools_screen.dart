@@ -1445,7 +1445,7 @@ const _guidedJourneys = <_GuidedJourney>[
       'Write a fairer, more balanced sentence you can practice instead.',
     ],
   ),
-]
+];
 
 class _GuidedJourneyLibrary extends StatelessWidget {
   const _GuidedJourneyLibrary({
