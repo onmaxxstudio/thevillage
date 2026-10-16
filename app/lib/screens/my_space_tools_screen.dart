@@ -1447,6 +1447,52 @@ const _guidedJourneys = <_GuidedJourney>[
   ),
 ];
 
+const _guidedCategoryOrder = <String>[
+  'Healing & Letting Go',
+  'Self-Discovery & Identity',
+  'Emotional Wellness',
+  'Love & Relationships',
+  'Life Transitions & Purpose',
+  'Confidence & Personal Growth',
+];
+
+String _guidedCategoryFor(_GuidedJourney journey) => switch (journey.category) {
+  'Healing' => 'Healing & Letting Go',
+  'Self-Discovery' => 'Self-Discovery & Identity',
+  'Stress & Calm' => 'Emotional Wellness',
+  'Relationships' => 'Love & Relationships',
+  'Confidence' => 'Confidence & Personal Growth',
+  'Growth & Purpose' => 'Life Transitions & Purpose',
+  _ => journey.category,
+};
+
+const _guidedCategoryDetails = <String, (String, IconData)>{
+  'Healing & Letting Go': (
+    'Make space for what hurt, what you are carrying, and what you may be ready to release.',
+    Icons.spa_outlined,
+  ),
+  'Self-Discovery & Identity': (
+    'Reconnect with your preferences, values, joy, and the person you are becoming.',
+    Icons.self_improvement_rounded,
+  ),
+  'Emotional Wellness': (
+    'Understand what you are feeling and find steadier ways through demanding seasons.',
+    Icons.waves_rounded,
+  ),
+  'Love & Relationships': (
+    'Explore communication, connection, changing relationships, and the care you need.',
+    Icons.favorite_border_rounded,
+  ),
+  'Life Transitions & Purpose': (
+    'Reflect on new chapters, work changes, purpose, and the direction you want to take.',
+    Icons.explore_outlined,
+  ),
+  'Confidence & Personal Growth': (
+    'Practice self-trust, recognize your progress, and grow a kinder inner voice.',
+    Icons.verified_user_outlined,
+  ),
+};
+
 class _GuidedJourneyLibrary extends StatelessWidget {
   const _GuidedJourneyLibrary({
     required this.entries,
@@ -1457,109 +1503,191 @@ class _GuidedJourneyLibrary extends StatelessWidget {
   final List<_GuidedJourney> journeys;
 
   @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.fromLTRB(16, 8, 16, 26),
-    children: [
-      Text(
-        'A little structure, plenty of room to be honest.',
-        style: GoogleFonts.playfairDisplay(
-          color: _green,
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
+  Widget build(BuildContext context) {
+    final grouped = <String, List<_GuidedJourney>>{
+      for (final category in _guidedCategoryOrder) category: <_GuidedJourney>[],
+    };
+    for (final journey in journeys) {
+      grouped.putIfAbsent(_guidedCategoryFor(journey), () => <_GuidedJourney>[]);
+      grouped[_guidedCategoryFor(journey)]!.add(journey);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 26),
+      children: [
+        Text(
+          'Your Journey Starts Within',
+          style: GoogleFonts.playfairDisplay(
+            color: _green,
+            fontSize: 27,
+            fontWeight: FontWeight.w700,
+          ),
         ),
+        const SizedBox(height: 5),
+        const Text(
+          'A little guidance. A deeper understanding of yourself.',
+          style: TextStyle(color: Color(0xFF5F625D), height: 1.4),
+        ),
+        const SizedBox(height: 7),
+        const Text(
+          'Choose a topic that fits this season of your life. Each journey has four reflections, and you can move at your own pace.',
+          style: TextStyle(color: Color(0xFF5F625D), height: 1.4),
+        ),
+        const SizedBox(height: 18),
+        for (var index = 0; index < _guidedCategoryOrder.length; index++)
+          _categorySection(
+            context,
+            _guidedCategoryOrder[index],
+            grouped[_guidedCategoryOrder[index]] ?? const <_GuidedJourney>[],
+            initiallyExpanded: index == 0,
+          ),
+        const SizedBox(height: 10),
+        const Text(
+          'Your reflections are private. Take only the questions that feel useful today.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Color(0xFF74766F), fontSize: 11, height: 1.4),
+        ),
+      ],
+    );
+  }
+
+  Widget _categorySection(
+    BuildContext context,
+    String category,
+    List<_GuidedJourney> journeys, {
+    required bool initiallyExpanded,
+  }) {
+    final details = _guidedCategoryDetails[category];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _line),
       ),
-      const SizedBox(height: 5),
-      const Text(
-        'Choose a guided path. Move through one reflection at a time, write in your own words, and save the whole journey privately when you finish.',
-        style: TextStyle(color: Color(0xFF5F625D), height: 1.4),
-      ),
-      const SizedBox(height: 16),
-      for (final journey in journeys)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Material(
-            color: _paper,
-            borderRadius: BorderRadius.circular(18),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => _GuidedJourneyScreen(
-                    journey: journey,
-                    entries: entries,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          leading: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: _sage,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(details?.$2 ?? Icons.auto_awesome_outlined, color: _green),
+          ),
+          title: Text(
+            category,
+            style: GoogleFonts.playfairDisplay(
+              color: _green,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          subtitle: Text(
+            '${journeys.length} ${journeys.length == 1 ? 'journey' : 'journeys'}',
+            style: const TextStyle(color: Color(0xFF656961), fontSize: 12),
+          ),
+          iconColor: _green,
+          collapsedIconColor: _green,
+          children: [
+            if (details != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    details.$1,
+                    style: const TextStyle(
+                      color: Color(0xFF5F625D),
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ),
-              child: Container(
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: _line),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: const BoxDecoration(
-                        color: _sage,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(journey.icon, color: _green, size: 24),
-                    ),
-                    const SizedBox(width: 13),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            journey.category.toUpperCase(),
-                            style: const TextStyle(
-                              color: _green,
-                              fontSize: 10,
-                              letterSpacing: .7,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            journey.title,
-                            style: GoogleFonts.playfairDisplay(
-                              color: _ink,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            journey.subtitle,
-                            style: const TextStyle(
-                              color: Color(0xFF656961),
-                              fontSize: 12,
-                              height: 1.3,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            '${journey.steps.length} reflection steps',
-                            style: const TextStyle(
-                              color: _green,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 7),
-                    const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: _green),
-                  ],
-                ),
+            for (final journey in journeys)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _journeyCard(context, journey),
               ),
-            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _journeyCard(BuildContext context, _GuidedJourney journey) => Material(
+    color: const Color(0xFFFFFCF7),
+    borderRadius: BorderRadius.circular(15),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(15),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => _GuidedJourneyScreen(
+            journey: journey,
+            entries: entries,
           ),
         ),
-    ],
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: _line),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: const BoxDecoration(color: _sage, shape: BoxShape.circle),
+              child: Icon(journey.icon, color: _green, size: 21),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    journey.title,
+                    style: GoogleFonts.playfairDisplay(
+                      color: _ink,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    journey.subtitle,
+                    style: const TextStyle(
+                      color: Color(0xFF656961),
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '${journey.steps.length} reflections',
+                    style: const TextStyle(
+                      color: _green,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 7),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 15, color: _green),
+          ],
+        ),
+      ),
+    ),
   );
 }
 
