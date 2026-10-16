@@ -641,15 +641,13 @@ class _MyEntriesScreenState extends State<MyEntriesScreen> {
     final navigator = Navigator.of(context, rootNavigator: true);
     await navigator.push(MaterialPageRoute<void>(
       builder: (routeContext) {
-        // Safari can carry a stale keyboard inset from the editor into this
-        // route, leaving the saved entry page clipped or apparently blank.
+        // Open the saved content in the editor, which remains visible and
+        // usable in iOS Safari while preserving the entry's saved fields.
         final mediaQuery = MediaQuery.of(routeContext);
         return MediaQuery(
           data: mediaQuery.copyWith(viewInsets: EdgeInsets.zero),
-          child: SavedJournalEntryScreen(
+          child: WriteFreelyEditorScreen(
             journal: widget.journal,
-            entries: entries,
-            index: index,
             entry: entry,
           ),
         );
