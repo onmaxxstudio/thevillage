@@ -290,6 +290,16 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       editorEntryType = entryType ?? entry?.data()['entryType'] as String?;
       text.text = entry?.data()['body'] as String? ?? '';
     });
+
+    if (editorEntryType == 'gratitude') {
+      Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => _gratitudeEditorPage(),
+      )).whenComplete(() {
+        if (mounted && writing) setState(() => writing = false);
+      });
+      return;
+    }
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -310,6 +320,102 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     ).whenComplete(() {
       if (mounted && writing) setState(() => writing = false);
     });
+  }
+
+  Widget _gratitudeEditorPage() {
+    return Scaffold(
+      backgroundColor: cream,
+      appBar: AppBar(
+        backgroundColor: cream,
+        foregroundColor: green,
+        centerTitle: true,
+        title: Text(
+          'Gratitude',
+          style: GoogleFonts.playfairDisplay(
+            color: green,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          tooltip: 'Back to gratitude',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    prompt,
+                    style: GoogleFonts.playfairDisplay(
+                      color: green,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: text,
+                      autofocus: false,
+                      expands: true,
+                      minLines: null,
+                      maxLines: null,
+                      maxLength: 10000,
+                      textAlignVertical: TextAlignVertical.top,
+                      decoration: InputDecoration(
+                        hintText: 'Start writing here…',
+                        alignLabelWithHint: true,
+                        filled: true,
+                        fillColor: const Color(0xFFFFFDF8),
+                        contentPadding: const EdgeInsets.all(18),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(color: line),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(color: line),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(color: green, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton.icon(
+                      onPressed: saving ? null : save,
+                      icon: const Icon(Icons.lock_outline_rounded, size: 18),
+                      label: Text(saving ? 'Saving…' : 'Save privately'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: green,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void showPromptPicker({String? category}) {
