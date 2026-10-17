@@ -30,6 +30,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   bool saving = false;
   bool writing = false;
   String? editorEntryType;
+  bool? editorJournalPromptCompleted;
   String searchText = '';
   String selectedFilter = 'All';
 
@@ -158,6 +159,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         'entryType': editorEntryType ?? entryType,
         'updatedAt': FieldValue.serverTimestamp(),
       };
+      if (editorEntryType == 'journal_prompt') {
+        data['journalPromptCompleted'] = editorJournalPromptCompleted ?? false;
+      }
       if (editingId == null) {
         data['createdAt'] = FieldValue.serverTimestamp();
         data['favorite'] = false;
@@ -171,6 +175,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         prompt = '';
         writing = false;
         editorEntryType = null;
+        editorJournalPromptCompleted = null;
         text.clear();
       });
       Navigator.of(context).pop();
@@ -288,6 +293,12 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       editingId = entry?.id;
       writing = true;
       editorEntryType = entryType ?? entry?.data()['entryType'] as String?;
+      final entryData = entry?.data();
+      editorJournalPromptCompleted = entryData == null
+          ? false
+          : entryData['journalPromptCompleted'] as bool? ??
+                (entryData['entryType'] == 'guided' &&
+                    entryData['guidedJourneyId'] == null);
       text.text = entry?.data()['body'] as String? ?? '';
     });
 
@@ -497,7 +508,12 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
 
   String entryKind(Map<String, dynamic> data) {
     final kind = data['entryType'] as String?;
-    if (kind != null) return kind;
+    if (kind != null) {
+      if (kind == 'guided' && data['guidedJourneyId'] == null) {
+        return 'journal_prompt';
+      }
+      return kind;
+    }
     final value = (data['prompt'] as String? ?? '').toLowerCase();
     if (value.contains('letter')) return 'letter';
     return value.isEmpty ? 'journal' : 'guided';
@@ -817,6 +833,14 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         onWritePrompt: (value, type) {
           if (!mounted) return;
           startWriting(value, entryType: type);
+        },
+        onOpenEntry: (entry, {entryType}) {
+          if (!mounted) return;
+          startWriting(
+            entry.data()['prompt'] as String? ?? '',
+            entry: entry,
+            entryType: entryType,
+          );
         },
       ),
     ));
