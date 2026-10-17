@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 30071)
-Total output lines: 3442
-
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1720,7 +1717,12 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
                 ),
                 child: const Column(
                   children: [
-                    Icon(Icons.auto_awesome_outli…71 tokens truncated…FontWeight.w600),
+                    Icon(Icons.auto_awesome_outlined, color: _green, size: 30),
+                    SizedBox(height: 9),
+                    Text(
+                      'Your completed journeys will be kept here.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: _ink, fontWeight: FontWeight.w600),
                     ),
                     SizedBox(height: 5),
                     Text(
@@ -2262,6 +2264,7 @@ class _PromptLibrary extends StatefulWidget {
     required this.intro,
     this.onOpenEntry,
   });
+
   final List<String> categories;
   final CollectionReference<Map<String, dynamic>>? savedPrompts;
   final CollectionReference<Map<String, dynamic>>? entries;
@@ -2272,6 +2275,7 @@ class _PromptLibrary extends StatefulWidget {
     QueryDocumentSnapshot<Map<String, dynamic>> entry, {
     String? entryType,
   })? onOpenEntry;
+
   @override
   State<_PromptLibrary> createState() => _PromptLibraryState();
 }
@@ -2394,110 +2398,116 @@ class _PromptLibraryState extends State<_PromptLibrary>
     List<(String, String)> filtered,
     Set<String> saved,
     Set<String> answered,
-  ) => ListView(
-    padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-    children: [
-      TextField(
-        onChanged: (value) =>
-            setState(() => _query = value.trim().toLowerCase()),
-        decoration: InputDecoration(
-          prefixIcon: const Icon(Icons.search_rounded, color: _green),
-          hintText: 'Search thoughtful questions…',
-          filled: true,
-          fillColor: _paper,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: _line),
-          ),
-        ),
-      ),
-      const SizedBox(height: 10),
-      Container(
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 7),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF7F2E8),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _line),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: ['All', ...widget.categories]
-                    .map(
-                      (name) => Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: ChoiceChip(
-                          label: Text(name),
-                          selected: _category == name,
-                          onSelected: (_) => setState(() => _category = name),
-                          selectedColor: _green,
-                          labelStyle: TextStyle(
-                            color: _category == name ? Colors.white : _ink,
-                            fontSize: 12,
-                          ),
-                          backgroundColor: const Color(0xFFF3E9DA),
-                          side: BorderSide.none,
-                        ),
-                      ),
-                    )
-                    .toList(),
+  ) =>
+      ListView(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+        children: [
+          TextField(
+            onChanged: (value) =>
+                setState(() => _query = value.trim().toLowerCase()),
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search_rounded, color: _green),
+              hintText: 'Search thoughtful questions…',
+              filled: true,
+              fillColor: _paper,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: _line),
               ),
             ),
-            const Divider(height: 8, color: _line),
-            Wrap(
-              spacing: 7,
-              runSpacing: 0,
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 7),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF7F2E8),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _line),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FilterChip(
-                  label: const Text('Saved'),
-                  selected: _favoritesOnly,
-                  onSelected: (value) =>
-                      setState(() => _favoritesOnly = value),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: ['All', ...widget.categories]
+                        .map(
+                          (name) => Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: ChoiceChip(
+                              label: Text(name),
+                              selected: _category == name,
+                              onSelected: (_) =>
+                                  setState(() => _category = name),
+                              selectedColor: _green,
+                              labelStyle: TextStyle(
+                                color: _category == name
+                                    ? Colors.white
+                                    : _ink,
+                                fontSize: 12,
+                              ),
+                              backgroundColor: const Color(0xFFF3E9DA),
+                              side: BorderSide.none,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
                 ),
-                FilterChip(
-                  label: const Text('Not answered'),
-                  selected: _unansweredOnly,
-                  onSelected: (value) =>
-                      setState(() => _unansweredOnly = value),
+                const Divider(height: 8, color: _line),
+                Wrap(
+                  spacing: 7,
+                  runSpacing: 0,
+                  children: [
+                    FilterChip(
+                      label: const Text('Saved'),
+                      selected: _favoritesOnly,
+                      onSelected: (value) =>
+                          setState(() => _favoritesOnly = value),
+                    ),
+                    FilterChip(
+                      label: const Text('Not answered'),
+                      selected: _unansweredOnly,
+                      onSelected: (value) =>
+                          setState(() => _unansweredOnly = value),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 6),
-      if (filtered.isEmpty)
-        _softCard(
-          child: const Padding(
-            padding: EdgeInsets.all(18),
-            child: Text(
-              'No prompts match these filters yet. Adjust your search or choose another category.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF74766F)),
-            ),
           ),
-        )
-      else
-        for (final item in filtered)
-          _promptTile(
-            item.$1,
-            item.$2,
-            saved.contains(item.$2),
-            answered.contains(item.$2),
-            _savingPrompts.contains(item.$2),
-            () => _savePrompt(item.$1, item.$2, saved.contains(item.$2)),
-          ),
-    ],
-  );
+          const SizedBox(height: 6),
+          if (filtered.isEmpty)
+            _softCard(
+              child: const Padding(
+                padding: EdgeInsets.all(18),
+                child: Text(
+                  'No prompts match these filters yet. Adjust your search or choose another category.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Color(0xFF74766F)),
+                ),
+              ),
+            )
+          else
+            for (final item in filtered)
+              _promptTile(
+                item.$1,
+                item.$2,
+                saved.contains(item.$2),
+                answered.contains(item.$2),
+                _savingPrompts.contains(item.$2),
+                () => _savePrompt(item.$1, item.$2, saved.contains(item.$2)),
+              ),
+        ],
+      );
 
   Widget _promptEntriesTab(
     List<QueryDocumentSnapshot<Map<String, dynamic>>> entries, {
     required bool completed,
   }) {
-    final docs = entries.where((doc) => _isCompleted(doc) == completed).toList();
+    final docs = entries
+        .where((doc) => _isCompleted(doc) == completed)
+        .toList();
     final emptyText = completed
         ? 'Prompts you mark complete will be kept here. You can reopen any reflection whenever you like.'
         : 'Reflections you save will appear here until you mark them complete.';
@@ -2511,7 +2521,9 @@ class _PromptLibraryState extends State<_PromptLibrary>
               child: Column(
                 children: [
                   Icon(
-                    completed ? Icons.check_circle_outline : Icons.edit_note_rounded,
+                    completed
+                        ? Icons.check_circle_outline
+                        : Icons.edit_note_rounded,
                     color: _green,
                     size: 30,
                   ),
@@ -2521,7 +2533,10 @@ class _PromptLibraryState extends State<_PromptLibrary>
                         ? 'Completed prompts will be kept here.'
                         : 'Your prompt reflections will gather here.',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: _ink, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: _ink,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 5),
                   Text(
@@ -2543,7 +2558,8 @@ class _PromptLibraryState extends State<_PromptLibrary>
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
-        for (final doc in docs) _promptReflectionCard(doc, completed: completed),
+        for (final doc in docs)
+          _promptReflectionCard(doc, completed: completed),
       ],
     );
   }
@@ -2615,7 +2631,10 @@ class _PromptLibraryState extends State<_PromptLibrary>
             IconButton(
               tooltip: 'Mark prompt completed',
               onPressed: () => _markCompleted(doc),
-              icon: const Icon(Icons.check_circle_outline_rounded, color: _green),
+              icon: const Icon(
+                Icons.check_circle_outline_rounded,
+                color: _green,
+              ),
             ),
         ],
       ),
@@ -2637,7 +2656,9 @@ class _PromptLibraryState extends State<_PromptLibrary>
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not update this prompt. Please try again.')),
+          const SnackBar(
+            content: Text('Could not update this prompt. Please try again.'),
+          ),
         );
       }
     }
@@ -2660,51 +2681,57 @@ class _PromptLibraryState extends State<_PromptLibrary>
     bool answered,
     bool saving,
     VoidCallback onToggle,
-  ) => _softCard(
-    margin: const EdgeInsets.only(bottom: 7),
-    child: Row(
-      children: [
-        Expanded(
-          child: InkWell(
-            onTap: () => widget.onWrite(prompt),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  prompt,
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 16,
-                    height: 1.15,
-                    fontWeight: FontWeight.w700,
-                    color: _ink,
-                  ),
+  ) =>
+      _softCard(
+        margin: const EdgeInsets.only(bottom: 7),
+        child: Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: () => widget.onWrite(prompt),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      prompt,
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 16,
+                        height: 1.15,
+                        fontWeight: FontWeight.w700,
+                        color: _ink,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '$category${answered ? ' · Answered' : ''}',
+                      style: const TextStyle(fontSize: 11, color: _green),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  '$category${answered ? ' · Answered' : ''}',
-                  style: const TextStyle(fontSize: 11, color: _green),
-                ),
-              ],
+              ),
             ),
-          ),
+            IconButton(
+              tooltip: saved ? 'Remove saved prompt' : 'Save prompt',
+              onPressed: saving ? null : onToggle,
+              icon: saving
+                  ? const SizedBox(
+                      width: 19,
+                      height: 19,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: _green,
+                      ),
+                    )
+                  : Icon(
+                      saved
+                          ? Icons.bookmark_rounded
+                          : Icons.bookmark_border_rounded,
+                      color: saved ? _green : const Color(0xFF9C7452),
+                    ),
+            ),
+          ],
         ),
-        IconButton(
-          tooltip: saved ? 'Remove saved prompt' : 'Save prompt',
-          onPressed: saving ? null : onToggle,
-          icon: saving
-              ? const SizedBox(
-                  width: 19,
-                  height: 19,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: _green),
-                )
-              : Icon(
-                  saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                  color: saved ? _green : const Color(0xFF9C7452),
-                ),
-        ),
-      ],
-    ),
-  );
+      );
 }
 
 class _MoodComposer extends StatefulWidget {
