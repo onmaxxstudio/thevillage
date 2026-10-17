@@ -2310,8 +2310,11 @@ class _PromptLibraryState extends State<_PromptLibrary>
 
   bool _isCompleted(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
-    final completed = data['journalPromptCompleted'];
-    if (completed is bool) return completed;
+    if (data['journalPromptCompleted'] == true) return true;
+    // Any saved writing is a completed one-off prompt. This also surfaces
+    // older responses that were saved before completion was set automatically.
+    final body = data['body'] as String? ?? '';
+    if (body.trim().isNotEmpty) return true;
     // Older prompt responses were saved as "guided" without a journey ID.
     return data['entryType'] == 'guided' && data['guidedJourneyId'] == null;
   }
