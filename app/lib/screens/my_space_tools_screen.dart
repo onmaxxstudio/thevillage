@@ -1513,7 +1513,7 @@ class _GuidedJourneyLibrary extends StatefulWidget {
 
 class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabs = TabController(length: 2, vsync: this);
+  late final TabController _tabs = TabController(length: 3, vsync: this);
 
   @override
   void dispose() {
@@ -1580,7 +1580,9 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
           labelColor: _green,
           unselectedLabelColor: const Color(0xFF74766F),
           indicatorColor: _green,
+          labelPadding: EdgeInsets.zero,
           tabs: const [
+            Tab(text: 'Explore'),
             Tab(text: 'In Progress'),
             Tab(text: 'Completed'),
           ],
@@ -1592,45 +1594,6 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
               ListView(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
                 children: [
-                  StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                    stream: widget.entries?.orderBy('createdAt', descending: true).snapshots(),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) return const SizedBox.shrink();
-                      final unfinished = snapshot.data!.docs
-                          .where((doc) => doc.data()['entryType'] == 'guided' && !_isCompleted(doc))
-                          .toList();
-                      if (unfinished.isEmpty) return const SizedBox.shrink();
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Saved in progress',
-                            style: GoogleFonts.playfairDisplay(
-                              color: _green,
-                              fontSize: 19,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 7),
-                          for (final doc in unfinished)
-                            _completedJourneyCard(doc, completed: false),
-                          const SizedBox(height: 8),
-                        ],
-                      );
-                    },
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Explore journeys',
-                      style: GoogleFonts.playfairDisplay(
-                        color: _green,
-                        fontSize: 19,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   for (final category in _guidedCategoryOrder)
                     _categorySection(
                       context,
@@ -1646,11 +1609,69 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
                   ),
                 ],
               ),
+              _inProgressTab(),
               _completedTab(),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _inProgressTab() {
+    final collection = widget.entries;
+    if (collection == null) return const Center(child: Text('Sign in to view your in-progress journeys.'));
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: collection.orderBy('createdAt', descending: true).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(child: Text('In-progress journeys could not be loaded. Check your connection and try again.'));
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator(color: _green));
+        }
+        final docs = snapshot.data!.docs
+            .where((doc) => doc.data()['entryType'] == 'guided' && !_isCompleted(doc))
+            .toList();
+        if (docs.isEmpty) {
+          return ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: _paper,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: _line),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(Icons.edit_note_rounded, color: _green, size: 30),
+                    SizedBox(height: 9),
+                    Text(
+                      'Journeys you start will appear here.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: _ink, fontWeight: FontWeight.w600),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      'Your saved reflections will be ready whenever you want to continue.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xFF74766F), fontSize: 12, height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+          children: [
+            for (final doc in docs) _completedJourneyCard(doc, completed: false),
+          ],
+        );
+      },
     );
   }
 
@@ -1717,8 +1738,18 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
     );
   }
 
+  _GuidedJourney? _journeyForEntry(Map<String, dynamic> data) {
+    final id = data['guidedJourneyId'] as String?;
+    if (id == null) return null;
+    for (final journey in widget.journeys) {
+      if (journey.id == id) return journey;
+    }
+    return null;
+  }
+
   Widget _completedJourneyCard(QueryDocumentSnapshot<Map<String, dynamic>> doc, {required bool completed}) {
     final data = doc.data();
+    final journey = _journeyForEntry(data);
     final title = data['title'] as String? ?? 'Completed journey';
     final body = data['body'] as String? ?? '';
     final stamp = data['createdAt'];
@@ -1756,6 +1787,24 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
             alignment: Alignment.centerLeft,
             child: Text(body, style: const TextStyle(color: Color(0xFF5F625D), height: 1.5)),
           ),
+          if (journey != null) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => _GuidedJourneyScreen(
+                    journey: journey,
+                    entries: widget.entries,
+                    draft: doc,
+                  ),
+                )),
+                icon: Icon(completed ? Icons.replay_rounded : Icons.edit_note_rounded, size: 18),
+                label: Text(completed ? 'Reopen journey' : 'Continue journey'),
+                style: FilledButton.styleFrom(backgroundColor: _green, foregroundColor: Colors.white),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1904,10 +1953,12 @@ class _GuidedJourneyScreen extends StatefulWidget {
   const _GuidedJourneyScreen({
     required this.journey,
     required this.entries,
+    this.draft,
   });
 
   final _GuidedJourney journey;
   final CollectionReference<Map<String, dynamic>>? entries;
+  final QueryDocumentSnapshot<Map<String, dynamic>>? draft;
 
   @override
   State<_GuidedJourneyScreen> createState() => _GuidedJourneyScreenState();
@@ -1925,6 +1976,32 @@ class _GuidedJourneyScreenState extends State<_GuidedJourneyScreen> {
       widget.journey.steps.length,
       (_) => TextEditingController(),
     );
+    final saved = widget.draft?.data();
+    if (saved == null) return;
+    final storedAnswers = saved['guidedJourneyAnswers'];
+    if (storedAnswers is List) {
+      for (var index = 0; index < _answers.length && index < storedAnswers.length; index++) {
+        _answers[index].text = storedAnswers[index] as String? ?? '';
+      }
+      return;
+    }
+    final body = saved['body'] as String? ?? '';
+    var cursor = 0;
+    for (var index = 0; index < widget.journey.steps.length; index++) {
+      final marker = '${index + 1}. ${widget.journey.steps[index]}\n';
+      final start = body.indexOf(marker, cursor);
+      if (start < 0) continue;
+      final answerStart = start + marker.length;
+      var end = body.length;
+      if (index + 1 < widget.journey.steps.length) {
+        final nextMarker = '${index + 2}. ${widget.journey.steps[index + 1]}\n';
+        final nextStart = body.indexOf(nextMarker, answerStart);
+        if (nextStart >= 0) end = nextStart;
+      }
+      final answer = body.substring(answerStart, end).replaceFirst(RegExp(r'\n+$'), '');
+      _answers[index].text = answer == '—' ? '' : answer;
+      cursor = end;
+    }
   }
 
   @override
@@ -1951,19 +2028,26 @@ class _GuidedJourneyScreenState extends State<_GuidedJourneyScreen> {
       return '${index + 1}. ${widget.journey.steps[index]}\n${answer.isEmpty ? '—' : answer}';
     }).join('\n\n');
     try {
-      await collection.add({
+      final data = <String, dynamic>{
         'title': widget.journey.title,
         'body': body,
+        'guidedJourneyAnswers': _answers.map((answer) => answer.text.trim()).toList(),
         'prompt': 'Guided journey: ${widget.journey.title}',
         'entryType': 'guided',
         'guidedJourneyId': widget.journey.id,
         'guidedJourneyCompleted': isComplete,
         'tags': [widget.journey.category, 'Guided Journey'],
-        'attachments': <String>[],
-        'favorite': false,
-        'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+      final draft = widget.draft;
+      if (draft == null) {
+        data['attachments'] = <String>[];
+        data['favorite'] = false;
+        data['createdAt'] = FieldValue.serverTimestamp();
+        await collection.add(data);
+      } else {
+        await collection.doc(draft.id).update(data);
+      }
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
