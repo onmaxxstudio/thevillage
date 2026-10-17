@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 30071)
+Total output lines: 3442
+
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -95,10 +98,15 @@ class MySpaceToolsScreen extends StatefulWidget {
   const MySpaceToolsScreen({
     required this.mode,
     required this.onWritePrompt,
+    this.onOpenEntry,
     super.key,
   });
   final String mode;
   final void Function(String prompt, String entryType) onWritePrompt;
+  final void Function(
+    QueryDocumentSnapshot<Map<String, dynamic>> entry, {
+    String? entryType,
+  })? onOpenEntry;
 
   @override
   State<MySpaceToolsScreen> createState() => _MySpaceToolsScreenState();
@@ -201,8 +209,11 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
 
   void _open(String mode) => Navigator.of(context).push(
     MaterialPageRoute<void>(
-      builder: (_) =>
-          MySpaceToolsScreen(mode: mode, onWritePrompt: widget.onWritePrompt),
+      builder: (_) => MySpaceToolsScreen(
+        mode: mode,
+        onWritePrompt: widget.onWritePrompt,
+        onOpenEntry: widget.onOpenEntry,
+      ),
     ),
   );
 
@@ -233,8 +244,9 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
       entries: _entries,
       onWrite: (prompt) {
         Navigator.pop(context);
-        widget.onWritePrompt(prompt, 'guided');
+        widget.onWritePrompt(prompt, guided ? 'guided' : 'journal_prompt');
       },
+      onOpenEntry: widget.onOpenEntry,
       onToggleFavorite: _togglePrompt,
       intro: guided
           ? 'Choose a gentle path and take the questions at your own pace.'
@@ -421,7 +433,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
                 children: [
                   Expanded(
                     child: InkWell(
-                      onTap: () => widget.onWritePrompt(prompt, 'guided'),
+                      onTap: () => widget.onWritePrompt(prompt, 'journal_prompt'),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1523,7 +1535,9 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
 
   bool _isCompleted(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
-    if (data['entryType'] != 'guided') return false;
+    if (data['entryType'] != 'guided' || data['guidedJourneyId'] is! String) {
+      return false;
+    }
     if (data['guidedJourneyCompleted'] == true) return true;
     final body = data['body'] as String? ?? '';
     return body.isNotEmpty && !RegExp(r'\n—(?:\n|$)').hasMatch(body);
@@ -1631,7 +1645,12 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
           return const Center(child: CircularProgressIndicator(color: _green));
         }
         final docs = snapshot.data!.docs
-            .where((doc) => doc.data()['entryType'] == 'guided' && !_isCompleted(doc))
+            .where(
+              (doc) =>
+                  doc.data()['entryType'] == 'guided' &&
+                  doc.data()['guidedJourneyId'] is String &&
+                  !_isCompleted(doc),
+            )
             .toList();
         if (docs.isEmpty) {
           return ListView(
@@ -1701,12 +1720,7 @@ class _GuidedJourneyLibraryState extends State<_GuidedJourneyLibrary>
                 ),
                 child: const Column(
                   children: [
-                    Icon(Icons.auto_awesome_outlined, color: _green, size: 30),
-                    SizedBox(height: 9),
-                    Text(
-                      'Your completed journeys will be kept here.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: _ink, fontWeight: FontWeight.w600),
+                    Icon(Icons.auto_awesome_outli…71 tokens truncated…FontWeight.w600),
                     ),
                     SizedBox(height: 5),
                     Text(
@@ -2246,6 +2260,7 @@ class _PromptLibrary extends StatefulWidget {
     required this.onWrite,
     required this.onToggleFavorite,
     required this.intro,
+    this.onOpenEntry,
   });
   final List<String> categories;
   final CollectionReference<Map<String, dynamic>>? savedPrompts;
@@ -2253,22 +2268,63 @@ class _PromptLibrary extends StatefulWidget {
   final ValueChanged<String> onWrite;
   final Future<void> Function(String, String, bool) onToggleFavorite;
   final String intro;
+  final void Function(
+    QueryDocumentSnapshot<Map<String, dynamic>> entry, {
+    String? entryType,
+  })? onOpenEntry;
   @override
   State<_PromptLibrary> createState() => _PromptLibraryState();
 }
 
-class _PromptLibraryState extends State<_PromptLibrary> {
+class _PromptLibraryState extends State<_PromptLibrary>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs = TabController(length: 3, vsync: this);
   String _category = 'All';
   String _query = '';
   bool _favoritesOnly = false;
   bool _unansweredOnly = false;
   final Set<String> _savingPrompts = <String>{};
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  String? _categoryFor(String prompt) {
+    for (final group in _promptGroups.entries) {
+      if (group.value.contains(prompt)) return group.key;
+    }
+    return null;
+  }
+
+  bool _isJournalPromptEntry(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data();
+    if (data['entryType'] == 'journal_prompt') return true;
+    return data['entryType'] == 'guided' &&
+        data['guidedJourneyId'] == null &&
+        _categoryFor(data['prompt'] as String? ?? '') != null;
+  }
+
+  bool _isCompleted(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final completed = data['journalPromptCompleted'];
+    if (completed is bool) return completed;
+    // Older prompt responses were saved as "guided" without a journey ID.
+    return data['entryType'] == 'guided' && data['guidedJourneyId'] == null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: widget.entries?.snapshots(),
       builder: (context, entriesSnapshot) {
-        final answered = (entriesSnapshot.data?.docs ?? [])
+        final promptEntries = (entriesSnapshot.data?.docs ?? [])
+            .where(_isJournalPromptEntry)
+            .toList();
+        final answered = promptEntries
             .map((doc) => doc.data()['prompt'] as String? ?? '')
             .where((item) => item.isNotEmpty)
             .toSet();
@@ -2289,116 +2345,302 @@ class _PromptLibraryState extends State<_PromptLibrary> {
                 filtered.add((category, prompt));
               }
             }
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 5, 16, 24),
+            return Column(
               children: [
-                Text(
-                  widget.intro,
-                  style: const TextStyle(color: Color(0xFF5F625D), height: 1.4),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  onChanged: (value) =>
-                      setState(() => _query = value.trim().toLowerCase()),
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.search_rounded, color: _green),
-                    hintText: 'Search thoughtful questions…',
-                    filled: true,
-                    fillColor: _paper,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: _line),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      widget.intro,
+                      style: const TextStyle(
+                        color: Color(0xFF5F625D),
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 7),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7F2E8),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: _line),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                TabBar(
+                  controller: _tabs,
+                  labelColor: _green,
+                  unselectedLabelColor: const Color(0xFF74766F),
+                  indicatorColor: _green,
+                  labelPadding: EdgeInsets.zero,
+                  tabs: const [
+                    Tab(text: 'Explore'),
+                    Tab(text: 'In Progress'),
+                    Tab(text: 'Completed'),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabs,
                     children: [
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: ['All', ...widget.categories]
-                              .map(
-                                (name) => Padding(
-                                  padding: const EdgeInsets.only(right: 6),
-                                  child: ChoiceChip(
-                                    label: Text(name),
-                                    selected: _category == name,
-                                    onSelected: (_) =>
-                                        setState(() => _category = name),
-                                    selectedColor: _green,
-                                    labelStyle: TextStyle(
-                                      color: _category == name
-                                          ? Colors.white
-                                          : _ink,
-                                      fontSize: 12,
-                                    ),
-                                    backgroundColor: const Color(0xFFF3E9DA),
-                                    side: BorderSide.none,
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ),
-                      const Divider(height: 8, color: _line),
-                      Wrap(
-                        spacing: 7,
-                        runSpacing: 0,
-                        children: [
-                          FilterChip(
-                            label: const Text('Saved'),
-                            selected: _favoritesOnly,
-                            onSelected: (value) =>
-                                setState(() => _favoritesOnly = value),
-                          ),
-                          FilterChip(
-                            label: const Text('Not answered'),
-                            selected: _unansweredOnly,
-                            onSelected: (value) =>
-                                setState(() => _unansweredOnly = value),
-                          ),
-                        ],
-                      ),
+                      _exploreTab(filtered, saved, answered),
+                      _promptEntriesTab(promptEntries, completed: false),
+                      _promptEntriesTab(promptEntries, completed: true),
                     ],
                   ),
                 ),
-                const SizedBox(height: 6),
-                if (filtered.isEmpty)
-                  _softCard(
-                    child: const Padding(
-                      padding: EdgeInsets.all(18),
-                      child: Text(
-                        'No prompts match these filters yet. Adjust your search or choose another category.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Color(0xFF74766F)),
-                      ),
-                    ),
-                  )
-                else
-                  for (final item in filtered)
-                    _promptTile(
-                      item.$1,
-                      item.$2,
-                      saved.contains(item.$2),
-                      answered.contains(item.$2),
-                      _savingPrompts.contains(item.$2),
-                      () => _savePrompt(item.$1, item.$2, saved.contains(item.$2)),
-                    ),
               ],
             );
           },
         );
       },
     );
+  }
+
+  Widget _exploreTab(
+    List<(String, String)> filtered,
+    Set<String> saved,
+    Set<String> answered,
+  ) => ListView(
+    padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+    children: [
+      TextField(
+        onChanged: (value) =>
+            setState(() => _query = value.trim().toLowerCase()),
+        decoration: InputDecoration(
+          prefixIcon: const Icon(Icons.search_rounded, color: _green),
+          hintText: 'Search thoughtful questions…',
+          filled: true,
+          fillColor: _paper,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _line),
+          ),
+        ),
+      ),
+      const SizedBox(height: 10),
+      Container(
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 7),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F2E8),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _line),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: ['All', ...widget.categories]
+                    .map(
+                      (name) => Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: ChoiceChip(
+                          label: Text(name),
+                          selected: _category == name,
+                          onSelected: (_) => setState(() => _category = name),
+                          selectedColor: _green,
+                          labelStyle: TextStyle(
+                            color: _category == name ? Colors.white : _ink,
+                            fontSize: 12,
+                          ),
+                          backgroundColor: const Color(0xFFF3E9DA),
+                          side: BorderSide.none,
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+            const Divider(height: 8, color: _line),
+            Wrap(
+              spacing: 7,
+              runSpacing: 0,
+              children: [
+                FilterChip(
+                  label: const Text('Saved'),
+                  selected: _favoritesOnly,
+                  onSelected: (value) =>
+                      setState(() => _favoritesOnly = value),
+                ),
+                FilterChip(
+                  label: const Text('Not answered'),
+                  selected: _unansweredOnly,
+                  onSelected: (value) =>
+                      setState(() => _unansweredOnly = value),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 6),
+      if (filtered.isEmpty)
+        _softCard(
+          child: const Padding(
+            padding: EdgeInsets.all(18),
+            child: Text(
+              'No prompts match these filters yet. Adjust your search or choose another category.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Color(0xFF74766F)),
+            ),
+          ),
+        )
+      else
+        for (final item in filtered)
+          _promptTile(
+            item.$1,
+            item.$2,
+            saved.contains(item.$2),
+            answered.contains(item.$2),
+            _savingPrompts.contains(item.$2),
+            () => _savePrompt(item.$1, item.$2, saved.contains(item.$2)),
+          ),
+    ],
+  );
+
+  Widget _promptEntriesTab(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> entries, {
+    required bool completed,
+  }) {
+    final docs = entries.where((doc) => _isCompleted(doc) == completed).toList();
+    final emptyText = completed
+        ? 'Prompts you mark complete will be kept here. You can reopen any reflection whenever you like.'
+        : 'Reflections you save will appear here until you mark them complete.';
+    if (docs.isEmpty) {
+      return ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          _softCard(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Icon(
+                    completed ? Icons.check_circle_outline : Icons.edit_note_rounded,
+                    color: _green,
+                    size: 30,
+                  ),
+                  const SizedBox(height: 9),
+                  Text(
+                    completed
+                        ? 'Completed prompts will be kept here.'
+                        : 'Your prompt reflections will gather here.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: _ink, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    emptyText,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF74766F),
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        for (final doc in docs) _promptReflectionCard(doc, completed: completed),
+      ],
+    );
+  }
+
+  Widget _promptReflectionCard(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc, {
+    required bool completed,
+  }) {
+    final data = doc.data();
+    final prompt = data['prompt'] as String? ?? 'Journal prompt';
+    final category = data['journalPromptCategory'] as String? ??
+        _categoryFor(prompt) ??
+        'Journal Prompt';
+    final body = data['body'] as String? ?? '';
+    return _softCard(
+      margin: const EdgeInsets.only(bottom: 9),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                final openEntry = widget.onOpenEntry;
+                if (openEntry != null) {
+                  openEntry(doc, entryType: 'journal_prompt');
+                } else {
+                  widget.onWrite(prompt);
+                }
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    prompt,
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 16,
+                      height: 1.15,
+                      fontWeight: FontWeight.w700,
+                      color: _ink,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    category,
+                    style: const TextStyle(fontSize: 11, color: _green),
+                  ),
+                  if (body.isNotEmpty) ...[
+                    const SizedBox(height: 7),
+                    Text(
+                      body,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF5F625D),
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          if (completed)
+            const Padding(
+              padding: EdgeInsets.only(left: 8),
+              child: Icon(Icons.check_circle_rounded, color: _green),
+            )
+          else
+            IconButton(
+              tooltip: 'Mark prompt completed',
+              onPressed: () => _markCompleted(doc),
+              icon: const Icon(Icons.check_circle_outline_rounded, color: _green),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _markCompleted(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) async {
+    try {
+      final prompt = doc.data()['prompt'] as String? ?? '';
+      final category = _categoryFor(prompt);
+      await doc.reference.update({
+        'entryType': 'journal_prompt',
+        'journalPromptCompleted': true,
+        if (category != null) 'journalPromptCategory': category,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not update this prompt. Please try again.')),
+        );
+      }
+    }
   }
 
   Future<void> _savePrompt(String prompt, String category, bool saved) async {
