@@ -255,8 +255,13 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
           'savedAt': FieldValue.serverTimestamp(),
         });
       }
+      if (mounted) {
+        _message(saved ? 'Prompt removed from Saved Favorites.' : 'Prompt saved to Saved Favorites.');
+      }
+    } on FirebaseException catch (error) {
+      if (mounted) _message('Could not save prompt (${error.code}). Please try again.');
     } catch (_) {
-      if (mounted) _message('Could not update saved prompts.');
+      if (mounted) _message('Could not save prompt. Please try again.');
     }
   }
 
@@ -2173,6 +2178,7 @@ class _PromptLibraryState extends State<_PromptLibrary> {
   String _query = '';
   bool _favoritesOnly = false;
   bool _unansweredOnly = false;
+  final Set<String> _savingPrompts = <String>{};
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -2283,6 +2289,8 @@ class _PromptLibraryState extends State<_PromptLibrary> {
                       item.$2,
                       saved.contains(item.$2),
                       answered.contains(item.$2),
+                      _savingPrompts.contains(item.$2),
+                      () => _savePrompt(item.$1, item.$2, saved.contains(item.$2)),
                     ),
               ],
             );
@@ -2292,11 +2300,23 @@ class _PromptLibraryState extends State<_PromptLibrary> {
     );
   }
 
+  Future<void> _savePrompt(String prompt, String category, bool saved) async {
+    if (_savingPrompts.contains(prompt)) return;
+    setState(() => _savingPrompts.add(prompt));
+    try {
+      await widget.onToggleFavorite(prompt, category, saved);
+    } finally {
+      if (mounted) setState(() => _savingPrompts.remove(prompt));
+    }
+  }
+
   Widget _promptTile(
     String category,
     String prompt,
     bool saved,
     bool answered,
+    bool saving,
+    VoidCallback onToggle,
   ) => _softCard(
     margin: const EdgeInsets.only(bottom: 7),
     child: Row(
@@ -2327,11 +2347,17 @@ class _PromptLibraryState extends State<_PromptLibrary> {
         ),
         IconButton(
           tooltip: saved ? 'Remove saved prompt' : 'Save prompt',
-          onPressed: () => widget.onToggleFavorite(prompt, category, saved),
-          icon: Icon(
-            saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-            color: saved ? _green : const Color(0xFF9C7452),
-          ),
+          onPressed: saving ? null : onToggle,
+          icon: saving
+              ? const SizedBox(
+                  width: 19,
+                  height: 19,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: _green),
+                )
+              : Icon(
+                  saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                  color: saved ? _green : const Color(0xFF9C7452),
+                ),
         ),
       ],
     ),
