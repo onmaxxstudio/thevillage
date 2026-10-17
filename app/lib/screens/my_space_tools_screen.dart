@@ -2454,7 +2454,7 @@ class _PromptLibraryState extends State<_PromptLibrary>
       'Get to Know You' => Icons.self_improvement_rounded,
       'Heal & Let Go' => Icons.spa_outlined,
       'Relationships' => Icons.favorite_border_rounded,
-      'Growth Mindset' => Icons.trending_up_rounded,
+      'Growth Mindset' => Icons.trending_up,
       'Faith & Purpose' => Icons.explore_outlined,
       _ => Icons.wb_sunny_outlined,
     };
