@@ -2284,8 +2284,6 @@ class _PromptLibraryState extends State<_PromptLibrary>
     with SingleTickerProviderStateMixin {
   late final TabController _tabs = TabController(length: 3, vsync: this);
   String _query = '';
-  bool _favoritesOnly = false;
-  bool _unansweredOnly = false;
   final Set<String> _savingPrompts = <String>{};
 
   @override
@@ -2342,8 +2340,6 @@ class _PromptLibraryState extends State<_PromptLibrary>
               for (final prompt
                   in _promptGroups[category] ?? const <String>[]) {
                 if (!prompt.toLowerCase().contains(_query)) continue;
-                if (_favoritesOnly && !saved.contains(prompt)) continue;
-                if (_unansweredOnly && answered.contains(prompt)) continue;
                 filtered.add((category, prompt));
               }
             }
@@ -2422,30 +2418,6 @@ class _PromptLibraryState extends State<_PromptLibrary>
           ),
         ),
         const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 7),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF7F2E8),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _line),
-          ),
-          child: Wrap(
-            spacing: 7,
-            runSpacing: 0,
-            children: [
-              FilterChip(
-                label: const Text('Saved'),
-                selected: _favoritesOnly,
-                onSelected: (value) => setState(() => _favoritesOnly = value),
-              ),
-              FilterChip(
-                label: const Text('Not answered'),
-                selected: _unansweredOnly,
-                onSelected: (value) => setState(() => _unansweredOnly = value),
-              ),
-            ],
-          ),
-        ),
         const SizedBox(height: 10),
         if (filtered.isEmpty)
           _softCard(
