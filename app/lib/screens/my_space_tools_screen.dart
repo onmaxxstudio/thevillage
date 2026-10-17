@@ -2531,7 +2531,7 @@ class _PromptLibraryState extends State<_PromptLibrary>
                 saved.contains(prompt),
                 answered.contains(prompt),
                 _savingPrompts.contains(prompt),
-                () => _savePrompt(category, prompt, saved.contains(prompt)),
+                () => _savePrompt(prompt, category, saved.contains(prompt)),
               ),
           ],
         ),
