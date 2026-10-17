@@ -2372,7 +2372,7 @@ class _PromptLibraryState extends State<_PromptLibrary>
                   labelPadding: EdgeInsets.zero,
                   tabs: const [
                     Tab(text: 'Explore'),
-                    Tab(text: 'In Progress'),
+                    Tab(text: 'Saved Favorites'),
                     Tab(text: 'Completed'),
                   ],
                 ),
@@ -2381,7 +2381,7 @@ class _PromptLibraryState extends State<_PromptLibrary>
                     controller: _tabs,
                     children: [
                       _exploreTab(filtered, saved, answered),
-                      _promptEntriesTab(promptEntries, completed: false),
+                      _savedFavoritesTab(savedSnapshot),
                       _promptEntriesTab(promptEntries, completed: true),
                     ],
                   ),
@@ -2500,6 +2500,101 @@ class _PromptLibraryState extends State<_PromptLibrary>
               ),
         ],
       );
+
+  Widget _savedFavoritesTab(
+    AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot,
+  ) {
+    if (snapshot.hasError) {
+      return const Center(child: Text('Saved favorites could not be loaded. Check your connection and try again.'));
+    }
+    if (!snapshot.hasData) {
+      return const Center(child: CircularProgressIndicator(color: _green));
+    }
+    final docs = snapshot.data!.docs;
+    if (docs.isEmpty) {
+      return ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          _softCard(
+            child: const Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Icon(Icons.bookmark_border_rounded, color: _green, size: 30),
+                  SizedBox(height: 9),
+                  Text(
+                    'Your saved prompt favorites will appear here.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: _ink, fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    'Tap a bookmark in Explore to keep a question close and return to it anytime.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Color(0xFF74766F), fontSize: 12, height: 1.4),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        for (final doc in docs)
+          Builder(
+            builder: (context) {
+              final data = doc.data();
+              final prompt = data['prompt'] as String? ?? '';
+              final category = data['category'] as String? ?? 'Saved prompt';
+              final saving = _savingPrompts.contains(prompt);
+              return _softCard(
+                margin: const EdgeInsets.only(bottom: 9),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: prompt.isEmpty ? null : () => widget.onWrite(prompt),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              prompt,
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 16,
+                                height: 1.15,
+                                fontWeight: FontWeight.w700,
+                                color: _ink,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(category, style: const TextStyle(fontSize: 11, color: _green)),
+                            const SizedBox(height: 5),
+                            const Text(
+                              'Tap to write a reflection',
+                              style: TextStyle(fontSize: 11, color: Color(0xFF74766F)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Remove from Saved Favorites',
+                      onPressed: saving ? null : () => _savePrompt(prompt, category, true),
+                      icon: saving
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: _green))
+                          : const Icon(Icons.bookmark_rounded, color: _green),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ],
+    );
+  }
 
   Widget _promptEntriesTab(
     List<QueryDocumentSnapshot<Map<String, dynamic>>> entries, {
