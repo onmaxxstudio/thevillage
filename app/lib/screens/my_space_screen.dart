@@ -160,7 +160,8 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       };
       if (editorEntryType == 'journal_prompt') {
-        data['journalPromptCompleted'] = editorJournalPromptCompleted ?? false;
+        // Saving a written answer completes this one-off prompt.
+        data['journalPromptCompleted'] = true;
       }
       if (editingId == null) {
         data['createdAt'] = FieldValue.serverTimestamp();
