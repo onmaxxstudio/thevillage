@@ -2283,7 +2283,6 @@ class _PromptLibrary extends StatefulWidget {
 class _PromptLibraryState extends State<_PromptLibrary>
     with SingleTickerProviderStateMixin {
   late final TabController _tabs = TabController(length: 3, vsync: this);
-  String _category = 'All';
   String _query = '';
   bool _favoritesOnly = false;
   bool _unansweredOnly = false;
@@ -2340,7 +2339,6 @@ class _PromptLibraryState extends State<_PromptLibrary>
                 .toSet();
             final filtered = <(String, String)>[];
             for (final category in widget.categories) {
-              if (_category != 'All' && _category != category) continue;
               for (final prompt
                   in _promptGroups[category] ?? const <String>[]) {
                 if (!prompt.toLowerCase().contains(_query)) continue;
@@ -2398,108 +2396,148 @@ class _PromptLibraryState extends State<_PromptLibrary>
     List<(String, String)> filtered,
     Set<String> saved,
     Set<String> answered,
-  ) =>
-      ListView(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-        children: [
-          TextField(
-            onChanged: (value) =>
-                setState(() => _query = value.trim().toLowerCase()),
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search_rounded, color: _green),
-              hintText: 'Search thoughtful questions…',
-              filled: true,
-              fillColor: _paper,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: _line),
-              ),
+  ) {
+    final grouped = <String, List<String>>{
+      for (final category in widget.categories) category: <String>[],
+    };
+    for (final item in filtered) {
+      grouped.putIfAbsent(item.$1, () => <String>[]).add(item.$2);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+      children: [
+        TextField(
+          onChanged: (value) =>
+              setState(() => _query = value.trim().toLowerCase()),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search_rounded, color: _green),
+            hintText: 'Search thoughtful questions…',
+            filled: true,
+            fillColor: _paper,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: _line),
             ),
           ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 7),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 7),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF7F2E8),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _line),
+          ),
+          child: Wrap(
+            spacing: 7,
+            runSpacing: 0,
+            children: [
+              FilterChip(
+                label: const Text('Saved'),
+                selected: _favoritesOnly,
+                onSelected: (value) => setState(() => _favoritesOnly = value),
+              ),
+              FilterChip(
+                label: const Text('Not answered'),
+                selected: _unansweredOnly,
+                onSelected: (value) => setState(() => _unansweredOnly = value),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (filtered.isEmpty)
+          _softCard(
+            child: const Padding(
+              padding: EdgeInsets.all(18),
+              child: Text(
+                'No prompts match these filters yet. Adjust your search or choose another filter.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Color(0xFF74766F)),
+              ),
+            ),
+          )
+        else
+          for (final category in widget.categories)
+            if ((grouped[category] ?? const <String>[]).isNotEmpty)
+              _promptCategorySection(
+                context,
+                category,
+                grouped[category]!,
+                saved,
+                answered,
+              ),
+      ],
+    );
+  }
+
+  Widget _promptCategorySection(
+    BuildContext context,
+    String category,
+    List<String> prompts,
+    Set<String> saved,
+    Set<String> answered,
+  ) {
+    final icon = switch (category) {
+      'Get to Know You' => Icons.self_improvement_rounded,
+      'Heal & Let Go' => Icons.spa_outlined,
+      'Relationships' => Icons.favorite_border_rounded,
+      'Growth Mindset' => Icons.trending_up_rounded,
+      'Faith & Purpose' => Icons.explore_outlined,
+      _ => Icons.wb_sunny_outlined,
+    };
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _line),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: false,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          leading: Container(
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFFF7F2E8),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: _line),
+              color: _sage,
+              borderRadius: BorderRadius.circular(13),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: ['All', ...widget.categories]
-                        .map(
-                          (name) => Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: ChoiceChip(
-                              label: Text(name),
-                              selected: _category == name,
-                              onSelected: (_) =>
-                                  setState(() => _category = name),
-                              selectedColor: _green,
-                              labelStyle: TextStyle(
-                                color: _category == name
-                                    ? Colors.white
-                                    : _ink,
-                                fontSize: 12,
-                              ),
-                              backgroundColor: const Color(0xFFF3E9DA),
-                              side: BorderSide.none,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-                const Divider(height: 8, color: _line),
-                Wrap(
-                  spacing: 7,
-                  runSpacing: 0,
-                  children: [
-                    FilterChip(
-                      label: const Text('Saved'),
-                      selected: _favoritesOnly,
-                      onSelected: (value) =>
-                          setState(() => _favoritesOnly = value),
-                    ),
-                    FilterChip(
-                      label: const Text('Not answered'),
-                      selected: _unansweredOnly,
-                      onSelected: (value) =>
-                          setState(() => _unansweredOnly = value),
-                    ),
-                  ],
-                ),
-              ],
+            child: Icon(icon, color: _green),
+          ),
+          title: Text(
+            category,
+            style: GoogleFonts.playfairDisplay(
+              color: _green,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 6),
-          if (filtered.isEmpty)
-            _softCard(
-              child: const Padding(
-                padding: EdgeInsets.all(18),
-                child: Text(
-                  'No prompts match these filters yet. Adjust your search or choose another category.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0xFF74766F)),
-                ),
-              ),
-            )
-          else
-            for (final item in filtered)
+          subtitle: Text(
+            '${prompts.length} ${prompts.length == 1 ? 'prompt' : 'prompts'}',
+            style: const TextStyle(color: Color(0xFF656961), fontSize: 12),
+          ),
+          iconColor: _green,
+          collapsedIconColor: _green,
+          children: [
+            for (final prompt in prompts)
               _promptTile(
-                item.$1,
-                item.$2,
-                saved.contains(item.$2),
-                answered.contains(item.$2),
-                _savingPrompts.contains(item.$2),
-                () => _savePrompt(item.$1, item.$2, saved.contains(item.$2)),
+                category,
+                prompt,
+                saved.contains(prompt),
+                answered.contains(prompt),
+                _savingPrompts.contains(prompt),
+                () => _savePrompt(category, prompt, saved.contains(prompt)),
               ),
-        ],
-      );
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _savedFavoritesTab(
     AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot,
