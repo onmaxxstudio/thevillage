@@ -2311,48 +2311,65 @@ class _PromptLibraryState extends State<_PromptLibrary> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 9),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: ['All', ...widget.categories]
-                        .map(
-                          (name) => Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: ChoiceChip(
-                              label: Text(name),
-                              selected: _category == name,
-                              onSelected: (_) =>
-                                  setState(() => _category = name),
-                              selectedColor: _green,
-                              labelStyle: TextStyle(
-                                color: _category == name ? Colors.white : _ink,
-                                fontSize: 12,
-                              ),
-                              backgroundColor: const Color(0xFFF3E9DA),
-                              side: BorderSide.none,
-                            ),
-                          ),
-                        )
-                        .toList(),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 7),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF7F2E8),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: _line),
                   ),
-                ),
-                Wrap(
-                  spacing: 7,
-                  children: [
-                    FilterChip(
-                      label: const Text('Saved'),
-                      selected: _favoritesOnly,
-                      onSelected: (value) =>
-                          setState(() => _favoritesOnly = value),
-                    ),
-                    FilterChip(
-                      label: const Text('Not answered'),
-                      selected: _unansweredOnly,
-                      onSelected: (value) =>
-                          setState(() => _unansweredOnly = value),
-                    ),
-                  ],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: ['All', ...widget.categories]
+                              .map(
+                                (name) => Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: ChoiceChip(
+                                    label: Text(name),
+                                    selected: _category == name,
+                                    onSelected: (_) =>
+                                        setState(() => _category = name),
+                                    selectedColor: _green,
+                                    labelStyle: TextStyle(
+                                      color: _category == name
+                                          ? Colors.white
+                                          : _ink,
+                                      fontSize: 12,
+                                    ),
+                                    backgroundColor: const Color(0xFFF3E9DA),
+                                    side: BorderSide.none,
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                      const Divider(height: 8, color: _line),
+                      Wrap(
+                        spacing: 7,
+                        runSpacing: 0,
+                        children: [
+                          FilterChip(
+                            label: const Text('Saved'),
+                            selected: _favoritesOnly,
+                            onSelected: (value) =>
+                                setState(() => _favoritesOnly = value),
+                          ),
+                          FilterChip(
+                            label: const Text('Not answered'),
+                            selected: _unansweredOnly,
+                            onSelected: (value) =>
+                                setState(() => _unansweredOnly = value),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 6),
                 if (filtered.isEmpty)
