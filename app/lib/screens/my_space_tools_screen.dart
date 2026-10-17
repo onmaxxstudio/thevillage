@@ -2418,13 +2418,12 @@ class _PromptLibraryState extends State<_PromptLibrary>
           ),
         ),
         const SizedBox(height: 10),
-        const SizedBox(height: 10),
         if (filtered.isEmpty)
           _softCard(
             child: const Padding(
               padding: EdgeInsets.all(18),
               child: Text(
-                'No prompts match these filters yet. Adjust your search or choose another filter.',
+                'No prompts match these filters yet. Try a different search.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Color(0xFF74766F)),
               ),
