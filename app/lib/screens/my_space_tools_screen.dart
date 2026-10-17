@@ -247,7 +247,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
       onToggleFavorite: _togglePrompt,
       intro: guided
           ? 'Choose a gentle path and take the questions at your own pace.'
-          : 'Explore prompts by topic, save your favorites, and return whenever you like.',
+          : 'Explore the season you’re in through thoughtful prompts. Save your favorites and return whenever you like.',
     );
   }
 
