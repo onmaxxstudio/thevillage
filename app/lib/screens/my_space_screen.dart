@@ -31,6 +31,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   bool writing = false;
   String? editorEntryType;
   bool? editorJournalPromptCompleted;
+  DateTime? reflectionDate;
   String searchText = '';
   String selectedFilter = 'All';
 
@@ -177,6 +178,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         writing = false;
         editorEntryType = null;
         editorJournalPromptCompleted = null;
+        reflectionDate = null;
         text.clear();
       });
       Navigator.of(context).pop();
@@ -295,6 +297,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       writing = true;
       editorEntryType = entryType ?? entry?.data()['entryType'] as String?;
       final entryData = entry?.data();
+      reflectionDate = entryData == null ? DateTime.now() : entryDate(entryData) ?? DateTime.now();
       editorJournalPromptCompleted = entryData == null
           ? false
           : entryData['journalPromptCompleted'] as bool? ??
@@ -303,9 +306,12 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       text.text = entry?.data()['body'] as String? ?? '';
     });
 
-    if (editorEntryType == 'gratitude') {
-      Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => _gratitudeEditorPage(),
+    if (editorEntryType == 'gratitude' || editorEntryType == 'journal_prompt') {
+      final editorPage = editorEntryType == 'gratitude'
+          ? _gratitudeEditorPage()
+          : _journalPromptEditorPage();
+      Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
+        builder: (_) => editorPage,
       )).whenComplete(() {
         if (mounted && writing) setState(() => writing = false);
       });
@@ -374,6 +380,123 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: text,
+                      autofocus: false,
+                      expands: true,
+                      minLines: null,
+                      maxLines: null,
+                      maxLength: 10000,
+                      textAlignVertical: TextAlignVertical.top,
+                      decoration: InputDecoration(
+                        hintText: 'Start writing here…',
+                        alignLabelWithHint: true,
+                        filled: true,
+                        fillColor: const Color(0xFFFFFDF8),
+                        contentPadding: const EdgeInsets.all(18),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(color: line),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(color: line),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(color: green, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton.icon(
+                      onPressed: saving ? null : save,
+                      icon: const Icon(Icons.lock_outline_rounded, size: 18),
+                      label: Text(saving ? 'Saving…' : 'Save privately'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: green,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _journalPromptEditorPage() {
+    final date = reflectionDate ?? DateTime.now();
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    final dateLabel = '${months[date.month - 1]} ${date.day}, ${date.year}';
+
+    return Scaffold(
+      backgroundColor: cream,
+      appBar: AppBar(
+        backgroundColor: cream,
+        foregroundColor: green,
+        centerTitle: true,
+        title: Text(
+          'Journal Prompt',
+          style: GoogleFonts.playfairDisplay(
+            color: green,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          tooltip: 'Back to prompts',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    prompt,
+                    style: GoogleFonts.playfairDisplay(
+                      color: green,
+                      fontSize: 25,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today_rounded, size: 15, color: Color(0xFF77766F)),
+                      const SizedBox(width: 7),
+                      Text(
+                        dateLabel,
+                        style: const TextStyle(
+                          color: Color(0xFF77766F),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
                   Expanded(
                     child: TextField(
                       controller: text,
