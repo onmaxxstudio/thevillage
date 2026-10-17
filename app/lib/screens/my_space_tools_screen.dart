@@ -2283,7 +2283,6 @@ class _PromptLibrary extends StatefulWidget {
 class _PromptLibraryState extends State<_PromptLibrary>
     with SingleTickerProviderStateMixin {
   late final TabController _tabs = TabController(length: 3, vsync: this);
-  String _query = '';
   final Set<String> _savingPrompts = <String>{};
 
   @override
@@ -2339,7 +2338,6 @@ class _PromptLibraryState extends State<_PromptLibrary>
             for (final category in widget.categories) {
               for (final prompt
                   in _promptGroups[category] ?? const <String>[]) {
-                if (!prompt.toLowerCase().contains(_query)) continue;
                 filtered.add((category, prompt));
               }
             }
@@ -2401,29 +2399,14 @@ class _PromptLibraryState extends State<_PromptLibrary>
     }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
       children: [
-        TextField(
-          onChanged: (value) =>
-              setState(() => _query = value.trim().toLowerCase()),
-          decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search_rounded, color: _green),
-            hintText: 'Search thoughtful questions…',
-            filled: true,
-            fillColor: _paper,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: _line),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
         if (filtered.isEmpty)
           _softCard(
             child: const Padding(
               padding: EdgeInsets.all(18),
               child: Text(
-                'No prompts match these filters yet. Try a different search.',
+                'No prompts are available right now.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Color(0xFF74766F)),
               ),
