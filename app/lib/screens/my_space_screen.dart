@@ -172,6 +172,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         await collection.doc(editingId).update(data);
       }
       if (!mounted) return;
+      final returnToPromptLibrary = editorEntryType == 'journal_prompt';
       setState(() {
         editingId = null;
         prompt = '';
@@ -181,7 +182,11 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         reflectionDate = null;
         text.clear();
       });
-      Navigator.of(context).pop();
+      if (returnToPromptLibrary) {
+        Navigator.of(context, rootNavigator: true).pop();
+      } else {
+        Navigator.of(context).pop();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Saved privately to My Space.')),
       );
