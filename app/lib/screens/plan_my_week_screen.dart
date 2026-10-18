@@ -104,6 +104,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   String section = 'Overview', review = '';
   String _recipeFilter = 'Vegan';
   final TextEditingController _taskDraft = TextEditingController();
+  DateTime? _draftTaskDay;
   List<Map<String, dynamic>> goals = [], tasks = [], groceries = [];
   Map<String, dynamic> meals = {}, notes = {};
   bool shareTasks = true, shareMeals = false, shareSchedule = true;
@@ -210,14 +211,24 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     await _save();
   }
 
-  void _openTaskPage() => setState(() => section = 'Task List');
+  void _openTaskPage() => setState(() {
+    _draftTaskDay = daySelected ? selectedDay : null;
+    section = 'Task List';
+  });
 
   Future<void> _saveTaskDraft() async {
     final title = _taskDraft.text.trim();
     if (title.isEmpty) return;
+    final taskDay = _draftTaskDay;
     setState(() {
-      tasks.add({'title': title, if (daySelected) 'day': _key(selectedDay), 'done': false});
+      tasks.add({'title': title, if (taskDay != null) 'day': _key(taskDay), 'done': false});
       _taskDraft.clear();
+      if (taskDay == null) {
+        daySelected = false;
+      } else {
+        selectedDay = taskDay;
+        daySelected = true;
+      }
     });
     await _save();
   }
@@ -412,7 +423,10 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   void _moveWeek(int n) {
     setState(() {
       weekStart = weekStart.add(Duration(days: n * 7));
-      selectedDay = weekStart; daySelected = false; section = 'Overview';
+      selectedDay = weekStart;
+      daySelected = false;
+      _draftTaskDay = null;
+      section = 'Overview';
     });
     _load();
   }
@@ -501,7 +515,12 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     IconButton(onPressed: () => _moveWeek(1), icon: const Icon(Icons.chevron_right)),
     TextButton(onPressed: () {
       final now = DateTime.now();
-      setState(() { weekStart = _monday(now); selectedDay = DateTime(now.year, now.month, now.day); daySelected = false; });
+      setState(() {
+        weekStart = _monday(now);
+        selectedDay = DateTime(now.year, now.month, now.day);
+        daySelected = false;
+        _draftTaskDay = null;
+      });
       _load();
     }, child: const Text('Today', style: TextStyle(color: sage))),
   ]);
@@ -525,8 +544,10 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
           style: TextStyle(fontSize: 11, color: sage)),
       ])),
     const SizedBox(width: 6),
-    IconButton(onPressed: _openTaskPage,
-      tooltip: 'Add task', icon: const Icon(Icons.add_circle_outline, color: sage)),
+    OutlinedButton.icon(
+      onPressed: _openTaskPage,
+      icon: const Icon(Icons.add, color: sage),
+      label: const Text('Add task', style: TextStyle(color: sage))),
   ]));
 
   Widget _weeklyFocus() => _card(Column(crossAxisAlignment: CrossAxisAlignment.start,
@@ -571,6 +592,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
           final wasSelected = daySelected && _same(selectedDay, tappedDay);
           selectedDay = tappedDay;
           daySelected = !wasSelected;
+          _draftTaskDay = daySelected ? tappedDay : null;
         }),
         child: Container(margin: const EdgeInsets.symmetric(horizontal: 2),
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1014,6 +1036,38 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     }
   }
 
+  Widget _taskDayPicker() {
+    final options = List.generate(7, (i) => weekStart.add(Duration(days: i)));
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: DropdownButtonFormField<DateTime?>(
+        value: _draftTaskDay,
+        isExpanded: true,
+        decoration: InputDecoration(
+          labelText: 'Task day (optional)',
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+        hint: const Text('Any day this week'),
+        items: [
+          const DropdownMenuItem<DateTime?>(
+            value: null, child: Text('Any day this week')),
+          for (final day in options)
+            DropdownMenuItem<DateTime?>(
+              value: day,
+              child: Text('${_weekday(day)} · ${_month(day.month)} ${day.day}'),
+            ),
+        ],
+        onChanged: (day) => setState(() {
+          _draftTaskDay = day;
+          daySelected = day != null;
+          if (day != null) selectedDay = day;
+        }),
+      ),
+    );
+  }
+
   Widget _taskListPage() {
     final indices = <int>[
       for (var i = 0; i < tasks.length; i++)
@@ -1031,6 +1085,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
         : '${indices.where((i) => tasks[i]['done'] == true).length} of ${indices.length} completed',
         style: const TextStyle(color: sage)),
       const SizedBox(height: 12),
+      _taskDayPicker(),
       Container(
         decoration: BoxDecoration(color: Colors.white,
           border: Border.all(color: line), borderRadius: BorderRadius.circular(18)),
@@ -1042,10 +1097,13 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _saveTaskDraft(),
             decoration: const InputDecoration(
-              hintText: 'Add a task', border: InputBorder.none,
+              hintText: 'Add a task for the week', border: InputBorder.none,
               counterText: '',), maxLength: 180)),
-          IconButton(onPressed: _saveTaskDraft, tooltip: 'Add task',
-            icon: const Icon(Icons.add_circle, color: sage)),
+          FilledButton.icon(
+            onPressed: _saveTaskDraft,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Add')),
+          const SizedBox(width: 6),
         ]),
       ),
       const SizedBox(height: 8),
