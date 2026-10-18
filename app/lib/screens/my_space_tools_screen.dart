@@ -2932,6 +2932,136 @@ class _MoodComposerState extends State<_MoodComposer> {
     super.dispose();
   }
 
+  String _journalEntryTitle(Map<String, dynamic> data) {
+    final title = (data['title'] as String? ?? '').trim();
+    if (title.isNotEmpty) return title;
+    final prompt = (data['prompt'] as String? ?? '').trim();
+    return prompt.isNotEmpty ? prompt : 'Journal entry';
+  }
+
+  Future<void> _chooseLinkedEntry(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> entries,
+  ) async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: _cream,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * .76,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Choose a journal entry',
+                      style: GoogleFonts.playfairDisplay(
+                        color: _green,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Select the page you want to connect to this reflection.',
+                      style: TextStyle(color: Color(0xFF62665E)),
+                    ),
+                  ],
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.link_off_rounded, color: _green),
+                title: const Text('No linked entry'),
+                subtitle: const Text('Leave this reflection unconnected'),
+                trailing: _linkedId == null
+                    ? const Icon(Icons.check_circle_rounded, color: _green)
+                    : null,
+                onTap: () => Navigator.pop(sheetContext, ''),
+              ),
+              const Divider(height: 1, color: _line),
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+                  itemCount: entries.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 4),
+                  itemBuilder: (context, index) {
+                    final doc = entries[index];
+                    final data = doc.data();
+                    final title = _journalEntryTitle(data);
+                    final type = switch (data['entryType'] as String? ?? 'journal') {
+                      'journal_prompt' => 'Journal prompt',
+                      'guided' => 'Guided journaling',
+                      'gratitude' => 'Gratitude note',
+                      'letter' => 'Letter',
+                      final value => value[0].toUpperCase() + value.substring(1),
+                    };
+                    final stamp = data['createdAt'];
+                    final date = stamp is Timestamp
+                        ? MaterialLocalizations.of(context).formatMediumDate(stamp.toDate())
+                        : 'Date unavailable';
+                    final preview = (data['body'] as String? ?? '').trim();
+                    final isSelected = doc.id == _linkedId;
+                    return Material(
+                      color: _paper,
+                      borderRadius: BorderRadius.circular(14),
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: BorderSide(
+                            color: isSelected ? _green : _line,
+                          ),
+                        ),
+                        title: Text(
+                          title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: _ink,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('$type · $date'),
+                              if (preview.isNotEmpty)
+                                Text(
+                                  preview,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
+                        ),
+                        trailing: Icon(
+                          isSelected
+                              ? Icons.check_circle_rounded
+                              : Icons.radio_button_unchecked_rounded,
+                          color: _green,
+                        ),
+                        onTap: () => Navigator.pop(sheetContext, doc.id),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (selected == null || !mounted) return;
+    setState(() => _linkedId = selected.isEmpty ? null : selected);
+  }
+
   Future<void> _save() async {
     final collection = widget.entries;
     if (_mood == null || _saving || collection == null) return;
@@ -3094,38 +3224,41 @@ class _MoodComposerState extends State<_MoodComposer> {
                 )
                 .toList();
             if (entries.isEmpty) return const SizedBox.shrink();
+            final selectedEntry = entries
+                .where((doc) => doc.id == _linkedId)
+                .firstOrNull;
+            final selectedTitle = selectedEntry == null
+                ? 'Choose a journal entry'
+                : _journalEntryTitle(selectedEntry.data());
             return Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: DropdownButtonFormField<String?>(
-                value: _linkedId,
-                decoration: InputDecoration(
-                  labelText: 'Link to a journal entry (optional)',
-                  filled: true,
-                  fillColor: _paper,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: _line),
-                  ),
-                ),
-                items: [
-                  const DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text('No linked entry'),
-                  ),
-                  ...entries.map(
-                    (doc) => DropdownMenuItem<String?>(
-                      value: doc.id,
-                      child: Text(
-                        (doc.data()['title'] as String? ?? '').trim().isEmpty
-                            ? (doc.data()['prompt'] as String? ??
-                                  'Journal entry')
-                            : doc.data()['title'] as String,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => _chooseLinkedEntry(entries),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Link to a journal entry (optional)',
+                    helperText: 'Choose which page this reflection connects to.',
+                    filled: true,
+                    fillColor: _paper,
+                    suffixIcon: const Icon(Icons.expand_more_rounded),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: _line),
                     ),
                   ),
-                ],
-                onChanged: (value) => setState(() => _linkedId = value),
+                  child: Text(
+                    selectedTitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: selectedEntry == null ? const Color(0xFF74766F) : _ink,
+                      fontWeight: selectedEntry == null
+                          ? FontWeight.normal
+                          : FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
             );
           },
