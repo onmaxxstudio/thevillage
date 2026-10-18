@@ -690,80 +690,21 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
   }
 
   Future<void> _addMilestone() async {
-    final title = TextEditingController();
-    final description = TextEditingController();
-    DateTime date = DateTime.now();
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialog) => AlertDialog(
-          backgroundColor: _paper,
-          title: Text(
-            'Celebrate a milestone',
-            style: GoogleFonts.playfairDisplay(color: _green),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: title,
-                  decoration: const InputDecoration(
-                    labelText: 'What did you do?',
-                  ),
-                ),
-                TextField(
-                  controller: description,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'A few words about it (optional)',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: () async {
-                    final next = await showDatePicker(
-                      context: ctx,
-                      initialDate: date,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (next != null) setDialog(() => date = next);
-                  },
-                  icon: const Icon(Icons.calendar_today_outlined),
-                  label: Text('${date.month}/${date.day}/${date.year}'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Save milestone'),
-            ),
-          ],
-        ),
+    final draft = await Navigator.of(context).push<_MilestoneDraft>(
+      MaterialPageRoute<_MilestoneDraft>(
+        builder: (_) => const _MilestoneEditorPage(),
       ),
     );
-    if (saved == true && title.text.trim().isNotEmpty) {
-      await _saveRecord(
-        type: 'milestone',
-        title: title.text.trim(),
-        body: description.text.trim().isEmpty
-            ? title.text.trim()
-            : description.text.trim(),
-        extra: {
-          'milestoneDate': Timestamp.fromDate(date),
-          'milestoneIcon': '🌱',
-        },
-      );
-    }
-    title.dispose();
-    description.dispose();
+    if (draft == null) return;
+    await _saveRecord(
+      type: 'milestone',
+      title: draft.title,
+      body: draft.description.isEmpty ? draft.title : draft.description,
+      extra: {
+        'milestoneDate': Timestamp.fromDate(draft.date),
+        'milestoneIcon': '🌱',
+      },
+    );
   }
 
   Future<void> _addGoal() async {
@@ -3673,6 +3614,199 @@ class _JournalInsightsState extends State<_JournalInsights> {
         ),
     ],
   );
+}
+
+class _MilestoneDraft {
+  const _MilestoneDraft({
+    required this.title,
+    required this.description,
+    required this.date,
+  });
+
+  final String title;
+  final String description;
+  final DateTime date;
+}
+
+class _MilestoneEditorPage extends StatefulWidget {
+  const _MilestoneEditorPage();
+
+  @override
+  State<_MilestoneEditorPage> createState() => _MilestoneEditorPageState();
+}
+
+class _MilestoneEditorPageState extends State<_MilestoneEditorPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _title = TextEditingController();
+  final _description = TextEditingController();
+  DateTime _date = DateTime.now();
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _description.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final next = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (next != null && mounted) setState(() => _date = next);
+  }
+
+  void _save() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.of(context).pop(
+      _MilestoneDraft(
+        title: _title.text.trim(),
+        description: _description.text.trim(),
+        date: _date,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width > 760;
+    return Scaffold(
+      backgroundColor: _cream,
+      appBar: AppBar(
+        backgroundColor: _cream,
+        foregroundColor: _green,
+        centerTitle: true,
+        title: Text(
+          'New Milestone',
+          style: GoogleFonts.playfairDisplay(
+            color: _green,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: wide ? 680 : 560),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              children: [
+                Text(
+                  'Celebrate a milestone',
+                  style: GoogleFonts.playfairDisplay(
+                    color: _green,
+                    fontSize: 27,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Give a moment you are proud of a place in your journal.',
+                  style: TextStyle(
+                    color: Color(0xFF62665E),
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _title,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    labelText: 'What did you do?',
+                    filled: true,
+                    fillColor: _paper,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: const BorderSide(color: _line),
+                    ),
+                  ),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Add a title for your milestone.'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _description,
+                  textCapitalization: TextCapitalization.sentences,
+                  minLines: 4,
+                  maxLines: 8,
+                  maxLength: 3000,
+                  decoration: InputDecoration(
+                    labelText: 'A few words about it (optional)',
+                    alignLabelWithHint: true,
+                    filled: true,
+                    fillColor: _paper,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: const BorderSide(color: _line),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Material(
+                  color: _paper,
+                  borderRadius: BorderRadius.circular(15),
+                  child: ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      side: const BorderSide(color: _line),
+                    ),
+                    leading: const Icon(
+                      Icons.calendar_today_outlined,
+                      color: _green,
+                    ),
+                    title: const Text('Milestone date'),
+                    subtitle: Text(
+                      MaterialLocalizations.of(context)
+                          .formatMediumDate(_date),
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: _green,
+                    ),
+                    onTap: _pickDate,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: wide ? 644 : 524),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
+              child: SizedBox(
+                height: 50,
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _save,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  child: const Text(
+                    'Save milestone',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _MoodReflectionDetailsPage extends StatelessWidget {
