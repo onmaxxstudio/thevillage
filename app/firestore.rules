@@ -731,7 +731,7 @@ service cloud.firestore {
       allow get, list: if isSelf(uid);
       allow create, update: if isSelf(uid) &&
         request.resource.data.keys().hasOnly([
-          'goals', 'tasks', 'groceries', 'meals', 'notes', 'review', 'updatedAt'
+          'goals', 'tasks', 'groceries', 'meals', 'notes', 'review', 'sharing', 'updatedAt'
         ]) &&
         request.resource.data.goals is list &&
         request.resource.data.goals.size() <= 20 &&
@@ -743,8 +743,50 @@ service cloud.firestore {
         request.resource.data.notes is map &&
         request.resource.data.review is string &&
         request.resource.data.review.size() <= 2000 &&
+        request.resource.data.sharing is map &&
+        request.resource.data.sharing.keys().hasOnly(['tasks', 'meals', 'schedule', 'token']) &&
+        request.resource.data.sharing.tasks is bool &&
+        request.resource.data.sharing.meals is bool &&
+        request.resource.data.sharing.schedule is bool &&
+        (!request.resource.data.sharing.keys().hasAny(['token']) ||
+          (request.resource.data.sharing.token is string &&
+           request.resource.data.sharing.token.matches('^[a-f0-9]{64}$'))) &&
         request.resource.data.updatedAt == request.time;
       allow delete: if isSelf(uid);
+    }
+
+    // A private-link share contains only the sections the owner selected.
+    // Guests may fetch one high-entropy token document, but cannot enumerate shares.
+    match /weekly_plan_shares/{token} {
+      allow get: if token.matches('^[a-f0-9]{64}$') &&
+        resource.data.expiresAt is timestamp &&
+        resource.data.expiresAt > request.time;
+      allow list: if false;
+      allow create: if signedIn() &&
+        token.matches('^[a-f0-9]{64}$') &&
+        request.resource.data.keys().hasOnly([
+          'ownerUid', 'weekLabel', 'payload', 'updatedAt', 'expiresAt'
+        ]) &&
+        request.resource.data.ownerUid == request.auth.uid &&
+        request.resource.data.weekLabel is string &&
+        request.resource.data.payload is map &&
+        request.resource.data.payload.keys().hasOnly(['tasks', 'meals', 'groceries', 'notes']) &&
+        request.resource.data.updatedAt == request.time &&
+        request.resource.data.expiresAt is timestamp &&
+        request.resource.data.expiresAt > request.time;
+      allow update: if signedIn() &&
+        resource.data.ownerUid == request.auth.uid &&
+        request.resource.data.ownerUid == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'ownerUid', 'weekLabel', 'payload', 'updatedAt', 'expiresAt'
+        ]) &&
+        request.resource.data.weekLabel is string &&
+        request.resource.data.payload is map &&
+        request.resource.data.payload.keys().hasOnly(['tasks', 'meals', 'groceries', 'notes']) &&
+        request.resource.data.updatedAt == request.time &&
+        request.resource.data.expiresAt is timestamp &&
+        request.resource.data.expiresAt > request.time;
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
     }
 
     match /{document=**} {
