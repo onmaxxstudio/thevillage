@@ -703,6 +703,26 @@ service cloud.firestore {
         request.resource.data.savedAt == request.time;
     }
 
+    // Budget planning data is private to the signed-in owner.
+    match /private_journals/{uid}/budget/{budgetId} {
+      allow get, list, delete: if isSelf(uid) && budgetId == 'current';
+      allow create, update: if isSelf(uid) && budgetId == 'current' &&
+        request.resource.data.keys().hasOnly([
+          'monthlyIncome', 'savingsGoal', 'savedAmount', 'categories', 'expenses', 'updatedAt'
+        ]) &&
+        (!('monthlyIncome' in request.resource.data) ||
+          (request.resource.data.monthlyIncome is number && request.resource.data.monthlyIncome >= 0 && request.resource.data.monthlyIncome <= 10000000)) &&
+        (!('savingsGoal' in request.resource.data) ||
+          (request.resource.data.savingsGoal is number && request.resource.data.savingsGoal >= 0 && request.resource.data.savingsGoal <= 10000000)) &&
+        (!('savedAmount' in request.resource.data) ||
+          (request.resource.data.savedAmount is number && request.resource.data.savedAmount >= 0 && request.resource.data.savedAmount <= 10000000)) &&
+        (!('categories' in request.resource.data) ||
+          (request.resource.data.categories is list && request.resource.data.categories.size() <= 20)) &&
+        (!('expenses' in request.resource.data) ||
+          (request.resource.data.expenses is list && request.resource.data.expenses.size() <= 200)) &&
+        request.resource.data.updatedAt == request.time;
+    }
+
     // Weekly plans contain private schedules, tasks, meals, and reflections.
     // Only the signed-in owner can read or change their weekly documents.
     match /weekly_plans/{uid}/weeks/{weekId} {
