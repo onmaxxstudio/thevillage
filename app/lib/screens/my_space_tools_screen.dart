@@ -2645,12 +2645,91 @@ class _PromptLibraryState extends State<_PromptLibrary>
         ],
       );
     }
+    if (completed) {
+      final grouped = <String, List<QueryDocumentSnapshot<Map<String, dynamic>>>>{};
+      for (final doc in docs) {
+        final data = doc.data();
+        final prompt = data['prompt'] as String? ?? '';
+        final category = data['journalPromptCategory'] as String? ??
+            _categoryFor(prompt) ??
+            'Other Prompts';
+        grouped.putIfAbsent(category, () => []).add(doc);
+      }
+      final orderedCategories = [
+        ...widget.categories.where(grouped.containsKey),
+        ...grouped.keys.where((category) => !widget.categories.contains(category)),
+      ];
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+        children: [
+          for (final category in orderedCategories)
+            _completedPromptCategorySection(category, grouped[category]!),
+        ],
+      );
+    }
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         for (final doc in docs)
           _promptReflectionCard(doc, completed: completed),
       ],
+    );
+  }
+
+  Widget _completedPromptCategorySection(
+    String category,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> entries,
+  ) {
+    final icon = switch (category) {
+      'Get to Know You' => Icons.self_improvement_rounded,
+      'Heal & Let Go' => Icons.spa_outlined,
+      'Relationships' => Icons.favorite_border_rounded,
+      'Growth Mindset' => Icons.trending_up,
+      'Faith & Purpose' => Icons.explore_outlined,
+      _ => Icons.wb_sunny_outlined,
+    };
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: _paper,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _line),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: false,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          leading: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: _sage,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(icon, color: _green),
+          ),
+          title: Text(
+            category,
+            style: GoogleFonts.playfairDisplay(
+              color: _green,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          subtitle: Text(
+            '${entries.length} ${entries.length == 1 ? 'prompt' : 'prompts'}',
+            style: const TextStyle(color: Color(0xFF656961), fontSize: 12),
+          ),
+          iconColor: _green,
+          collapsedIconColor: _green,
+          children: [
+            for (final doc in entries)
+              _promptReflectionCard(doc, completed: true),
+          ],
+        ),
+      ),
     );
   }
 
