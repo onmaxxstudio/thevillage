@@ -2330,6 +2330,11 @@ class _PromptLibraryState extends State<_PromptLibrary>
             .map((doc) => doc.data()['prompt'] as String? ?? '')
             .where((item) => item.isNotEmpty)
             .toSet();
+        final completedPrompts = promptEntries
+            .where(_isCompleted)
+            .map((doc) => doc.data()['prompt'] as String? ?? '')
+            .where((item) => item.isNotEmpty)
+            .toSet();
         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: widget.savedPrompts?.snapshots(),
           builder: (context, savedSnapshot) {
@@ -2340,7 +2345,9 @@ class _PromptLibraryState extends State<_PromptLibrary>
             for (final category in widget.categories) {
               for (final prompt
                   in _promptGroups[category] ?? const <String>[]) {
-                filtered.add((category, prompt));
+                if (!completedPrompts.contains(prompt)) {
+                  filtered.add((category, prompt));
+                }
               }
             }
             return Column(
