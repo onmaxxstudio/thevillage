@@ -562,7 +562,13 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: InkWell(
-              onTap: () => _openEntry(doc),
+              onTap: () {
+                if (type == 'milestone') {
+                  _openMilestoneDetails(doc);
+                } else {
+                  _openEntry(doc);
+                }
+              },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -646,6 +652,16 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
                     ],
             ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _openMilestoneDetails(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _MilestoneDetailsPage(entry: doc),
       ),
     );
   }
@@ -3815,6 +3831,164 @@ class _MilestoneEditorPageState extends State<_MilestoneEditorPage> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _MilestoneDetailsPage extends StatelessWidget {
+  const _MilestoneDetailsPage({required this.entry});
+
+  final QueryDocumentSnapshot<Map<String, dynamic>> entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = entry.data();
+    final rawTitle = (data['title'] as String? ?? '').trim();
+    final title = rawTitle.isEmpty ? 'Milestone' : rawTitle;
+    final body = (data['body'] as String? ?? '').trim();
+    final milestoneValue = data['milestoneDate'] ?? data['createdAt'];
+    final milestoneDate = milestoneValue is Timestamp
+        ? milestoneValue.toDate()
+        : milestoneValue is DateTime
+        ? milestoneValue
+        : null;
+    final createdValue = data['createdAt'];
+    final createdDate = createdValue is Timestamp
+        ? createdValue.toDate()
+        : createdValue is DateTime
+        ? createdValue
+        : null;
+    final dateLabel = milestoneDate == null
+        ? 'Date unavailable'
+        : MaterialLocalizations.of(context).formatMediumDate(milestoneDate);
+    final savedLabel = createdDate == null
+        ? null
+        : MaterialLocalizations.of(context).formatMediumDate(createdDate);
+    final description = body == title ? '' : body;
+
+    return Scaffold(
+      backgroundColor: _cream,
+      appBar: AppBar(
+        backgroundColor: _cream,
+        foregroundColor: _green,
+        centerTitle: true,
+        title: Text(
+          'Milestone',
+          style: GoogleFonts.playfairDisplay(
+            color: _green,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          tooltip: 'Back to milestones',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+          onPressed: () => Navigator.maybePop(context),
+        ),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
+              children: [
+                _softCard(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 54,
+                        height: 58,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _sage,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          data['milestoneIcon'] as String? ?? '🌱',
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: GoogleFonts.playfairDisplay(
+                                color: _green,
+                                fontSize: 23,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              dateLabel,
+                              style: const TextStyle(
+                                color: Color(0xFF74766F),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _softCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your milestone',
+                        style: GoogleFonts.playfairDisplay(
+                          color: _green,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SelectableText(
+                        description.isEmpty
+                            ? 'No additional details were added.'
+                            : description,
+                        style: const TextStyle(
+                          color: _ink,
+                          fontSize: 15,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (savedLabel != null) ...[
+                  const SizedBox(height: 12),
+                  _softCard(
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.bookmark_added_outlined,
+                          color: _green,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 9),
+                        Text(
+                          'Saved on $savedLabel',
+                          style: const TextStyle(
+                            color: Color(0xFF5E615B),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
