@@ -631,8 +631,8 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(17),
       child: Container(
-        height: 150,
-        padding: const EdgeInsets.all(12),
+        height: 112,
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFF1F3E9) : cream,
           border: Border.all(color: selected ? sage : line, width: selected ? 1.5 : 1),
