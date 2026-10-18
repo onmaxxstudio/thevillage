@@ -2924,62 +2924,17 @@ class _MoodComposerState extends State<_MoodComposer> {
   String? _linkedId;
   final Set<String> _tags = {};
   final TextEditingController _note = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  String? _editingId;
   bool _saving = false;
 
   @override
   void dispose() {
     _note.dispose();
-    _scrollController.dispose();
     super.dispose();
-  }
-
-  void _editMoodReflection(
-    QueryDocumentSnapshot<Map<String, dynamic>> doc,
-  ) {
-    final data = doc.data();
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _editingId = doc.id;
-      _mood = data['mood'] as String?;
-      _linkedId = data['linkedEntryId'] as String?;
-      _tags
-        ..clear()
-        ..addAll(
-          (data['tags'] as List<dynamic>? ?? const [])
-              .whereType<String>()
-              .take(6),
-        );
-      _note.text = data['body'] as String? ?? '';
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  void _cancelMoodEdit() {
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _editingId = null;
-      _mood = null;
-      _linkedId = null;
-      _tags.clear();
-      _note.clear();
-    });
   }
 
   Future<void> _save() async {
     final collection = widget.entries;
     if (_mood == null || _saving || collection == null) return;
-    final wasEditing = _editingId != null;
-    final editingId = _editingId;
     setState(() => _saving = true);
     try {
       final data = <String, dynamic>{
@@ -2994,29 +2949,19 @@ class _MoodComposerState extends State<_MoodComposer> {
         'tags': _tags.toList(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
-      if (editingId == null) {
-        await collection.add({
-          ...data,
-          'favorite': false,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      } else {
-        if (_linkedId == null) data['linkedEntryId'] = FieldValue.delete();
-        await collection.doc(editingId).update(data);
-      }
+      await collection.add({
+        ...data,
+        'favorite': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
       if (!mounted) return;
       _note.clear();
       setState(() {
-        _editingId = null;
         _mood = null;
         _linkedId = null;
         _tags.clear();
       });
-      widget.onSaved(
-        wasEditing
-            ? 'Your mood reflection was updated privately.'
-            : 'Your mood reflection was saved privately.',
-      );
+      widget.onSaved('Your mood reflection was saved privately.');
     } catch (_) {
       if (mounted) {
         widget.onSaved(
@@ -3030,7 +2975,6 @@ class _MoodComposerState extends State<_MoodComposer> {
 
   @override
   Widget build(BuildContext context) => ListView(
-    controller: _scrollController,
     padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
     children: [
       const Text(
@@ -3186,13 +3130,6 @@ class _MoodComposerState extends State<_MoodComposer> {
             );
           },
         ),
-      if (_editingId != null)
-        TextButton.icon(
-          onPressed: _saving ? null : _cancelMoodEdit,
-          icon: const Icon(Icons.close_rounded),
-          label: const Text('Cancel editing'),
-          style: TextButton.styleFrom(foregroundColor: _green),
-        ),
       const SizedBox(height: 10),
       SizedBox(
         height: 48,
@@ -3253,7 +3190,14 @@ class _MoodComposerState extends State<_MoodComposer> {
                 margin: const EdgeInsets.only(bottom: 7),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),
-                  onTap: () => _editMoodReflection(doc),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => _MoodReflectionDetailsPage(
+                        entry: doc,
+                        entries: widget.entries!,
+                      ),
+                    ),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Row(
@@ -3285,7 +3229,7 @@ class _MoodComposerState extends State<_MoodComposer> {
                               ),
                               const SizedBox(height: 3),
                               const Text(
-                                'Tap to edit',
+                                'Tap to view reflection',
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: Color(0xFF74766F),
@@ -3294,7 +3238,7 @@ class _MoodComposerState extends State<_MoodComposer> {
                             ],
                           ),
                         ),
-                        const Icon(Icons.edit_outlined, color: _green, size: 18),
+                        const Icon(Icons.arrow_forward_ios_rounded, color: _green, size: 16),
                       ],
                     ),
                   ),
@@ -3592,6 +3536,245 @@ class _JournalInsightsState extends State<_JournalInsights> {
         ),
     ],
   );
+}
+
+class _MoodReflectionDetailsPage extends StatelessWidget {
+  const _MoodReflectionDetailsPage({
+    required this.entry,
+    required this.entries,
+  });
+
+  final QueryDocumentSnapshot<Map<String, dynamic>> entry;
+  final CollectionReference<Map<String, dynamic>> entries;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = entry.data();
+    final mood = data['mood'] as String? ?? 'Mood reflection';
+    final body = data['body'] as String? ?? '';
+    final tags = (data['tags'] as List<dynamic>? ?? const [])
+        .whereType<String>()
+        .toList();
+    final createdAt = data['createdAt'];
+    final date = createdAt is Timestamp
+        ? createdAt.toDate()
+        : createdAt is DateTime
+        ? createdAt
+        : null;
+    final dateLabel = date == null
+        ? 'Date unavailable'
+        : MaterialLocalizations.of(context).formatMediumDate(date);
+    final linkedId = data['linkedEntryId'] as String?;
+
+    return Scaffold(
+      backgroundColor: _cream,
+      appBar: AppBar(
+        backgroundColor: _cream,
+        foregroundColor: _green,
+        centerTitle: true,
+        title: Text(
+          'Mood Reflection',
+          style: GoogleFonts.playfairDisplay(
+            color: _green,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          tooltip: 'Back to mood reflections',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+          onPressed: () => Navigator.maybePop(context),
+        ),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
+              children: [
+                _softCard(
+                  child: Row(
+                    children: [
+                      Text(
+                        _moods[mood] ?? '🌿',
+                        style: const TextStyle(fontSize: 38),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              mood,
+                              style: GoogleFonts.playfairDisplay(
+                                color: _green,
+                                fontSize: 23,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              dateLabel,
+                              style: const TextStyle(
+                                color: Color(0xFF74766F),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _softCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your reflection',
+                        style: GoogleFonts.playfairDisplay(
+                          color: _green,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SelectableText(
+                        body.isEmpty ? 'No written note was added.' : body,
+                        style: const TextStyle(
+                          color: _ink,
+                          fontSize: 15,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (tags.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _softCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tags',
+                          style: GoogleFonts.playfairDisplay(
+                            color: _green,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 7,
+                          runSpacing: 7,
+                          children: tags
+                              .map(
+                                (tag) => Chip(
+                                  label: Text(tag),
+                                  backgroundColor: _sage,
+                                  side: BorderSide.none,
+                                  labelStyle: const TextStyle(color: _green),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                _softCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Linked journal entry',
+                        style: GoogleFonts.playfairDisplay(
+                          color: _green,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      if (linkedId == null)
+                        const Text(
+                          'No journal entry was linked.',
+                          style: TextStyle(color: Color(0xFF74766F)),
+                        )
+                      else
+                        FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                          future: entries.doc(linkedId).get(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasError) {
+                              return const Text(
+                                'The linked entry could not be loaded.',
+                                style: TextStyle(color: Color(0xFF74766F)),
+                              );
+                            }
+                            if (!snapshot.hasData) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: _green,
+                                  ),
+                                ),
+                              );
+                            }
+                            final linkedData = snapshot.data!.data();
+                            if (linkedData == null) {
+                              return const Text(
+                                'The linked journal entry is no longer available.',
+                                style: TextStyle(color: Color(0xFF74766F)),
+                              );
+                            }
+                            final title =
+                                (linkedData['title'] as String? ?? '').trim();
+                            final prompt =
+                                (linkedData['prompt'] as String? ?? '').trim();
+                            return Text(
+                              title.isNotEmpty
+                                  ? title
+                                  : prompt.isNotEmpty
+                                  ? prompt
+                                  : 'Journal entry',
+                              style: const TextStyle(
+                                color: _ink,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+                if (data['favorite'] == true) ...[
+                  const SizedBox(height: 12),
+                  const _softCard(
+                    child: Row(
+                      children: [
+                        Icon(Icons.bookmark_rounded, color: _green, size: 19),
+                        SizedBox(width: 8),
+                        Text(
+                          'Saved to favorites',
+                          style: TextStyle(
+                            color: _green,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _MoodChart extends CustomPainter {
