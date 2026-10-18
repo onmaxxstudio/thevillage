@@ -1503,7 +1503,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       left: centerX - 62,
                       top: centerY - 78,
                       child: GestureDetector(
-                        onTap: _openAvatarBuilder,
+                        onTap: _startAskMyCircle,
                         child: _orbitYou(),
                       ),
                     ),
@@ -1631,15 +1631,21 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             Positioned(
               right: 2,
               bottom: 2,
-              child: Container(
-                width: 31,
-                height: 31,
-                decoration: BoxDecoration(
+              child: Tooltip(
+                message: 'Build your avatar',
+                child: Material(
                   color: sage,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: cream, width: 2),
+                  shape: CircleBorder(side: BorderSide(color: cream, width: 2)),
+                  child: InkWell(
+                    onTap: _openAvatarBuilder,
+                    customBorder: const CircleBorder(),
+                    child: const SizedBox(
+                      width: 31,
+                      height: 31,
+                      child: Icon(Icons.edit_rounded, color: Colors.white, size: 15),
+                    ),
+                  ),
                 ),
-                child: const Icon(Icons.edit_rounded, color: Colors.white, size: 15),
               ),
             ),
           ],
