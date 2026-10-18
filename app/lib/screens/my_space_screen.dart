@@ -794,64 +794,101 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     final collection = entries;
     return Scaffold(
       backgroundColor: cream,
-      appBar: AppBar(
-        backgroundColor: cream,
-        foregroundColor: green,
-        toolbarHeight: 48,
-        leading: IconButton(
-          tooltip: 'Back',
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.maybePop(context),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Settings',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
-            ),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: collection == null
-          ? const Center(child: Text('Sign in to open your private journal.'))
-          : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: collection.orderBy('createdAt', descending: true).snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return const Center(child: Text('Unable to load private entries.'));
-                }
-                final docs = snapshot.data?.docs ??
-                    <QueryDocumentSnapshot<Map<String, dynamic>>>[];
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 760),
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 0, bottom: 10),
-                          child: Column(children: [
-                            Text('My Space', style: GoogleFonts.playfairDisplay(fontSize: 24, color: green, fontWeight: FontWeight.w700)),
-                            const SizedBox(height: 2),
-                            const Text('Your space. Your thoughts. Your growth.', style: TextStyle(color: ink, fontSize: 13)),
-                          ]),
-                        ),
-                        _heroBanner(),
-                        const SizedBox(height: 12),
-                        _featureGrid(),
-                        const SizedBox(height: 14),
-                        _journalLibrary(docs),
-                        const SizedBox(height: 12),
-                        _closingQuote(),
-                        const SizedBox(height: 12),
-                      ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            _spaceHeader(),
+            Expanded(
+              child: collection == null
+                  ? const Center(child: Text('Sign in to open your private journal.'))
+                  : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: collection
+                          .orderBy('createdAt', descending: true)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return const Center(
+                            child: Text('Unable to load private entries.'),
+                          );
+                        }
+                        final docs = snapshot.data?.docs ??
+                            <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+                        return Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 760),
+                            child: ListView(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                              children: [
+                                _heroBanner(),
+                                const SizedBox(height: 12),
+                                _featureGrid(),
+                                const SizedBox(height: 14),
+                                _journalLibrary(docs),
+                                const SizedBox(height: 12),
+                                _closingQuote(),
+                                const SizedBox(height: 12),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                );
-              },
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _spaceHeader() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 48,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                tooltip: 'Back',
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                color: green,
+                onPressed: () => Navigator.maybePop(context),
+              ),
+              IconButton(
+                tooltip: 'Settings',
+                icon: const Icon(Icons.settings_outlined),
+                color: green,
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const SettingsScreen(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 2, 12, 12),
+          child: Column(
+            children: [
+              Text(
+                'My Space',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 24,
+                  color: green,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              const Text(
+                'Your space. Your thoughts. Your growth.',
+                style: TextStyle(color: ink, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
