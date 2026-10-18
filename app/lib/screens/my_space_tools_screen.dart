@@ -175,14 +175,17 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
           .map((item) => Map<String, dynamic>.from(item))
           .toList();
       final expensesByMonth = <String, List<Map<String, dynamic>>>{};
+      final thisMonth = _selectedBudgetMonth;
+      final currentId = '${thisMonth.year}-${thisMonth.month.toString().padLeft(2, '0')}';
       for (final expense in expenses) {
         final date = _budgetDate(expense['date']);
-        if (date == null) continue;
+        if (date == null) {
+          expensesByMonth.putIfAbsent(currentId, () => []).add(expense);
+          continue;
+        }
         final id = '${date.year}-${date.month.toString().padLeft(2, '0')}';
         expensesByMonth.putIfAbsent(id, () => []).add(expense);
       }
-      final thisMonth = _selectedBudgetMonth;
-      final currentId = '${thisMonth.year}-${thisMonth.month.toString().padLeft(2, '0')}';
       expensesByMonth.putIfAbsent(currentId, () => []);
       for (final entry in expensesByMonth.entries) {
         final monthly = FirebaseFirestore.instance
@@ -192,8 +195,16 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
             .doc(entry.key);
         await FirebaseFirestore.instance.runTransaction((transaction) async {
           if ((await transaction.get(monthly)).exists) return;
+          final monthData = entry.key == currentId
+              ? values
+              : <String, dynamic>{
+                  'monthlyIncome': 0,
+                  'savingsGoal': 0,
+                  'savedAmount': 0,
+                  'categories': _defaultBudgetCategories,
+                };
           transaction.set(monthly, {
-            ...values,
+            ...monthData,
             'expenses': entry.value,
             'updatedAt': FieldValue.serverTimestamp(),
           });
@@ -507,9 +518,12 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
             .map((item) => Map<String, dynamic>.from(item))
             .toList();
         final month = _selectedBudgetMonth;
+        final currentMonth = DateTime.now();
         final monthExpenses = expenses.where((expense) {
           final date = _budgetDate(expense['date']);
-          return date != null && date.year == month.year && date.month == month.month;
+          return date == null
+              ? month.year == currentMonth.year && month.month == currentMonth.month
+              : date.year == month.year && date.month == month.month;
         }).toList()
           ..sort((a, b) => (_budgetDate(b['date']) ?? DateTime(1970))
               .compareTo(_budgetDate(a['date']) ?? DateTime(1970)));
