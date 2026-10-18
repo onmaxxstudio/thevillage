@@ -797,14 +797,6 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       appBar: AppBar(
         backgroundColor: cream,
         foregroundColor: green,
-        centerTitle: true,
-        title: Text(
-          'My Space',
-          style: GoogleFonts.playfairDisplay(
-            color: green,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
         leading: IconButton(
           tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
