@@ -329,35 +329,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 14),
-                _section(
-                  title: 'What’s this about?',
-                  subtitle: 'Choose the topic that fits best.',
-                  child: _topicChoices(),
-                ),
-                const SizedBox(height: 14),
-                _section(
-                  title: 'What would help most right now?',
-                  subtitle: 'Choose the kind of response that would feel helpful.',
-                  child: Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
-                    children: [
-                      for (final intent in supportIntents)
-                        ChoiceChip(
-                          avatar: Icon(intent.$2, size: 17),
-                          label: Text(intent.$1),
-                          selected: supportIntent == intent.$1,
-                          selectedColor: const Color(0xFFE8EBDD),
-                          side: BorderSide(
-                            color: supportIntent == intent.$1 ? sage : line,
-                          ),
-                          onSelected: (_) =>
-                              setState(() => supportIntent = intent.$1),
-                        ),
-                    ],
-                  ),
-                ),
                 if (!(widget.initialCommunityName?.trim().isNotEmpty ?? false)) ...[
                   const SizedBox(height: 14),
                   _section(
@@ -388,6 +359,35 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                     ),
                   ),
                 ],
+                const SizedBox(height: 14),
+                _section(
+                  title: 'What’s this about?',
+                  subtitle: 'Choose the topic that fits best.',
+                  child: _topicChoices(),
+                ),
+                const SizedBox(height: 14),
+                _section(
+                  title: 'What would help most right now?',
+                  subtitle: 'Choose the kind of response that would feel helpful.',
+                  child: Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: [
+                      for (final intent in supportIntents)
+                        ChoiceChip(
+                          avatar: Icon(intent.$2, size: 17),
+                          label: Text(intent.$1),
+                          selected: supportIntent == intent.$1,
+                          selectedColor: const Color(0xFFE8EBDD),
+                          side: BorderSide(
+                            color: supportIntent == intent.$1 ? sage : line,
+                          ),
+                          onSelected: (_) =>
+                              setState(() => supportIntent = intent.$1),
+                        ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 14),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
