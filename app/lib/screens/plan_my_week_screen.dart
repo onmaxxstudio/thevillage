@@ -680,7 +680,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       SizedBox(width: double.infinity, child: FilledButton.icon(
         style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.symmetric(vertical: 14)),
         onPressed: _saveShareSettings, icon: const Icon(Icons.check),
-        label: const Text('Save sharing settings')),
+        label: const Text('Save sharing settings'))),
       const SizedBox(height: 8),
       SizedBox(width: double.infinity, child: FilledButton.icon(
         style: FilledButton.styleFrom(backgroundColor: sage.withValues(alpha: .92), padding: const EdgeInsets.symmetric(vertical: 14)),
@@ -751,7 +751,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     return true;
   }
 
-  String _shareUrl() => '${Uri.base.origin}${Uri.base.path}?sharedPlan=$shareToken';
+  String _shareUrl() => 'https://askthevillage.app/?sharedPlan=$shareToken';
 
   Future<void> _createAndShareLink() async {
     if (!shareTasks && !shareMeals && !shareSchedule) {
