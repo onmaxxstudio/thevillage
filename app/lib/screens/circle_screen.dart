@@ -11,6 +11,7 @@ import '../services/profile_service.dart';
 import '../services/circle_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import '../widgets/village_avatar.dart';
+import 'avatar_builder_screen.dart';
 
 class CircleScreen extends StatefulWidget {
   const CircleScreen({super.key});
@@ -150,6 +151,22 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     setState(() {
       myUsername = username?.trim() ?? '';
     });
+  }
+
+  Future<void> _openAvatarBuilder() async {
+    try {
+      final profile = await ProfileService().loadProfile();
+      if (!mounted) return;
+      await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => AvatarBuilderScreen(profile: profile)),
+      );
+      VillageAvatar.invalidate(profile.uid);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open your avatar builder: $error')),
+      );
+    }
   }
 
   void _connectCircleData() {
@@ -1486,7 +1503,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       left: centerX - 62,
                       top: centerY - 78,
                       child: GestureDetector(
-                        onTap: _startAskMyCircle,
+                        onTap: _openAvatarBuilder,
                         child: _orbitYou(),
                       ),
                     ),
@@ -1591,12 +1608,43 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     final photoUrl = _isTestCircle
         ? 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=320&q=85'
         : FirebaseAuth.instance.currentUser?.photoURL ?? '';
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: const BoxDecoration(shape: BoxShape.circle, color: gold),
-      child: _isTestCircle
-          ? CircleAvatar(radius: 54, backgroundImage: NetworkImage(photoUrl))
-          : VillageAvatar(uid: FirebaseAuth.instance.currentUser?.uid, radius: 54),
+    return Semantics(
+      button: true,
+      label: 'Build your avatar',
+      child: SizedBox(
+        width: 124,
+        height: 124,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: 4,
+              top: 4,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(shape: BoxShape.circle, color: gold),
+                child: _isTestCircle
+                    ? CircleAvatar(radius: 54, backgroundImage: NetworkImage(photoUrl))
+                    : VillageAvatar(uid: FirebaseAuth.instance.currentUser?.uid, radius: 54),
+              ),
+            ),
+            Positioned(
+              right: 2,
+              bottom: 2,
+              child: Container(
+                width: 31,
+                height: 31,
+                decoration: BoxDecoration(
+                  color: sage,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: cream, width: 2),
+                ),
+                child: const Icon(Icons.edit_rounded, color: Colors.white, size: 15),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
