@@ -4068,7 +4068,7 @@ class _GoalEditorPageState extends State<_GoalEditorPage> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  _surface(
+                  _softCard(
                     child: const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
