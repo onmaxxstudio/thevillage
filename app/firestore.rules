@@ -705,8 +705,10 @@ service cloud.firestore {
 
     // Budget planning data is private to the signed-in owner.
     match /private_journals/{uid}/budget/{budgetId} {
-      allow get, list, delete: if isSelf(uid) && budgetId == 'current';
-      allow create, update: if isSelf(uid) && budgetId == 'current' &&
+      allow get, list, delete: if isSelf(uid) &&
+        (budgetId == 'current' || budgetId.matches('^[0-9]{4}-(0[1-9]|1[0-2])$'));
+      allow create, update: if isSelf(uid) &&
+        (budgetId == 'current' || budgetId.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')) &&
         request.resource.data.keys().hasOnly([
           'monthlyIncome', 'savingsGoal', 'savedAmount', 'categories', 'expenses', 'updatedAt'
         ]) &&
