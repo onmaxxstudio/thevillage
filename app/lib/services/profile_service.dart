@@ -412,7 +412,8 @@ class ProfileService {
 
   static int _appearanceValue(Map<String, dynamic> data, String key) {
     final value = data[key];
-    return value is int && value >= 0 && value <= 5 ? value : 0;
+    final max = const {'avatarFace', 'avatarEyes', 'avatarSmile'}.contains(key) ? 2 : 5;
+    return value is int && value >= 0 && value <= max ? value : 0;
   }
 
   static Map<String, int> _validatedAppearance(Map<String, dynamic> data) => {
@@ -461,7 +462,8 @@ class ProfileService {
     if (mode == 'avatar' && !avatarKeys.contains(key)) {
       throw const ProfileValidationException('Choose one of the available avatars.');
     }
-    if ([skin, hair, hairColor, face, eyes, smile].any((value) => value < 0 || value > 5)) {
+    if ([skin, hair, hairColor].any((value) => value < 0 || value > 5) ||
+        [face, eyes, smile].any((value) => value < 0 || value > 2)) {
       throw const ProfileValidationException('Choose valid avatar features.');
     }
     final user = _user;
