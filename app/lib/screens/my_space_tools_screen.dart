@@ -3871,16 +3871,111 @@ class _MoodReflectionDetailsPage extends StatelessWidget {
                                 (linkedData['title'] as String? ?? '').trim();
                             final prompt =
                                 (linkedData['prompt'] as String? ?? '').trim();
-                            return Text(
-                              title.isNotEmpty
-                                  ? title
-                                  : prompt.isNotEmpty
-                                  ? prompt
-                                  : 'Journal entry',
-                              style: const TextStyle(
-                                color: _ink,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            final body =
+                                (linkedData['body'] as String? ?? '').trim();
+                            final linkedTags =
+                                (linkedData['tags'] as List<dynamic>? ?? const [])
+                                    .whereType<String>()
+                                    .toList();
+                            final linkedCreatedAt = linkedData['createdAt'];
+                            final linkedDate = linkedCreatedAt is Timestamp
+                                ? MaterialLocalizations.of(context)
+                                    .formatMediumDate(linkedCreatedAt.toDate())
+                                : null;
+                            final displayTitle = title.isNotEmpty
+                                ? title
+                                : prompt.isNotEmpty
+                                ? prompt
+                                : 'Journal entry';
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  displayTitle,
+                                  style: const TextStyle(
+                                    color: _ink,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                if (linkedDate != null) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    linkedDate,
+                                    style: const TextStyle(
+                                      color: Color(0xFF74766F),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                                if (prompt.isNotEmpty && prompt != displayTitle) ...[
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Prompt',
+                                    style: TextStyle(
+                                      color: _green,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  SelectableText(
+                                    prompt,
+                                    style: const TextStyle(
+                                      color: _ink,
+                                      height: 1.45,
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Full entry',
+                                  style: TextStyle(
+                                    color: _green,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                SelectableText(
+                                  body.isEmpty
+                                      ? 'No written response was added.'
+                                      : body,
+                                  style: const TextStyle(
+                                    color: _ink,
+                                    height: 1.5,
+                                  ),
+                                ),
+                                if (linkedTags.isNotEmpty) ...[
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Tags',
+                                    style: TextStyle(
+                                      color: _green,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 4,
+                                    children: linkedTags
+                                        .map(
+                                          (tag) => Chip(
+                                            label: Text(tag),
+                                            backgroundColor: _sage,
+                                            side: BorderSide.none,
+                                            labelStyle: const TextStyle(
+                                              color: _green,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                ],
+                              ],
                             );
                           },
                         ),
