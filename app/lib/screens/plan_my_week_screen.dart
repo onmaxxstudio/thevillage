@@ -225,8 +225,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   Future<void> _reorderDayTasks(int oldIndex, int newIndex) async {
     final indices = <int>[
       for (var i = 0; i < tasks.length; i++)
-        if (!daySelected || tasks[i]['day'] == null || tasks[i]['day'] == ''
-            || tasks[i]['day'] == _key(selectedDay)) i,
+        if (!daySelected || tasks[i]['day'] == _key(selectedDay)) i,
     ];
     if (oldIndex < newIndex) newIndex--;
     setState(() {
@@ -240,9 +239,12 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     await _save();
   }
 
+  String get _activePlanKey => daySelected ? _key(selectedDay) : 'week';
+  String get _activePlanLabel => daySelected ? _weekday(selectedDay) : 'this week';
+
   Future<void> _meal() async {
-    final key = _key(selectedDay);
-    final value = await _input('Plan meals for ${_weekday(selectedDay)}',
+    final key = _activePlanKey;
+    final value = await _input('Plan meals for ${_activePlanLabel}',
       hint: 'Breakfast, lunch, or dinner', initial: meals[key] as String? ?? '');
     if (value == null) return;
     setState(() { if (value.isEmpty) { meals.remove(key); } else { meals[key] = value; } });
@@ -250,7 +252,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   }
 
   Future<void> _addRecipeToDay(_MealRecipe recipe) async {
-    final key = _key(selectedDay);
+    final key = _activePlanKey;
     final existing = (meals[key] as String? ?? '').trim();
     if (!existing.toLowerCase().contains(recipe.title.toLowerCase())) {
       setState(() => meals[key] = existing.isEmpty
@@ -258,7 +260,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       await _save();
     }
     if (mounted) Navigator.of(context).pop();
-    _msg('${recipe.title} added to ${_weekday(selectedDay)}.');
+    _msg('${recipe.title} added to ${_activePlanLabel}.');
   }
 
   Future<void> _addRecipeIngredients(_MealRecipe recipe) async {
@@ -340,7 +342,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
                 FilledButton.icon(style: FilledButton.styleFrom(backgroundColor: sage),
                   onPressed: () => _addRecipeToDay(recipe),
                   icon: const Icon(Icons.add),
-                  label: Text('Add to ${_shortDay(selectedDay)}')),
+                  label: Text('Add to ${daySelected ? _shortDay(selectedDay) : 'week'}')),
               ])),
         ])),
       ),
@@ -425,6 +427,8 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       return d != null && !d.isBefore(start) && d.isBefore(start.add(const Duration(days: 7)));
     }).toList();
     final complete = weekTasks.where((t) => t['done'] == true).length;
+    final selectedDayTasks = tasks.where((t) => t['day'] == _key(selectedDay)).toList();
+    final selectedDayComplete = selectedDayTasks.where((t) => t['done'] == true).length;
     return Scaffold(
       backgroundColor: cream,
       appBar: AppBar(backgroundColor: cream, foregroundColor: ink, elevation: 0,
@@ -442,7 +446,9 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
             if (section == 'Overview') ...[
               const Text('Make space for what matters this week.'),
               const SizedBox(height: 12),
-              _weeklySummary(complete, weekTasks.length),
+              _weeklySummary(daySelected ? selectedDayComplete : complete,
+                daySelected ? selectedDayTasks.length : weekTasks.length,
+                title: daySelected ? _weekday(selectedDay) : 'Your week'),
               const SizedBox(height: 16),
               _days(),
               const SizedBox(height: 16),
@@ -459,7 +465,9 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
               _overviewAction(
                 icon: Icons.assignment_outlined,
                 title: 'Tasks & appointments',
-                detail: '${weekTasks.length} tasks planned this week',
+                detail: daySelected
+                  ? '${selectedDayTasks.length} tasks planned for ${_weekday(selectedDay)}'
+                  : '${weekTasks.length} tasks planned this week',
                 tint: colors[1],
                 onTap: () => setState(() => section = 'Tasks & Schedule'),
               ),
@@ -498,7 +506,8 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     }, child: const Text('Today', style: TextStyle(color: sage))),
   ]);
 
-  Widget _weeklySummary(int done, int total) => _card(Row(children: [
+  Widget _weeklySummary(int done, int total, {String title = 'Your week'}) =>
+    _card(Row(children: [
     SizedBox(width: 42, height: 42, child: Stack(alignment: Alignment.center, children: [
       CircularProgressIndicator(value: total == 0 ? 0 : done / total,
         strokeWidth: 4, color: sage, backgroundColor: const Color(0xFFECE8DE)),
@@ -508,7 +517,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     const SizedBox(width: 12),
     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Your week', style: GoogleFonts.playfairDisplay(
+        Text(title, style: GoogleFonts.playfairDisplay(
           fontSize: 17, fontWeight: FontWeight.w600, color: ink)),
         Text('$total tasks planned · $done completed',
           style: const TextStyle(fontSize: 12, color: ink)),
@@ -554,25 +563,39 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
             const Icon(Icons.chevron_right, color: sage),
           ]))));
 
-  Widget _days() => Row(children: [for (var i = 0; i < 7; i++)
-    Expanded(child: GestureDetector(
-      onTap: () => setState(() {
-        selectedDay = weekStart.add(Duration(days: i));
-        daySelected = true;
-      }),
-      child: Container(margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(color: daySelected && _same(selectedDay, weekStart.add(Duration(days: i)))
-          ? sage : Colors.white, borderRadius: BorderRadius.circular(18)),
-        child: Column(children: [
-          Text(_shortDay(weekStart.add(Duration(days: i))).substring(0, 1),
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500,
-              color: daySelected && _same(selectedDay, weekStart.add(Duration(days: i))) ? Colors.white : ink)),
-          const SizedBox(height: 3),
-          Text('${weekStart.add(Duration(days: i)).day}', style: TextStyle(fontWeight: FontWeight.w700,
-            color: daySelected && _same(selectedDay, weekStart.add(Duration(days: i))) ? Colors.white : ink)),
-        ])),
-    ))]);
+  Widget _days() => Column(children: [
+    Row(children: [for (var i = 0; i < 7; i++)
+      Expanded(child: GestureDetector(
+        onTap: () => setState(() {
+          final tappedDay = weekStart.add(Duration(days: i));
+          final wasSelected = daySelected && _same(selectedDay, tappedDay);
+          selectedDay = tappedDay;
+          daySelected = !wasSelected;
+        }),
+        child: Container(margin: const EdgeInsets.symmetric(horizontal: 2),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: daySelected && _same(selectedDay, weekStart.add(Duration(days: i)))
+              ? sage : Colors.white,
+            borderRadius: BorderRadius.circular(18)),
+          child: Column(children: [
+            Text(_shortDay(weekStart.add(Duration(days: i))).substring(0, 1),
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500,
+                color: daySelected && _same(selectedDay, weekStart.add(Duration(days: i)))
+                  ? Colors.white : ink)),
+            const SizedBox(height: 3),
+            Text('${weekStart.add(Duration(days: i)).day}',
+              style: TextStyle(fontWeight: FontWeight.w700,
+                color: daySelected && _same(selectedDay, weekStart.add(Duration(days: i)))
+                  ? Colors.white : ink)),
+          ])),
+      ))]),
+    if (daySelected)
+      Align(alignment: Alignment.centerLeft, child: TextButton.icon(
+        onPressed: () => setState(() => daySelected = false),
+        icon: const Icon(Icons.calendar_view_week_outlined),
+        label: const Text('Show whole week'))),
+  ]);
 
   Widget _section() {
     if (section == 'Weekly Goals') return _card(Column(children: [
@@ -582,8 +605,8 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     ]));
     if (section == 'Task List') return _taskListPage();
     if (section == 'Tasks & Schedule') {
-      final items = tasks.where((t) => !daySelected || t['day'] == null
-        || t['day'] == '' || t['day'] == _key(selectedDay)).toList();
+      final items = tasks.where((t) => !daySelected
+        || t['day'] == _key(selectedDay)).toList();
       return Column(children: [
         _days(), const SizedBox(height: 12),
         _card(Column(children: [
@@ -994,15 +1017,9 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   Widget _taskListPage() {
     final indices = <int>[
       for (var i = 0; i < tasks.length; i++)
-        if (!daySelected || tasks[i]['day'] == null || tasks[i]['day'] == ''
-            || tasks[i]['day'] == _key(selectedDay)) i,
+        if (!daySelected || tasks[i]['day'] == _key(selectedDay)) i,
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (daySelected)
-        Align(alignment: Alignment.centerLeft, child: TextButton.icon(
-          onPressed: () => setState(() => daySelected = false),
-          icon: const Icon(Icons.calendar_view_week_outlined),
-          label: const Text('Show whole week'))),
       _days(),
       const SizedBox(height: 16),
       Text(daySelected ? 'Tasks for ${_weekday(selectedDay)}' : 'This week’s tasks',
@@ -1078,11 +1095,11 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     final recipes = _recipeFilter == 'All'
       ? _mealRecipes
       : _mealRecipes.where((recipe) => recipe.tags.contains(_recipeFilter)).toList();
-    final plannedMeal = (meals[_key(selectedDay)] as String?)?.trim() ?? '';
+    final plannedMeal = (meals[_activePlanKey] as String?)?.trim() ?? '';
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _days(), const SizedBox(height: 12),
       _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _heading('Meals for ${_weekday(selectedDay)}', _meal),
+        _heading('Meals for ${_activePlanLabel}', _meal),
         Text(plannedMeal.isNotEmpty ? plannedMeal : 'No meals planned yet.'),
         _link(Icons.shopping_cart_outlined,
           'Open Grocery List (${groceries.length} items)',
@@ -1092,7 +1109,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       Text('Meal ideas', style: GoogleFonts.playfairDisplay(fontSize: 23,
         color: ink, fontWeight: FontWeight.w600)),
       const SizedBox(height: 3),
-      const Text('Choose a recipe, add it to your day, and send its ingredients to your grocery list.'),
+      Text('Choose a recipe to add to ${_activePlanLabel}, or select a day above. Send ingredients to your grocery list.'),
       const SizedBox(height: 11),
       SingleChildScrollView(scrollDirection: Axis.horizontal,
         child: Row(children: [for (var i = 0; i < filters.length; i++)

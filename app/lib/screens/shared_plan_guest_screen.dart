@@ -78,7 +78,8 @@ class SharedPlanGuestScreen extends StatelessWidget {
 
   List<String> _datedEntries(Map<String, dynamic> entries) => entries.entries
     .where((entry) => entry.value is String && (entry.value as String).trim().isNotEmpty)
-    .map((entry) => '${entry.key} · ${entry.value}').toList();
+    .map((entry) => entry.key == 'week'
+      ? 'This week · ${entry.value}' : '${entry.key} · ${entry.value}').toList();
 
   Widget _message(String title, String detail) => Center(child: Padding(
     padding: const EdgeInsets.all(24),
