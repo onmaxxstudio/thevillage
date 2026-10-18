@@ -565,6 +565,8 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
               onTap: () {
                 if (type == 'milestone') {
                   _openMilestoneDetails(doc);
+                } else if (type == 'gratitude') {
+                  _openGratitudeDetails(doc);
                 } else {
                   _openEntry(doc);
                 }
@@ -652,6 +654,16 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
                     ],
             ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _openGratitudeDetails(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _GratitudeDetailsPage(entry: doc),
       ),
     );
   }
@@ -3831,6 +3843,137 @@ class _MilestoneEditorPageState extends State<_MilestoneEditorPage> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _GratitudeDetailsPage extends StatelessWidget {
+  const _GratitudeDetailsPage({required this.entry});
+
+  final QueryDocumentSnapshot<Map<String, dynamic>> entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = entry.data();
+    final rawTitle = (data['title'] as String? ?? '').trim();
+    final prompt = (data['prompt'] as String? ?? '').trim();
+    final question = prompt.isNotEmpty
+        ? prompt
+        : rawTitle.isNotEmpty
+        ? rawTitle
+        : 'What is one thing you appreciate today?';
+    final body = (data['body'] as String? ?? '').trim();
+    final createdAt = data['createdAt'];
+    final date = createdAt is Timestamp
+        ? createdAt.toDate()
+        : createdAt is DateTime
+        ? createdAt
+        : null;
+    final dateLabel = date == null
+        ? 'Date unavailable'
+        : MaterialLocalizations.of(context).formatMediumDate(date);
+
+    return Scaffold(
+      backgroundColor: _cream,
+      appBar: AppBar(
+        backgroundColor: _cream,
+        foregroundColor: _green,
+        centerTitle: true,
+        title: Text(
+          'Gratitude',
+          style: GoogleFonts.playfairDisplay(
+            color: _green,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          tooltip: 'Back to gratitude',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+          onPressed: () => Navigator.maybePop(context),
+        ),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
+              children: [
+                _softCard(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 54,
+                        height: 58,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _sage,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.favorite_border_rounded,
+                          color: _green,
+                          size: 29,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Gratitude note',
+                              style: GoogleFonts.playfairDisplay(
+                                color: _green,
+                                fontSize: 23,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              dateLabel,
+                              style: const TextStyle(
+                                color: Color(0xFF74766F),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _softCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        question,
+                        style: GoogleFonts.playfairDisplay(
+                          color: _green,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SelectableText(
+                        body.isEmpty ? 'No written note was added.' : body,
+                        style: const TextStyle(
+                          color: _ink,
+                          fontSize: 15,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
