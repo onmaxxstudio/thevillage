@@ -2989,7 +2989,7 @@ class _MoodComposerState extends State<_MoodComposer> {
                 child: ListView.separated(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
                   itemCount: entries.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 4),
+                  separatorBuilder: (_context, _index) => const SizedBox(height: 4),
                   itemBuilder: (context, index) {
                     final doc = entries[index];
                     final data = doc.data();
@@ -3224,9 +3224,13 @@ class _MoodComposerState extends State<_MoodComposer> {
                 )
                 .toList();
             if (entries.isEmpty) return const SizedBox.shrink();
-            final selectedEntry = entries
-                .where((doc) => doc.id == _linkedId)
-                .firstOrNull;
+            QueryDocumentSnapshot<Map<String, dynamic>>? selectedEntry;
+            for (final doc in entries) {
+              if (doc.id == _linkedId) {
+                selectedEntry = doc;
+                break;
+              }
+            }
             final selectedTitle = selectedEntry == null
                 ? 'Choose a journal entry'
                 : _journalEntryTitle(selectedEntry.data());
