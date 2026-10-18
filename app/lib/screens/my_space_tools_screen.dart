@@ -401,6 +401,33 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
     );
   }
 
+  Widget _goalDetailSection(String label, String value) => Padding(
+    padding: const EdgeInsets.only(top: 10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF74766F),
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          style: const TextStyle(
+            color: _ink,
+            fontSize: 12,
+            height: 1.35,
+          ),
+        ),
+      ],
+    ),
+  );
+
   Widget _goalList() {
     final collection = _entries;
     return ListView(
@@ -526,6 +553,9 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
                   final data = doc.data();
                   final title = (data['title'] as String? ?? 'Personal goal').trim();
                   final body = (data['body'] as String? ?? '').trim();
+                  final motivation = (data['goalMotivation'] as String? ?? '').trim();
+                  final obstacles = (data['goalObstacles'] as String? ?? '').trim();
+                  final plan = (data['goalPlan'] as String? ?? '').trim();
                   final progress = data['goalProgress'] is num
                       ? (data['goalProgress'] as num).toDouble().clamp(0, 100)
                       : 0.0;
@@ -534,6 +564,12 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
                       .where((step) => step.trim().isNotEmpty)
                       .take(2)
                       .toList();
+                  final description = (data['goalDescription'] as String? ?? '').trim();
+                  final displayBody = description.isNotEmpty
+                      ? description
+                      : steps.isEmpty
+                      ? body
+                      : '';
                   return Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(16),
@@ -570,10 +606,10 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                  if (body.isNotEmpty && body != title) ...[
+                                  if (displayBody.isNotEmpty && displayBody != title) ...[
                                     const SizedBox(height: 4),
                                     Text(
-                                      body,
+                                      displayBody,
                                       maxLines: 3,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -641,6 +677,12 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
                               ),
                             ),
                         ],
+                        if (motivation.isNotEmpty)
+                          _goalDetailSection('WHY THIS MATTERS', motivation),
+                        if (obstacles.isNotEmpty)
+                          _goalDetailSection('WHAT MIGHT GET IN THE WAY', obstacles),
+                        if (plan.isNotEmpty)
+                          _goalDetailSection('HOW I’LL WORK THROUGH IT', plan),
                         const SizedBox(height: 14),
                         Row(
                           children: [
@@ -1027,17 +1069,26 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
       ),
     );
     if (draft == null) return;
+    final steps = draft.steps
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
     await _saveRecord(
       type: 'goal',
       title: draft.title,
-      body: draft.steps.isEmpty ? draft.title : draft.steps,
+      body: draft.description.isNotEmpty
+          ? draft.description
+          : steps.isNotEmpty
+          ? steps.join('\n')
+          : draft.title,
       extra: {
         'goalProgress': 0,
-        'actionSteps': draft.steps
-            .split('\n')
-            .map((line) => line.trim())
-            .where((line) => line.isNotEmpty)
-            .toList(),
+        'goalMotivation': draft.motivation,
+        'goalDescription': draft.description,
+        'actionSteps': steps,
+        'goalObstacles': draft.barriers,
+        'goalPlan': draft.plan,
       },
     );
   }
@@ -3893,10 +3944,21 @@ class _JournalInsightsState extends State<_JournalInsights> {
 }
 
 class _GoalDraft {
-  const _GoalDraft({required this.title, required this.steps});
+  const _GoalDraft({
+    required this.title,
+    required this.motivation,
+    required this.description,
+    required this.steps,
+    required this.barriers,
+    required this.plan,
+  });
 
   final String title;
+  final String motivation;
+  final String description;
   final String steps;
+  final String barriers;
+  final String plan;
 }
 
 class _GoalEditorPage extends StatefulWidget {
@@ -3909,12 +3971,20 @@ class _GoalEditorPage extends StatefulWidget {
 class _GoalEditorPageState extends State<_GoalEditorPage> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
+  final _motivation = TextEditingController();
+  final _description = TextEditingController();
   final _steps = TextEditingController();
+  final _barriers = TextEditingController();
+  final _plan = TextEditingController();
 
   @override
   void dispose() {
     _title.dispose();
+    _motivation.dispose();
+    _description.dispose();
     _steps.dispose();
+    _barriers.dispose();
+    _plan.dispose();
     super.dispose();
   }
 
@@ -3923,8 +3993,84 @@ class _GoalEditorPageState extends State<_GoalEditorPage> {
     Navigator.of(context).pop(
       _GoalDraft(
         title: _title.text.trim(),
+        motivation: _motivation.text.trim(),
+        description: _description.text.trim(),
         steps: _steps.text.trim(),
+        barriers: _barriers.text.trim(),
+        plan: _plan.text.trim(),
       ),
+    );
+  }
+
+  Widget _field({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    int minLines = 3,
+    int maxLines = 5,
+    bool required = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.playfairDisplay(
+                  color: _green,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            if (!required)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _sage,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'Optional',
+                  style: TextStyle(color: _green, fontSize: 11),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 7),
+        TextFormField(
+          controller: controller,
+          textCapitalization: TextCapitalization.sentences,
+          minLines: minLines,
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            hintText: hint,
+            alignLabelWithHint: minLines > 1,
+            filled: true,
+            fillColor: _paper,
+            contentPadding: const EdgeInsets.all(15),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: const BorderSide(color: _line),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: const BorderSide(color: _line),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: const BorderSide(color: _green, width: 1.5),
+            ),
+          ),
+          validator: required
+              ? (value) => value == null || value.trim().isEmpty
+                  ? 'Add a name for your goal.'
+                  : null
+              : null,
+        ),
+      ],
     );
   }
 
@@ -3970,119 +4116,107 @@ class _GoalEditorPageState extends State<_GoalEditorPage> {
                       ),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        const Icon(Icons.lightbulb_outline_rounded, color: _green, size: 30),
-                        const SizedBox(height: 10),
-                        Text(
-                          'Make space for what matters',
-                          style: GoogleFonts.playfairDisplay(
-                            color: _green,
-                            fontSize: wide ? 27 : 24,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        const Icon(
+                          Icons.explore_outlined,
+                          color: _green,
+                          size: 40,
                         ),
-                        const SizedBox(height: 5),
-                        const Text(
-                          'Choose something meaningful to work toward. You can take it one small step at a time.',
-                          style: TextStyle(color: _ink, height: 1.4, fontSize: 14),
+                        const SizedBox(width: 13),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Make space for what matters',
+                                style: GoogleFonts.playfairDisplay(
+                                  color: _green,
+                                  fontSize: wide ? 25 : 21,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              const Text(
+                                'You don’t have to have it all figured out. Start with what feels important.',
+                                style: TextStyle(
+                                  color: _ink,
+                                  height: 1.4,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Text(
-                    'What do you want to work toward?',
-                    style: GoogleFonts.playfairDisplay(
-                      color: _green,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
+                  _field(
+                    label: 'What do you want to work toward?',
                     controller: _title,
-                    textCapitalization: TextCapitalization.sentences,
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(
-                      hintText: 'Give your goal a name',
-                      filled: true,
-                      fillColor: _paper,
-                      contentPadding: const EdgeInsets.all(16),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: _line),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: _line),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: _green, width: 1.5),
-                      ),
-                    ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Add a name for your goal.'
-                        : null,
+                    hint: 'Name your goal',
+                    minLines: 1,
+                    maxLines: 1,
+                    required: true,
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Your first steps',
-                    style: GoogleFonts.playfairDisplay(
-                      color: _green,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  const SizedBox(height: 18),
+                  _field(
+                    label: 'Why does this goal matter to you?',
+                    controller: _motivation,
+                    hint: 'What makes this meaningful for you?',
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Optional · write one step per line',
-                    style: TextStyle(color: Color(0xFF74766F), fontSize: 13),
+                  const SizedBox(height: 18),
+                  _field(
+                    label: 'Goal description',
+                    controller: _description,
+                    hint: 'What would this goal look or feel like for you?',
                   ),
-                  const SizedBox(height: 8),
-                  TextFormField(
+                  const SizedBox(height: 18),
+                  _field(
+                    label: 'Steps you believe you need to take',
                     controller: _steps,
-                    textCapitalization: TextCapitalization.sentences,
-                    minLines: 5,
-                    maxLines: 8,
-                    decoration: InputDecoration(
-                      hintText: 'What is one small thing you can do first?',
-                      alignLabelWithHint: true,
-                      filled: true,
-                      fillColor: _paper,
-                      contentPadding: const EdgeInsets.all(16),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: _line),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: _line),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: _green, width: 1.5),
-                      ),
-                    ),
+                    hint: 'Write one small step per line',
+                    minLines: 4,
+                    maxLines: 7,
+                  ),
+                  const SizedBox(height: 18),
+                  _field(
+                    label: 'What might get in the way?',
+                    controller: _barriers,
+                    hint: 'Name any barriers or worries',
+                  ),
+                  const SizedBox(height: 18),
+                  _field(
+                    label: 'How will you work through it?',
+                    controller: _plan,
+                    hint: 'What could help when things feel difficult?',
                   ),
                   const SizedBox(height: 18),
                   _softCard(
                     child: const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.favorite_border_rounded, color: _green, size: 20),
+                        Icon(
+                          Icons.favorite_border_rounded,
+                          color: _green,
+                          size: 20,
+                        ),
                         SizedBox(width: 9),
                         Expanded(
                           child: Text(
-                            'Your goals are personal. Progress can look different every day.',
-                            style: TextStyle(color: Color(0xFF5E615B), height: 1.35, fontSize: 13),
+                            'Small steps count. You can update your plan as you grow.',
+                            style: TextStyle(
+                              color: Color(0xFF5E615B),
+                              height: 1.35,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
