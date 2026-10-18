@@ -1063,7 +1063,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       _SpaceFeature('Milestones', Icons.emoji_events_rounded, const Color(0xFFF9EBD7), () => _openTool('milestones')),
       _SpaceFeature('Vision &\nGoals', Icons.track_changes_rounded, const Color(0xFFF8E4DC), () => _openTool('goals')),
       _SpaceFeature('Letters', Icons.mail_outline_rounded, const Color(0xFFE5EBDD), () => _openTool('letters')),
-      _SpaceFeature('Saved\nFavorites', Icons.bookmark_border_rounded, const Color(0xFFF9EBD7), () => _openTool('favorites')),
+      _SpaceFeature('Budget', Icons.account_balance_wallet_outlined, const Color(0xFFF9EBD7), () => _openTool('budget')),
     ];
     return GridView.builder(
       shrinkWrap: true,
@@ -1482,6 +1482,7 @@ class _SpaceFeature {
         'Milestones' => const Color(0xFFB77C29),
         'Vision & Goals' => const Color(0xFFB56054),
         'Letters' => const Color(0xFF355C3B),
+        'Budget' => const Color(0xFF527657),
         _ => const Color(0xFF355C3B),
       };
 }
