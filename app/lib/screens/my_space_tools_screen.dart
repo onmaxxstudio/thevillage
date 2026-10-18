@@ -167,7 +167,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
     try {
       final values = (await legacy.get()).data();
       if (values == null || values.isEmpty) {
-        await _seedCurrentBudgetFromPrevious();
+        await _seedBudgetMonthFromPrevious(_selectedBudgetMonth);
         return;
       }
       final expenses = (values['expenses'] as List<dynamic>? ?? const [])
@@ -210,16 +210,15 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
           });
         });
       }
-      await _seedCurrentBudgetFromPrevious();
+      await _seedBudgetMonthFromPrevious(_selectedBudgetMonth);
     } catch (_) {
       // The original record remains available even if the one-time copy fails.
     }
   }
 
-  Future<void> _seedCurrentBudgetFromPrevious() async {
+  Future<void> _seedBudgetMonthFromPrevious(DateTime month) async {
     final uid = _uid;
     if (uid == null) return;
-    final month = _selectedBudgetMonth;
     final current = FirebaseFirestore.instance
         .collection('private_journals')
         .doc(uid)
@@ -244,6 +243,15 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });
+  }
+
+  void _selectBudgetMonth(DateTime month) {
+    setState(() => _selectedBudgetMonth = month);
+    final today = DateTime.now();
+    final currentMonth = DateTime(today.year, today.month);
+    if (DateTime(month.year, month.month).isAfter(currentMonth)) {
+      _seedBudgetMonthFromPrevious(month);
+    }
   }
 
   String get _title => switch (widget.mode) {
@@ -560,7 +568,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
                       IconButton(
                         tooltip: 'Previous month',
                         visualDensity: VisualDensity.compact,
-                        onPressed: () => setState(() => _selectedBudgetMonth = DateTime(month.year, month.month - 1)),
+                        onPressed: () => _selectBudgetMonth(DateTime(month.year, month.month - 1)),
                         icon: const Icon(Icons.chevron_left_rounded, color: _green),
                       ),
                       const Icon(Icons.calendar_month_outlined, color: _green, size: 19),
@@ -569,9 +577,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
                       IconButton(
                         tooltip: 'Next month',
                         visualDensity: VisualDensity.compact,
-                        onPressed: month.year == DateTime.now().year && month.month == DateTime.now().month
-                            ? null
-                            : () => setState(() => _selectedBudgetMonth = DateTime(month.year, month.month + 1)),
+                        onPressed: () => _selectBudgetMonth(DateTime(month.year, month.month + 1)),
                         icon: const Icon(Icons.chevron_right_rounded, color: _green),
                       ),
                       const SizedBox(width: 4),
