@@ -240,7 +240,6 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
       savedPrompts: _savedPrompts,
       entries: _entries,
       onWrite: (prompt) {
-        Navigator.pop(context);
         widget.onWritePrompt(prompt, guided ? 'guided' : 'journal_prompt');
       },
       onOpenEntry: widget.onOpenEntry,
