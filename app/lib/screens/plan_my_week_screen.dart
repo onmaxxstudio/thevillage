@@ -287,7 +287,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
               ])),
         ])),
       ),
-    ));
+    );
 
   Widget _recipeSectionTitle(String title) => Container(
     width: double.infinity,
