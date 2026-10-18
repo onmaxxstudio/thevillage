@@ -1389,10 +1389,14 @@ class _SwipeDeleteTaskRowState extends State<_SwipeDeleteTaskRow> {
                 ),
               ),
             ),
-            AnimatedContainer(
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(end: _offset),
               duration: const Duration(milliseconds: 160),
               curve: Curves.easeOut,
-              transform: Matrix4.translationValues(_offset, 0, 0),
+              builder: (context, offset, child) => Transform.translate(
+                offset: Offset(offset, 0),
+                child: child,
+              ),
               child: widget.child,
             ),
           ],
