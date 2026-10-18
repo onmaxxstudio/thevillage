@@ -130,6 +130,17 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
               .collection('saved_prompts');
   }
 
+  DocumentReference<Map<String, dynamic>>? get _budgetDocument {
+    final uid = _uid;
+    return uid == null
+        ? null
+        : FirebaseFirestore.instance
+              .collection('private_journals')
+              .doc(uid)
+              .collection('budget')
+              .doc('current');
+  }
+
   String get _title => switch (widget.mode) {
     'guided' => 'Guided Journaling',
     'prompts' => 'Journal Prompts',
@@ -138,6 +149,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
     'milestones' => 'Milestones',
     'goals' => 'Vision & Goals',
     'letters' => 'Letters',
+    'budget' => 'My Budget',
     'favorites' => 'Saved Favorites',
     'insights' => 'Journal Insights',
     'journal' => 'My Journal',
@@ -193,6 +205,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
                   'milestones' => _recordList('milestone'),
                   'goals' => _recordList('goal'),
                   'letters' => _letters(),
+                  'budget' => _budget(),
                   'favorites' => _recordList('favorites'),
                   'insights' => _insights(),
                   'journal' => _recordList('all'),
@@ -358,6 +371,431 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
       ),
     ],
   );
+
+  static const _defaultBudgetCategories = <Map<String, dynamic>>[
+    {'name': 'Housing', 'planned': 0.0},
+    {'name': 'Groceries', 'planned': 0.0},
+    {'name': 'Transportation', 'planned': 0.0},
+    {'name': 'Bills', 'planned': 0.0},
+    {'name': 'Personal', 'planned': 0.0},
+    {'name': 'Other', 'planned': 0.0},
+  ];
+
+  Widget _budget() {
+    final document = _budgetDocument;
+    if (document == null) {
+      return const Center(child: Text('Sign in to use your private budget.'));
+    }
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: document.snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text('Your budget could not be loaded. Check your connection and try again.'),
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator(color: _green));
+        }
+        final data = snapshot.data!.data() ?? const <String, dynamic>{};
+        final income = _budgetNumber(data['monthlyIncome']);
+        final savingsGoal = _budgetNumber(data['savingsGoal']);
+        final savedAmount = _budgetNumber(data['savedAmount']);
+        final categories = (data['categories'] as List<dynamic>? ?? _defaultBudgetCategories)
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+        final expenses = (data['expenses'] as List<dynamic>? ?? const [])
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+        final now = DateTime.now();
+        final monthExpenses = expenses.where((expense) {
+          final date = _budgetDate(expense['date']);
+          return date != null && date.year == now.year && date.month == now.month;
+        }).toList()
+          ..sort((a, b) => (_budgetDate(b['date']) ?? DateTime(1970))
+              .compareTo(_budgetDate(a['date']) ?? DateTime(1970)));
+        final spent = monthExpenses.fold<double>(
+          0,
+          (total, expense) => total + _budgetNumber(expense['amount']),
+        );
+        final planned = categories.fold<double>(
+          0,
+          (total, category) => total + _budgetNumber(category['planned']),
+        );
+        final monthName = MaterialLocalizations.of(context).formatMonthYear(now);
+
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+          children: [
+            _topIntro('A private place to plan your money, track spending, and make room for what matters.'),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFE7EBDD), Color(0xFFF5EADB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: _line),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_month_outlined, color: _green, size: 19),
+                      const SizedBox(width: 8),
+                      Text(monthName, style: const TextStyle(color: _green, fontWeight: FontWeight.w700)),
+                      const Spacer(),
+                      const Icon(Icons.lock_outline_rounded, color: _green, size: 16),
+                      const SizedBox(width: 4),
+                      const Text('Private', style: TextStyle(color: _green, fontSize: 12)),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  const Text('Left after logged spending', style: TextStyle(color: _ink, fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Text(
+                    _budgetMoney(income - spent),
+                    style: GoogleFonts.playfairDisplay(
+                      color: _green,
+                      fontSize: 34,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  Row(
+                    children: [
+                      Expanded(child: _budgetMetric('Monthly income', _budgetMoney(income), () => _editBudgetAmount('Monthly income', income, 'monthlyIncome'))),
+                      const SizedBox(width: 10),
+                      Expanded(child: _budgetMetric('Spent this month', _budgetMoney(spent), null)),
+                    ],
+                  ),
+                  if (income == 0) ...[
+                    const SizedBox(height: 12),
+                    const Text('Add your monthly take-home income to see a more useful monthly balance.', style: TextStyle(color: _ink, height: 1.35, fontSize: 12)),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _wideAction('Log an expense', Icons.add_rounded, () => _addBudgetExpense(categories, expenses)),
+            const SizedBox(height: 22),
+            Row(
+              children: [
+                Expanded(child: Text('Your monthly plan', style: GoogleFonts.playfairDisplay(color: _green, fontSize: 21, fontWeight: FontWeight.w700))),
+                Text('${categories.length} categories', style: const TextStyle(color: Color(0xFF74766F), fontSize: 12)),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text('Planned total  ${_budgetMoney(planned)}', style: const TextStyle(color: Color(0xFF74766F), fontSize: 13)),
+            const SizedBox(height: 10),
+            for (var i = 0; i < categories.length; i++)
+              _budgetCategoryCard(categories[i], i, categories, monthExpenses),
+            const SizedBox(height: 2),
+            OutlinedButton.icon(
+              onPressed: () => _addBudgetCategory(categories),
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('Add a category'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _green,
+                side: const BorderSide(color: Color(0xFFBEC7B6)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _savingsCard(savingsGoal, savedAmount),
+            const SizedBox(height: 20),
+            Text('Recent spending', style: GoogleFonts.playfairDisplay(color: _green, fontSize: 21, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 9),
+            if (monthExpenses.isEmpty)
+              _surface(
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    children: [
+                      Icon(Icons.receipt_long_outlined, color: _green, size: 22),
+                      SizedBox(width: 10),
+                      Expanded(child: Text('Expenses you log will show here. Your budget stays private.', style: TextStyle(color: _ink, height: 1.35))),
+                    ],
+                  ),
+                ),
+              )
+            else
+              for (final expense in monthExpenses.take(6))
+                _budgetExpenseCard(expense),
+            const SizedBox(height: 10),
+            const Text('Your budget is private and for personal planning. It does not connect to your bank.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF74766F), fontSize: 12, height: 1.4)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _budgetMetric(String label, String value, VoidCallback? onTap) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(13),
+    child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: _paper.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(13)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: Color(0xFF74766F), fontSize: 11)),
+          const SizedBox(height: 4),
+          Row(children: [Expanded(child: Text(value, style: const TextStyle(color: _ink, fontWeight: FontWeight.w700, fontSize: 15))), if (onTap != null) const Icon(Icons.edit_outlined, color: _green, size: 15)]),
+        ],
+      ),
+    ),
+  );
+
+  Widget _budgetCategoryCard(
+    Map<String, dynamic> category,
+    int index,
+    List<Map<String, dynamic>> categories,
+    List<Map<String, dynamic>> expenses,
+  ) {
+    final name = (category['name'] as String? ?? 'Category').trim();
+    final target = _budgetNumber(category['planned']);
+    final actual = expenses
+        .where((expense) => expense['category'] == name)
+        .fold<double>(0, (total, expense) => total + _budgetNumber(expense['amount']));
+    final progress = target <= 0 ? 0.0 : (actual / target).clamp(0.0, 1.0);
+    return _surface(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () => _editBudgetCategory(index, categories),
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(width: 36, height: 36, decoration: BoxDecoration(color: _sage, borderRadius: BorderRadius.circular(11)), child: const Icon(Icons.spa_outlined, size: 19, color: _green)),
+                const SizedBox(width: 10),
+                Expanded(child: Text(name, style: const TextStyle(color: _ink, fontWeight: FontWeight.w700))),
+                Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                  Text(_budgetMoney(target), style: const TextStyle(color: _green, fontWeight: FontWeight.w700)),
+                  const Text('planned', style: TextStyle(color: Color(0xFF74766F), fontSize: 10)),
+                ]),
+                const SizedBox(width: 6),
+                const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF74766F)),
+              ],
+            ),
+            const SizedBox(height: 11),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(value: progress, minHeight: 7, backgroundColor: _sage, color: actual > target && target > 0 ? const Color(0xFFB56054) : _green),
+            ),
+            const SizedBox(height: 5),
+            Text('${_budgetMoney(actual)} spent', style: const TextStyle(color: Color(0xFF74766F), fontSize: 11)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _savingsCard(double goal, double saved) => _surface(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          Container(width: 40, height: 40, decoration: BoxDecoration(color: _sage, borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.savings_outlined, color: _green)),
+          const SizedBox(width: 10),
+          Expanded(child: Text('Savings goal', style: GoogleFonts.playfairDisplay(color: _green, fontSize: 18, fontWeight: FontWeight.w700))),
+          PopupMenuButton<String>(
+            tooltip: 'Update savings goal',
+            icon: const Icon(Icons.more_horiz_rounded, color: _green),
+            onSelected: (value) => _editBudgetAmount(value == 'goal' ? 'Monthly savings goal' : 'Amount saved so far', value == 'goal' ? goal : saved, value == 'goal' ? 'savingsGoal' : 'savedAmount'),
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'goal', child: Text('Set monthly goal')),
+              PopupMenuItem(value: 'saved', child: Text('Update saved amount')),
+            ],
+          ),
+        ]),
+        const SizedBox(height: 4),
+        Text(goal > 0 ? '${_budgetMoney(saved)} saved of ${_budgetMoney(goal)}' : 'Choose an amount you would like to set aside this month.', style: const TextStyle(color: Color(0xFF74766F), fontSize: 13)),
+        if (goal > 0) ...[
+          const SizedBox(height: 12),
+          ClipRRect(borderRadius: BorderRadius.circular(10), child: LinearProgressIndicator(value: (saved / goal).clamp(0.0, 1.0), minHeight: 8, backgroundColor: _sage, color: _green)),
+        ],
+      ],
+    ),
+  );
+
+  Widget _budgetExpenseCard(Map<String, dynamic> expense) {
+    final date = _budgetDate(expense['date']);
+    final dateLabel = date == null ? '' : MaterialLocalizations.of(context).formatShortDate(date);
+    final title = (expense['description'] as String? ?? '').trim();
+    final category = (expense['category'] as String? ?? 'Other').trim();
+    return _surface(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Container(width: 38, height: 38, decoration: BoxDecoration(color: _sage, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.receipt_long_outlined, color: _green, size: 20)),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title.isEmpty ? category : title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _ink, fontWeight: FontWeight.w700)),
+            Text('$category${dateLabel.isEmpty ? '' : ' · $dateLabel'}', style: const TextStyle(color: Color(0xFF74766F), fontSize: 12)),
+          ])),
+          const SizedBox(width: 8),
+          Text('−${_budgetMoney(_budgetNumber(expense['amount']))}', style: const TextStyle(color: _ink, fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _editBudgetAmount(String title, double initial, String field) async {
+    final controller = TextEditingController(text: initial == 0 ? '' : initial.toStringAsFixed(2));
+    final value = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: _paper,
+        title: Text(title, style: GoogleFonts.playfairDisplay(color: _green, fontWeight: FontWeight.w700)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(prefixText: '\$ ', hintText: '0.00', border: OutlineInputBorder()),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          FilledButton(onPressed: () {
+            final parsed = _parseBudgetAmount(controller.text);
+            if (parsed != null) Navigator.pop(dialogContext, parsed);
+          }, style: FilledButton.styleFrom(backgroundColor: _green), child: const Text('Save')),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (value == null) return;
+    await _writeBudget({field: value});
+  }
+
+  Future<void> _editBudgetCategory(int index, List<Map<String, dynamic>> categories) async {
+    final category = categories[index];
+    final controller = TextEditingController(text: _budgetNumber(category['planned']).toStringAsFixed(2));
+    final value = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: _paper,
+        title: Text('Plan for ${category['name']}', style: GoogleFonts.playfairDisplay(color: _green, fontWeight: FontWeight.w700)),
+        content: TextField(controller: controller, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(prefixText: '\$ ', hintText: '0.00', border: OutlineInputBorder())),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          FilledButton(onPressed: () { final parsed = _parseBudgetAmount(controller.text); if (parsed != null) Navigator.pop(dialogContext, parsed); }, style: FilledButton.styleFrom(backgroundColor: _green), child: const Text('Save plan')),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (value == null) return;
+    final updated = categories.map((item) => Map<String, dynamic>.from(item)).toList();
+    updated[index]['planned'] = value;
+    await _writeBudget({'categories': updated});
+  }
+
+  Future<void> _addBudgetCategory(List<Map<String, dynamic>> categories) async {
+    final nameController = TextEditingController();
+    final amountController = TextEditingController(text: '0.00');
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: _paper,
+        title: Text('Add a category', style: GoogleFonts.playfairDisplay(color: _green, fontWeight: FontWeight.w700)),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: nameController, maxLength: 40, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Category name', border: OutlineInputBorder())),
+          const SizedBox(height: 12),
+          TextField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Monthly plan', prefixText: '\$ ', border: OutlineInputBorder())),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          FilledButton(onPressed: () { final name = nameController.text.trim(); final amount = _parseBudgetAmount(amountController.text); if (name.isNotEmpty && amount != null) Navigator.pop(dialogContext, {'name': name, 'planned': amount}); }, style: FilledButton.styleFrom(backgroundColor: _green), child: const Text('Add')),
+        ],
+      ),
+    );
+    nameController.dispose();
+    amountController.dispose();
+    if (result == null) return;
+    if (categories.length >= 20) {
+      _message('You can have up to 20 budget categories.');
+      return;
+    }
+    if (categories.any((item) => (item['name'] as String? ?? '').toLowerCase() == (result['name'] as String).toLowerCase())) {
+      _message('That category already exists.');
+      return;
+    }
+    await _writeBudget({'categories': [...categories, result]});
+  }
+
+  Future<void> _addBudgetExpense(List<Map<String, dynamic>> categories, List<Map<String, dynamic>> expenses) async {
+    final descriptionController = TextEditingController();
+    final amountController = TextEditingController();
+    final categoryNames = categories.map((item) => (item['name'] as String? ?? '').trim()).where((name) => name.isNotEmpty).toList();
+    if (categoryNames.isEmpty) categoryNames.add('Other');
+    var selectedCategory = categoryNames.first;
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: _paper,
+          title: Text('Log an expense', style: GoogleFonts.playfairDisplay(color: _green, fontWeight: FontWeight.w700)),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(controller: descriptionController, maxLength: 60, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'What was it for?', border: OutlineInputBorder())),
+            const SizedBox(height: 10),
+            TextField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Amount', prefixText: '\$ ', border: OutlineInputBorder())),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String>(
+              value: selectedCategory,
+              decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
+              items: categoryNames.map((name) => DropdownMenuItem(value: name, child: Text(name))).toList(),
+              onChanged: (value) { if (value != null) setDialogState(() => selectedCategory = value); },
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+            FilledButton(onPressed: () { final amount = _parseBudgetAmount(amountController.text); if (amount != null && amount > 0) Navigator.pop(dialogContext, {'description': descriptionController.text.trim(), 'amount': amount, 'category': selectedCategory}); }, style: FilledButton.styleFrom(backgroundColor: _green), child: const Text('Save expense')),
+          ],
+        ),
+      ),
+    );
+    descriptionController.dispose();
+    amountController.dispose();
+    if (result == null) return;
+    final now = DateTime.now();
+    final updated = [...expenses, {
+      'id': now.microsecondsSinceEpoch.toString(),
+      'description': result['description'],
+      'amount': result['amount'],
+      'category': result['category'],
+      'date': Timestamp.fromDate(now),
+    }];
+    await _writeBudget({'expenses': updated.length > 200 ? updated.skip(updated.length - 200).toList() : updated});
+  }
+
+  Future<void> _writeBudget(Map<String, dynamic> values) async {
+    try {
+      await _budgetDocument?.set({...values, 'updatedAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+    } on FirebaseException catch (error) {
+      _message('Could not save budget (${error.code}). Please try again.');
+    } catch (_) {
+      _message('Could not save your budget. Please try again.');
+    }
+  }
+
+  double _budgetNumber(Object? value) => value is num ? value.toDouble() : 0;
+  DateTime? _budgetDate(Object? value) => value is Timestamp ? value.toDate() : value is DateTime ? value : null;
+  double? _parseBudgetAmount(String value) => double.tryParse(value.replaceAll(',', '').replaceAll('\$', '').trim());
+  String _budgetMoney(num amount) {
+    final absolute = amount.abs();
+    return '${amount < 0 ? '−' : ''}\$${absolute.toStringAsFixed(absolute % 1 == 0 ? 0 : 2)}';
+  }
 
   Widget _recordList(String kind) {
     if (kind == 'goal') return _goalList();
