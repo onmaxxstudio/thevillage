@@ -1115,6 +1115,11 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
         ? (daySelected ? 'A clear page for whatever matters today.' : 'Add tasks you want to track this week.')
         : '${indices.where((i) => tasks[i]['done'] == true).length} of ${indices.length} completed',
         style: const TextStyle(color: sage)),
+      if (indices.isNotEmpty) ...[
+        const SizedBox(height: 3),
+        const Text('Swipe left on a task for Delete · drag the handle to reorder',
+          style: TextStyle(color: sage, fontSize: 12)),
+      ],
       const SizedBox(height: 12),
       _taskDayPicker(),
       Container(
@@ -1153,30 +1158,33 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
             final taskIndex = indices[position];
             final task = tasks[taskIndex];
             final done = task['done'] == true;
-            return Container(
+            return _SwipeDeleteTaskRow(
               key: ObjectKey(task),
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              decoration: BoxDecoration(color: Colors.white,
-                border: Border.all(color: line), borderRadius: BorderRadius.circular(14)),
-              child: Row(children: [
-                Checkbox(value: done, activeColor: sage,
-                  onChanged: (_) => _toggle(tasks, taskIndex)),
-                Expanded(child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(task['title'] as String? ?? '',
-                      style: TextStyle(
-                        decoration: done ? TextDecoration.lineThrough : null,
-                        color: done ? ink.withValues(alpha: .55) : ink)),
-                    if (!daySelected)
-                      Text(_taskDayLabel(task),
-                        style: const TextStyle(fontSize: 12, color: sage)),
-                  ],
-                )),
-                ReorderableDragStartListener(index: position,
-                  child: const Padding(padding: EdgeInsets.all(12),
-                    child: Icon(Icons.drag_handle, color: sage))),
-              ]),
+              onDelete: () => _remove(tasks, taskIndex),
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                decoration: BoxDecoration(color: Colors.white,
+                  border: Border.all(color: line), borderRadius: BorderRadius.circular(14)),
+                child: Row(children: [
+                  Checkbox(value: done, activeColor: sage,
+                    onChanged: (_) => _toggle(tasks, taskIndex)),
+                  Expanded(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(task['title'] as String? ?? '',
+                        style: TextStyle(
+                          decoration: done ? TextDecoration.lineThrough : null,
+                          color: done ? ink.withValues(alpha: .55) : ink)),
+                      if (!daySelected)
+                        Text(_taskDayLabel(task),
+                          style: const TextStyle(fontSize: 12, color: sage)),
+                    ],
+                  )),
+                  ReorderableDragStartListener(index: position,
+                    child: const Padding(padding: EdgeInsets.all(12),
+                      child: Icon(Icons.drag_handle, color: sage))),
+                ]),
+              ),
             );
           },
         ),
@@ -1290,4 +1298,110 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   }
   String _shortDay(DateTime d) => const ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d.weekday - 1];
   String _month(int m) => const ['January','February','March','April','May','June','July','August','September','October','November','December'][m - 1];
+}
+
+class _SwipeDeleteTaskRow extends StatefulWidget {
+  const _SwipeDeleteTaskRow({
+    super.key,
+    required this.child,
+    required this.onDelete,
+  });
+
+  final Widget child;
+  final VoidCallback onDelete;
+
+  @override
+  State<_SwipeDeleteTaskRow> createState() => _SwipeDeleteTaskRowState();
+}
+
+class _SwipeDeleteTaskRowState extends State<_SwipeDeleteTaskRow> {
+  static const double _actionWidth = 92;
+  double _offset = 0;
+  double? _startX;
+  double? _startY;
+  double _startOffset = 0;
+  bool _tracking = false;
+
+  void _onPointerDown(PointerDownEvent event, double width) {
+    // Keep the dedicated drag handle on the far right free for reordering.
+    _tracking = event.localPosition.dx < width - 64;
+    if (!_tracking) return;
+    _startX = event.localPosition.dx;
+    _startY = event.localPosition.dy;
+    _startOffset = _offset;
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    if (!_tracking || _startX == null || _startY == null) return;
+    final dx = event.localPosition.dx - _startX!;
+    final dy = event.localPosition.dy - _startY!;
+    if (dy.abs() > dx.abs() && _offset == _startOffset) {
+      _tracking = false;
+      return;
+    }
+    setState(() {
+      _offset = (_startOffset + dx).clamp(-_actionWidth, 0).toDouble();
+    });
+  }
+
+  void _finishSwipe() {
+    if (!_tracking) return;
+    _tracking = false;
+    setState(() {
+      _offset = _offset <= -_actionWidth / 2 ? -_actionWidth : 0;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => Listener(
+      onPointerDown: (event) => _onPointerDown(event, constraints.maxWidth),
+      onPointerMove: _onPointerMove,
+      onPointerUp: (_) => _finishSwipe(),
+      onPointerCancel: (_) => _finishSwipe(),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: SizedBox(
+                  width: _actionWidth,
+                  child: Material(
+                    color: const Color(0xFFF7E9E5),
+                    child: InkWell(
+                      onTap: widget.onDelete,
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.delete_outline, color: Color(0xFF9A4138)),
+                          SizedBox(height: 2),
+                          Text('Delete', style: TextStyle(
+                            color: Color(0xFF9A4138),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          )),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(end: _offset),
+              duration: const Duration(milliseconds: 160),
+              curve: Curves.easeOut,
+              builder: (context, offset, child) => Transform.translate(
+                offset: Offset(offset, 0),
+                child: child,
+              ),
+              child: widget.child,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
