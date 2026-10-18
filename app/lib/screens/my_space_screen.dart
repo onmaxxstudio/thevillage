@@ -173,7 +173,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       }
       if (!mounted) return;
       final returnToFullPageTool =
-          editorEntryType == 'journal_prompt' || editorEntryType == 'gratitude';
+          editorEntryType == 'journal_prompt' ||
+          editorEntryType == 'gratitude' ||
+          editorEntryType == 'letter';
       setState(() {
         editingId = null;
         prompt = '';
@@ -312,10 +314,14 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       text.text = entry?.data()['body'] as String? ?? '';
     });
 
-    if (editorEntryType == 'gratitude' || editorEntryType == 'journal_prompt') {
-      final editorPage = editorEntryType == 'gratitude'
-          ? _gratitudeEditorPage()
-          : _journalPromptEditorPage();
+    if (editorEntryType == 'gratitude' ||
+        editorEntryType == 'journal_prompt' ||
+        editorEntryType == 'letter') {
+      final editorPage = switch (editorEntryType) {
+        'gratitude' => _gratitudeEditorPage(),
+        'journal_prompt' => _journalPromptEditorPage(),
+        _ => _letterEditorPage(),
+      };
       Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
         builder: (_) => editorPage,
       )).whenComplete(() {
@@ -397,6 +403,123 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                       textAlignVertical: TextAlignVertical.top,
                       decoration: InputDecoration(
                         hintText: 'Start writing here…',
+                        alignLabelWithHint: true,
+                        filled: true,
+                        fillColor: const Color(0xFFFFFDF8),
+                        contentPadding: const EdgeInsets.all(18),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(color: line),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(color: line),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(color: green, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton.icon(
+                      onPressed: saving ? null : save,
+                      icon: const Icon(Icons.lock_outline_rounded, size: 18),
+                      label: Text(saving ? 'Saving…' : 'Save privately'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: green,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _letterEditorPage() {
+    final date = reflectionDate ?? DateTime.now();
+    final dateLabel = MaterialLocalizations.of(context).formatMediumDate(date);
+    return Scaffold(
+      backgroundColor: cream,
+      appBar: AppBar(
+        backgroundColor: cream,
+        foregroundColor: green,
+        centerTitle: true,
+        title: Text(
+          'Write a Letter',
+          style: GoogleFonts.playfairDisplay(
+            color: green,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          tooltip: 'Back to letters',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    prompt,
+                    style: GoogleFonts.playfairDisplay(
+                      color: green,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_rounded,
+                        size: 15,
+                        color: Color(0xFF77766F),
+                      ),
+                      const SizedBox(width: 7),
+                      Text(
+                        dateLabel,
+                        style: const TextStyle(
+                          color: Color(0xFF77766F),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: text,
+                      autofocus: false,
+                      expands: true,
+                      minLines: null,
+                      maxLines: null,
+                      maxLength: 10000,
+                      textAlignVertical: TextAlignVertical.top,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        hintText: 'Write what you want to say…',
                         alignLabelWithHint: true,
                         filled: true,
                         fillColor: const Color(0xFFFFFDF8),
