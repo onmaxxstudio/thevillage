@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../services/circle_service.dart';
+
 class _MealRecipe {
   const _MealRecipe({required this.title, required this.description,
     required this.tags, required this.prepTime,
@@ -106,6 +108,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   Map<String, dynamic> meals = {}, notes = {};
   bool shareTasks = true, shareMeals = false, shareSchedule = true;
   String? shareToken;
+  final CircleService _circleService = CircleService();
 
   @override
   void initState() {
@@ -627,7 +630,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     Text('Sharing with', style: GoogleFonts.playfairDisplay(fontSize: 21,
       color: ink, fontWeight: FontWeight.w600)),
     const SizedBox(height: 4),
-    const Text('Send the link by text, email, or any app. They can open it without an Ask the Village account.'),
+    const Text('Share with someone in your Circle, or send a private link to anyone.'),
     const SizedBox(height: 10),
     _card(Row(children: [
       const CircleAvatar(backgroundColor: Color(0xFFE8EBDD),
@@ -639,7 +642,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
         onPressed: _revokeShareLink, icon: const Icon(Icons.close, color: sage)),
     ])),
     Align(alignment: Alignment.centerLeft, child: OutlinedButton.icon(
-      onPressed: shareToken == null ? _createAndShareLink : _shareExistingLink,
+      onPressed: _addSomeone,
       icon: const Icon(Icons.add, color: sage),
       label: const Text('Add someone'),
     )),
@@ -753,27 +756,204 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
 
   String _shareUrl() => 'https://askthevillage.app/?sharedPlan=$shareToken';
 
-  Future<void> _createAndShareLink() async {
-    if (!shareTasks && !shareMeals && !shareSchedule) {
-      _msg('Turn on at least one section to share.'); return;
+  Future<void> _addSomeone() async {
+    if (_uid.isEmpty) {
+      _msg('Sign in to share your weekly plan.');
+      return;
     }
-    if (_uid.isEmpty) { _msg('Sign in to create a sharing link.'); return; }
-    final token = _newShareToken();
-    setState(() => shareToken = token);
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Who would you like to share with?',
+                style: GoogleFonts.playfairDisplay(
+                  color: ink, fontSize: 23, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              const Text('Choose a Circle member or share a private link.'),
+              const SizedBox(height: 14),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE8EBDD),
+                  child: Icon(Icons.people_outline, color: sage)),
+                title: const Text('Someone from My Circle',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+                subtitle: const Text('Send it in a private Circle message.'),
+                onTap: () => Navigator.pop(sheetContext, 'circle'),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE8EBDD),
+                  child: Icon(Icons.link, color: sage)),
+                title: const Text('Share by private link',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+                subtitle: const Text('Send by text, email, or any app.'),
+                onTap: () => Navigator.pop(sheetContext, 'link'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    if (choice == 'circle') await _chooseCircleMember();
+    if (choice == 'link') await _shareByLink();
+  }
+
+  Future<void> _chooseCircleMember() async {
+    final height = (MediaQuery.sizeOf(context).height * .68)
+        .clamp(280.0, 560.0).toDouble();
+    final selection = await showModalBottomSheet<Object?>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: SizedBox(
+          height: height,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Share with your Circle',
+                  style: GoogleFonts.playfairDisplay(
+                    color: ink, fontSize: 24, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                const Text('Choose who should receive the private link.'),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: StreamBuilder<List<CirclePerson>>(
+                    stream: _circleService.members(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return const Center(
+                          child: Text('Your Circle could not be loaded right now.'));
+                      }
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final members = snapshot.data!;
+                      if (members.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.people_outline, size: 36, color: sage),
+                              const SizedBox(height: 10),
+                              const Text('Your Circle is empty.',
+                                style: TextStyle(fontWeight: FontWeight.w700)),
+                              const SizedBox(height: 4),
+                              const Text('You can still share a private link with anyone.'),
+                              const SizedBox(height: 12),
+                              OutlinedButton.icon(
+                                onPressed: () => Navigator.pop(sheetContext, 'share_link'),
+                                icon: const Icon(Icons.link),
+                                label: const Text('Share by link'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return ListView.separated(
+                        itemCount: members.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final member = members[index];
+                          final username = member.username.startsWith('@')
+                              ? member.username : '@${member.username}';
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              backgroundColor: const Color(0xFFE8EBDD),
+                              backgroundImage: member.photoUrl.isEmpty
+                                  ? null : NetworkImage(member.photoUrl),
+                              child: member.photoUrl.isEmpty
+                                  ? Text(username.substring(1, 2).toUpperCase(),
+                                      style: const TextStyle(color: sage, fontWeight: FontWeight.w700))
+                                  : null,
+                            ),
+                            title: Text(username,
+                              style: const TextStyle(fontWeight: FontWeight.w700)),
+                            subtitle: member.status.isEmpty ? null : Text(member.status),
+                            trailing: const Icon(Icons.send_outlined, color: sage),
+                            onTap: () => Navigator.pop(sheetContext, member),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (!mounted || selection == null) return;
+    if (selection == 'share_link') {
+      await _shareByLink();
+    } else if (selection is CirclePerson) {
+      await _sendPlanToCircleMember(selection);
+    }
+  }
+
+  bool get _hasShareSelection => shareTasks || shareMeals || shareSchedule;
+
+  Future<bool> _ensureShareLink() async {
+    if (!_hasShareSelection) {
+      _msg('Turn on at least one section to share.');
+      return false;
+    }
+    if (_uid.isEmpty) {
+      _msg('Sign in to create a sharing link.');
+      return false;
+    }
+    final createdToken = shareToken == null;
+    if (createdToken) setState(() => shareToken = _newShareToken());
     try {
-      if (!await _save()) {
-        if (mounted) {
-          setState(() => shareToken = null);
-          await _save();
-        }
-        return;
-      }
-      if (!mounted) return;
-      await _shareExistingLink();
+      if (await _save()) return true;
     } on FirebaseException catch (e) {
-      if (mounted) setState(() => shareToken = null);
       _msg('Could not create the sharing link: ${e.message ?? e.code}');
     }
+    if (createdToken && mounted) {
+      setState(() => shareToken = null);
+      await _save();
+    }
+    return false;
+  }
+
+  Future<void> _shareByLink() async {
+    if (await _ensureShareLink() && mounted) await _shareExistingLink();
+  }
+
+  Future<void> _sendPlanToCircleMember(CirclePerson member) async {
+    if (!await _ensureShareLink() || !mounted) return;
+    try {
+      await _circleService.sendMessage(
+        recipient: member,
+        text: 'I shared my weekly plan with you. You can view it here: ${_shareUrl()}',
+      );
+      if (mounted) _msg('Your weekly plan was sent to @${member.username.replaceFirst('@', '')}.');
+    } on Object {
+      if (mounted) {
+        _msg('The link is ready, but it could not be sent. You can try again or copy it below.');
+      }
+    }
+  }
+
+  Future<void> _createAndShareLink() async {
+    await _shareByLink();
   }
 
   Future<void> _saveShareSettings() async {
