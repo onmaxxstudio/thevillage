@@ -341,7 +341,16 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
             onTap: () => widget.onWritePrompt(item.$1, 'letter'),
           ),
         ),
-      const SizedBox(height: 10),
+      const SizedBox(height: 18),
+      Text(
+        'Recent Letters',
+        style: GoogleFonts.playfairDisplay(
+          color: _green,
+          fontSize: 21,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      const SizedBox(height: 9),
       _streamEntries(
         types: const {'letter'},
         emptyTitle: 'Your private letters will appear here.',
