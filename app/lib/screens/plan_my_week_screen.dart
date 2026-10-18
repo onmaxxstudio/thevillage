@@ -635,7 +635,38 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
           _heading(daySelected ? '${_weekday(selectedDay)} tasks' : 'This week’s tasks', _openTaskPage),
           if (items.isEmpty) Text(daySelected
             ? 'Nothing planned for this day.' : 'Nothing planned for this week.'),
-          for (final t in items) _row(tasks, tasks.indexOf(t)),
+          if (items.isNotEmpty)
+            ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              itemCount: items.length,
+              onReorder: _reorderDayTasks,
+              itemBuilder: (context, position) {
+                final task = items[position];
+                final taskIndex = tasks.indexOf(task);
+                return Container(
+                  key: ObjectKey(task),
+                  margin: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(children: [
+                    Checkbox(value: task['done'] == true, activeColor: sage,
+                      onChanged: (_) => _toggle(tasks, taskIndex)),
+                    Expanded(child: Text(task['title'] as String? ?? '',
+                      style: TextStyle(
+                        decoration: task['done'] == true
+                          ? TextDecoration.lineThrough : null))),
+                    IconButton(
+                      tooltip: 'Delete task',
+                      onPressed: () => _remove(tasks, taskIndex),
+                      icon: const Icon(Icons.delete_outline, color: sage)),
+                    ReorderableDragStartListener(index: position,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                        child: Icon(Icons.drag_handle, color: sage))),
+                  ]),
+                );
+              },
+            ),
           TextButton.icon(onPressed: _openTaskPage,
             icon: const Icon(Icons.notes_outlined), label: const Text('Open full task list')),
         ])),
@@ -1130,10 +1161,18 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
               child: Row(children: [
                 Checkbox(value: done, activeColor: sage,
                   onChanged: (_) => _toggle(tasks, taskIndex)),
-                Expanded(child: Text(task['title'] as String? ?? '',
-                  style: TextStyle(
-                    decoration: done ? TextDecoration.lineThrough : null,
-                    color: done ? ink.withValues(alpha: .55) : ink))),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(task['title'] as String? ?? '',
+                      style: TextStyle(
+                        decoration: done ? TextDecoration.lineThrough : null,
+                        color: done ? ink.withValues(alpha: .55) : ink)),
+                    if (!daySelected)
+                      Text(_taskDayLabel(task),
+                        style: const TextStyle(fontSize: 12, color: sage)),
+                  ],
+                )),
                 ReorderableDragStartListener(index: position,
                   child: const Padding(padding: EdgeInsets.all(12),
                     child: Icon(Icons.drag_handle, color: sage))),
@@ -1244,6 +1283,11 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
 
   bool _same(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
   String _weekday(DateTime d) => const ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][d.weekday - 1];
+  String _taskDayLabel(Map<String, dynamic> task) {
+    final day = DateTime.tryParse(task['day'] as String? ?? '');
+    if (day == null) return 'Any day this week';
+    return '${_shortDay(day)} · ${_month(day.month)} ${day.day}';
+  }
   String _shortDay(DateTime d) => const ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d.weekday - 1];
   String _month(int m) => const ['January','February','March','April','May','June','July','August','September','October','November','December'][m - 1];
 }
