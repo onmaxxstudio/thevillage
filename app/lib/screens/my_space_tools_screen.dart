@@ -294,7 +294,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
   );
 
   Widget _mood() =>
-      _MoodComposer(onSaved: _message, entries: _entries, uid: _uid!);
+      _MoodComposer(onSaved: _message, entries: _entries);
 
   Widget _letters() => ListView(
     padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
@@ -2912,11 +2912,9 @@ class _MoodComposer extends StatefulWidget {
   const _MoodComposer({
     required this.onSaved,
     required this.entries,
-    required this.uid,
   });
   final void Function(String) onSaved;
   final CollectionReference<Map<String, dynamic>>? entries;
-  final String uid;
   @override
   State<_MoodComposer> createState() => _MoodComposerState();
 }
@@ -2980,6 +2978,8 @@ class _MoodComposerState extends State<_MoodComposer> {
   Future<void> _save() async {
     final collection = widget.entries;
     if (_mood == null || _saving || collection == null) return;
+    final wasEditing = _editingId != null;
+    final editingId = _editingId;
     setState(() => _saving = true);
     try {
       final data = <String, dynamic>{
@@ -2994,7 +2994,7 @@ class _MoodComposerState extends State<_MoodComposer> {
         'tags': _tags.toList(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
-      if (_editingId == null) {
+      if (editingId == null) {
         await collection.add({
           ...data,
           'favorite': false,
@@ -3002,7 +3002,7 @@ class _MoodComposerState extends State<_MoodComposer> {
         });
       } else {
         if (_linkedId == null) data['linkedEntryId'] = FieldValue.delete();
-        await collection.doc(_editingId).update(data);
+        await collection.doc(editingId).update(data);
       }
       if (!mounted) return;
       _note.clear();
@@ -3013,9 +3013,9 @@ class _MoodComposerState extends State<_MoodComposer> {
         _tags.clear();
       });
       widget.onSaved(
-        _editingId == null
-            ? 'Your mood reflection was saved privately.'
-            : 'Your mood reflection was updated privately.',
+        wasEditing
+            ? 'Your mood reflection was updated privately.'
+            : 'Your mood reflection was saved privately.',
       );
     } catch (_) {
       if (mounted) {
