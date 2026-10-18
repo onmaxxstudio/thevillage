@@ -3,6 +3,85 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+class _MealRecipe {
+  const _MealRecipe({required this.title, required this.description,
+    required this.tags, required this.prepTime,
+    required this.imageUrl, required this.ingredients, required this.steps,
+    required this.tip, required this.servedWith, required this.emoji,
+    required this.tint});
+
+  final String title, description, prepTime, imageUrl, tip, servedWith, emoji;
+  final List<String> tags, ingredients, steps;
+  final Color tint;
+}
+
+const _mealRecipes = <_MealRecipe>[
+  _MealRecipe(title: 'Peanut Tofu Bowls',
+    description: 'Crispy tofu and colorful vegetables with a creamy peanut-lime sauce.',
+    tags: ['Vegan', 'High Protein'], prepTime: '30 min',
+    imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1000&q=82',
+    ingredients: ['14 oz extra-firm tofu', '1 cup brown rice', '1 cucumber, sliced', '1 cup shredded carrots', '2 tbsp peanut butter', '1 tbsp soy sauce', '1 lime'],
+    steps: ['Cook rice according to the package directions.', 'Press and cube the tofu. Bake at 425°F for 25 minutes, turning once.', 'Whisk peanut butter, soy sauce, lime juice, and a splash of warm water.', 'Serve tofu and vegetables over rice with peanut sauce.'],
+    tip: 'Pat the tofu very dry before baking so the edges crisp.',
+    servedWith: 'Steamed edamame or a side of greens', emoji: '🥗', tint: Color(0xFFE9F0DF)),
+  _MealRecipe(title: 'Lentil Bolognese',
+    description: 'A cozy tomato and lentil sauce tossed with pasta for an easy plant-based dinner.',
+    tags: ['Vegan', 'High Protein'], prepTime: '40 min',
+    imageUrl: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=1000&q=82',
+    ingredients: ['8 oz pasta', '1 cup brown or green lentils', '1 small onion, diced', '2 garlic cloves, minced', '1 can crushed tomatoes', '2 cups vegetable broth', '1 tsp Italian seasoning'],
+    steps: ['Cook pasta until tender; reserve a little pasta water.', 'Soften onion and garlic in a pot with a drizzle of oil.', 'Add lentils, tomatoes, broth, and seasoning. Simmer until lentils are tender, about 25 minutes.', 'Spoon sauce over pasta and loosen with pasta water if needed.'],
+    tip: 'Use canned lentils to make this dinner faster; rinse and add them near the end.',
+    servedWith: 'Green salad or roasted vegetables', emoji: '🍝', tint: Color(0xFFF4E5D8)),
+  _MealRecipe(title: 'Chickpea Coconut Curry',
+    description: 'Chickpeas simmered in a warmly spiced tomato-coconut sauce.',
+    tags: ['Vegan'], prepTime: '25 min',
+    imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1000&q=82',
+    ingredients: ['2 cans chickpeas, drained', '1 can light coconut milk', '1 can diced tomatoes', '1 small onion, diced', '2 tsp curry powder', '2 cups baby spinach', '1 cup rice'],
+    steps: ['Start the rice according to the package directions.', 'Cook onion with curry powder until fragrant.', 'Add chickpeas, coconut milk, and tomatoes. Simmer for 15 minutes.', 'Stir in spinach until wilted and serve over rice.'],
+    tip: 'Add a squeeze of lemon at the end to brighten the curry.',
+    servedWith: 'Rice, warm flatbread, or cucumber salad', emoji: '🍛', tint: Color(0xFFF3EBD8)),
+  _MealRecipe(title: 'Greek Chicken Bowls',
+    description: 'Seasoned chicken, crisp vegetables, rice, and a simple yogurt sauce.',
+    tags: ['High Protein', 'Regular Recipes'], prepTime: '30 min',
+    imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1000&q=82',
+    ingredients: ['1 lb boneless chicken breast', '1 cup rice', '1 cucumber, chopped', '1 cup cherry tomatoes', '½ cup plain Greek yogurt', '1 lemon', '1 tsp oregano'],
+    steps: ['Cook rice according to the package directions.', 'Season chicken with oregano, lemon, salt, and pepper; cook until the center reaches 165°F.', 'Stir yogurt with lemon juice and a spoonful of water.', 'Slice chicken and serve over rice with vegetables and yogurt sauce.'],
+    tip: 'Let the chicken rest for 5 minutes before slicing to keep it juicy.',
+    servedWith: 'Hummus, olives, or warm pita', emoji: '🍗', tint: Color(0xFFE9F0DF)),
+  _MealRecipe(title: 'Salmon Rice Bowls',
+    description: 'Flaky salmon with rice, crunchy vegetables, and a quick savory dressing.',
+    tags: ['High Protein', 'Regular Recipes'], prepTime: '25 min',
+    imageUrl: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=1000&q=82',
+    ingredients: ['2 salmon fillets', '1 cup rice', '1 cucumber, sliced', '1 avocado, sliced', '1 tbsp soy sauce', '1 tsp honey', '1 tsp sesame seeds'],
+    steps: ['Cook rice according to the package directions.', 'Bake salmon at 400°F for 12–15 minutes, until it flakes easily.', 'Mix soy sauce and honey for a quick dressing.', 'Serve salmon over rice with cucumber and avocado; drizzle with dressing.'],
+    tip: 'For food safety, cook fish until it reaches 145°F at its thickest point.',
+    servedWith: 'Steamed broccoli or edamame', emoji: '🐟', tint: Color(0xFFE6EFF0)),
+  _MealRecipe(title: 'Turkey Taco Skillet',
+    description: 'A one-pan family dinner with lean turkey, beans, corn, and warm spices.',
+    tags: ['High Protein', 'Regular Recipes'], prepTime: '25 min',
+    imageUrl: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=1000&q=82',
+    ingredients: ['1 lb ground turkey', '1 can black beans, drained', '1 cup corn', '1 can diced tomatoes', '1 tbsp taco seasoning', '1 cup shredded cheese (optional)', 'Tortillas or rice'],
+    steps: ['Cook turkey in a skillet until no longer pink, breaking it into small pieces.', 'Stir in taco seasoning, beans, corn, and tomatoes.', 'Simmer for 8–10 minutes until hot and slightly thickened.', 'Serve with tortillas or rice and add cheese if you like.'],
+    tip: 'Ground turkey should reach 165°F. Add a splash of broth if the skillet gets too dry.',
+    servedWith: 'Avocado, salsa, and shredded lettuce', emoji: '🌮', tint: Color(0xFFF4E5D8)),
+  _MealRecipe(title: 'Sheet-Pan Chicken & Vegetables',
+    description: 'A simple oven dinner with seasoned chicken, potatoes, and vegetables.',
+    tags: ['Regular Recipes', 'High Protein'], prepTime: '40 min',
+    imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1000&q=82',
+    ingredients: ['1 lb chicken thighs', '12 oz baby potatoes, halved', '1 bell pepper, chopped', '1 red onion, wedged', '1 tbsp olive oil', '1 tsp garlic powder', '1 tsp paprika'],
+    steps: ['Heat oven to 425°F and line a sheet pan.', 'Toss potatoes and vegetables with oil and seasonings.', 'Add chicken and spread everything in one layer.', 'Roast until vegetables are tender and chicken reaches 165°F, about 25–30 minutes.'],
+    tip: 'Cut the potatoes evenly so they cook at the same pace.',
+    servedWith: 'Lemon wedges and a green salad', emoji: '🍽️', tint: Color(0xFFF3EBD8)),
+  _MealRecipe(title: 'Creamy Tomato Pasta',
+    description: 'A weeknight pasta with tomato, spinach, and a little cream.',
+    tags: ['Regular Recipes'], prepTime: '25 min',
+    imageUrl: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=1000&q=82',
+    ingredients: ['8 oz pasta', '1 tbsp olive oil', '2 garlic cloves, minced', '1 can crushed tomatoes', '½ cup cream or unsweetened oat cream', '2 cups baby spinach', '¼ cup grated parmesan (optional)'],
+    steps: ['Cook pasta until tender; reserve ½ cup pasta water.', 'Warm oil and garlic in a pan, then add tomatoes and simmer for 10 minutes.', 'Stir in cream and spinach until the spinach wilts.', 'Toss with pasta, adding pasta water as needed. Finish with parmesan.'],
+    tip: 'For a vegan version, use oat cream and skip the parmesan or use a dairy-free alternative.',
+    servedWith: 'Garlic bread or a simple green salad', emoji: '🍝', tint: Color(0xFFF4E5D8)),
+];
+
 class PlanMyWeekScreen extends StatefulWidget {
   const PlanMyWeekScreen({super.key});
   @override
@@ -17,6 +96,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   late DateTime weekStart, selectedDay;
   bool loading = true;
   String section = 'Overview', review = '';
+  String _recipeFilter = 'Vegan';
   List<Map<String, dynamic>> goals = [], tasks = [], groceries = [];
   Map<String, dynamic> meals = {}, notes = {};
 
@@ -111,6 +191,141 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     setState(() { if (value.isEmpty) { meals.remove(key); } else { meals[key] = value; } });
     await _save();
   }
+
+  Future<void> _addRecipeToDay(_MealRecipe recipe) async {
+    final key = _key(selectedDay);
+    final existing = (meals[key] as String? ?? '').trim();
+    if (!existing.toLowerCase().contains(recipe.title.toLowerCase())) {
+      setState(() => meals[key] = existing.isEmpty
+        ? recipe.title : '$existing · ${recipe.title}');
+      await _save();
+    }
+    if (mounted) Navigator.of(context).pop();
+    _msg('${recipe.title} added to ${_weekday(selectedDay)}.');
+  }
+
+  Future<void> _addRecipeIngredients(_MealRecipe recipe) async {
+    final existing = groceries.map((item) =>
+      (item['title'] as String? ?? '').trim().toLowerCase()).toSet();
+    final additions = recipe.ingredients.where((ingredient) =>
+      !existing.contains(ingredient.trim().toLowerCase()));
+    final newItems = additions.map((ingredient) =>
+      {'title': ingredient, 'done': false});
+    setState(() => groceries.addAll(newItems));
+    await _save();
+    _msg('Ingredients added to your grocery list.');
+  }
+
+  Future<void> _showRecipe(_MealRecipe recipe) => showDialog<void>(
+    context: context,
+    builder: (dialogContext) => Dialog(
+      backgroundColor: cream,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 520,
+          maxHeight: MediaQuery.sizeOf(dialogContext).height * .82),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Expanded(child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _recipeImage(recipe, height: 185),
+                const SizedBox(height: 14),
+                Wrap(spacing: 7, runSpacing: 6, children: [
+                  for (final tag in recipe.tags) _recipeTag(tag),
+                  _recipeTag(recipe.prepTime, isTime: true),
+                ]),
+                const SizedBox(height: 8),
+                Text(recipe.title, style: GoogleFonts.playfairDisplay(
+                  fontSize: 25, fontWeight: FontWeight.w700, color: ink)),
+                const SizedBox(height: 4),
+                Text(recipe.description, style: const TextStyle(color: ink)),
+                const SizedBox(height: 18),
+                _recipeSectionTitle('Ingredients'),
+                const SizedBox(height: 5),
+                for (final ingredient in recipe.ingredients)
+                  Padding(padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(padding: EdgeInsets.only(top: 7),
+                          child: Icon(Icons.circle, size: 5, color: sage)),
+                        const SizedBox(width: 9),
+                        Expanded(child: Text(ingredient)),
+                      ])),
+                const SizedBox(height: 14),
+                _recipeSectionTitle('Method'),
+                const SizedBox(height: 7),
+                for (var i = 0; i < recipe.steps.length; i++)
+                  Padding(padding: const EdgeInsets.only(bottom: 9),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CircleAvatar(radius: 12, backgroundColor: sage,
+                          child: Text('${i + 1}', style: const TextStyle(
+                            color: Colors.white, fontSize: 11))),
+                        const SizedBox(width: 9),
+                        Expanded(child: Padding(padding: const EdgeInsets.only(top: 3),
+                          child: Text(recipe.steps[i]))),
+                      ])),
+                const SizedBox(height: 4),
+                _recipeNote(Icons.lightbulb_outline, 'Tip', recipe.tip),
+                const SizedBox(height: 8),
+                _recipeNote(Icons.restaurant_menu, 'Best served with', recipe.servedWith),
+              ])),
+          ),
+          Padding(padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+            child: Wrap(alignment: WrapAlignment.end, spacing: 4,
+              runSpacing: 4, children: [
+                TextButton(onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Close')),
+                TextButton.icon(onPressed: () => _addRecipeIngredients(recipe),
+                  icon: const Icon(Icons.shopping_basket_outlined),
+                  label: const Text('Add ingredients')),
+                FilledButton.icon(style: FilledButton.styleFrom(backgroundColor: sage),
+                  onPressed: () => _addRecipeToDay(recipe),
+                  icon: const Icon(Icons.add),
+                  label: Text('Add to ${_shortDay(selectedDay)}')),
+              ])),
+        ])),
+      ),
+    ));
+
+  Widget _recipeSectionTitle(String title) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(color: sage, borderRadius: BorderRadius.circular(5)),
+    child: Text(title.toUpperCase(), style: const TextStyle(color: Colors.white,
+      fontWeight: FontWeight.w700, letterSpacing: .7, fontSize: 12)));
+
+  Widget _recipeNote(IconData icon, String title, String text) => Container(
+    width: double.infinity, padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(color: Colors.white,
+      border: Border.all(color: line), borderRadius: BorderRadius.circular(12)),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Icon(icon, color: sage, size: 19), const SizedBox(width: 8),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+        children: [Text(title, style: const TextStyle(color: sage,
+          fontWeight: FontWeight.w700, fontSize: 12)), Text(text)])),
+    ]));
+
+  Widget _recipeTag(String label, {bool isTime = false}) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+    decoration: BoxDecoration(color: isTime ? Colors.white : colors[0],
+      borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+    child: Text(label, style: const TextStyle(fontSize: 11, color: sage,
+      fontWeight: FontWeight.w600)));
+
+  Widget _recipeImage(_MealRecipe recipe, {double height = 145}) => ClipRRect(
+    borderRadius: BorderRadius.circular(15),
+    child: SizedBox(width: double.infinity, height: height,
+      child: Stack(fit: StackFit.expand, children: [
+        Container(color: recipe.tint, alignment: Alignment.center,
+          child: Text(recipe.emoji, style: const TextStyle(fontSize: 62))),
+        Image.network(recipe.imageUrl, fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(color: recipe.tint,
+            alignment: Alignment.center,
+            child: Text(recipe.emoji, style: const TextStyle(fontSize: 62)))),
+        Positioned(left: 10, top: 10, child: _recipeTag(recipe.prepTime, isTime: true)),
+      ])));
 
   Future<void> _note() async {
     final key = _key(selectedDay);
@@ -320,16 +535,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
         ])),
       ]);
     }
-    if (section == 'Meal Planner') return Column(children: [
-      _days(), const SizedBox(height: 12),
-      _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _heading('Meals for ${_weekday(selectedDay)}', _meal),
-        Text((meals[_key(selectedDay)] as String?)?.isNotEmpty == true
-          ? meals[_key(selectedDay)] as String : 'No meals planned yet.'),
-        _link(Icons.shopping_cart_outlined, 'Open Grocery List',
-          () => setState(() => section = 'Grocery List')),
-      ])),
-    ]);
+    if (section == 'Meal Planner') return _mealPlannerSection();
     if (section == 'Grocery List') return _card(Column(children: [
       _heading('Grocery List', () => _add(groceries, 'Add grocery item')),
       if (groceries.isEmpty) const Text('Add items you need for the week.'),
@@ -353,6 +559,77 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       const Text('Keep your personal plan private. Sharing controls are not enabled yet, so this page will not expose your tasks, meals, or schedule to anyone.'),
     ]));
   }
+
+  Widget _mealPlannerSection() {
+    final filters = ['Vegan', 'High Protein', 'Regular Recipes', 'All'];
+    final recipes = _recipeFilter == 'All'
+      ? _mealRecipes
+      : _mealRecipes.where((recipe) => recipe.tags.contains(_recipeFilter)).toList();
+    final plannedMeal = (meals[_key(selectedDay)] as String?)?.trim() ?? '';
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _days(), const SizedBox(height: 12),
+      _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        _heading('Meals for ${_weekday(selectedDay)}', _meal),
+        Text(plannedMeal.isNotEmpty ? plannedMeal : 'No meals planned yet.'),
+        _link(Icons.shopping_cart_outlined,
+          'Open Grocery List (${groceries.length} items)',
+          () => setState(() => section = 'Grocery List')),
+      ])),
+      const SizedBox(height: 20),
+      Text('Meal ideas', style: GoogleFonts.playfairDisplay(fontSize: 23,
+        color: ink, fontWeight: FontWeight.w600)),
+      const SizedBox(height: 3),
+      const Text('Choose a recipe, add it to your day, and send its ingredients to your grocery list.'),
+      const SizedBox(height: 11),
+      SingleChildScrollView(scrollDirection: Axis.horizontal,
+        child: Row(children: [for (var i = 0; i < filters.length; i++)
+          Padding(padding: EdgeInsets.only(right: i == filters.length - 1 ? 0 : 7),
+            child: ChoiceChip(label: Text(filters[i]),
+              selected: _recipeFilter == filters[i],
+              selectedColor: colors[0], labelStyle: TextStyle(color: sage,
+                fontWeight: _recipeFilter == filters[i]
+                  ? FontWeight.w700 : FontWeight.w500),
+              onSelected: (_) => setState(() => _recipeFilter = filters[i]))) ])),
+      const SizedBox(height: 12),
+      for (final recipe in recipes) ...[
+        _recipeCard(recipe), const SizedBox(height: 12),
+      ],
+    ]);
+  }
+
+  Widget _recipeCard(_MealRecipe recipe) => Container(
+    decoration: BoxDecoration(color: Colors.white, border: Border.all(color: line),
+      borderRadius: BorderRadius.circular(18)),
+    child: Material(color: Colors.transparent,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(onTap: () => _showRecipe(recipe),
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(padding: const EdgeInsets.all(10),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _recipeImage(recipe),
+            const SizedBox(height: 10),
+            Wrap(spacing: 6, runSpacing: 5, children: [
+              for (final tag in recipe.tags) _recipeTag(tag),
+            ]),
+            const SizedBox(height: 7),
+            Text(recipe.title, style: GoogleFonts.playfairDisplay(fontSize: 20,
+              color: ink, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 3),
+            Text(recipe.description, style: const TextStyle(color: ink)),
+            const SizedBox(height: 7),
+            Text('You’ll need: ${recipe.ingredients.take(3).join(' · ')}',
+              maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, color: sage)),
+            const SizedBox(height: 3),
+            const Align(alignment: Alignment.centerRight,
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Text('View recipe', style: TextStyle(color: sage,
+                  fontWeight: FontWeight.w600)),
+                SizedBox(width: 3),
+                Icon(Icons.chevron_right, color: sage),
+              ])),
+          ])))),
+  );
 
   Widget _card(Widget child) => Container(padding: const EdgeInsets.all(15),
     decoration: BoxDecoration(color: Colors.white, border: Border.all(color: line),
