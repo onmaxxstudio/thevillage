@@ -157,13 +157,13 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       final data = <String, dynamic>{
         'body': text.text.trim(),
         'prompt': prompt,
-        'entryType': editorEntryType ?? entryType,
+        // Store one-off journal prompts as the already-supported "guided"
+        // type. The prompt library recognizes these by their prompt text.
+        'entryType': editorEntryType == 'journal_prompt'
+            ? 'guided'
+            : editorEntryType ?? entryType,
         'updatedAt': FieldValue.serverTimestamp(),
       };
-      if (editorEntryType == 'journal_prompt') {
-        // Saving a written answer completes this one-off prompt.
-        data['journalPromptCompleted'] = true;
-      }
       if (editingId == null) {
         data['createdAt'] = FieldValue.serverTimestamp();
         data['favorite'] = false;
@@ -172,7 +172,8 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         await collection.doc(editingId).update(data);
       }
       if (!mounted) return;
-      final returnToPromptLibrary = editorEntryType == 'journal_prompt';
+      final returnToFullPageTool =
+          editorEntryType == 'journal_prompt' || editorEntryType == 'gratitude';
       setState(() {
         editingId = null;
         prompt = '';
@@ -182,7 +183,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         reflectionDate = null;
         text.clear();
       });
-      if (returnToPromptLibrary) {
+      if (returnToFullPageTool) {
         Navigator.of(context, rootNavigator: true).pop();
       } else {
         Navigator.of(context).pop();
@@ -362,7 +363,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         leading: IconButton(
           tooltip: 'Back to gratitude',
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
         ),
       ),
       body: SafeArea(
