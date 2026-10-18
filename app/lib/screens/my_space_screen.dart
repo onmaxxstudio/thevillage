@@ -1459,41 +1459,25 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   }
 
   Widget _closingQuote() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(17),
-      child: SizedBox(
-        height: 92,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Row(
-              children: [
-                Expanded(child: Image.asset('assets/images/my_space_quote_leaves.jpg', fit: BoxFit.cover)),
-                Expanded(child: Image.asset('assets/images/my_space_quote_mountains.jpg', fit: BoxFit.cover)),
-              ],
-            ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [Color(0x004B5C41), Color(0xAFFFFAF1), Color(0x004B5C41)]),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 18),
+      child: Row(
+        children: [
+          Expanded(child: Divider(color: green.withValues(alpha: .28))),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              'Your story is still unfolding.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: green,
               ),
             ),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  '“Your story is still unfolding,\nand every chapter matters.”',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 17,
-                    height: 1.15,
-                    fontStyle: FontStyle.italic,
-                    color: ink,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+          Expanded(child: Divider(color: green.withValues(alpha: .28))),
+        ],
       ),
     );
   }
