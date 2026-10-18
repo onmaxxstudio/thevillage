@@ -441,7 +441,9 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
               _weeklySummary(complete, weekTasks.length),
               const SizedBox(height: 16),
               _days(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              _weekAtAGlance(weekTasks),
+              const SizedBox(height: 12),
               _weeklyFocus(),
               const SizedBox(height: 12),
               _overviewAction(
@@ -455,7 +457,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
               _overviewAction(
                 icon: Icons.assignment_outlined,
                 title: 'Tasks & appointments',
-                detail: '${weekTasks.length} planned this week · ${_weekday(selectedDay)} selected',
+                detail: '${weekTasks.length} tasks across all 7 days',
                 tint: colors[1],
                 onTap: () => setState(() => section = 'Tasks & Schedule'),
               ),
@@ -529,12 +531,81 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
           child: Text('Choose a few priorities to guide your week.'))
       else
         for (var i = 0; i < goals.length; i++) _row(goals, i),
-      const Divider(height: 12),
-      _link(Icons.notes_outlined,
-        (notes[_key(selectedDay)] as String?)?.isNotEmpty == true
-          ? 'Day note: ${notes[_key(selectedDay)]}' : 'Add a note for ${_weekday(selectedDay)}',
-        _note),
     ]));
+
+  Widget _weekAtAGlance(List<Map<String, dynamic>> weekTasks) {
+    final planned = List.generate(7, (i) {
+      final day = weekStart.add(Duration(days: i));
+      final dayTasks = weekTasks.where((t) => t['day'] == _key(day)).toList();
+      final dayMeals = (meals[_key(day)] as String? ?? '').trim();
+      final dayNote = (notes[_key(day)] as String? ?? '').trim();
+      return (day: day, tasks: dayTasks, meals: dayMeals, note: dayNote);
+    });
+    return _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('This week at a glance', style: GoogleFonts.playfairDisplay(
+        fontSize: 20, fontWeight: FontWeight.w600, color: ink)),
+      const SizedBox(height: 3),
+      const Text('Your plan, organized across all seven days.',
+        style: TextStyle(fontSize: 13, color: ink)),
+      const Divider(height: 18),
+      for (var i = 0; i < planned.length; i++) ...[
+        if (i > 0) const Divider(height: 16),
+        _weekDayRow(planned[i].day, planned[i].tasks,
+          planned[i].meals, planned[i].note),
+      ],
+    ]));
+  }
+
+  Widget _weekDayRow(DateTime day, List<Map<String, dynamic>> dayTasks,
+      String dayMeals, String dayNote) {
+    final done = dayTasks.where((t) => t['done'] == true).length;
+    final isSelected = _same(day, selectedDay);
+    final summary = <String>[
+      if (dayTasks.isNotEmpty) '$done/${dayTasks.length} tasks done',
+      if (dayMeals.isNotEmpty) 'Meal planned',
+      if (dayNote.isNotEmpty) 'Note added',
+      if (dayTasks.isEmpty && dayMeals.isEmpty && dayNote.isEmpty) 'Nothing planned yet',
+    ].join(' · ');
+    return InkWell(
+      onTap: () => setState(() {
+        selectedDay = day;
+        section = 'Tasks & Schedule';
+      }),
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Row(children: [
+          Container(width: 42, height: 42,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isSelected ? colors[0] : const Color(0xFFF8F6F0),
+              borderRadius: BorderRadius.circular(12)),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text(_shortDay(day).substring(0, 1),
+                style: const TextStyle(fontSize: 10, color: sage)),
+              Text('${day.day}', style: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w700, color: ink)),
+            ])),
+          const SizedBox(width: 11),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_weekday(day), style: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w600, color: ink)),
+              Text(summary, style: const TextStyle(
+                fontSize: 11, color: sage), maxLines: 2,
+                overflow: TextOverflow.ellipsis),
+            ])),
+          IconButton(
+            tooltip: 'Add a note for ${_weekday(day)}',
+            onPressed: () {
+              setState(() => selectedDay = day);
+              _note();
+            },
+            icon: const Icon(Icons.edit_note_outlined, color: sage)),
+        ]),
+      ),
+    );
+  }
 
   Widget _overviewAction({required IconData icon, required String title,
     required String detail, required Color tint, required VoidCallback onTap}) =>
