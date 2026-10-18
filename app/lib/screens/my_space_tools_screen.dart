@@ -109,6 +109,8 @@ class MySpaceToolsScreen extends StatefulWidget {
 }
 
 class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
+  DateTime _selectedBudgetMonth = DateTime(DateTime.now().year, DateTime.now().month);
+
   String? get _uid => FirebaseAuth.instance.currentUser?.uid;
   CollectionReference<Map<String, dynamic>>? get _entries {
     final uid = _uid;
@@ -138,7 +140,110 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
               .collection('private_journals')
               .doc(uid)
               .collection('budget')
+              .doc('${_selectedBudgetMonth.year}-${_selectedBudgetMonth.month.toString().padLeft(2, '0')}');
+  }
+
+  DocumentReference<Map<String, dynamic>>? get _legacyBudgetDocument {
+    final uid = _uid;
+    return uid == null
+        ? null
+        : FirebaseFirestore.instance
+              .collection('private_journals')
+              .doc(uid)
+              .collection('budget')
               .doc('current');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.mode == 'budget') _preserveLegacyBudget();
+  }
+
+  Future<void> _preserveLegacyBudget() async {
+    final legacy = _legacyBudgetDocument;
+    final uid = _uid;
+    if (legacy == null || uid == null) return;
+    try {
+      final values = (await legacy.get()).data();
+      if (values == null || values.isEmpty) {
+        await _seedCurrentBudgetFromPrevious();
+        return;
+      }
+      final expenses = (values['expenses'] as List<dynamic>? ?? const [])
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+      final expensesByMonth = <String, List<Map<String, dynamic>>>{};
+      final thisMonth = _selectedBudgetMonth;
+      final currentId = '${thisMonth.year}-${thisMonth.month.toString().padLeft(2, '0')}';
+      for (final expense in expenses) {
+        final date = _budgetDate(expense['date']);
+        if (date == null) {
+          expensesByMonth.putIfAbsent(currentId, () => []).add(expense);
+          continue;
+        }
+        final id = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+        expensesByMonth.putIfAbsent(id, () => []).add(expense);
+      }
+      expensesByMonth.putIfAbsent(currentId, () => []);
+      for (final entry in expensesByMonth.entries) {
+        final monthly = FirebaseFirestore.instance
+            .collection('private_journals')
+            .doc(uid)
+            .collection('budget')
+            .doc(entry.key);
+        await FirebaseFirestore.instance.runTransaction((transaction) async {
+          if ((await transaction.get(monthly)).exists) return;
+          final monthData = entry.key == currentId
+              ? values
+              : <String, dynamic>{
+                  'monthlyIncome': 0,
+                  'savingsGoal': 0,
+                  'savedAmount': 0,
+                  'categories': _defaultBudgetCategories,
+                };
+          transaction.set(monthly, {
+            ...monthData,
+            'expenses': entry.value,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        });
+      }
+      await _seedCurrentBudgetFromPrevious();
+    } catch (_) {
+      // The original record remains available even if the one-time copy fails.
+    }
+  }
+
+  Future<void> _seedCurrentBudgetFromPrevious() async {
+    final uid = _uid;
+    if (uid == null) return;
+    final month = _selectedBudgetMonth;
+    final current = FirebaseFirestore.instance
+        .collection('private_journals')
+        .doc(uid)
+        .collection('budget')
+        .doc('${month.year}-${month.month.toString().padLeft(2, '0')}');
+    final previousDate = DateTime(month.year, month.month - 1);
+    final previousMonth = FirebaseFirestore.instance
+        .collection('private_journals')
+        .doc(uid)
+        .collection('budget')
+        .doc('${previousDate.year}-${previousDate.month.toString().padLeft(2, '0')}');
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      if ((await transaction.get(current)).exists) return;
+      final previous = (await transaction.get(previousMonth)).data();
+      if (previous == null) return;
+      transaction.set(current, {
+        'monthlyIncome': previous['monthlyIncome'] ?? 0,
+        'savingsGoal': previous['savingsGoal'] ?? 0,
+        'savedAmount': 0,
+        'categories': previous['categories'] ?? _defaultBudgetCategories,
+        'expenses': const <Map<String, dynamic>>[],
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
   }
 
   String get _title => switch (widget.mode) {
@@ -412,10 +517,13 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
             .whereType<Map>()
             .map((item) => Map<String, dynamic>.from(item))
             .toList();
-        final now = DateTime.now();
+        final month = _selectedBudgetMonth;
+        final currentMonth = DateTime.now();
         final monthExpenses = expenses.where((expense) {
           final date = _budgetDate(expense['date']);
-          return date != null && date.year == now.year && date.month == now.month;
+          return date == null
+              ? month.year == currentMonth.year && month.month == currentMonth.month
+              : date.year == month.year && date.month == month.month;
         }).toList()
           ..sort((a, b) => (_budgetDate(b['date']) ?? DateTime(1970))
               .compareTo(_budgetDate(a['date']) ?? DateTime(1970)));
@@ -427,7 +535,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
           0,
           (total, category) => total + _budgetNumber(category['planned']),
         );
-        final monthName = MaterialLocalizations.of(context).formatMonthYear(now);
+        final monthName = MaterialLocalizations.of(context).formatMonthYear(month);
 
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
@@ -449,9 +557,24 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
                 children: [
                   Row(
                     children: [
+                      IconButton(
+                        tooltip: 'Previous month',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => setState(() => _selectedBudgetMonth = DateTime(month.year, month.month - 1)),
+                        icon: const Icon(Icons.chevron_left_rounded, color: _green),
+                      ),
                       const Icon(Icons.calendar_month_outlined, color: _green, size: 19),
-                      const SizedBox(width: 8),
-                      Text(monthName, style: const TextStyle(color: _green, fontWeight: FontWeight.w700)),
+                      const SizedBox(width: 6),
+                      Expanded(child: Text(monthName, style: const TextStyle(color: _green, fontWeight: FontWeight.w700))),
+                      IconButton(
+                        tooltip: 'Next month',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: month.year == DateTime.now().year && month.month == DateTime.now().month
+                            ? null
+                            : () => setState(() => _selectedBudgetMonth = DateTime(month.year, month.month + 1)),
+                        icon: const Icon(Icons.chevron_right_rounded, color: _green),
+                      ),
+                      const SizedBox(width: 4),
                       const Spacer(),
                       const Icon(Icons.lock_outline_rounded, color: _green, size: 16),
                       const SizedBox(width: 4),
@@ -486,6 +609,8 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
             ),
             const SizedBox(height: 12),
             _wideAction('Log an expense', Icons.add_rounded, () => _addBudgetExpense(categories, expenses)),
+            const SizedBox(height: 8),
+            const Text('Each month keeps its own plan and spending history. Earlier months stay saved and can be revisited.', style: TextStyle(color: Color(0xFF74766F), fontSize: 12, height: 1.35)),
             const SizedBox(height: 22),
             Row(
               children: [
@@ -768,7 +893,10 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
     descriptionController.dispose();
     amountController.dispose();
     if (result == null) return;
-    final now = DateTime.now();
+    final today = DateTime.now();
+    final month = _selectedBudgetMonth;
+    final day = today.day.clamp(1, DateTime(month.year, month.month + 1, 0).day) as int;
+    final now = DateTime(month.year, month.month, day, today.hour, today.minute, today.second);
     final updated = [...expenses, {
       'id': now.microsecondsSinceEpoch.toString(),
       'description': result['description'],
