@@ -445,7 +445,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
         child: TextField(
           controller: _reviewDraft,
           autofocus: true,
-          maxLength: 180,
+          maxLength: 10000,
           minLines: 10,
           maxLines: null,
           textCapitalization: TextCapitalization.sentences,
