@@ -797,6 +797,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       appBar: AppBar(
         backgroundColor: cream,
         foregroundColor: green,
+        toolbarHeight: 48,
         leading: IconButton(
           tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -827,10 +828,10 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 760),
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(top: 3, bottom: 10),
+                          padding: const EdgeInsets.only(top: 0, bottom: 10),
                           child: Column(children: [
                             Text('My Space', style: GoogleFonts.playfairDisplay(fontSize: 24, color: green, fontWeight: FontWeight.w700)),
                             const SizedBox(height: 2),
