@@ -335,7 +335,6 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                     title: 'How would you like to ask?',
                     subtitle: 'You’re in control. Choose how you show up.',
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
                           child: _choiceCard(
@@ -632,7 +631,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(17),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 112),
+        height: 128,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFF1F3E9) : cream,
