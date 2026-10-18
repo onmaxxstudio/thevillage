@@ -1,7 +1,11 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 
 class _MealRecipe {
   const _MealRecipe({required this.title, required this.description,
@@ -100,6 +104,8 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   final TextEditingController _taskDraft = TextEditingController();
   List<Map<String, dynamic>> goals = [], tasks = [], groceries = [];
   Map<String, dynamic> meals = {}, notes = {};
+  bool shareTasks = true, shareMeals = false, shareSchedule = true;
+  String? shareToken;
 
   @override
   void initState() {
@@ -139,6 +145,11 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
         groceries = _list(d['groceries']);
         meals = Map<String, dynamic>.from(d['meals'] as Map? ?? {});
         notes = Map<String, dynamic>.from(d['notes'] as Map? ?? {});
+        final sharing = Map<String, dynamic>.from(d['sharing'] as Map? ?? {});
+        shareTasks = sharing['tasks'] is bool ? sharing['tasks'] as bool : true;
+        shareMeals = sharing['meals'] is bool ? sharing['meals'] as bool : false;
+        shareSchedule = sharing['schedule'] is bool ? sharing['schedule'] as bool : true;
+        shareToken = sharing['token'] as String?;
         review = d['review'] as String? ?? ''; loading = false;
       });
     } on FirebaseException catch (e) {
@@ -148,14 +159,19 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     }
   }
 
-  Future<void> _save() async {
-    if (_uid.isEmpty) { _msg('Sign in to save your weekly plan.'); return; }
+  Future<bool> _save() async {
+    if (_uid.isEmpty) { _msg('Sign in to save your weekly plan.'); return false; }
     try {
       await _doc.set({'goals': goals, 'tasks': tasks, 'groceries': groceries,
         'meals': meals, 'notes': notes, 'review': review,
+        'sharing': {'tasks': shareTasks, 'meals': shareMeals,
+          'schedule': shareSchedule, if (shareToken != null) 'token': shareToken},
         'updatedAt': FieldValue.serverTimestamp()});
+      if (shareToken != null && !await _syncShareLink()) return false;
+      return true;
     } on FirebaseException catch (e) {
       _msg('Could not save your plan: ${e.message ?? e.code}');
+      return false;
     }
   }
 
@@ -590,12 +606,205 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
         onPressed: _review, icon: const Icon(Icons.edit_outlined),
         label: Text(review.isEmpty ? 'Write a reflection' : 'Edit reflection')),
     ]));
-    return _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Icon(Icons.people_alt_outlined, size: 34, color: sage),
-      Text('Shared Planning', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w600)),
-      const SizedBox(height: 6),
-      const Text('Keep your personal plan private. Sharing controls are not enabled yet, so this page will not expose your tasks, meals, or schedule to anyone.'),
+    if (section == 'Shared Planning') return _sharedPlanning();
+    return const SizedBox.shrink();
+  }
+
+  Widget _sharedPlanning() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    _card(Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(width: 52, height: 52, decoration: const BoxDecoration(
+        color: Color(0xFFE8EBDD), shape: BoxShape.circle),
+        child: const Icon(Icons.lock_outline, color: sage, size: 27)),
+      const SizedBox(width: 14),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Your plan stays yours', style: GoogleFonts.playfairDisplay(
+          fontSize: 19, color: ink, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 5),
+        const Text('Choose what to share. Only people you send your private link to can view it.'),
+      ])),
+    ])),
+    const SizedBox(height: 16),
+    Text('Sharing with', style: GoogleFonts.playfairDisplay(fontSize: 21,
+      color: ink, fontWeight: FontWeight.w600)),
+    const SizedBox(height: 4),
+    const Text('Send the link by text, email, or any app. They can open it without an Ask the Village account.'),
+    const SizedBox(height: 10),
+    _card(Row(children: [
+      const CircleAvatar(backgroundColor: Color(0xFFE8EBDD),
+        child: Icon(Icons.link, color: sage)),
+      const SizedBox(width: 10),
+      Expanded(child: Text(shareToken == null ? 'No one has access yet'
+        : 'Anyone you send this link to', style: const TextStyle(fontWeight: FontWeight.w600))),
+      if (shareToken != null) IconButton(tooltip: 'Revoke link',
+        onPressed: _revokeShareLink, icon: const Icon(Icons.close, color: sage)),
+    ])),
+    Align(alignment: Alignment.centerLeft, child: OutlinedButton.icon(
+      onPressed: shareToken == null ? _createAndShareLink : _shareExistingLink,
+      icon: const Icon(Icons.add, color: sage),
+      label: const Text('Add someone'),
+    )),
+    const SizedBox(height: 16),
+    Text('Choose what to share', style: GoogleFonts.playfairDisplay(fontSize: 21,
+      color: ink, fontWeight: FontWeight.w600)),
+    const SizedBox(height: 4),
+    const Text('You can share individual parts of your plan.'),
+    const SizedBox(height: 10),
+    _card(Column(children: [
+      _shareSwitch(Icons.checklist, 'Tasks', 'Share your to-dos and progress.', shareTasks,
+        (value) => setState(() => shareTasks = value)),
+      const Divider(height: 18),
+      _shareSwitch(Icons.restaurant_outlined, 'Meals & grocery list',
+        'Share your meal plan and grocery list.', shareMeals,
+        (value) => setState(() => shareMeals = value)),
+      const Divider(height: 18),
+      _shareSwitch(Icons.calendar_month_outlined, 'Weekly schedule',
+        'Share your daily notes and schedule.', shareSchedule,
+        (value) => setState(() => shareSchedule = value)),
+    ])),
+    const SizedBox(height: 14),
+    _card(Row(children: [
+      const Icon(Icons.visibility_outlined, color: sage),
+      const SizedBox(width: 12),
+      const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('View only', style: TextStyle(fontWeight: FontWeight.w600)),
+        Text('People with the link cannot change your plan.'),
+      ])),
+    ])),
+    const SizedBox(height: 14),
+    if (shareToken == null)
+      SizedBox(width: double.infinity, child: FilledButton.icon(
+        style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.symmetric(vertical: 14)),
+        onPressed: _createAndShareLink, icon: const Icon(Icons.ios_share),
+        label: const Text('Create link and share')))
+    else ...[
+      SizedBox(width: double.infinity, child: FilledButton.icon(
+        style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.symmetric(vertical: 14)),
+        onPressed: _saveShareSettings, icon: const Icon(Icons.check),
+        label: const Text('Save sharing settings'))),
+      const SizedBox(height: 8),
+      SizedBox(width: double.infinity, child: FilledButton.icon(
+        style: FilledButton.styleFrom(backgroundColor: sage.withValues(alpha: .92), padding: const EdgeInsets.symmetric(vertical: 14)),
+        onPressed: _shareExistingLink, icon: const Icon(Icons.ios_share),
+        label: const Text('Share with someone'))),
+      const SizedBox(height: 8),
+      SizedBox(width: double.infinity, child: OutlinedButton.icon(
+        onPressed: _copyShareLink, icon: const Icon(Icons.copy),
+        label: const Text('Copy private link'))),
+      const SizedBox(height: 8),
+      TextButton(onPressed: _revokeShareLink,
+        child: const Text('Revoke access', style: TextStyle(color: sage))),
+    ],
+    const SizedBox(height: 4),
+    const Text('Anyone who receives the link can view the selected sections. You can revoke it anytime.',
+      style: TextStyle(fontSize: 12, color: Colors.black54)),
+  ]);
+
+  Widget _shareSwitch(IconData icon, String title, String detail, bool value,
+      ValueChanged<bool> onChanged) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 3),
+    child: Row(children: [
+      Container(width: 44, height: 44, decoration: const BoxDecoration(
+        color: Color(0xFFE8EBDD), shape: BoxShape.circle),
+        child: Icon(icon, color: sage)),
+      const SizedBox(width: 12),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        Text(detail, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+      ])),
+      Switch(value: value, activeColor: sage, onChanged: onChanged),
     ]));
+
+  String _newShareToken() {
+    final random = Random.secure();
+    return List<int>.generate(32, (_) => random.nextInt(256))
+      .map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  Map<String, dynamic> _sharePayload() {
+    final payload = <String, dynamic>{};
+    if (shareTasks) payload['tasks'] = tasks;
+    if (shareMeals) {
+      payload['meals'] = meals;
+      payload['groceries'] = groceries;
+    }
+    if (shareSchedule) payload['notes'] = notes;
+    return payload;
+  }
+
+  Future<bool> _syncShareLink() async {
+    final token = shareToken;
+    if (token == null) return true;
+    final ref = FirebaseFirestore.instance.collection('weekly_plan_shares').doc(token);
+    final payload = _sharePayload();
+    final encodedSize = payload.toString().length;
+    if (encodedSize > 700000) {
+      _msg('This plan is too large to share as one link.');
+      return false;
+    }
+    await ref.set({
+      'ownerUid': _uid,
+      'weekLabel': '${_month(weekStart.month)} ${weekStart.day} – ${_month(weekStart.add(const Duration(days: 6)).month)} ${weekStart.add(const Duration(days: 6)).day}',
+      'payload': payload,
+      'updatedAt': FieldValue.serverTimestamp(),
+      'expiresAt': Timestamp.fromDate(DateTime.now().add(const Duration(days: 30))),
+    });
+    return true;
+  }
+
+  String _shareUrl() => 'https://askthevillage.app/?sharedPlan=$shareToken';
+
+  Future<void> _createAndShareLink() async {
+    if (!shareTasks && !shareMeals && !shareSchedule) {
+      _msg('Turn on at least one section to share.'); return;
+    }
+    if (_uid.isEmpty) { _msg('Sign in to create a sharing link.'); return; }
+    final token = _newShareToken();
+    setState(() => shareToken = token);
+    try {
+      if (!await _save()) {
+        if (mounted) {
+          setState(() => shareToken = null);
+          await _save();
+        }
+        return;
+      }
+      if (!mounted) return;
+      await _shareExistingLink();
+    } on FirebaseException catch (e) {
+      if (mounted) setState(() => shareToken = null);
+      _msg('Could not create the sharing link: ${e.message ?? e.code}');
+    }
+  }
+
+  Future<void> _saveShareSettings() async {
+    if (!shareTasks && !shareMeals && !shareSchedule) {
+      _msg('Turn on at least one section to share.'); return;
+    }
+    if (await _save() && mounted) _msg('Sharing settings saved.');
+  }
+
+  Future<void> _shareExistingLink() async {
+    if (shareToken == null) return;
+    await Share.share(_shareUrl(), subject: 'My shared weekly plan');
+  }
+
+  Future<void> _copyShareLink() async {
+    if (shareToken == null) return;
+    await Clipboard.setData(ClipboardData(text: _shareUrl()));
+    _msg('Private link copied.');
+  }
+
+  Future<void> _revokeShareLink() async {
+    final token = shareToken;
+    if (token == null) return;
+    try {
+      await FirebaseFirestore.instance.collection('weekly_plan_shares').doc(token).delete();
+      setState(() => shareToken = null);
+      await _save();
+      _msg('Link access revoked.');
+    } on FirebaseException catch (e) {
+      _msg('Could not revoke the link: ${e.message ?? e.code}');
+    }
   }
 
   Widget _taskListPage() {
