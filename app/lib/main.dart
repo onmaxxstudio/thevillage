@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'firebase_options.dart';
 import 'navigation/village_app_shell.dart';
+import 'screens/shared_plan_guest_screen.dart';
 import 'screens/village_promise_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'services/auth_service.dart';
@@ -56,9 +57,11 @@ class MyApp extends StatelessWidget {
           foregroundColor: deepSlate,
         ),
       ),
-      home: Firebase.apps.isEmpty
-          ? const WelcomeScreen()
-          : const _AuthGate(),
+      home: Uri.base.queryParameters['sharedPlan']?.isNotEmpty == true
+          ? SharedPlanGuestScreen(token: Uri.base.queryParameters['sharedPlan']!)
+          : Firebase.apps.isEmpty
+              ? const WelcomeScreen()
+              : const _AuthGate(),
     );
   }
 }
