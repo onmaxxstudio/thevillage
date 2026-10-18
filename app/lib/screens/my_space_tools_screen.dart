@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../services/private_journal_service.dart';
 import 'write_freely_screen.dart';
@@ -2927,48 +2926,63 @@ class _MoodComposerState extends State<_MoodComposer> {
   String? _linkedId;
   final Set<String> _tags = {};
   final TextEditingController _note = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
-  String? _attachment;
+  final ScrollController _scrollController = ScrollController();
+  String? _editingId;
   bool _saving = false;
+
   @override
   void dispose() {
     _note.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  Future<void> _attach() async {
-    try {
-      final file = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 82,
-        maxWidth: 1800,
-      );
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
-      if (bytes.length > 5 * 1024 * 1024)
-        throw StateError('Choose an image under 5 MB.');
-      final path = await PrivateJournalService(uid: widget.uid)
-          .uploadImage(bytes, file.name);
-      if (mounted) setState(() => _attachment = path);
-    } catch (error) {
-      if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              error is StateError
-                  ? error.message
-                  : 'Could not attach that photo.',
-            ),
-          ),
+  void _editMoodReflection(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data();
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _editingId = doc.id;
+      _mood = data['mood'] as String?;
+      _linkedId = data['linkedEntryId'] as String?;
+      _tags
+        ..clear()
+        ..addAll(
+          (data['tags'] as List<dynamic>? ?? const [])
+              .whereType<String>()
+              .take(6),
         );
-    }
+      _note.text = data['body'] as String? ?? '';
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _cancelMoodEdit() {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _editingId = null;
+      _mood = null;
+      _linkedId = null;
+      _tags.clear();
+      _note.clear();
+    });
   }
 
   Future<void> _save() async {
-    if (_mood == null || _saving) return;
+    final collection = widget.entries;
+    if (_mood == null || _saving || collection == null) return;
     setState(() => _saving = true);
     try {
-      await widget.entries!.add({
+      final data = <String, dynamic>{
         'title': 'Mood reflection · $_mood',
         'body': _note.text.trim().isEmpty
             ? 'Mood check-in: $_mood'
@@ -2978,25 +2992,37 @@ class _MoodComposerState extends State<_MoodComposer> {
         'mood': _mood,
         if (_linkedId != null) 'linkedEntryId': _linkedId,
         'tags': _tags.toList(),
-        'attachments': _attachment == null ? <String>[] : [_attachment],
-        'favorite': false,
-        'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+      if (_editingId == null) {
+        await collection.add({
+          ...data,
+          'favorite': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        if (_linkedId == null) data['linkedEntryId'] = FieldValue.delete();
+        await collection.doc(_editingId).update(data);
+      }
       if (!mounted) return;
       _note.clear();
       setState(() {
+        _editingId = null;
         _mood = null;
         _linkedId = null;
         _tags.clear();
-        _attachment = null;
       });
-      widget.onSaved('Your mood reflection was saved privately.');
+      widget.onSaved(
+        _editingId == null
+            ? 'Your mood reflection was saved privately.'
+            : 'Your mood reflection was updated privately.',
+      );
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         widget.onSaved(
           'Could not save your mood reflection. Please try again.',
         );
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -3004,6 +3030,7 @@ class _MoodComposerState extends State<_MoodComposer> {
 
   @override
   Widget build(BuildContext context) => ListView(
+    controller: _scrollController,
     padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
     children: [
       const Text(
@@ -3159,14 +3186,13 @@ class _MoodComposerState extends State<_MoodComposer> {
             );
           },
         ),
-      OutlinedButton.icon(
-        onPressed: _attachment == null ? _attach : null,
-        icon: const Icon(Icons.add_photo_alternate_outlined),
-        label: Text(
-          _attachment == null ? 'Attach a photo (optional)' : 'Photo attached',
+      if (_editingId != null)
+        TextButton.icon(
+          onPressed: _saving ? null : _cancelMoodEdit,
+          icon: const Icon(Icons.close_rounded),
+          label: const Text('Cancel editing'),
+          style: TextButton.styleFrom(foregroundColor: _green),
         ),
-        style: OutlinedButton.styleFrom(foregroundColor: _green),
-      ),
       const SizedBox(height: 10),
       SizedBox(
         height: 48,
@@ -3224,46 +3250,56 @@ class _MoodComposerState extends State<_MoodComposer> {
               children: moodDocs.map((doc) {
                 final data = doc.data();
                 return _softCard(
-                  margin: const EdgeInsets.only(bottom: 7),
-                  child: Row(
-                    children: [
-                      Text(
-                        _moods[data['mood']] ?? '🌿',
-                        style: const TextStyle(fontSize: 25),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              data['mood'] as String? ?? 'Mood reflection',
-                              style: const TextStyle(
-                                color: _green,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              data['body'] as String? ?? '',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF62665E),
-                              ),
-                            ),
-                          ],
+                margin: const EdgeInsets.only(bottom: 7),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () => _editMoodReflection(doc),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      children: [
+                        Text(
+                          _moods[data['mood']] ?? '🌿',
+                          style: const TextStyle(fontSize: 25),
                         ),
-                      ),
-                      if (data['favorite'] == true)
-                        const Icon(
-                          Icons.bookmark_rounded,
-                          color: _green,
-                          size: 18,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                data['mood'] as String? ?? 'Mood reflection',
+                                style: const TextStyle(
+                                  color: _green,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                data['body'] as String? ?? '',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF62665E),
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              const Text(
+                                'Tap to edit',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Color(0xFF74766F),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                    ],
+                        const Icon(Icons.edit_outlined, color: _green, size: 18),
+                      ],
+                    ),
                   ),
-                );
+                ),
+              );
               }).toList(),
             );
           },
