@@ -97,6 +97,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   bool loading = true;
   String section = 'Overview', review = '';
   String _recipeFilter = 'Vegan';
+  final TextEditingController _taskDraft = TextEditingController();
   List<Map<String, dynamic>> goals = [], tasks = [], groceries = [];
   Map<String, dynamic> meals = {}, notes = {};
 
@@ -107,6 +108,12 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     weekStart = _monday(now);
     selectedDay = DateTime(now.year, now.month, now.day);
     _load();
+  }
+
+  @override
+  void dispose() {
+    _taskDraft.dispose();
+    super.dispose();
   }
 
   DateTime _monday(DateTime d) => DateTime(d.year, d.month, d.day)
@@ -180,6 +187,35 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     setState(() => list.add(task
       ? {'title': text, 'day': _key(selectedDay), 'done': false}
       : {'title': text, 'done': false}));
+    await _save();
+  }
+
+  void _openTaskPage() => setState(() => section = 'Task List');
+
+  Future<void> _saveTaskDraft() async {
+    final title = _taskDraft.text.trim();
+    if (title.isEmpty) return;
+    setState(() {
+      tasks.add({'title': title, 'day': _key(selectedDay), 'done': false});
+      _taskDraft.clear();
+    });
+    await _save();
+  }
+
+  Future<void> _reorderDayTasks(int oldIndex, int newIndex) async {
+    final indices = <int>[
+      for (var i = 0; i < tasks.length; i++)
+        if (tasks[i]['day'] == _key(selectedDay)) i,
+    ];
+    if (oldIndex < newIndex) newIndex--;
+    setState(() {
+      final dayTasks = indices.map((i) => tasks[i]).toList();
+      final moved = dayTasks.removeAt(oldIndex);
+      dayTasks.insert(newIndex, moved);
+      for (var i = 0; i < indices.length; i++) {
+        tasks[indices[i]] = dayTasks[i];
+      }
+    });
     await _save();
   }
 
@@ -369,7 +405,8 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     return Scaffold(
       backgroundColor: cream,
       appBar: AppBar(backgroundColor: cream, foregroundColor: ink, elevation: 0,
-        title: Text(section == 'Overview' ? 'Plan My Week' : section,
+        title: Text(section == 'Overview' ? 'Plan My Week'
+            : section == 'Task List' ? '${_weekday(selectedDay)} tasks' : section,
           style: GoogleFonts.playfairDisplay(color: ink, fontWeight: FontWeight.w600)),
         actions: [if (section != 'Overview') IconButton(
           tooltip: 'Planner home', onPressed: () => setState(() => section = 'Overview'),
@@ -456,7 +493,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
           style: TextStyle(fontSize: 11, color: sage)),
       ])),
     const SizedBox(width: 6),
-    IconButton(onPressed: () => _add(tasks, 'Add a task', task: true),
+    IconButton(onPressed: _openTaskPage,
       tooltip: 'Add task', icon: const Icon(Icons.add_circle_outline, color: sage)),
   ]));
 
@@ -522,16 +559,17 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       if (goals.isEmpty) const Text('Set the priorities you want to focus on this week.'),
       for (var i = 0; i < goals.length; i++) _row(goals, i),
     ]));
+    if (section == 'Task List') return _taskListPage();
     if (section == 'Tasks & Schedule') {
       final items = tasks.where((t) => t['day'] == _key(selectedDay)).toList();
       return Column(children: [
         _days(), const SizedBox(height: 12),
         _card(Column(children: [
-          _heading('${_weekday(selectedDay)} tasks', () => _add(tasks, 'Add a task', task: true)),
+          _heading('${_weekday(selectedDay)} tasks', _openTaskPage),
           if (items.isEmpty) const Text('Nothing planned for this day.'),
           for (final t in items) _row(tasks, tasks.indexOf(t)),
-          TextButton.icon(onPressed: () => _add(tasks, 'Add an event or appointment', task: true),
-            icon: const Icon(Icons.event_outlined), label: const Text('Add an event or appointment')),
+          TextButton.icon(onPressed: _openTaskPage,
+            icon: const Icon(Icons.notes_outlined), label: const Text('Open full task list')),
         ])),
       ]);
     }
@@ -558,6 +596,79 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       const SizedBox(height: 6),
       const Text('Keep your personal plan private. Sharing controls are not enabled yet, so this page will not expose your tasks, meals, or schedule to anyone.'),
     ]));
+  }
+
+  Widget _taskListPage() {
+    final indices = <int>[
+      for (var i = 0; i < tasks.length; i++)
+        if (tasks[i]['day'] == _key(selectedDay)) i,
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _days(),
+      const SizedBox(height: 16),
+      Text('Tasks for ${_weekday(selectedDay)}',
+        style: GoogleFonts.playfairDisplay(fontSize: 23,
+          color: ink, fontWeight: FontWeight.w600)),
+      const SizedBox(height: 4),
+      Text(indices.isEmpty ? 'A clear page for whatever matters today.'
+        : '${indices.where((i) => tasks[i]['done'] == true).length} of ${indices.length} completed',
+        style: const TextStyle(color: sage)),
+      const SizedBox(height: 12),
+      Container(
+        decoration: BoxDecoration(color: Colors.white,
+          border: Border.all(color: line), borderRadius: BorderRadius.circular(18)),
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(children: [
+          const Padding(padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Icon(Icons.circle_outlined, size: 19, color: sage)),
+          Expanded(child: TextField(controller: _taskDraft,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _saveTaskDraft(),
+            decoration: const InputDecoration(
+              hintText: 'Add a task', border: InputBorder.none,
+              counterText: '',), maxLength: 180)),
+          IconButton(onPressed: _saveTaskDraft, tooltip: 'Add task',
+            icon: const Icon(Icons.add_circle, color: sage)),
+        ]),
+      ),
+      const SizedBox(height: 8),
+      if (indices.isEmpty)
+        _card(const Text('Your list will appear here. Drag items to put them in the order you want.'))
+      else
+        ReorderableListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          buildDefaultDragHandles: false,
+          itemCount: indices.length,
+          onReorder: _reorderDayTasks,
+          itemBuilder: (context, position) {
+            final taskIndex = indices[position];
+            final task = tasks[taskIndex];
+            final done = task['done'] == true;
+            return Container(
+              key: ObjectKey(task),
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              decoration: BoxDecoration(color: Colors.white,
+                border: Border.all(color: line), borderRadius: BorderRadius.circular(14)),
+              child: Row(children: [
+                Checkbox(value: done, activeColor: sage,
+                  onChanged: (_) => _toggle(tasks, taskIndex)),
+                Expanded(child: Text(task['title'] as String? ?? '',
+                  style: TextStyle(
+                    decoration: done ? TextDecoration.lineThrough : null,
+                    color: done ? ink.withValues(alpha: .55) : ink))),
+                ReorderableDragStartListener(index: position,
+                  child: const Padding(padding: EdgeInsets.all(12),
+                    child: Icon(Icons.drag_handle, color: sage))),
+              ]),
+            );
+          },
+        ),
+      const SizedBox(height: 8),
+      TextButton.icon(onPressed: () => setState(() => section = 'Tasks & Schedule'),
+        icon: const Icon(Icons.calendar_month_outlined),
+        label: const Text('Back to schedule')),
+    ]);
   }
 
   Widget _mealPlannerSection() {
