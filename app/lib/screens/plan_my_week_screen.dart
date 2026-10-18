@@ -167,7 +167,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
         'sharing': {'tasks': shareTasks, 'meals': shareMeals,
           'schedule': shareSchedule, if (shareToken != null) 'token': shareToken},
         'updatedAt': FieldValue.serverTimestamp()});
-      if (shareToken != null) await _syncShareLink();
+      if (shareToken != null && !await _syncShareLink()) return false;
       return true;
     } on FirebaseException catch (e) {
       _msg('Could not save your plan: ${e.message ?? e.code}');
@@ -731,15 +731,15 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     return payload;
   }
 
-  Future<void> _syncShareLink() async {
+  Future<bool> _syncShareLink() async {
     final token = shareToken;
-    if (token == null) return;
+    if (token == null) return true;
     final ref = FirebaseFirestore.instance.collection('weekly_plan_shares').doc(token);
     final payload = _sharePayload();
     final encodedSize = payload.toString().length;
     if (encodedSize > 700000) {
       _msg('This plan is too large to share as one link.');
-      return;
+      return false;
     }
     await ref.set({
       'ownerUid': _uid,
@@ -748,6 +748,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       'updatedAt': FieldValue.serverTimestamp(),
       'expiresAt': Timestamp.fromDate(DateTime.now().add(const Duration(days: 30))),
     });
+    return true;
   }
 
   String _shareUrl() => '${Uri.base.origin}${Uri.base.path}?sharedPlan=$shareToken';
@@ -761,7 +762,10 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     setState(() => shareToken = token);
     try {
       if (!await _save()) {
-        if (mounted) setState(() => shareToken = null);
+        if (mounted) {
+          setState(() => shareToken = null);
+          await _save();
+        }
         return;
       }
       if (!mounted) return;
