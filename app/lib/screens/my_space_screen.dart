@@ -847,45 +847,49 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         SizedBox(
           height: 48,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                tooltip: 'Back',
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                color: green,
-                onPressed: () => Navigator.maybePop(context),
+              SizedBox(
+                width: 48,
+                child: IconButton(
+                  tooltip: 'Back',
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                  color: green,
+                  onPressed: () => Navigator.maybePop(context),
+                ),
               ),
-              IconButton(
-                tooltip: 'Settings',
-                icon: const Icon(Icons.settings_outlined),
-                color: green,
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const SettingsScreen(),
+              Expanded(
+                child: Text(
+                  'My Space',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 24,
+                    color: green,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 48,
+                child: IconButton(
+                  tooltip: 'Settings',
+                  icon: const Icon(Icons.settings_outlined),
+                  color: green,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const SettingsScreen(),
+                    ),
                   ),
                 ),
               ),
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 2, 12, 12),
-          child: Column(
-            children: [
-              Text(
-                'My Space',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 24,
-                  color: green,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 2),
-              const Text(
-                'Your space. Your thoughts. Your growth.',
-                style: TextStyle(color: ink, fontSize: 13),
-              ),
-            ],
+        const Padding(
+          padding: EdgeInsets.fromLTRB(12, 2, 12, 12),
+          child: Text(
+            'Your space. Your thoughts. Your growth.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: ink, fontSize: 13),
           ),
         ),
       ],
