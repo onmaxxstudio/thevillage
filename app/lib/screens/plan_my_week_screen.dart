@@ -919,13 +919,14 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       _msg('Sign in to create a sharing link.');
       return false;
     }
-    if (shareToken == null) setState(() => shareToken = _newShareToken());
+    final createdToken = shareToken == null;
+    if (createdToken) setState(() => shareToken = _newShareToken());
     try {
       if (await _save()) return true;
     } on FirebaseException catch (e) {
       _msg('Could not create the sharing link: ${e.message ?? e.code}');
     }
-    if (mounted) {
+    if (createdToken && mounted) {
       setState(() => shareToken = null);
       await _save();
     }
