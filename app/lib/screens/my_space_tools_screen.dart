@@ -351,6 +351,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
   );
 
   Widget _recordList(String kind) {
+    if (kind == 'goal') return _goalList();
     final title = kind == 'milestone'
         ? 'Small steps deserve to be celebrated.'
         : kind == 'goal'
@@ -396,6 +397,290 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
           const SizedBox(height: 6),
           _savedPromptList(),
         ],
+      ],
+    );
+  }
+
+  Widget _goalList() {
+    final collection = _entries;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 26),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE7EBDD), Color(0xFFF5EADB)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: _line),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _paper.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(Icons.explore_outlined, color: _green, size: 26),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Your next chapter',
+                style: GoogleFonts.playfairDisplay(
+                  color: _green,
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Dream it, give it a first step, and keep growing at your own pace.',
+                style: TextStyle(color: _ink, height: 1.4, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _addGoal,
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Create a goal'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 22),
+        Text(
+          'Goals you’re growing',
+          style: GoogleFonts.playfairDisplay(
+            color: _green,
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 9),
+        if (collection == null)
+          const SizedBox.shrink()
+        else
+          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: collection.orderBy('createdAt', descending: true).snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return _surface(
+                  child: const Text('Your goals could not be loaded. Check your connection and try again.'),
+                );
+              }
+              if (!snapshot.hasData) {
+                return const Padding(
+                  padding: EdgeInsets.all(26),
+                  child: Center(child: CircularProgressIndicator(color: _green)),
+                );
+              }
+              final docs = snapshot.data!.docs
+                  .where((doc) => doc.data()['entryType'] == 'goal')
+                  .toList();
+              if (docs.isEmpty) {
+                return _surface(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 12),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.spa_outlined, color: _green, size: 34),
+                        const SizedBox(height: 9),
+                        Text(
+                          'A good place to begin is with one thing you want for yourself.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.playfairDisplay(
+                            color: _ink,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        const Text(
+                          'Your goals and progress will appear here.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Color(0xFF74766F), fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return Column(
+                children: docs.map((doc) {
+                  final data = doc.data();
+                  final title = (data['title'] as String? ?? 'Personal goal').trim();
+                  final body = (data['body'] as String? ?? '').trim();
+                  final progress = data['goalProgress'] is num
+                      ? (data['goalProgress'] as num).toDouble().clamp(0, 100)
+                      : 0.0;
+                  final steps = (data['actionSteps'] as List<dynamic>? ?? const [])
+                      .whereType<String>()
+                      .where((step) => step.trim().isNotEmpty)
+                      .take(2)
+                      .toList();
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: _paper,
+                      borderRadius: BorderRadius.circular(19),
+                      border: Border.all(color: _line),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: _sage,
+                                borderRadius: BorderRadius.circular(13),
+                              ),
+                              child: const Icon(Icons.flag_outlined, color: _green),
+                            ),
+                            const SizedBox(width: 11),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title.isEmpty ? 'Personal goal' : title,
+                                    style: GoogleFonts.playfairDisplay(
+                                      color: _green,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  if (body.isNotEmpty && body != title) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      body,
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Color(0xFF5E615B),
+                                        height: 1.35,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            PopupMenuButton<String>(
+                              tooltip: 'Goal actions',
+                              onSelected: (action) {
+                                if (action == 'progress') {
+                                  _changeProgress(doc);
+                                } else {
+                                  _delete(doc);
+                                }
+                              },
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'progress',
+                                  child: Text('Update progress'),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text('Delete goal'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        if (steps.isNotEmpty) ...[
+                          const SizedBox(height: 11),
+                          const Text(
+                            'FIRST STEPS',
+                            style: TextStyle(
+                              color: Color(0xFF74766F),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          for (final step in steps)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 3),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('•  ', style: TextStyle(color: _green)),
+                                  Expanded(
+                                    child: Text(
+                                      step,
+                                      style: const TextStyle(
+                                        color: _ink,
+                                        fontSize: 12,
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Progress',
+                                style: TextStyle(
+                                  color: Color(0xFF5E615B),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${progress.round()}%',
+                              style: const TextStyle(
+                                color: _green,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: progress / 100,
+                            minHeight: 8,
+                            backgroundColor: _sage,
+                            color: _green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
       ],
     );
   }
@@ -736,62 +1021,25 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
   }
 
   Future<void> _addGoal() async {
-    final title = TextEditingController();
-    final steps = TextEditingController();
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _paper,
-        title: Text(
-          'Set a personal goal',
-          style: GoogleFonts.playfairDisplay(color: _green),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: title,
-              decoration: const InputDecoration(
-                labelText: 'What do you want to work toward?',
-              ),
-            ),
-            TextField(
-              controller: steps,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'First action steps (optional)',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Save goal'),
-          ),
-        ],
+    final draft = await Navigator.of(context).push<_GoalDraft>(
+      MaterialPageRoute<_GoalDraft>(
+        builder: (_) => const _GoalEditorPage(),
       ),
     );
-    if (saved == true && title.text.trim().isNotEmpty) {
-      await _saveRecord(
-        type: 'goal',
-        title: title.text.trim(),
-        body: steps.text.trim().isEmpty ? title.text.trim() : steps.text.trim(),
-        extra: {
-          'goalProgress': 0,
-          'actionSteps': steps.text
-              .split('\n')
-              .where((line) => line.trim().isNotEmpty)
-              .toList(),
-        },
-      );
-    }
-    title.dispose();
-    steps.dispose();
+    if (draft == null) return;
+    await _saveRecord(
+      type: 'goal',
+      title: draft.title,
+      body: draft.steps.isEmpty ? draft.title : draft.steps,
+      extra: {
+        'goalProgress': 0,
+        'actionSteps': draft.steps
+            .split('\n')
+            .map((line) => line.trim())
+            .where((line) => line.isNotEmpty)
+            .toList(),
+      },
+    );
   }
 
   Future<void> _changeProgress(
@@ -3642,6 +3890,236 @@ class _JournalInsightsState extends State<_JournalInsights> {
         ),
     ],
   );
+}
+
+class _GoalDraft {
+  const _GoalDraft({required this.title, required this.steps});
+
+  final String title;
+  final String steps;
+}
+
+class _GoalEditorPage extends StatefulWidget {
+  const _GoalEditorPage();
+
+  @override
+  State<_GoalEditorPage> createState() => _GoalEditorPageState();
+}
+
+class _GoalEditorPageState extends State<_GoalEditorPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _title = TextEditingController();
+  final _steps = TextEditingController();
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _steps.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.of(context).pop(
+      _GoalDraft(
+        title: _title.text.trim(),
+        steps: _steps.text.trim(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width > 760;
+    return Scaffold(
+      backgroundColor: _cream,
+      appBar: AppBar(
+        backgroundColor: _cream,
+        foregroundColor: _green,
+        centerTitle: true,
+        title: Text(
+          'Create a Goal',
+          style: GoogleFonts.playfairDisplay(
+            color: _green,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          tooltip: 'Back to Vision & Goals',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+          onPressed: () => Navigator.maybePop(context),
+        ),
+      ),
+      body: SafeArea(
+        bottom: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFE7EBDD), Color(0xFFF5EADB)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.lightbulb_outline_rounded, color: _green, size: 30),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Make space for what matters',
+                          style: GoogleFonts.playfairDisplay(
+                            color: _green,
+                            fontSize: wide ? 27 : 24,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        const Text(
+                          'Choose something meaningful to work toward. You can take it one small step at a time.',
+                          style: TextStyle(color: _ink, height: 1.4, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'What do you want to work toward?',
+                    style: GoogleFonts.playfairDisplay(
+                      color: _green,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _title,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      hintText: 'Give your goal a name',
+                      filled: true,
+                      fillColor: _paper,
+                      contentPadding: const EdgeInsets.all(16),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: _line),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: _line),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: _green, width: 1.5),
+                      ),
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Add a name for your goal.'
+                        : null,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Your first steps',
+                    style: GoogleFonts.playfairDisplay(
+                      color: _green,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Optional · write one step per line',
+                    style: TextStyle(color: Color(0xFF74766F), fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _steps,
+                    textCapitalization: TextCapitalization.sentences,
+                    minLines: 5,
+                    maxLines: 8,
+                    decoration: InputDecoration(
+                      hintText: 'What is one small thing you can do first?',
+                      alignLabelWithHint: true,
+                      filled: true,
+                      fillColor: _paper,
+                      contentPadding: const EdgeInsets.all(16),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: _line),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: _line),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: _green, width: 1.5),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  _surface(
+                    child: const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.favorite_border_rounded, color: _green, size: 20),
+                        SizedBox(width: 9),
+                        Expanded(
+                          child: Text(
+                            'Your goals are personal. Progress can look different every day.',
+                            style: TextStyle(color: Color(0xFF5E615B), height: 1.35, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _save,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Save goal',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _MilestoneDraft {
