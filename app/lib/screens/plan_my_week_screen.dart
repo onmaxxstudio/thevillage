@@ -675,7 +675,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       SizedBox(width: double.infinity, child: FilledButton.icon(
         style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.symmetric(vertical: 14)),
         onPressed: _createAndShareLink, icon: const Icon(Icons.ios_share),
-        label: const Text('Create link and share'))
+        label: const Text('Create link and share')))
     else ...[
       SizedBox(width: double.infinity, child: FilledButton.icon(
         style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.symmetric(vertical: 14)),
@@ -685,7 +685,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       SizedBox(width: double.infinity, child: FilledButton.icon(
         style: FilledButton.styleFrom(backgroundColor: sage.withValues(alpha: .92), padding: const EdgeInsets.symmetric(vertical: 14)),
         onPressed: _shareExistingLink, icon: const Icon(Icons.ios_share),
-        label: const Text('Share with someone')),
+        label: const Text('Share with someone'))),
       const SizedBox(height: 8),
       SizedBox(width: double.infinity, child: OutlinedButton.icon(
         onPressed: _copyShareLink, icon: const Icon(Icons.copy),
