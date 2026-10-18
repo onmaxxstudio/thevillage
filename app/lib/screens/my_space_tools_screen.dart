@@ -3752,8 +3752,8 @@ class _MoodReflectionDetailsPage extends StatelessWidget {
                 ),
                 if (data['favorite'] == true) ...[
                   const SizedBox(height: 12),
-                  const _softCard(
-                    child: Row(
+                  _softCard(
+                    child: const Row(
                       children: [
                         Icon(Icons.bookmark_rounded, color: _green, size: 19),
                         SizedBox(width: 8),
