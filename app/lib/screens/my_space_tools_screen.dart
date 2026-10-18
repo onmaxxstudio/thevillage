@@ -3686,132 +3686,135 @@ class _MilestoneEditorPageState extends State<_MilestoneEditorPage> {
           ),
         ),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: wide ? 680 : 560),
-          child: Form(
-            key: _formKey,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Celebrate a milestone',
-                    style: GoogleFonts.playfairDisplay(
-                      color: _green,
-                      fontSize: 27,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    'Take a moment to recognize how far you have come.',
-                    style: TextStyle(
-                      color: Color(0xFF62665E),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _title,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: InputDecoration(
-                      labelText: 'What did you do?',
-                      filled: true,
-                      fillColor: _paper,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(color: _line),
-                      ),
-                    ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Add a title for your milestone.'
-                        : null,
-                  ),
-                  const SizedBox(height: 10),
-                  Material(
-                    color: _paper,
-                    borderRadius: BorderRadius.circular(15),
-                    child: ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        side: const BorderSide(color: _line),
-                      ),
-                      leading: const Icon(
-                        Icons.calendar_today_outlined,
-                        color: _green,
-                      ),
-                      title: const Text('Milestone date'),
-                      subtitle: Text(
-                        MaterialLocalizations.of(context)
-                            .formatMediumDate(_date),
-                      ),
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: _green,
-                      ),
-                      onTap: _pickDate,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _description,
-                      textCapitalization: TextCapitalization.sentences,
-                      textAlignVertical: TextAlignVertical.top,
-                      expands: true,
-                      minLines: null,
-                      maxLines: null,
-                      maxLength: 10000,
-                      decoration: InputDecoration(
-                        labelText: 'Write about this moment (optional)',
-                        hintText: 'Start writing here…',
-                        alignLabelWithHint: true,
-                        filled: true,
-                        fillColor: _paper,
-                        contentPadding: const EdgeInsets.all(16),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: const BorderSide(color: _line),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final contentMaxWidth = wide ? 680.0 : 560.0;
+          final contentWidth = constraints.maxWidth < contentMaxWidth
+              ? constraints.maxWidth
+              : contentMaxWidth;
+          return Center(
+            child: SizedBox(
+              width: contentWidth,
+              height: constraints.maxHeight,
+              child: Form(
+                key: _formKey,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Celebrate a milestone',
+                        style: GoogleFonts.playfairDisplay(
+                          color: _green,
+                          fontSize: 27,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: wide ? 644 : 524),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
-              child: SizedBox(
-                height: 50,
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _save,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _green,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                  child: const Text(
-                    'Save milestone',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      const SizedBox(height: 5),
+                      const Text(
+                        'Take a moment to recognize how far you have come.',
+                        style: TextStyle(
+                          color: Color(0xFF62665E),
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _title,
+                        textCapitalization: TextCapitalization.sentences,
+                        decoration: InputDecoration(
+                          labelText: 'What did you do?',
+                          filled: true,
+                          fillColor: _paper,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: const BorderSide(color: _line),
+                          ),
+                        ),
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
+                                ? 'Add a title for your milestone.'
+                                : null,
+                      ),
+                      const SizedBox(height: 10),
+                      Material(
+                        color: _paper,
+                        borderRadius: BorderRadius.circular(15),
+                        child: ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            side: const BorderSide(color: _line),
+                          ),
+                          leading: const Icon(
+                            Icons.calendar_today_outlined,
+                            color: _green,
+                          ),
+                          title: const Text('Milestone date'),
+                          subtitle: Text(
+                            MaterialLocalizations.of(context)
+                                .formatMediumDate(_date),
+                          ),
+                          trailing: const Icon(
+                            Icons.chevron_right_rounded,
+                            color: _green,
+                          ),
+                          onTap: _pickDate,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _description,
+                          textCapitalization: TextCapitalization.sentences,
+                          textAlignVertical: TextAlignVertical.top,
+                          expands: true,
+                          minLines: null,
+                          maxLines: null,
+                          maxLength: 10000,
+                          decoration: InputDecoration(
+                            labelText: 'Write about this moment (optional)',
+                            hintText: 'Start writing here…',
+                            alignLabelWithHint: true,
+                            filled: true,
+                            fillColor: _paper,
+                            contentPadding: const EdgeInsets.all(16),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: const BorderSide(color: _line),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 50,
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: _save,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _green,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          child: const Text(
+                            'Save milestone',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
