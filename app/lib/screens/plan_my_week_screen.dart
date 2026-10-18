@@ -104,6 +104,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   String section = 'Overview', review = '';
   String _recipeFilter = 'Vegan';
   final TextEditingController _taskDraft = TextEditingController();
+  final TextEditingController _reviewDraft = TextEditingController();
   DateTime? _draftTaskDay;
   List<Map<String, dynamic>> goals = [], tasks = [], groceries = [];
   Map<String, dynamic> meals = {}, notes = {};
@@ -124,6 +125,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   @override
   void dispose() {
     _taskDraft.dispose();
+    _reviewDraft.dispose();
     super.dispose();
   }
 
@@ -406,12 +408,73 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     await _save();
   }
 
-  Future<void> _review() async {
-    final value = await _input('Weekly reflection',
-      hint: 'What went well? What would you like to change?', initial: review);
-    if (value == null) return;
-    setState(() => review = value); await _save();
+  void _openReviewEditor() {
+    _reviewDraft.text = review;
+    setState(() => section = 'Weekly Reflection');
   }
+
+  Future<void> _saveReview() async {
+    final previousReview = review;
+    setState(() => review = _reviewDraft.text.trim());
+    if (await _save()) {
+      if (!mounted) return;
+      setState(() => section = 'Weekly Review');
+      _msg('Weekly reflection saved.');
+    } else if (mounted) {
+      setState(() => review = previousReview);
+    }
+  }
+
+  Widget _weeklyReflectionEditor() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('Your weekly reflection',
+        style: GoogleFonts.playfairDisplay(fontSize: 24,
+          color: ink, fontWeight: FontWeight.w600)),
+      const SizedBox(height: 6),
+      const Text('Celebrate what went well and consider what you want to carry into next week.',
+        style: TextStyle(color: sage)),
+      const SizedBox(height: 16),
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: line),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: TextField(
+          controller: _reviewDraft,
+          autofocus: true,
+          maxLength: 180,
+          minLines: 10,
+          maxLines: null,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(
+            hintText: 'What went well? What would you like to change?',
+            border: InputBorder.none,
+            alignLabelWithHint: true,
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: () => setState(() => section = 'Weekly Review'),
+            child: const Text('Cancel'),
+          ),
+          const SizedBox(width: 8),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: sage),
+            onPressed: _saveReview,
+            icon: const Icon(Icons.save_outlined),
+            label: const Text('Save reflection'),
+          ),
+        ],
+      ),
+    ],
+  );
 
   Future<void> _toggle(List<Map<String, dynamic>> list, int i) async {
     setState(() => list[i]['done'] = list[i]['done'] != true);
@@ -447,7 +510,8 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       backgroundColor: cream,
       appBar: AppBar(backgroundColor: cream, foregroundColor: ink, elevation: 0,
         title: Text(section == 'Overview' ? 'Plan My Week'
-            : section == 'Task List' ? (daySelected ? '${_weekday(selectedDay)} tasks' : 'This Week’s Tasks') : section,
+            : section == 'Task List' ? (daySelected ? '${_weekday(selectedDay)} tasks' : 'This Week’s Tasks')
+            : section == 'Weekly Reflection' ? 'Weekly Review' : section,
           style: GoogleFonts.playfairDisplay(color: ink, fontWeight: FontWeight.w600)),
         actions: [if (section != 'Overview') IconButton(
           tooltip: 'Planner home', onPressed: () => setState(() => section = 'Overview'),
@@ -689,13 +753,14 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       if (groceries.isNotEmpty) Text('${groceries.where((g) => g['done'] == true).length} of ${groceries.length} checked',
         style: const TextStyle(color: sage, fontSize: 12)),
     ]));
+    if (section == 'Weekly Reflection') return _weeklyReflectionEditor();
     if (section == 'Weekly Review') return _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('How did your week go?', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w600)),
       const SizedBox(height: 8), Text(review.isEmpty
         ? 'Celebrate what went well and prepare for next week.' : review),
       const SizedBox(height: 10),
       FilledButton.icon(style: FilledButton.styleFrom(backgroundColor: sage),
-        onPressed: _review, icon: const Icon(Icons.edit_outlined),
+        onPressed: _openReviewEditor, icon: const Icon(Icons.edit_outlined),
         label: Text(review.isEmpty ? 'Write a reflection' : 'Edit reflection')),
     ]));
     if (section == 'Shared Planning') return _sharedPlanning();
