@@ -125,6 +125,14 @@ service cloud.firestore {
           'avatarFace',
           'avatarEyes',
           'avatarSmile',
+          'avatarPresentation',
+          'avatarFacialHair',
+          'avatarMole',
+          'avatarNose',
+          'avatarBrows',
+          'avatarGlasses',
+          'avatarFreckles',
+          'avatarEyeColor',
           'createdAt',
           'updatedAt'
         ]) &&
@@ -139,12 +147,20 @@ service cloud.firestore {
           'sage', 'rose', 'gold', 'sky', 'lavender', 'peach',
           'cobalt', 'plum', 'coral', 'mint', 'teal', 'amber'
         ] &&
-        request.resource.data.avatarSkin is int && request.resource.data.avatarSkin >= 0 && request.resource.data.avatarSkin <= 5 &&
-        request.resource.data.avatarHair is int && request.resource.data.avatarHair >= 0 && request.resource.data.avatarHair <= 5 &&
-        request.resource.data.avatarHairColor is int && request.resource.data.avatarHairColor >= 0 && request.resource.data.avatarHairColor <= 5 &&
+        request.resource.data.avatarSkin is int && request.resource.data.avatarSkin >= 0 && request.resource.data.avatarSkin <= 11 &&
+        request.resource.data.avatarHair is int && request.resource.data.avatarHair >= 0 && request.resource.data.avatarHair <= 10 &&
+        request.resource.data.avatarHairColor is int && request.resource.data.avatarHairColor >= 0 && request.resource.data.avatarHairColor <= 9 &&
         request.resource.data.avatarFace is int && request.resource.data.avatarFace >= 0 && request.resource.data.avatarFace <= 2 &&
         request.resource.data.avatarEyes is int && request.resource.data.avatarEyes >= 0 && request.resource.data.avatarEyes <= 2 &&
-        request.resource.data.avatarSmile is int && request.resource.data.avatarSmile >= 0 && request.resource.data.avatarSmile <= 2;
+        request.resource.data.avatarSmile is int && request.resource.data.avatarSmile >= 0 && request.resource.data.avatarSmile <= 2 &&
+        request.resource.data.avatarPresentation is int && request.resource.data.avatarPresentation >= 0 && request.resource.data.avatarPresentation <= 2 &&
+        request.resource.data.avatarFacialHair is int && request.resource.data.avatarFacialHair >= 0 && request.resource.data.avatarFacialHair <= 4 &&
+        request.resource.data.avatarMole is int && request.resource.data.avatarMole >= 0 && request.resource.data.avatarMole <= 4 &&
+        request.resource.data.avatarNose is int && request.resource.data.avatarNose >= 0 && request.resource.data.avatarNose <= 2 &&
+        request.resource.data.avatarBrows is int && request.resource.data.avatarBrows >= 0 && request.resource.data.avatarBrows <= 2 &&
+        request.resource.data.avatarGlasses is int && request.resource.data.avatarGlasses >= 0 && request.resource.data.avatarGlasses <= 2 &&
+        request.resource.data.avatarFreckles is int && request.resource.data.avatarFreckles >= 0 && request.resource.data.avatarFreckles <= 2 &&
+        request.resource.data.avatarEyeColor is int && request.resource.data.avatarEyeColor >= 0 && request.resource.data.avatarEyeColor <= 5;
 
       allow delete: if isSelf(uid);
     }
@@ -184,6 +200,14 @@ service cloud.firestore {
           'avatarFace',
           'avatarEyes',
           'avatarSmile',
+          'avatarPresentation',
+          'avatarFacialHair',
+          'avatarMole',
+          'avatarNose',
+          'avatarBrows',
+          'avatarGlasses',
+          'avatarFreckles',
+          'avatarEyeColor',
           'updatedAt'
         ]) &&
         request.resource.data.uid == request.auth.uid &&
@@ -196,12 +220,20 @@ service cloud.firestore {
           'sage', 'rose', 'gold', 'sky', 'lavender', 'peach',
           'cobalt', 'plum', 'coral', 'mint', 'teal', 'amber'
         ] &&
-        request.resource.data.avatarSkin is int && request.resource.data.avatarSkin >= 0 && request.resource.data.avatarSkin <= 5 &&
-        request.resource.data.avatarHair is int && request.resource.data.avatarHair >= 0 && request.resource.data.avatarHair <= 5 &&
-        request.resource.data.avatarHairColor is int && request.resource.data.avatarHairColor >= 0 && request.resource.data.avatarHairColor <= 5 &&
+        request.resource.data.avatarSkin is int && request.resource.data.avatarSkin >= 0 && request.resource.data.avatarSkin <= 11 &&
+        request.resource.data.avatarHair is int && request.resource.data.avatarHair >= 0 && request.resource.data.avatarHair <= 10 &&
+        request.resource.data.avatarHairColor is int && request.resource.data.avatarHairColor >= 0 && request.resource.data.avatarHairColor <= 9 &&
         request.resource.data.avatarFace is int && request.resource.data.avatarFace >= 0 && request.resource.data.avatarFace <= 2 &&
         request.resource.data.avatarEyes is int && request.resource.data.avatarEyes >= 0 && request.resource.data.avatarEyes <= 2 &&
-        request.resource.data.avatarSmile is int && request.resource.data.avatarSmile >= 0 && request.resource.data.avatarSmile <= 2;
+        request.resource.data.avatarSmile is int && request.resource.data.avatarSmile >= 0 && request.resource.data.avatarSmile <= 2 &&
+        request.resource.data.avatarPresentation is int && request.resource.data.avatarPresentation >= 0 && request.resource.data.avatarPresentation <= 2 &&
+        request.resource.data.avatarFacialHair is int && request.resource.data.avatarFacialHair >= 0 && request.resource.data.avatarFacialHair <= 4 &&
+        request.resource.data.avatarMole is int && request.resource.data.avatarMole >= 0 && request.resource.data.avatarMole <= 4 &&
+        request.resource.data.avatarNose is int && request.resource.data.avatarNose >= 0 && request.resource.data.avatarNose <= 2 &&
+        request.resource.data.avatarBrows is int && request.resource.data.avatarBrows >= 0 && request.resource.data.avatarBrows <= 2 &&
+        request.resource.data.avatarGlasses is int && request.resource.data.avatarGlasses >= 0 && request.resource.data.avatarGlasses <= 2 &&
+        request.resource.data.avatarFreckles is int && request.resource.data.avatarFreckles >= 0 && request.resource.data.avatarFreckles <= 2 &&
+        request.resource.data.avatarEyeColor is int && request.resource.data.avatarEyeColor >= 0 && request.resource.data.avatarEyeColor <= 5;
 
       allow delete: if isSelf(uid);
     }

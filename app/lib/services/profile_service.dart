@@ -21,6 +21,14 @@ class VillageProfile {
     this.avatarFace = 0,
     this.avatarEyes = 0,
     this.avatarSmile = 0,
+    this.avatarPresentation = 0,
+    this.avatarFacialHair = 0,
+    this.avatarMole = 0,
+    this.avatarNose = 0,
+    this.avatarBrows = 0,
+    this.avatarGlasses = 0,
+    this.avatarFreckles = 0,
+    this.avatarEyeColor = 0,
   });
 
   final String uid;
@@ -35,6 +43,14 @@ class VillageProfile {
   final int avatarFace;
   final int avatarEyes;
   final int avatarSmile;
+  final int avatarPresentation;
+  final int avatarFacialHair;
+  final int avatarMole;
+  final int avatarNose;
+  final int avatarBrows;
+  final int avatarGlasses;
+  final int avatarFreckles;
+  final int avatarEyeColor;
 }
 
 class UsernameLookup {
@@ -397,6 +413,14 @@ class ProfileService {
       avatarFace: _appearanceValue(data, 'avatarFace'),
       avatarEyes: _appearanceValue(data, 'avatarEyes'),
       avatarSmile: _appearanceValue(data, 'avatarSmile'),
+      avatarPresentation: _appearanceValue(data, 'avatarPresentation'),
+      avatarFacialHair: _appearanceValue(data, 'avatarFacialHair'),
+      avatarMole: _appearanceValue(data, 'avatarMole'),
+      avatarNose: _appearanceValue(data, 'avatarNose'),
+      avatarBrows: _appearanceValue(data, 'avatarBrows'),
+      avatarGlasses: _appearanceValue(data, 'avatarGlasses'),
+      avatarFreckles: _appearanceValue(data, 'avatarFreckles'),
+      avatarEyeColor: _appearanceValue(data, 'avatarEyeColor'),
     );
   }
 
@@ -406,13 +430,25 @@ class ProfileService {
   ];
 
   static const avatarAppearanceKeys = <String>[
-    'avatarSkin', 'avatarHair', 'avatarHairColor',
-    'avatarFace', 'avatarEyes', 'avatarSmile',
+    'avatarSkin', 'avatarHair', 'avatarHairColor', 'avatarFace',
+    'avatarEyes', 'avatarSmile', 'avatarPresentation',
+    'avatarFacialHair', 'avatarMole', 'avatarNose', 'avatarBrows',
+    'avatarGlasses', 'avatarFreckles',
+    'avatarEyeColor',
   ];
 
   static int _appearanceValue(Map<String, dynamic> data, String key) {
     final value = data[key];
-    final max = const {'avatarFace', 'avatarEyes', 'avatarSmile'}.contains(key) ? 2 : 5;
+    final max = switch (key) {
+      'avatarFace' || 'avatarEyes' || 'avatarSmile' || 'avatarPresentation' ||
+      'avatarNose' || 'avatarBrows' || 'avatarGlasses' || 'avatarFreckles' => 2,
+      'avatarEyeColor' => 5,
+      'avatarFacialHair' || 'avatarMole' => 4,
+      'avatarHair' => 10,
+      'avatarSkin' => 11,
+      'avatarHairColor' => 9,
+      _ => 0,
+    };
     return value is int && value >= 0 && value <= max ? value : 0;
   }
 
@@ -455,6 +491,14 @@ class ProfileService {
     int face = 0,
     int eyes = 0,
     int smile = 0,
+    int presentation = 0,
+    int facialHair = 0,
+    int mole = 0,
+    int nose = 0,
+    int brows = 0,
+    int glasses = 0,
+    int freckles = 0,
+    int eyeColor = 0,
   }) async {
     if (mode != 'avatar') {
       throw const ProfileValidationException('Choose a valid profile option.');
@@ -462,8 +506,10 @@ class ProfileService {
     if (mode == 'avatar' && !avatarKeys.contains(key)) {
       throw const ProfileValidationException('Choose one of the available avatars.');
     }
-    if ([skin, hair, hairColor].any((value) => value < 0 || value > 5) ||
-        [face, eyes, smile].any((value) => value < 0 || value > 2)) {
+    if (skin < 0 || skin > 11 || hair < 0 || hair > 10 || hairColor < 0 || hairColor > 9 || eyeColor < 0 || eyeColor > 5 ||
+        [face, eyes, smile, presentation, nose, brows, glasses, freckles]
+            .any((value) => value < 0 || value > 2) ||
+        [facialHair, mole].any((value) => value < 0 || value > 4)) {
       throw const ProfileValidationException('Choose valid avatar features.');
     }
     final user = _user;
@@ -481,6 +527,14 @@ class ProfileService {
       'avatarFace': face,
       'avatarEyes': eyes,
       'avatarSmile': smile,
+      'avatarPresentation': presentation,
+      'avatarFacialHair': facialHair,
+      'avatarMole': mole,
+      'avatarNose': nose,
+      'avatarBrows': brows,
+      'avatarGlasses': glasses,
+      'avatarFreckles': freckles,
+      'avatarEyeColor': eyeColor,
       'photoUrl': '',
     };
     await _saveAvatarFields(user.uid, fields);
