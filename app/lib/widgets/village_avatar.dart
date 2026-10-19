@@ -376,7 +376,7 @@ class _VillageAvatarPainter extends CustomPainter {
     stroke.strokeWidth = browStyle == 1 ? 2.0 : browStyle == 2 ? 1.0 : 1.35;
     final browLift = browStyle == 2 ? -1.0 : (i % 2 == 0 ? -1.0 : 0.0);
     canvas.drawLine(const Offset(24, 29), Offset(29, 29 + browLift), stroke);
-    canvas.drawLine(const Offset(35, 29 + browLift), const Offset(40, 29), stroke);
+    canvas.drawLine(Offset(35, 29 + browLift), const Offset(40, 29), stroke);
     fill.color = _eyeChoices[eyeColorIndex];
     final eyeY = i % 3 == 0 ? 32.0 : 33.0;
     final eyeHeight = eyeStyle == 1 ? 2.8 : eyeStyle == 2 ? 1.4 : (i % 4 == 0 ? 1.4 : 2.1);
