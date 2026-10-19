@@ -20,17 +20,35 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   static const line = Color(0xFFE3D8C9);
 
   static const skinColors = <Color>[
-    Color(0xFF6E3E2E), Color(0xFF9C6045), Color(0xFFC98761),
-    Color(0xFFE0AD86), Color(0xFFEDC29B), Color(0xFF81513D),
+    Color(0xFF3B2119), Color(0xFF563326), Color(0xFF704630),
+    Color(0xFF81513D), Color(0xFF8B553A), Color(0xFF9C6045),
+    Color(0xFFA66A4E), Color(0xFFB97855), Color(0xFFC98761),
+    Color(0xFFD69A70), Color(0xFFE0AD86), Color(0xFFEDC29B),
   ];
   static const hairColors = <Color>[
     Color(0xFF171311), Color(0xFF2D211C), Color(0xFF542F23),
-    Color(0xFF8A5837), Color(0xFFB78A58), Color(0xFF4A4A47),
+    Color(0xFF8A5837), Color(0xFFC17C36), Color(0xFFE1BE78),
+    Color(0xFF4A4A47), Color(0xFFE1D9CC), Color(0xFF76509A),
+    Color(0xFFB34E72),
   ];
-  static const hairStyles = ['Coils', 'Locs', 'Braids', 'Waves', 'Short', 'Bun'];
+  static const eyeColors = <Color>[
+    Color(0xFF30231F), Color(0xFF79513B), Color(0xFF9A7A42),
+    Color(0xFF52755B), Color(0xFF527B9B), Color(0xFF71818B),
+  ];
+  static const hairStyles = [
+    'Afro', 'Locs', 'Twists', 'Braids', 'Bantu knots', 'Curls',
+    'Waves', 'Short crop', 'Bun', 'Ponytail', 'Bald',
+  ];
   static const faceShapes = ['Soft', 'Long', 'Round'];
   static const eyeStyles = ['Almond', 'Round', 'Gentle'];
   static const expressions = ['Smile', 'Big smile', 'Calm'];
+  static const presentations = ['Feminine', 'Masculine', 'Androgynous'];
+  static const facialHairStyles = ['None', 'Stubble', 'Mustache', 'Goatee', 'Full beard'];
+  static const moleOptions = ['None', 'Left cheek', 'Right cheek', 'Chin', 'Two moles'];
+  static const noseStyles = ['Soft', 'Straight', 'Wide'];
+  static const browStyles = ['Natural', 'Bold', 'Soft arch'];
+  static const glassesStyles = ['None', 'Square', 'Round'];
+  static const freckleStyles = ['None', 'Light', 'More'];
 
   late int skin = widget.profile.avatarSkin;
   late int hair = widget.profile.avatarHair;
@@ -38,6 +56,14 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   late int face = widget.profile.avatarFace.clamp(0, 2).toInt();
   late int eyes = widget.profile.avatarEyes.clamp(0, 2).toInt();
   late int smile = widget.profile.avatarSmile.clamp(0, 2).toInt();
+  late int presentation = widget.profile.avatarPresentation.clamp(0, 2).toInt();
+  late int facialHair = widget.profile.avatarFacialHair.clamp(0, 4).toInt();
+  late int mole = widget.profile.avatarMole.clamp(0, 4).toInt();
+  late int nose = widget.profile.avatarNose.clamp(0, 2).toInt();
+  late int brows = widget.profile.avatarBrows.clamp(0, 2).toInt();
+  late int glasses = widget.profile.avatarGlasses.clamp(0, 2).toInt();
+  late int freckles = widget.profile.avatarFreckles.clamp(0, 2).toInt();
+  late int eyeColor = widget.profile.avatarEyeColor.clamp(0, 5).toInt();
   bool saving = false;
 
   Future<void> save() async {
@@ -53,6 +79,14 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
         face: face,
         eyes: eyes,
         smile: smile,
+        presentation: presentation,
+        facialHair: facialHair,
+        mole: mole,
+        nose: nose,
+        brows: brows,
+        glasses: glasses,
+        freckles: freckles,
+        eyeColor: eyeColor,
       );
       VillageAvatar.invalidate(widget.profile.uid);
       if (!mounted) return;
@@ -99,6 +133,14 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
                         avatarFace: face,
                         avatarEyes: eyes,
                         avatarSmile: smile,
+                        avatarPresentation: presentation,
+                        avatarFacialHair: facialHair,
+                        avatarMole: mole,
+                        avatarNose: nose,
+                        avatarBrows: brows,
+                        avatarGlasses: glasses,
+                        avatarFreckles: freckles,
+                        avatarEyeColor: eyeColor,
                       ),
                     ),
                   ),
@@ -130,10 +172,47 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
                   _sectionTitle('Eyes'),
                   const SizedBox(height: 9),
                   _choices(eyeStyles, eyes, (value) => setState(() => eyes = value)),
+                  const SizedBox(height: 12),
+                  const Text('Eye colour', style: TextStyle(color: Color(0xFF667769), fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 12, runSpacing: 10, children: [
+                    for (var index = 0; index < eyeColors.length; index++)
+                      _colorChoice(eyeColors[index], selected: eyeColor == index, onTap: () => setState(() => eyeColor = index), label: 'Eye colour ${index + 1}'),
+                  ]),
                   const SizedBox(height: 20),
                   _sectionTitle('Expression'),
                   const SizedBox(height: 9),
                   _choices(expressions, smile, (value) => setState(() => smile = value)),
+                  const SizedBox(height: 22),
+                  _sectionTitle('Gender presentation'),
+                  const SizedBox(height: 9),
+                  _choices(presentations, presentation, (value) => setState(() => presentation = value)),
+                  const SizedBox(height: 20),
+                  _sectionTitle('Facial hair'),
+                  const SizedBox(height: 9),
+                  _choices(facialHairStyles, facialHair, (value) => setState(() => facialHair = value)),
+                  const SizedBox(height: 20),
+                  _sectionTitle('Facial details'),
+                  const SizedBox(height: 9),
+                  const Text('Nose', style: TextStyle(color: Color(0xFF667769), fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 7),
+                  _choices(noseStyles, nose, (value) => setState(() => nose = value)),
+                  const SizedBox(height: 12),
+                  const Text('Eyebrows', style: TextStyle(color: Color(0xFF667769), fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 7),
+                  _choices(browStyles, brows, (value) => setState(() => brows = value)),
+                  const SizedBox(height: 12),
+                  const Text('Moles / beauty marks', style: TextStyle(color: Color(0xFF667769), fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 7),
+                  _choices(moleOptions, mole, (value) => setState(() => mole = value)),
+                  const SizedBox(height: 12),
+                  const Text('Freckles', style: TextStyle(color: Color(0xFF667769), fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 7),
+                  _choices(freckleStyles, freckles, (value) => setState(() => freckles = value)),
+                  const SizedBox(height: 20),
+                  _sectionTitle('Glasses'),
+                  const SizedBox(height: 9),
+                  _choices(glassesStyles, glasses, (value) => setState(() => glasses = value)),
                 ],
               ),
             ),

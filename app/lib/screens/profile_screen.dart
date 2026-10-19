@@ -343,7 +343,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _card(children: [
                             ListTile(
                               contentPadding: EdgeInsets.zero,
-                              leading: VillageAvatar(avatarMode: profile!.avatarMode, avatarKey: profile!.avatarKey, photoUrl: profile!.photoUrl, radius: 22, avatarSkin: profile!.avatarSkin, avatarHair: profile!.avatarHair, avatarHairColor: profile!.avatarHairColor, avatarFace: profile!.avatarFace, avatarEyes: profile!.avatarEyes, avatarSmile: profile!.avatarSmile),
+                              leading: VillageAvatar(avatarMode: profile!.avatarMode, avatarKey: profile!.avatarKey, photoUrl: profile!.photoUrl, radius: 22, avatarSkin: profile!.avatarSkin, avatarHair: profile!.avatarHair, avatarHairColor: profile!.avatarHairColor, avatarFace: profile!.avatarFace, avatarEyes: profile!.avatarEyes, avatarSmile: profile!.avatarSmile, avatarPresentation: profile!.avatarPresentation, avatarFacialHair: profile!.avatarFacialHair, avatarMole: profile!.avatarMole, avatarNose: profile!.avatarNose, avatarBrows: profile!.avatarBrows, avatarGlasses: profile!.avatarGlasses, avatarFreckles: profile!.avatarFreckles, avatarEyeColor: profile!.avatarEyeColor),
                               title: const Text('Build your avatar'),
                               subtitle: const Text('Choose your skin colour, hair and facial features'),
                               trailing: profile!.avatarMode == 'avatar' ? const Icon(Icons.check_circle, color: sage) : const Icon(Icons.chevron_right_rounded),
@@ -551,6 +551,14 @@ class _ProfileHeader extends StatelessWidget {
           avatarFace: profile.avatarFace,
           avatarEyes: profile.avatarEyes,
           avatarSmile: profile.avatarSmile,
+          avatarPresentation: profile.avatarPresentation,
+          avatarFacialHair: profile.avatarFacialHair,
+          avatarMole: profile.avatarMole,
+          avatarNose: profile.avatarNose,
+          avatarBrows: profile.avatarBrows,
+          avatarGlasses: profile.avatarGlasses,
+          avatarFreckles: profile.avatarFreckles,
+          avatarEyeColor: profile.avatarEyeColor,
         ),
         const SizedBox(height: 10),
         Text(
