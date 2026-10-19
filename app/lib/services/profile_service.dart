@@ -15,6 +15,12 @@ class VillageProfile {
     this.avatarMode = 'avatar',
     this.avatarKey = 'sage',
     this.photoUrl = '',
+    this.avatarSkin = 0,
+    this.avatarHair = 0,
+    this.avatarHairColor = 0,
+    this.avatarFace = 0,
+    this.avatarEyes = 0,
+    this.avatarSmile = 0,
   });
 
   final String uid;
@@ -23,6 +29,12 @@ class VillageProfile {
   final String avatarMode;
   final String avatarKey;
   final String photoUrl;
+  final int avatarSkin;
+  final int avatarHair;
+  final int avatarHairColor;
+  final int avatarFace;
+  final int avatarEyes;
+  final int avatarSmile;
 }
 
 class UsernameLookup {
@@ -208,6 +220,7 @@ class ProfileService {
       final avatarKey = savedMode == 'avatar' && avatarKeys.contains(savedKey)
           ? savedKey as String
           : 'sage';
+      final avatarAppearance = _validatedAppearance(savedProfile);
       const avatarMode = 'avatar';
       const photoUrl = '';
 
@@ -221,6 +234,7 @@ class ProfileService {
           'photoUrl': photoUrl,
           'avatarMode': avatarMode,
           'avatarKey': avatarKey,
+          ...avatarAppearance,
           'updatedAt': FieldValue.serverTimestamp(),
           if (!userSnapshot.exists) 'createdAt': FieldValue.serverTimestamp(),
         },
@@ -236,6 +250,7 @@ class ProfileService {
           'photoUrl': photoUrl,
           'avatarMode': avatarMode,
           'avatarKey': avatarKey,
+          ...avatarAppearance,
           'updatedAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true),
@@ -376,6 +391,12 @@ class ProfileService {
       avatarMode: data['avatarMode'] as String? ?? 'avatar',
       avatarKey: data['avatarKey'] as String? ?? 'sage',
       photoUrl: data['photoUrl'] as String? ?? '',
+      avatarSkin: _appearanceValue(data, 'avatarSkin'),
+      avatarHair: _appearanceValue(data, 'avatarHair'),
+      avatarHairColor: _appearanceValue(data, 'avatarHairColor'),
+      avatarFace: _appearanceValue(data, 'avatarFace'),
+      avatarEyes: _appearanceValue(data, 'avatarEyes'),
+      avatarSmile: _appearanceValue(data, 'avatarSmile'),
     );
   }
 
@@ -383,6 +404,21 @@ class ProfileService {
     'sage', 'rose', 'gold', 'sky', 'lavender', 'peach',
     'cobalt', 'plum', 'coral', 'mint', 'teal', 'amber',
   ];
+
+  static const avatarAppearanceKeys = <String>[
+    'avatarSkin', 'avatarHair', 'avatarHairColor',
+    'avatarFace', 'avatarEyes', 'avatarSmile',
+  ];
+
+  static int _appearanceValue(Map<String, dynamic> data, String key) {
+    final value = data[key];
+    final max = const {'avatarFace', 'avatarEyes', 'avatarSmile'}.contains(key) ? 2 : 5;
+    return value is int && value >= 0 && value <= max ? value : 0;
+  }
+
+  static Map<String, int> _validatedAppearance(Map<String, dynamic> data) => {
+    for (final key in avatarAppearanceKeys) key: _appearanceValue(data, key),
+  };
 
   Future<void> _saveAvatarFields(String uid, Map<String, dynamic> fields) async {
     final batch = _firestore.batch();
@@ -394,6 +430,7 @@ class ProfileService {
       'photoUrl': fields['photoUrl'] ?? '',
       'avatarMode': fields['avatarMode'] ?? 'avatar',
       'avatarKey': fields['avatarKey'] ?? 'sage',
+      ..._validatedAppearance(fields),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     batch.set(_publicProfileDocument(uid), {
@@ -403,17 +440,31 @@ class ProfileService {
       'photoUrl': fields['photoUrl'] ?? '',
       'avatarMode': fields['avatarMode'] ?? 'avatar',
       'avatarKey': fields['avatarKey'] ?? 'sage',
+      ..._validatedAppearance(fields),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     await batch.commit();
   }
 
-  Future<void> updateAvatar({required String mode, String key = 'sage'}) async {
+  Future<void> updateAvatar({
+    required String mode,
+    String key = 'sage',
+    int skin = 0,
+    int hair = 0,
+    int hairColor = 0,
+    int face = 0,
+    int eyes = 0,
+    int smile = 0,
+  }) async {
     if (mode != 'avatar') {
       throw const ProfileValidationException('Choose a valid profile option.');
     }
     if (mode == 'avatar' && !avatarKeys.contains(key)) {
       throw const ProfileValidationException('Choose one of the available avatars.');
+    }
+    if ([skin, hair, hairColor].any((value) => value < 0 || value > 5) ||
+        [face, eyes, smile].any((value) => value < 0 || value > 2)) {
+      throw const ProfileValidationException('Choose valid avatar features.');
     }
     final user = _user;
     final current = await loadProfile();
@@ -424,6 +475,12 @@ class ProfileService {
       'email': current.email,
       'avatarMode': mode,
       'avatarKey': key,
+      'avatarSkin': skin,
+      'avatarHair': hair,
+      'avatarHairColor': hairColor,
+      'avatarFace': face,
+      'avatarEyes': eyes,
+      'avatarSmile': smile,
       'photoUrl': '',
     };
     await _saveAvatarFields(user.uid, fields);
@@ -495,6 +552,7 @@ class ProfileService {
         (payload['account'] as Map<String, Object?>).addAll({
           'avatarMode': accountData['avatarMode'] ?? 'avatar',
           'avatarKey': accountData['avatarKey'] ?? 'sage',
+          ..._validatedAppearance(accountData),
           'photoUrl': accountData['photoUrl'] ?? '',
         });
         final results = await Future.wait([

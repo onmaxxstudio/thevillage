@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/village_avatar.dart';
+import 'avatar_builder_screen.dart';
 import 'welcome_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -77,62 +78,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> chooseAvatar() async {
-    const keys = ProfileService.avatarKeys;
-    const names = <String>[
-      'Coil Crown', 'Soft Curls', 'Headscarf', 'Long Locs',
-      'Soft Waves', 'Braids', 'Full Afro', 'Curly Bob',
-      'Headwrap', 'Short Curls', 'Natural Bob', 'Locs',
-    ];
-    final selected = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: cream,
-        title: const Text('Choose an Avatar'),
-        content: SizedBox(
-          width: 320,
-          child: GridView.builder(
-            shrinkWrap: true,
-            itemCount: keys.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 12, crossAxisSpacing: 12),
-            itemBuilder: (_, index) => Semantics(
-              label: 'Avatar ${index + 1}: ${names[index]}',
-              button: true,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(18),
-                onTap: () => Navigator.pop(dialogContext, keys[index]),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(color: Colors.white, border: Border.all(color: profile?.avatarKey == keys[index] && profile?.avatarMode == 'avatar' ? sage : line, width: 2), borderRadius: BorderRadius.circular(18)),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      VillageAvatar(avatarMode: 'avatar', avatarKey: keys[index], radius: 25),
-                      const SizedBox(height: 3),
-                      Text(names[index], textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: ink)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel'))],
-      ),
+    final current = profile;
+    if (current == null || saving) return;
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => AvatarBuilderScreen(profile: current)),
     );
-    if (selected == null) return;
-    await saveAvatar(mode: 'avatar', key: selected);
-  }
-
-  Future<void> saveAvatar({required String mode, String key = 'sage'}) async {
-    if (mounted) setState(() => saving = true);
-    try {
-      await service.updateAvatar(mode: mode, key: key);
-      if (profile != null) VillageAvatar.invalidate(profile!.uid);
+    if (changed == true && mounted) {
       await loadProfile();
-      if (mounted) showMessage('Your profile avatar was updated.');
-    } catch (error) {
-      if (mounted) showMessage(messageFor(error));
-    } finally {
-      if (mounted) setState(() => saving = false);
+      if (mounted) showMessage('Your avatar was updated.');
     }
   }
 
@@ -390,9 +343,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _card(children: [
                             ListTile(
                               contentPadding: EdgeInsets.zero,
-                              leading: VillageAvatar(avatarMode: profile!.avatarMode, avatarKey: profile!.avatarKey, photoUrl: profile!.photoUrl, radius: 22),
-                              title: const Text('Choose an Avatar'),
-                              subtitle: const Text('Choose from 12 illustrated avatars with varied looks'),
+                              leading: VillageAvatar(avatarMode: profile!.avatarMode, avatarKey: profile!.avatarKey, photoUrl: profile!.photoUrl, radius: 22, avatarSkin: profile!.avatarSkin, avatarHair: profile!.avatarHair, avatarHairColor: profile!.avatarHairColor, avatarFace: profile!.avatarFace, avatarEyes: profile!.avatarEyes, avatarSmile: profile!.avatarSmile),
+                              title: const Text('Build your avatar'),
+                              subtitle: const Text('Choose your skin colour, hair and facial features'),
                               trailing: profile!.avatarMode == 'avatar' ? const Icon(Icons.check_circle, color: sage) : const Icon(Icons.chevron_right_rounded),
                               onTap: saving ? null : chooseAvatar,
                             ),
@@ -592,6 +545,12 @@ class _ProfileHeader extends StatelessWidget {
           avatarMode: profile.avatarMode,
           avatarKey: profile.avatarKey,
           photoUrl: profile.photoUrl,
+          avatarSkin: profile.avatarSkin,
+          avatarHair: profile.avatarHair,
+          avatarHairColor: profile.avatarHairColor,
+          avatarFace: profile.avatarFace,
+          avatarEyes: profile.avatarEyes,
+          avatarSmile: profile.avatarSmile,
         ),
         const SizedBox(height: 10),
         Text(
