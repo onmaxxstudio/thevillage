@@ -506,10 +506,21 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     final complete = weekTasks.where((t) => t['done'] == true).length;
     final selectedDayTasks = tasks.where((t) => t['day'] == _key(selectedDay)).toList();
     final selectedDayComplete = selectedDayTasks.where((t) => t['done'] == true).length;
-    return Scaffold(
-      backgroundColor: cream,
-      appBar: AppBar(backgroundColor: cream, foregroundColor: ink, elevation: 0,
-        title: Text(section == 'Overview' ? 'Plan My Week'
+    return PopScope(
+      canPop: section == 'Overview',
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && section != 'Overview') {
+          setState(() => section = 'Overview');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: cream,
+        appBar: AppBar(backgroundColor: cream, foregroundColor: ink, elevation: 0,
+          leading: section == 'Overview' ? null : IconButton(
+            tooltip: 'Back to Plan My Week',
+            onPressed: () => setState(() => section = 'Overview'),
+            icon: const Icon(Icons.arrow_back)),
+          title: Text(section == 'Overview' ? 'Plan My Week'
             : section == 'Task List' ? (daySelected ? '${_weekday(selectedDay)} tasks' : 'This Week’s Tasks')
             : section == 'Weekly Reflection' ? 'Weekly Review' : section,
           style: GoogleFonts.playfairDisplay(color: ink, fontWeight: FontWeight.w600)),
@@ -568,6 +579,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
             ] else _section(),
           ]),
       )),
+      ),
     );
   }
 
