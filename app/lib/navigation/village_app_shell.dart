@@ -6,6 +6,7 @@ import '../screens/community_hub_managed_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/personalization_screen.dart';
 import '../screens/profile_screen.dart';
+import '../screens/private_messages_screen.dart';
 import '../screens/settings_screen.dart';
 import '../services/personalization_service.dart';
 import '../screens/village_feed_screen.dart';
@@ -145,6 +146,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
             _drawerItem(Icons.people_rounded, 'My Circle', () => closeAndSelect(1)),
             _drawerItem(Icons.add_circle_outline_rounded, 'Ask the Village', () => closeAndSelect(2)),
             _drawerItem(Icons.forum_rounded, 'The Village', () => closeAndSelect(3)),
+            _drawerItem(Icons.mark_unread_chat_alt_outlined, 'Messages', () => closeAndPush(const PrivateMessagesScreen())),
             _drawerItem(Icons.diversity_3_rounded, 'Community Hub', () => closeAndSelect(4)),
             const Divider(height: 30),
             _drawerItem(Icons.person_outline_rounded, 'Profile', () => closeAndPush(const ProfileScreen())),
