@@ -6,10 +6,12 @@ import '../services/village_post_service.dart';
 import '../services/profile_service.dart';
 import '../services/safety_service.dart';
 import '../services/notification_service.dart';
+import '../services/private_message_service.dart';
 import '../widgets/village_avatar.dart';
 import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
 import 'notifications_screen.dart';
+import 'private_messages_screen.dart';
 
 class VillageFeedScreen extends StatefulWidget {
   const VillageFeedScreen({
@@ -800,6 +802,43 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     );
   }
 
+  Future<void> _messageReplyAuthor(String postId, VillageReply reply) async {
+    final recipientUid = reply.authorUid;
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (recipientUid == null || recipientUid.isEmpty || recipientUid == currentUid) return;
+    final postIndex = posts.indexWhere((item) => item.id == postId);
+    if (postIndex < 0) return;
+    final post = posts[postIndex];
+    try {
+      final conversationId = await PrivateMessageService().openOrCreate(
+        otherUid: recipientUid,
+        sourceType: post.communityId == null ? 'village' : 'community',
+        communityId: post.communityId ?? '',
+        communityName: post.communityName ?? '',
+        sourcePostId: post.id,
+        sourcePostExcerpt: post.question,
+        commentExcerpt: reply.text,
+      );
+      if (!mounted) return;
+      await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => PrivateChatScreen(
+          conversationId: conversationId,
+          otherUid: recipientUid,
+          contextExcerpt: reply.text,
+          sourceLabel: post.communityName?.isNotEmpty == true
+              ? post.communityName!
+              : 'Village feed',
+        ),
+      ));
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open this private chat. Please try again.')),
+        );
+      }
+    }
+  }
+
   Future<void> _openFollowUp(VillagePost post) async {
     final status = await showModalBottomSheet<String>(
       context: context,
@@ -1241,13 +1280,20 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                   tooltip: 'Reply options',
                   padding: EdgeInsets.zero,
                   onSelected: (value) {
-                    if (value == 'block') {
+                    if (value == 'message') {
+                      _messageReplyAuthor(postId, reply);
+                    } else if (value == 'block') {
                       _blockReplyAuthor(reply);
                     } else {
                       _reportReply(reply);
                     }
                   },
                   itemBuilder: (_) => [
+                    if (reply.authorUid != null && !anonymous)
+                      const PopupMenuItem(
+                        value: 'message',
+                        child: Text('Message privately'),
+                      ),
                     const PopupMenuItem(
                       value: 'report',
                       child: Text('Report reply'),

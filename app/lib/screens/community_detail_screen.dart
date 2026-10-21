@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/admin_content_service.dart';
 import '../services/community_hub_service.dart';
 import '../services/village_post_service.dart';
+import '../services/private_message_service.dart';
+import 'private_messages_screen.dart';
 import '../widgets/village_avatar.dart';
 import 'ask_village_screen.dart';
 import 'village_feed_screen.dart';
@@ -130,6 +132,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   _hero(),
                   const SizedBox(height: 14),
                   _membershipRow(),
+                  const SizedBox(height: 12),
+                  _messagesCard(),
                   const SizedBox(height: 18),
                   _startHere(),
                   const SizedBox(height: 16),
@@ -204,6 +208,62 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             icon: const Icon(Icons.more_horiz_rounded, color: ink),
           ),
         ],
+      );
+
+  Widget _messagesCard() => StreamBuilder<List<PrivateConversation>>(
+        stream: PrivateMessageService().watchConversations(),
+        builder: (context, snapshot) {
+          final unreadCount = snapshot.data
+                  ?.where((conversation) =>
+                      conversation.sourceType == 'community' &&
+                      conversation.communityId == widget.id &&
+                      conversation.unreadForMe)
+                  .length ??
+              0;
+          return Material(
+        color: Colors.white.withValues(alpha: .72),
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => PrivateMessagesScreen(
+              communityId: widget.id,
+              communityName: widget.name,
+            ),
+          )),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              border: Border.all(color: line),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(color: softSage, borderRadius: BorderRadius.circular(14)),
+                child: const Icon(Icons.chat_bubble_outline_rounded, color: sage),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Messages', style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w700, color: ink)),
+                Text('Private chats from this community', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF667066))),
+              ])),
+              if (unreadCount > 0)
+                Container(
+                  constraints: const BoxConstraints(minWidth: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                  decoration: const BoxDecoration(color: gold, shape: BoxShape.circle),
+                  child: Text('$unreadCount', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+                ),
+              const Icon(Icons.lock_outline_rounded, size: 17, color: sage),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right_rounded, color: sage),
+            ]),
+          ),
+        ),
+      );
+        },
       );
 
   Widget _hero() => ClipRRect(

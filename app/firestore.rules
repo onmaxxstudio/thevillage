@@ -29,6 +29,11 @@ service cloud.firestore {
           .data.uid == request.auth.uid;
     }
 
+    function membersAllowMessages(firstUid, secondUid) {
+      return !exists(/databases/$(database)/documents/users/$(firstUid)/blocked/$(secondUid)) &&
+        !exists(/databases/$(database)/documents/users/$(secondUid)/blocked/$(firstUid));
+    }
+
     match /admins/{uid} {
       allow get: if isSelf(uid);
       allow list, create, update, delete: if false;
@@ -503,6 +508,97 @@ service cloud.firestore {
             .hasOnly(['readAt']);
 
         allow delete: if false;
+      }
+    }
+
+    // Private one-to-one chats. Every read and write is scoped to the two
+    // immutable participants on the parent conversation document.
+    match /private_conversations/{conversationId} {
+      allow get, list: if signedIn() &&
+        request.auth.uid in resource.data.participantUids;
+
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly([
+          'participantUids', 'sourceKey', 'sourceType', 'communityId',
+          'communityName', 'sourcePostId', 'sourcePostExcerpt',
+          'contextExcerpt', 'lastMessage', 'lastSenderUid', 'createdAt',
+          'updatedAt', 'unreadFor'
+        ]) &&
+        request.resource.data.participantUids is list &&
+        request.resource.data.participantUids.size() == 2 &&
+        request.auth.uid in request.resource.data.participantUids &&
+        request.resource.data.participantUids[0] != request.resource.data.participantUids[1] &&
+        membersAllowMessages(
+          request.resource.data.participantUids[0],
+          request.resource.data.participantUids[1]
+        ) &&
+        request.resource.data.sourceType in ['village', 'community'] &&
+        request.resource.data.sourceKey is string &&
+        request.resource.data.communityId is string &&
+        request.resource.data.communityName is string &&
+        request.resource.data.sourcePostId is string &&
+        request.resource.data.sourcePostExcerpt is string &&
+        request.resource.data.sourcePostExcerpt.size() <= 1500 &&
+        request.resource.data.contextExcerpt is string &&
+        request.resource.data.contextExcerpt.size() <= 500 &&
+        request.resource.data.lastMessage == '' &&
+        request.resource.data.lastSenderUid == request.auth.uid &&
+        request.resource.data.unreadFor is list &&
+        request.resource.data.unreadFor.size() == 0 &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time;
+
+      allow update: if signedIn() &&
+        request.auth.uid in resource.data.participantUids &&
+        (
+          (
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['lastMessage', 'lastSenderUid', 'updatedAt', 'unreadFor']) &&
+            membersAllowMessages(
+              resource.data.participantUids[0],
+              resource.data.participantUids[1]
+            ) &&
+            request.resource.data.lastMessage is string &&
+            request.resource.data.lastMessage.size() <= 2000 &&
+            request.resource.data.lastSenderUid == request.auth.uid &&
+            request.resource.data.updatedAt == request.time &&
+            request.resource.data.unreadFor is list &&
+            request.resource.data.unreadFor.size() == 1 &&
+            request.resource.data.unreadFor[0] in resource.data.participantUids &&
+            request.resource.data.unreadFor[0] != request.auth.uid
+          ) ||
+          (
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['unreadFor']) &&
+            request.auth.uid in resource.data.unreadFor &&
+            request.resource.data.unreadFor is list &&
+            request.resource.data.unreadFor.size() == 0
+          )
+        );
+
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        function isConversationMember() {
+          return signedIn() &&
+            request.auth.uid in get(
+              /databases/$(database)/documents/private_conversations/$(conversationId)
+            ).data.participantUids;
+        }
+
+        allow get, list: if isConversationMember();
+        allow create: if isConversationMember() &&
+          membersAllowMessages(
+            get(/databases/$(database)/documents/private_conversations/$(conversationId)).data.participantUids[0],
+            get(/databases/$(database)/documents/private_conversations/$(conversationId)).data.participantUids[1]
+          ) &&
+          request.resource.data.keys().hasOnly(['senderUid', 'text', 'createdAt']) &&
+          request.resource.data.senderUid == request.auth.uid &&
+          request.resource.data.text is string &&
+          request.resource.data.text.size() >= 1 &&
+          request.resource.data.text.size() <= 2000 &&
+          request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
       }
     }
 
