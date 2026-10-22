@@ -285,7 +285,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
             padding: const EdgeInsets.fromLTRB(5, 7, 5, 5),
             decoration: BoxDecoration(color: hair == i ? const Color(0xFFEAF0E4) : Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: hair == i ? sage : line, width: hair == i ? 1.6 : 1)),
             child: Column(children: [
-              Expanded(child: ClipOval(child: VillageAvatar(uid: 'builder-preview-$i', radius: 24, avatarMode: 'avatar', avatarKey: avatarKey, avatarSkin: skin, avatarHair: i, avatarHairColor: hairColor, avatarFace: face, avatarEyes: eyes, avatarSmile: smile, avatarPresentation: presentation, avatarFacialHair: facialHair, avatarMole: mole, avatarNose: nose, avatarBrows: brows, avatarGlasses: glasses, avatarFreckles: freckles, avatarEyeColor: eyeColor))),
+              Expanded(child: ClipOval(child: VillageAvatar(radius: 24, avatarMode: 'avatar', avatarKey: avatarKey, avatarSkin: skin, avatarHair: i, avatarHairColor: hairColor, avatarFace: face, avatarEyes: eyes, avatarSmile: smile, avatarPresentation: presentation, avatarFacialHair: facialHair, avatarMole: mole, avatarNose: nose, avatarBrows: brows, avatarGlasses: glasses, avatarFreckles: freckles, avatarEyeColor: eyeColor))),
               const SizedBox(height: 4),
               Text(hairStyles[i], maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10, color: hair == i ? sage : ink, fontWeight: FontWeight.w700)),
             ]),
