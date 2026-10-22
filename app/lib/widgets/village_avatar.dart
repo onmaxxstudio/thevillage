@@ -326,9 +326,18 @@ class _VillageAvatarPainter extends CustomPainter {
     fill.color = skinColor;
     canvas.drawOval(const Rect.fromLTWH(15, 27, 7, 12), fill);
     canvas.drawOval(const Rect.fromLTWH(42, 27, 7, 12), fill);
-    final faceWidth = faceStyle == 1 ? 22.0 : faceStyle == 2 ? 29.0 : (presentationStyle == 0 ? 24.0 : 26.0);
+    final faceWidth = faceStyle == 1
+        ? 22.0
+        : faceStyle == 2
+            ? 29.0
+            : presentationStyle == 0
+                ? 22.5
+                : presentationStyle == 1
+                    ? 27.0
+                    : 25.0;
     final faceLeft = (64 - faceWidth) / 2;
-    canvas.drawOval(Rect.fromLTWH(faceLeft, faceStyle == 2 ? 18 : 17, faceWidth, faceStyle == 1 ? 36 : faceStyle == 2 ? 30 : 34), fill);
+    final faceHeight = faceStyle == 1 ? 36.0 : faceStyle == 2 ? 30.0 : presentationStyle == 0 ? 35.0 : 33.0;
+    canvas.drawOval(Rect.fromLTWH(faceLeft, faceStyle == 2 ? 18 : 17, faceWidth, faceHeight), fill);
 
     // A short fringe for waves and a neat hairline for cropped styles.
     fill.color = hairColor;
@@ -378,17 +387,27 @@ class _VillageAvatarPainter extends CustomPainter {
     canvas.drawLine(const Offset(24, 29), Offset(29, 29 + browLift), stroke);
     canvas.drawLine(Offset(35, 29 + browLift), const Offset(40, 29), stroke);
     fill.color = _eyeChoices[eyeColorIndex];
-    final eyeY = i % 3 == 0 ? 32.0 : 33.0;
-    final eyeHeight = eyeStyle == 1 ? 2.8 : eyeStyle == 2 ? 1.4 : (i % 4 == 0 ? 1.4 : 2.1);
+    final eyeY = (i % 3 == 0 ? 32.0 : 33.0) + (presentationStyle == 0 ? -1.0 : 0.0);
+    final baseEyeHeight = eyeStyle == 1 ? 2.8 : eyeStyle == 2 ? 1.4 : (i % 4 == 0 ? 1.4 : 2.1);
+    final eyeHeight = baseEyeHeight + (presentationStyle == 0 ? .6 : 0.0);
     canvas.drawOval(Rect.fromCenter(center: Offset(26.5, eyeY), width: 2.1, height: eyeHeight), fill);
     canvas.drawOval(Rect.fromCenter(center: Offset(37.5, eyeY), width: 2.1, height: eyeHeight), fill);
+    if (presentationStyle == 0) {
+      stroke.color = hairColor;
+      stroke.strokeWidth = .8;
+      canvas.drawLine(Offset(25.7, eyeY - 1), Offset(24.8, eyeY - 2.1), stroke);
+      canvas.drawLine(Offset(38.3, eyeY - 1), Offset(39.2, eyeY - 2.1), stroke);
+      fill.color = const Color(0x269E5B60);
+      canvas.drawOval(const Rect.fromLTWH(20.5, 36, 6, 2.5), fill);
+      canvas.drawOval(const Rect.fromLTWH(37.5, 36, 6, 2.5), fill);
+    }
     stroke.color = Color.lerp(ink, skinColor, .22)!;
     stroke.strokeWidth = 1;
     final noseX = 32.0 + (noseStyle - 1) * 1.2;
     canvas.drawLine(Offset(32, 33), Offset(noseX, noseStyle == 2 ? 37 : 38), stroke);
     if (noseStyle == 2) canvas.drawLine(Offset(noseX, 37), Offset(noseX + 2, 38), stroke);
-    stroke.color = const Color(0xFF8B4C46);
-    stroke.strokeWidth = 1.3;
+    stroke.color = presentationStyle == 0 ? const Color(0xFF9E5B60) : const Color(0xFF8B4C46);
+    stroke.strokeWidth = presentationStyle == 0 ? 1.55 : 1.3;
     if (smileStyle == 2) {
       canvas.drawLine(const Offset(28, 43), const Offset(36, 43), stroke);
     } else {
