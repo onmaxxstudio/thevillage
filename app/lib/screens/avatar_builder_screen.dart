@@ -141,32 +141,14 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
       ),
       body: SafeArea(
         top: false,
-        child: Column(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
           children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(18, 4, 18, 20),
-                children: [
-                  _preview(),
-                  const SizedBox(height: 16),
-                  _tabs(),
-                  const SizedBox(height: 18),
-                  _options(),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(18, 10, 18, 14),
-              decoration: const BoxDecoration(color: cream, border: Border(top: BorderSide(color: line))),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: saving ? null : save,
-                  style: FilledButton.styleFrom(backgroundColor: sage, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 15), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
-                  child: Text(saving ? 'Saving…' : 'Save my avatar', style: const TextStyle(fontWeight: FontWeight.w700)),
-                ),
-              ),
-            ),
+            _preview(),
+            const SizedBox(height: 14),
+            _tabs(),
+            const SizedBox(height: 14),
+            _options(),
           ],
         ),
       ),
@@ -174,7 +156,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   }
 
   Widget _preview() => Container(
-    height: 300,
+    height: 286,
     decoration: BoxDecoration(
       color: const Color(0xFFF2EEE4),
       borderRadius: BorderRadius.circular(25),
@@ -187,7 +169,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
         Positioned(left: -30, top: -30, child: _orb(const Color(0xFFE1E8D9), 115)),
         Positioned(right: -22, bottom: -40, child: _orb(const Color(0xFFF1E1D5), 140)),
         Positioned(
-          bottom: 27,
+          bottom: 25,
           left: 0,
           right: 0,
           child: Center(
@@ -489,8 +471,8 @@ class _AvatarCharacterPainter extends CustomPainter {
     fill.color = const Color(0x1E30231F);
     canvas.drawOval(const Rect.fromLTWH(47, 205, 96, 13), fill);
     fill.color = const Color(0xFF51443B);
-    canvas.drawOval(const Rect.fromLTWH(61, 199, 26, 12), fill);
-    canvas.drawOval(const Rect.fromLTWH(105, 199, 26, 12), fill);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(59, 198, 31, 14), const Radius.circular(8)), fill);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(102, 198, 31, 14), const Radius.circular(8)), fill);
 
     // Back hair gives long styles room to fall behind the shoulders.
     fill.color = hairTone;
@@ -532,6 +514,8 @@ class _AvatarCharacterPainter extends CustomPainter {
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(84, 94, 22, 31), const Radius.circular(9)), fill);
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(53, 108, 15, 67), const Radius.circular(8)), fill);
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(122, 108, 15, 67), const Radius.circular(8)), fill);
+    canvas.drawOval(const Rect.fromLTWH(51, 165, 19, 17), fill);
+    canvas.drawOval(const Rect.fromLTWH(120, 165, 19, 17), fill);
     fill.color = outfitTone;
     final top = Path()
       ..moveTo(77, 111)
@@ -543,6 +527,18 @@ class _AvatarCharacterPainter extends CustomPainter {
       ..quadraticBezierTo(96, 151, 66, 140)
       ..close();
     canvas.drawPath(top, fill);
+    // A soft highlight and a waist seam give the outfit a more finished, illustrated feel.
+    fill.color = Color.lerp(outfitTone, Colors.white, .13)!;
+    final highlight = Path()
+      ..moveTo(84, 113)
+      ..quadraticBezierTo(94, 120, 105, 113)
+      ..lineTo(116, 139)
+      ..quadraticBezierTo(96, 145, 76, 139)
+      ..close();
+    canvas.drawPath(highlight, fill);
+    stroke.color = Color.lerp(outfitTone, Colors.black, .12)!;
+    stroke.strokeWidth = 1;
+    canvas.drawLine(const Offset(69, 141), const Offset(123, 141), stroke);
     // Shirt neckline and seams add a little clothing detail.
     stroke.color = Color.lerp(outfitTone, Colors.white, .35)!;
     stroke.strokeWidth = 2;
@@ -619,9 +615,20 @@ class _AvatarCharacterPainter extends CustomPainter {
     // Face details. A feminine style has a softer jaw, lifted eyes, and a
     // gentle lip shape so changing the selection is immediately visible.
     final eyeY = presentation == 0 ? 61.0 : 62.0;
+    // Layered eyes read clearly at small mobile sizes: warm whites, iris, pupil, highlight.
+    fill.color = const Color(0xFFFFF8EF);
+    final eyeHeight = eyes == 1 ? 6.5 : 5.2;
+    canvas.drawOval(Rect.fromCenter(center: Offset(84, eyeY), width: 8.5, height: eyeHeight), fill);
+    canvas.drawOval(Rect.fromCenter(center: Offset(106, eyeY), width: 8.5, height: eyeHeight), fill);
     fill.color = _eyeTones[eyeColor.clamp(0, 5).toInt()];
-    canvas.drawOval(Rect.fromCenter(center: Offset(84, eyeY), width: 5, height: eyes == 1 ? 5 : 3.5), fill);
-    canvas.drawOval(Rect.fromCenter(center: Offset(106, eyeY), width: 5, height: eyes == 1 ? 5 : 3.5), fill);
+    canvas.drawCircle(Offset(84, eyeY), 2.2, fill);
+    canvas.drawCircle(Offset(106, eyeY), 2.2, fill);
+    fill.color = dark;
+    canvas.drawCircle(Offset(84, eyeY), 1.15, fill);
+    canvas.drawCircle(Offset(106, eyeY), 1.15, fill);
+    fill.color = Colors.white;
+    canvas.drawCircle(Offset(84.8, eyeY - .8), .65, fill);
+    canvas.drawCircle(Offset(106.8, eyeY - .8), .65, fill);
     stroke.color = hairTone;
     stroke.strokeWidth = brows == 1 ? 3.2 : brows == 2 ? 1.5 : 2.2;
     canvas.drawLine(Offset(78, eyeY - 7), Offset(88, eyeY - 8), stroke);
@@ -631,9 +638,14 @@ class _AvatarCharacterPainter extends CustomPainter {
       canvas.drawLine(Offset(81, eyeY - 2), Offset(79, eyeY - 5), stroke);
       canvas.drawLine(Offset(109, eyeY - 2), Offset(111, eyeY - 5), stroke);
     }
+    fill.color = Color.lerp(const Color(0xFFB56F54), skinTone, .56)!;
+    canvas.drawOval(Rect.fromCenter(center: Offset(95 + (nose - 1) * 1.7, 72), width: nose == 2 ? 6 : 4, height: 3.2), fill);
     stroke.color = Color.lerp(dark, skinTone, .18)!;
-    stroke.strokeWidth = nose == 2 ? 2.1 : 1.4;
-    canvas.drawLine(const Offset(95, 64), Offset(95 + (nose - 1) * 2.0, 73), stroke);
+    stroke.strokeWidth = 1.25;
+    canvas.drawLine(const Offset(95, 63), Offset(95 + (nose - 1) * 2.0, 71), stroke);
+    fill.color = Color.lerp(const Color(0xFFE79D8E), skinTone, .72)!;
+    canvas.drawOval(const Rect.fromLTWH(74, 68, 9, 4), fill);
+    canvas.drawOval(const Rect.fromLTWH(107, 68, 9, 4), fill);
     stroke.color = presentation == 0 ? const Color(0xFF9E5B60) : const Color(0xFF8B4C46);
     stroke.strokeWidth = presentation == 0 ? 2.5 : 2;
     final mouth = Path()
