@@ -396,328 +396,45 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
 }
 
 class _AvatarCharacterPainter extends CustomPainter {
-  const _AvatarCharacterPainter({
-    required this.skin,
-    required this.hair,
-    required this.hairColor,
-    required this.presentation,
-    required this.facialHair,
-    required this.outfit,
-    required this.face,
-    required this.eyes,
-    required this.smile,
-    required this.nose,
-    required this.brows,
-    required this.glasses,
-    required this.freckles,
-    required this.mole,
-    required this.eyeColor,
-  });
-
-  final int skin;
-  final int hair;
-  final int hairColor;
-  final int presentation;
-  final int facialHair;
-  final int outfit;
-  final int face;
-  final int eyes;
-  final int smile;
-  final int nose;
-  final int brows;
-  final int glasses;
-  final int freckles;
-  final int mole;
-  final int eyeColor;
-
-  static const _skinTones = <Color>[
-    Color(0xFF3B2119), Color(0xFF563326), Color(0xFF704630),
-    Color(0xFF81513D), Color(0xFF8B553A), Color(0xFF9C6045),
-    Color(0xFFA66A4E), Color(0xFFB97855), Color(0xFFC98761),
-    Color(0xFFD69A70), Color(0xFFE0AD86), Color(0xFFEDC29B),
-  ];
-  static const _hairTones = <Color>[
-    Color(0xFF171311), Color(0xFF2D211C), Color(0xFF542F23),
-    Color(0xFF8A5837), Color(0xFFC17C36), Color(0xFFE1BE78),
-    Color(0xFF4A4A47), Color(0xFFE1D9CC), Color(0xFF76509A),
-    Color(0xFFB34E72),
-  ];
-  static const _outfitTones = <Color>[
-    Color(0xFF355C3B), Color(0xFF9E6257), Color(0xFFB5873F),
-    Color(0xFF426A78), Color(0xFF72617E), Color(0xFFAD7654),
-    Color(0xFF485D83), Color(0xFF855A74), Color(0xFFBD735D),
-    Color(0xFF567663), Color(0xFF397778), Color(0xFF967241),
-  ];
-  static const _eyeTones = <Color>[
-    Color(0xFF30231F), Color(0xFF79513B), Color(0xFF9A7A42),
-    Color(0xFF52755B), Color(0xFF527B9B), Color(0xFF71818B),
-  ];
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.scale(size.width / 190, size.width / 190);
-    canvas.clipRect(const Rect.fromLTWH(0, 10, 190, 140));
-    canvas.translate(0, -10);
-    final skinTone = _skinTones[skin.clamp(0, 11).toInt()];
-    final hairTone = _hairTones[hairColor.clamp(0, 9).toInt()];
-    final outfitTone = _outfitTones[outfit.clamp(0, 11).toInt()];
-    final dark = const Color(0xFF30231F);
-    final fill = Paint()..style = PaintingStyle.fill;
-    final stroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    // Soft grounding shadow and feet.
-    fill.color = const Color(0x1E30231F);
-    canvas.drawOval(const Rect.fromLTWH(47, 205, 96, 13), fill);
-    fill.color = const Color(0xFF51443B);
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(59, 198, 31, 14), const Radius.circular(8)), fill);
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(102, 198, 31, 14), const Radius.circular(8)), fill);
-
-    // Back hair gives long styles room to fall behind the shoulders.
-    fill.color = hairTone;
-    if (hair == 1 || hair == 2 || hair == 3 || hair == 9) {
-      canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(67, 39, 56, 93), const Radius.circular(27)), fill);
-      if (hair == 1 || hair == 2 || hair == 3) {
-        for (var x = 72.0; x <= 116; x += hair == 3 ? 7 : 10) {
-          final width = hair == 3 ? 4.2 : 6.5;
-          canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x, 72, width, 47 + (x.toInt() % 3) * 4), Radius.circular(width / 2)), fill);
-        }
-      } else {
-        canvas.drawOval(const Rect.fromLTWH(116, 50, 31, 58), fill);
-      }
-    }
-
-    // Legs / lower half. Feminine presentation uses a soft A-line outfit;
-    // masculine and androgynous looks use separate trousers.
-    if (presentation == 0) {
-      final skirt = Path()
-        ..moveTo(68, 137)
-        ..lineTo(122, 137)
-        ..quadraticBezierTo(132, 163, 140, 195)
-        ..lineTo(50, 195)
-        ..quadraticBezierTo(58, 163, 68, 137)
-        ..close();
-      fill.color = outfitTone;
-      canvas.drawPath(skirt, fill);
-      fill.color = skinTone;
-      canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(72, 182, 13, 22), const Radius.circular(6)), fill);
-      canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(105, 182, 13, 22), const Radius.circular(6)), fill);
-    } else {
-      fill.color = Color.lerp(outfitTone, dark, .3)!;
-      canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(68, 137, 25, 65), const Radius.circular(9)), fill);
-      canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(97, 137, 25, 65), const Radius.circular(9)), fill);
-    }
-
-    // Neck, arms, and shirt / dress bodice.
-    fill.color = skinTone;
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(84, 94, 22, 31), const Radius.circular(9)), fill);
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(53, 108, 15, 67), const Radius.circular(8)), fill);
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(122, 108, 15, 67), const Radius.circular(8)), fill);
-    canvas.drawOval(const Rect.fromLTWH(51, 165, 19, 17), fill);
-    canvas.drawOval(const Rect.fromLTWH(120, 165, 19, 17), fill);
-    fill.color = outfitTone;
-    final top = Path()
-      ..moveTo(77, 111)
-      ..quadraticBezierTo(82, 104, 88, 103)
-      ..lineTo(95, 110)
-      ..lineTo(102, 103)
-      ..quadraticBezierTo(111, 104, 116, 111)
-      ..lineTo(126, 140)
-      ..quadraticBezierTo(96, 151, 66, 140)
-      ..close();
-    canvas.drawPath(top, fill);
-    // A soft highlight and a waist seam give the outfit a more finished, illustrated feel.
-    fill.color = Color.lerp(outfitTone, Colors.white, .13)!;
-    final highlight = Path()
-      ..moveTo(84, 113)
-      ..quadraticBezierTo(94, 120, 105, 113)
-      ..lineTo(116, 139)
-      ..quadraticBezierTo(96, 145, 76, 139)
-      ..close();
-    canvas.drawPath(highlight, fill);
-    stroke.color = Color.lerp(outfitTone, Colors.black, .12)!;
-    stroke.strokeWidth = 1;
-    canvas.drawLine(const Offset(69, 141), const Offset(123, 141), stroke);
-    // Shirt neckline and seams add a little clothing detail.
-    stroke.color = Color.lerp(outfitTone, Colors.white, .35)!;
-    stroke.strokeWidth = 2;
-    canvas.drawArc(const Rect.fromLTWH(83, 101, 24, 18), .2, 2.75, false, stroke);
-
-    // Hair cap and style-specific silhouette.
-    fill.color = hairTone;
-    switch (hair) {
-      case 0: // Afro
-        canvas.drawOval(const Rect.fromLTWH(57, 20, 76, 55), fill);
-        for (final p in const [Offset(63, 38), Offset(72, 24), Offset(86, 18), Offset(101, 18), Offset(118, 27), Offset(128, 43), Offset(60, 54), Offset(130, 55)]) {
-          canvas.drawCircle(p, 12, fill);
-        }
-        break;
-      case 1: // Locs
-      case 2: // Twists
-      case 3: // Braids
-        canvas.drawOval(const Rect.fromLTWH(68, 25, 54, 46), fill);
-        break;
-      case 4: // Bantu knots
-        canvas.drawOval(const Rect.fromLTWH(68, 41, 54, 29), fill);
-        for (final p in const [Offset(71, 37), Offset(82, 25), Offset(95, 21), Offset(108, 25), Offset(120, 37)]) {
-          canvas.drawCircle(p, 7, fill);
-        }
-        break;
-      case 5: // Curls
-        canvas.drawOval(const Rect.fromLTWH(64, 27, 62, 47), fill);
-        for (final p in const [Offset(69, 43), Offset(79, 30), Offset(94, 26), Offset(109, 32), Offset(120, 45)]) {
-          canvas.drawCircle(p, 8, fill);
-        }
-        break;
-      case 6: // Waves
-        canvas.drawOval(const Rect.fromLTWH(68, 25, 54, 45), fill);
-        final wave = Path()
-          ..moveTo(67, 57)
-          ..quadraticBezierTo(79, 38, 91, 53)
-          ..quadraticBezierTo(105, 36, 123, 54)
-          ..lineTo(120, 65)
-          ..quadraticBezierTo(96, 52, 70, 67)
-          ..close();
-        canvas.drawPath(wave, fill);
-        break;
-      case 7: // Short crop
-        canvas.drawOval(const Rect.fromLTWH(70, 26, 50, 32), fill);
-        break;
-      case 8: // Bun
-        canvas.drawOval(const Rect.fromLTWH(68, 28, 54, 44), fill);
-        canvas.drawCircle(const Offset(96, 19), 13, fill);
-        break;
-      case 9: // Ponytail
-        canvas.drawOval(const Rect.fromLTWH(68, 26, 54, 44), fill);
-        break;
-      case 10: // Bald
-        break;
-    }
-    if (hair == 1 || hair == 2 || hair == 3) {
-      for (var x = 72.0; x <= 116; x += hair == 3 ? 7 : 10) {
-        final width = hair == 3 ? 4.2 : 6.5;
-        canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x, 53, width, 39 + (x.toInt() % 3) * 3), Radius.circular(width / 2)), fill);
-      }
-    } else if (hair == 9) {
-      canvas.drawOval(const Rect.fromLTWH(112, 48, 29, 54), fill);
-    }
-
-    // Face silhouette and ears are painted over the hair cap, keeping the
-    // hairline visible while leaving the face clear for its chosen features.
-    fill.color = skinTone;
-    canvas.drawOval(const Rect.fromLTWH(65, 45, 16, 23), fill);
-    canvas.drawOval(const Rect.fromLTWH(109, 45, 16, 23), fill);
-    final faceWidth = presentation == 0 ? 50.0 : presentation == 1 ? 54.0 : 52.0;
-    final faceRect = Rect.fromCenter(center: const Offset(95, 65), width: faceWidth, height: face == 1 ? 68 : face == 2 ? 58 : 64);
-    canvas.drawRRect(RRect.fromRectAndRadius(faceRect, Radius.circular(presentation == 0 ? 23 : 20)), fill);
-
-    // Face details. A feminine style has a softer jaw, lifted eyes, and a
-    // gentle lip shape so changing the selection is immediately visible.
-    final eyeY = presentation == 0 ? 61.0 : 62.0;
-    // Layered eyes read clearly at small mobile sizes: warm whites, iris, pupil, highlight.
-    fill.color = const Color(0xFFFFF8EF);
-    final eyeHeight = eyes == 1 ? 6.5 : 5.2;
-    canvas.drawOval(Rect.fromCenter(center: Offset(84, eyeY), width: 8.5, height: eyeHeight), fill);
-    canvas.drawOval(Rect.fromCenter(center: Offset(106, eyeY), width: 8.5, height: eyeHeight), fill);
-    fill.color = _eyeTones[eyeColor.clamp(0, 5).toInt()];
-    canvas.drawCircle(Offset(84, eyeY), 2.2, fill);
-    canvas.drawCircle(Offset(106, eyeY), 2.2, fill);
-    fill.color = dark;
-    canvas.drawCircle(Offset(84, eyeY), 1.15, fill);
-    canvas.drawCircle(Offset(106, eyeY), 1.15, fill);
-    fill.color = Colors.white;
-    canvas.drawCircle(Offset(84.8, eyeY - .8), .65, fill);
-    canvas.drawCircle(Offset(106.8, eyeY - .8), .65, fill);
-    stroke.color = hairTone;
-    stroke.strokeWidth = brows == 1 ? 3.2 : brows == 2 ? 1.5 : 2.2;
-    canvas.drawLine(Offset(78, eyeY - 7), Offset(88, eyeY - 8), stroke);
-    canvas.drawLine(Offset(102, eyeY - 8), Offset(112, eyeY - 7), stroke);
-    if (presentation == 0) {
-      stroke.strokeWidth = 1.2;
-      canvas.drawLine(Offset(81, eyeY - 2), Offset(79, eyeY - 5), stroke);
-      canvas.drawLine(Offset(109, eyeY - 2), Offset(111, eyeY - 5), stroke);
-    }
-    fill.color = Color.lerp(const Color(0xFFB56F54), skinTone, .56)!;
-    canvas.drawOval(Rect.fromCenter(center: Offset(95 + (nose - 1) * 1.7, 72), width: nose == 2 ? 6 : 4, height: 3.2), fill);
-    stroke.color = Color.lerp(dark, skinTone, .18)!;
-    stroke.strokeWidth = 1.25;
-    canvas.drawLine(const Offset(95, 63), Offset(95 + (nose - 1) * 2.0, 71), stroke);
-    fill.color = Color.lerp(const Color(0xFFE79D8E), skinTone, .72)!;
-    canvas.drawOval(const Rect.fromLTWH(74, 68, 9, 4), fill);
-    canvas.drawOval(const Rect.fromLTWH(107, 68, 9, 4), fill);
-    stroke.color = presentation == 0 ? const Color(0xFF9E5B60) : const Color(0xFF8B4C46);
-    stroke.strokeWidth = presentation == 0 ? 2.5 : 2;
-    final mouth = Path()
-      ..moveTo(89, 81)
-      ..quadraticBezierTo(95, smile == 1 ? 88 : 85, 101, 81);
-    if (smile == 2) {
-      canvas.drawLine(const Offset(90, 82), const Offset(100, 82), stroke);
-    } else {
-      canvas.drawPath(mouth, stroke);
-    }
-
-    if (facialHair > 0) {
-      fill.color = hairTone;
-      if (facialHair == 1) {
-        for (final p in const [Offset(83, 80), Offset(88, 84), Offset(95, 85), Offset(102, 84), Offset(107, 80)]) {
-          canvas.drawCircle(p, 1.3, fill);
-        }
-      } else if (facialHair == 2 || facialHair == 3) {
-        canvas.drawOval(const Rect.fromLTWH(88, 77, 7, 4), fill);
-        canvas.drawOval(const Rect.fromLTWH(95, 77, 7, 4), fill);
-        if (facialHair == 3) canvas.drawOval(const Rect.fromLTWH(91, 84, 9, 7), fill);
-      } else {
-        final beard = Path()
-          ..moveTo(73, 67)
-          ..quadraticBezierTo(74, 93, 95, 101)
-          ..quadraticBezierTo(116, 93, 117, 67)
-          ..quadraticBezierTo(108, 83, 95, 82)
-          ..quadraticBezierTo(82, 83, 73, 67)
-          ..close();
-        canvas.drawPath(beard, fill);
-        fill.color = skinTone;
-        canvas.drawOval(const Rect.fromLTWH(89, 79, 13, 7), fill);
-      }
-    }
-
-    if (freckles > 0) {
-      fill.color = Color.lerp(dark, skinTone, .4)!;
-      for (final p in const [Offset(78, 72), Offset(83, 74), Offset(88, 72), Offset(102, 72), Offset(107, 74), Offset(112, 72)]) {
-        canvas.drawCircle(p, freckles == 1 ? 1.0 : 1.5, fill);
-      }
-    }
-    if (mole > 0) {
-      fill.color = const Color(0xFF4D3027);
-      final point = switch (mole) {
-        1 => const Offset(81, 75),
-        2 => const Offset(109, 75),
-        3 => const Offset(95, 91),
-        _ => const Offset(81, 75),
-      };
-      canvas.drawCircle(point, 1.6, fill);
-      if (mole == 4) canvas.drawCircle(const Offset(109, 75), 1.6, fill);
-    }
-    if (glasses > 0) {
-      stroke.color = const Color(0xFF51413B);
-      stroke.strokeWidth = 1.8;
-      final radius = glasses == 1 ? const Radius.circular(3) : const Radius.circular(8);
-      canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(75, 55, 19, 15), radius), stroke);
-      canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(96, 55, 19, 15), radius), stroke);
-      canvas.drawLine(const Offset(94, 61), const Offset(96, 61), stroke);
-    }
-
+  const _AvatarCharacterPainter({required this.skin,required this.hair,required this.hairColor,required this.presentation,required this.facialHair,required this.outfit,required this.face,required this.eyes,required this.smile,required this.nose,required this.brows,required this.glasses,required this.freckles,required this.mole,required this.eyeColor});
+  final int skin,hair,hairColor,presentation,facialHair,outfit,face,eyes,smile,nose,brows,glasses,freckles,mole,eyeColor;
+  static const skins=[Color(0xFF3B2119),Color(0xFF563326),Color(0xFF704630),Color(0xFF81513D),Color(0xFF8B553A),Color(0xFF9C6045),Color(0xFFA66A4E),Color(0xFFB97855),Color(0xFFC98761),Color(0xFFD69A70),Color(0xFFE0AD86),Color(0xFFEDC29B)];
+  static const hairs=[Color(0xFF171311),Color(0xFF2D211C),Color(0xFF542F23),Color(0xFF8A5837),Color(0xFFC17C36),Color(0xFFE1BE78),Color(0xFF4A4A47),Color(0xFFE1D9CC),Color(0xFF76509A),Color(0xFFB34E72)];
+  static const outfits=[Color(0xFF355C3B),Color(0xFF9E6257),Color(0xFFB5873F),Color(0xFF426A78),Color(0xFF72617E),Color(0xFFAD7654),Color(0xFF485D83),Color(0xFF855A74),Color(0xFFBD735D),Color(0xFF567663),Color(0xFF397778),Color(0xFF967241)];
+  static const eyesC=[Color(0xFF30231F),Color(0xFF79513B),Color(0xFF9A7A42),Color(0xFF52755B),Color(0xFF527B9B),Color(0xFF71818B)];
+  @override void paint(Canvas canvas,Size size){
+    canvas.save(); canvas.scale(size.width/190,size.width/190); canvas.clipRect(const Rect.fromLTWH(0,0,190,150));
+    final s=skins[skin.clamp(0,11)], h=hairs[hairColor.clamp(0,9)], shirt=outfits[outfit.clamp(0,11)];
+    final p=Paint()..style=PaintingStyle.fill; final line=Paint()..style=PaintingStyle.stroke..strokeCap=StrokeCap.round..strokeWidth=2;
+    // Soft portrait backdrop and shoulders.
+    p.color=const Color(0xFFE9EDE3); canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(14,5,162,145),const Radius.circular(72)),p);
+    p.color=s; canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(77,88,36,35),const Radius.circular(15)),p);
+    p.color=shirt; final shoulders=Path()..moveTo(77,105)..lineTo(95,116)..lineTo(113,105)..quadraticBezierTo(153,109,164,150)..lineTo(26,150)..quadraticBezierTo(37,109,77,105)..close(); canvas.drawPath(shoulders,p);
+    // Hair behind face; locks fall to shoulder line.
+    p.color=h;
+    if([1,2,3,9].contains(hair)){canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(52,35,86,92),const Radius.circular(38)),p); if([1,2,3].contains(hair)){for(double x=57;x<137;x+=hair==3?8:12){canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x,67, hair==3?5:8,54+(x.toInt()%2)*8),const Radius.circular(5)),p);}}}
+    // Hair silhouette variations.
+    if(hair==0){canvas.drawOval(const Rect.fromLTWH(43,14,104,78),p); for(final q in const [Offset(50,41),Offset(62,23),Offset(80,16),Offset(102,15),Offset(125,24),Offset(140,44),Offset(49,64),Offset(139,64)]) canvas.drawCircle(q,15,p);}
+    else if(hair==4){canvas.drawOval(const Rect.fromLTWH(55,28,80,60),p); for(final q in const [Offset(60,38),Offset(76,24),Offset(95,20),Offset(115,24),Offset(132,39)]) canvas.drawCircle(q,9,p);}
+    else if(hair==5||hair==6||hair==8||hair==9){canvas.drawOval(const Rect.fromLTWH(53,23,84,65),p); if(hair==8)canvas.drawCircle(const Offset(96,17),17,p); if(hair==9)canvas.drawOval(const Rect.fromLTWH(127,43,32,74),p);}
+    else if(hair==7){canvas.drawOval(const Rect.fromLTWH(59,25,72,43),p);}
+    // Ears and softly shaped face.
+    p.color=s; canvas.drawOval(const Rect.fromLTWH(50,51,20,29),p); canvas.drawOval(const Rect.fromLTWH(120,51,20,29),p);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(61,35,68,77, const Radius.circular(30)),p);
+    // Face is drawn over the hairline for a clean portrait silhouette.
+    p.color=s; canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(61,36,68,76),const Radius.circular(31)),p);
+    // Eyes, brows, nose, blush and mouth.
+    final ey=70.0; p.color=const Color(0xFFFFF8EF); canvas.drawOval(Rect.fromCenter(center:Offset(79,ey),width:15,height:eyes==1?9:7),p); canvas.drawOval(Rect.fromCenter(center:Offset(111,ey),width:15,height:eyes==1?9:7),p);
+    p.color=eyesC[eyeColor.clamp(0,5)]; canvas.drawCircle(Offset(79,ey),3.6,p); canvas.drawCircle(Offset(111,ey),3.6,p); p.color=const Color(0xFF30231F); canvas.drawCircle(Offset(79,ey),1.8,p); canvas.drawCircle(Offset(111,ey),1.8,p);
+    line.color=h; line.strokeWidth=brows==1?3.5:2.4; canvas.drawLine(const Offset(70,59),const Offset(87,57),line); canvas.drawLine(const Offset(103,57),const Offset(120,59),line);
+    p.color=Color.lerp(const Color(0xFFB56F54),s,.55)!; canvas.drawOval(Rect.fromCenter(center:Offset(95,83),width:nose==2?9:6,height:5),p);
+    p.color=Color.lerp(const Color(0xFFE79D8E),s,.72)!; canvas.drawOval(const Rect.fromLTWH(67,81,16,7),p); canvas.drawOval(const Rect.fromLTWH(107,81,16,7),p);
+    line.color=const Color(0xFF985B59); line.strokeWidth=3; final mouth=Path()..moveTo(84,96)..quadraticBezierTo(95,smile==1?106:101,106,96); if(smile==2)canvas.drawLine(const Offset(85,98),const Offset(105,98),line);else canvas.drawPath(mouth,line);
+    if(facialHair>0){p.color=h;if(facialHair==1){for(final q in const [Offset(80,99),Offset(88,103),Offset(96,104),Offset(104,103),Offset(112,99)])canvas.drawCircle(q,1.8,p);}else{canvas.drawOval(const Rect.fromLTWH(82,97,13,8),p);canvas.drawOval(const Rect.fromLTWH(96,97,13,8),p); if(facialHair>=3)canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(83,99,25,20),const Radius.circular(10)),p);}}
+    if(freckles>0){p.color=Color.lerp(const Color(0xFF30231F),s,.45)!;for(final q in const [Offset(73,85),Offset(80,88),Offset(87,85),Offset(103,85),Offset(110,88),Offset(117,85)])canvas.drawCircle(q,freckles==1?1.2:1.8,p);}
+    if(mole>0){p.color=const Color(0xFF4D3027);final q=mole==1?const Offset(75,91):mole==2?const Offset(115,91):mole==3?const Offset(95,107):const Offset(75,91);canvas.drawCircle(q,2,p);if(mole==4)canvas.drawCircle(const Offset(115,91),2,p);}
+    if(glasses>0){line.color=const Color(0xFF51413B);line.strokeWidth=2;final r=glasses==1?const Radius.circular(4):const Radius.circular(10);canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(66,62,27,20),r),line);canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(98,62,27,20),r),line);canvas.drawLine(const Offset(93,71),const Offset(98,71),line);}
     canvas.restore();
   }
-
-  @override
-  bool shouldRepaint(covariant _AvatarCharacterPainter oldDelegate) =>
-      skin != oldDelegate.skin || hair != oldDelegate.hair ||
-      hairColor != oldDelegate.hairColor || presentation != oldDelegate.presentation ||
-      facialHair != oldDelegate.facialHair || outfit != oldDelegate.outfit ||
-      face != oldDelegate.face || eyes != oldDelegate.eyes || smile != oldDelegate.smile ||
-      nose != oldDelegate.nose || brows != oldDelegate.brows || glasses != oldDelegate.glasses ||
-      freckles != oldDelegate.freckles || mole != oldDelegate.mole || eyeColor != oldDelegate.eyeColor;
+  @override bool shouldRepaint(covariant _AvatarCharacterPainter old)=>skin!=old.skin||hair!=old.hair||hairColor!=old.hairColor||presentation!=old.presentation||facialHair!=old.facialHair||outfit!=old.outfit||face!=old.face||eyes!=old.eyes||smile!=old.smile||nose!=old.nose||brows!=old.brows||glasses!=old.glasses||freckles!=old.freckles||mole!=old.mole||eyeColor!=old.eyeColor;
 }
