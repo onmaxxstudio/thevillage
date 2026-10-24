@@ -420,7 +420,7 @@ class _AvatarCharacterPainter extends CustomPainter {
     else if(hair==7){canvas.drawOval(const Rect.fromLTWH(59,25,72,43),p);}
     // Ears and softly shaped face.
     p.color=s; canvas.drawOval(const Rect.fromLTWH(50,51,20,29),p); canvas.drawOval(const Rect.fromLTWH(120,51,20,29),p);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(61,35,68,77, const Radius.circular(30)),p);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(61,35,68,77), const Radius.circular(30)),p);
     // Face is drawn over the hairline for a clean portrait silhouette.
     p.color=s; canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(61,36,68,76),const Radius.circular(31)),p);
     // Eyes, brows, nose, blush and mouth.
