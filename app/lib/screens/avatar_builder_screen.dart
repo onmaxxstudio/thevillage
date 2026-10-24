@@ -174,7 +174,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
           right: 0,
           child: Center(
             child: CustomPaint(
-              size: const Size(190, 222),
+              size: const Size(190, 150),
               painter: _AvatarCharacterPainter(
                 skin: skin,
                 hair: hair,
@@ -456,7 +456,9 @@ class _AvatarCharacterPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
-    canvas.scale(size.width / 190, size.height / 222);
+    canvas.scale(size.width / 190, size.width / 190);
+    canvas.clipRect(const Rect.fromLTWH(0, 10, 190, 140));
+    canvas.translate(0, -10);
     final skinTone = _skinTones[skin.clamp(0, 11).toInt()];
     final hairTone = _hairTones[hairColor.clamp(0, 9).toInt()];
     final outfitTone = _outfitTones[outfit.clamp(0, 11).toInt()];
