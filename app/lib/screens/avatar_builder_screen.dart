@@ -156,7 +156,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   }
 
   Widget _preview() => Container(
-    height: 286,
+    height: 330,
     decoration: BoxDecoration(
       color: const Color(0xFFF2EEE4),
       borderRadius: BorderRadius.circular(25),
@@ -174,7 +174,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
           right: 0,
           child: Center(
             child: CustomPaint(
-              size: const Size(190, 150),
+              size: const Size(240, 190),
               painter: _AvatarCharacterPainter(
                 skin: skin,
                 hair: hair,
@@ -213,7 +213,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
         ),
         Positioned(
           bottom: 12, left: 0, right: 0,
-          child: Center(child: Text('Tap the categories below to customize', style: GoogleFonts.dmSans(color: muted, fontSize: 11, fontWeight: FontWeight.w600))),
+          child: Center(child: Text('Your portrait updates as you customize', style: GoogleFonts.dmSans(color: muted, fontSize: 11, fontWeight: FontWeight.w600))),
         ),
       ],
     ),
