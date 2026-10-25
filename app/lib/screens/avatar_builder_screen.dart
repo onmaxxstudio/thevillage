@@ -49,7 +49,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     Color(0xFF485D83), Color(0xFF855A74), Color(0xFFBD735D),
     Color(0xFF567663), Color(0xFF397778), Color(0xFF967241),
   ];
-  static const tabs = ['Gender', 'Skin', 'Hair', 'Face', 'Facial hair', 'Outfit'];
+  static const tabs = ['Skin tone', 'Hairstyle', 'Features', 'More'];
   static const presentations = ['Feminine', 'Masculine', 'Androgynous'];
   static const facialHairStyles = ['None', 'Stubble', 'Mustache', 'Goatee', 'Full beard'];
   static const faceShapes = ['Soft', 'Long', 'Round'];
