@@ -1569,7 +1569,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               onChanged: (value) => update(() => muted = value)),
             SizedBox(width: double.infinity, child: FilledButton(
               onPressed: () => Navigator.pop(sheetContext, true),
-              child: const Text('Save preferences')),
+              child: const Text('Save preferences'))),
           ]),
         )))),
     );
