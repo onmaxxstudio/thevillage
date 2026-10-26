@@ -1737,6 +1737,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             }
 
             return SizedBox(
+              width: double.infinity,
               height: 274.5,
               child: FittedBox(
                 fit: BoxFit.contain,
