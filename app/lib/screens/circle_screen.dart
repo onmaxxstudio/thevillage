@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -78,6 +79,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   String sharedStatusNote = '';
   String myUsername = '';
   String? selectedNeed;
+  String supportStyle = 'Listen first';
+  String availability = 'Here to listen';
+  bool muteRequests = false;
   final Set<int> completedReminders = {};
   final Set<int> dismissedReminders = {};
   final Set<int> dismissedActivity = {};
@@ -144,6 +148,23 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     _loadStatus();
     _connectCircleData();
     _loadMyProfile();
+    _loadSupportProfile();
+  }
+
+  Future<void> _loadSupportProfile() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      final profile = await circleService.supportProfile(uid).first;
+      if (!mounted || !profile.exists) return;
+      setState(() {
+        supportStyle = profile.data()?['supportStyle'] as String? ?? supportStyle;
+        availability = profile.data()?['availability'] as String? ?? availability;
+        muteRequests = profile.data()?['muteRequests'] as bool? ?? false;
+      });
+    } on Object {
+      // Keep defaults until the member's profile can load.
+    }
   }
 
   Future<void> _loadMyProfile() async {
@@ -492,13 +513,23 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           sent.audience == 'My whole Circle' || member.name == sent.audience).toList();
       if (recipients.isEmpty) return;
       try {
+        var delivered = 0;
         for (final member in recipients) {
           if (member.uid == null || _isTestMember(member)) continue;
+          final preferences = await circleService.supportProfile(member.uid!).first;
+          if (preferences.data()?['muteRequests'] == true ||
+              preferences.data()?['availability'] == 'Away today') continue;
           await circleService.sendMessage(
             recipient: CirclePerson(uid: member.uid!,
               username: member.name.replaceFirst('@', '')),
             text: '${sent.type}${sent.message.isEmpty ? '' : ': ${sent.message}'}',
           );
+          delivered++;
+        }
+        if (delivered == 0 && !_isTestCircle) {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Your chosen people are away or have muted requests.')));
+          return;
         }
       } on Object {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(
@@ -825,6 +856,21 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               ],
             ),
             const SizedBox(height: 15),
+            if (member.uid != null && !_isTestMember(member))
+              StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                stream: circleService.supportProfile(member.uid!),
+                builder: (context, snapshot) {
+                  final profile = snapshot.data?.data();
+                  if (profile == null) return const SizedBox.shrink();
+                  return Card(color: paleSage, child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('How to support ${member.name}: ${profile['supportStyle']}'),
+                        Text('Availability: ${profile['availability']}'),
+                      ]),
+                  ));
+                }),
             Row(
               children: [
                 Expanded(
@@ -856,6 +902,24 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               ],
             ),
             const SizedBox(height: 25),
+            TextButton.icon(onPressed: () async {
+              Navigator.pop(sheetContext);
+              final remove = await showDialog<bool>(context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: Text('Remove ${member.name} from your Circle?'),
+                  content: const Text('They will no longer receive new Circle updates.'),
+                  actions: [TextButton(onPressed: () => Navigator.pop(dialogContext, false),
+                    child: const Text('Cancel')),
+                    FilledButton(onPressed: () => Navigator.pop(dialogContext, true),
+                      child: const Text('Remove'))]));
+              if (remove == true && member.uid != null) {
+                try { await circleService.removeMember(member.uid!); }
+                on Object { if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Could not remove this person.'))); }
+              }
+            }, icon: const Icon(Icons.person_remove_outlined),
+              label: const Text('Remove from Circle')),
+            const SizedBox(height: 12),
             Text(
               'Messages between you',
               style: GoogleFonts.playfairDisplay(
@@ -1368,6 +1432,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         _supportRequestPanel(),
         const SizedBox(height: 10),
         _featureShortcuts(),
+        const SizedBox(height: 10),
+        _circleCareTools(),
         const SizedBox(height: 16),
         Row(children: [
           Expanded(child: Text('From your circle',
@@ -1376,13 +1442,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           TextButton(onPressed: _showCircleUpdates, child: const Text('View all')),
         ]),
         const SizedBox(height: 8),
-        if (_visibleCircleMoments.isEmpty)
-          _momentsRow()
-        else
-          for (final moment in _visibleCircleMoments.take(3)) ...[
-            _circleUpdateCard(moment),
-            const SizedBox(height: 10),
-          ],
+        _sharedActivityPreview(),
         const SizedBox(height: 7),
         OutlinedButton.icon(
           onPressed: _shareSomethingGood,
@@ -1404,6 +1464,150 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         ]),
       ],
     );
+  }
+
+  Widget _circleCareTools() => Wrap(spacing: 10, runSpacing: 10, children: [
+    OutlinedButton.icon(onPressed: _editSupportProfile,
+      icon: const Icon(Icons.tune_rounded), label: const Text('How to support me')),
+    OutlinedButton.icon(onPressed: _openGroupConversation,
+      icon: const Icon(Icons.forum_outlined), label: const Text('Circle conversation')),
+    OutlinedButton.icon(onPressed: _shareMilestone,
+      icon: const Icon(Icons.event_available_outlined), label: const Text('Share a moment')),
+  ]);
+
+  Widget _sharedActivityPreview() => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    stream: circleService.activity(),
+    builder: (context, snapshot) {
+      if (snapshot.hasError) return const Text('Circle updates are unavailable right now.');
+      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+      final items = snapshot.data!.docs.where((item) => item.data()['kind'] != 'group')
+          .take(3).toList();
+      if (items.isEmpty) return const Text('When someone shares with you, it will appear here.');
+      return Column(children: [for (final item in items) Card(
+        color: Colors.white.withValues(alpha: .7), elevation: 0,
+        child: ListTile(
+          leading: VillageAvatar(uid: item.data()['authorUid'] as String?, radius: 20),
+          title: Text('@${item.data()['authorName']} · ${item.data()['kind']}'),
+          subtitle: Text(item.data()['text'] as String? ?? ''),
+          trailing: IconButton(tooltip: 'Respond privately',
+            icon: const Icon(Icons.chat_bubble_outline_rounded, color: sage),
+            onPressed: () {
+              final authorUid = item.data()['authorUid'] as String?;
+              for (final member in _visibleCircleMembers) {
+                if (member.uid == authorUid) { _messageMember(member); return; }
+              }
+            }),
+        ),
+      )]);
+    },
+  );
+
+  Future<String?> _writeCircleText(String title, String hint) async {
+    final controller = TextEditingController();
+    final value = await showDialog<String>(context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: TextField(controller: controller, autofocus: true,
+          maxLength: 500, maxLines: 3, decoration: InputDecoration(hintText: hint)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          FilledButton(onPressed: () {
+            if (controller.text.trim().isNotEmpty) Navigator.pop(dialogContext, controller.text.trim());
+          }, child: const Text('Continue')),
+        ],
+      ));
+    controller.dispose();
+    return value;
+  }
+
+  Future<void> _shareWithCircle(String kind, String text, {String groupId = ''}) async {
+    if (_visibleCircleMembers.isEmpty) { await _findPeople(); return; }
+    final audience = await _chooseSupportAudience();
+    if (audience == null || !mounted) return;
+    final members = _visibleCircleMembers.where((member) =>
+        audience == 'My whole Circle' || member.name == audience);
+    try {
+      await circleService.shareActivity(kind: kind, text: text,
+        groupId: groupId,
+        recipientUids: members.map((member) => member.uid).whereType<String>().toList());
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Shared with $audience.')));
+    } on Object {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not share this. Try again.')));
+    }
+  }
+
+  Future<void> _shareMilestone() async {
+    final text = await _writeCircleText('Share a moment',
+      'A milestone, interview, appointment, or day you want support');
+    if (text != null && mounted) await _shareWithCircle('moment', text);
+  }
+
+  Future<void> _editSupportProfile() async {
+    var style = supportStyle;
+    var presence = availability;
+    var muted = muteRequests;
+    final save = await showModalBottomSheet<bool>(context: context,
+      isScrollControlled: true, backgroundColor: cream, showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(builder: (context, update) =>
+        SafeArea(child: SingleChildScrollView(child: Padding(
+          padding: const EdgeInsets.all(20), child: Column(mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('How to support me', style: GoogleFonts.playfairDisplay(fontSize: 27)),
+            const SizedBox(height: 12),
+            const Text('When I am having a hard day, I prefer:'),
+            for (final option in ['Listen first', 'Advice welcome', 'Practical help', 'Give me space'])
+              RadioListTile<String>(title: Text(option), value: option, groupValue: style,
+                onChanged: (value) => update(() => style = value!)),
+            const Divider(),
+            const Text('My availability'),
+            for (final option in ['Here to listen', 'Low energy', 'Away today'])
+              RadioListTile<String>(title: Text(option), value: option, groupValue: presence,
+                onChanged: (value) => update(() => presence = value!)),
+            SwitchListTile(title: const Text('Mute Circle requests'), value: muted,
+              onChanged: (value) => update(() => muted = value)),
+            SizedBox(width: double.infinity, child: FilledButton(
+              onPressed: () => Navigator.pop(sheetContext, true),
+              child: const Text('Save preferences')),
+          ]),
+        )))),
+    );
+    if (save != true || !mounted) return;
+    try {
+      await circleService.saveSupportProfile(style: style,
+        availability: presence, muteRequests: muted);
+      if (mounted) setState(() { supportStyle = style; availability = presence; muteRequests = muted; });
+    } on Object {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save your preferences.')));
+    }
+  }
+
+  Future<void> _openGroupConversation() async {
+    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (pageContext) => Scaffold(
+        backgroundColor: cream,
+        appBar: AppBar(backgroundColor: cream, title: const Text('Circle conversation')),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () async {
+            final reply = await _writeCircleText('Message your Circle', 'Write a message');
+            if (reply != null && mounted) await _shareWithCircle('group', reply, groupId: 'main');
+          }, label: const Text('Message Circle'), icon: const Icon(Icons.edit_outlined)),
+        body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: circleService.activity(), builder: (context, snapshot) {
+            if (snapshot.hasError) return const Center(child: Text('Conversation unavailable.'));
+            if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+            final items = snapshot.data!.docs.where((item) => item.data()['kind'] == 'group').toList();
+            if (items.isEmpty) return const Center(child: Text('Start a conversation with your Circle.'));
+            return ListView(padding: const EdgeInsets.all(18), children: [
+              for (final item in items) Card(child: ListTile(
+                title: Text('@${item.data()['authorName']}'),
+                subtitle: Text(item.data()['text'] as String? ?? ''),
+              )),
+            ]);
+          }),
+      )));
   }
 
   Future<void> _requestSupport(String need) async {
@@ -1585,21 +1789,23 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       builder: (pageContext) => Scaffold(
         backgroundColor: cream,
         appBar: AppBar(backgroundColor: cream, title: const Text('Small wins')),
-        body: ListView(padding: const EdgeInsets.all(18), children: [
-          OutlinedButton.icon(onPressed: () async {
-            await _shareSomethingGood();
-            if (pageContext.mounted) Navigator.of(pageContext).pop();
-          }, icon: const Icon(Icons.celebration_outlined),
-            label: const Text('Share a small win')),
-          const SizedBox(height: 12),
-          if (_visibleCircleMoments.isEmpty)
-            const Text('Your small wins will appear here.')
-          else
-            for (final moment in _visibleCircleMoments) ...[
-              _circleUpdateCard(moment),
-              const SizedBox(height: 10),
-            ],
-        ]),
+        body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: circleService.activity(), builder: (context, snapshot) {
+            if (snapshot.hasError) return const Center(child: Text('Small wins unavailable.'));
+            if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+            final wins = snapshot.data!.docs.where((item) => item.data()['kind'] == 'win');
+            return ListView(padding: const EdgeInsets.all(18), children: [
+              OutlinedButton.icon(onPressed: _shareSomethingGood,
+                icon: const Icon(Icons.celebration_outlined),
+                label: const Text('Share a small win')),
+              const SizedBox(height: 12),
+              if (wins.isEmpty) const Text('Your small wins will appear here.'),
+              for (final item in wins) Card(child: ListTile(
+                title: Text('@${item.data()['authorName']}'),
+                subtitle: Text(item.data()['text'] as String? ?? ''),
+              )),
+            ]);
+          }),
       ),
     )).then((_) {});
   }
@@ -2229,20 +2435,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       ),
     );
     if (text == null || text.isEmpty || !mounted) return;
-    final moment = _CircleMoment(
-      text: text,
-      author: 'You',
-      createdAt: DateTime.now(),
-    );
-    setState(() => circleMoments.insert(0, moment));
-    await _preferences.setStringList(
-      _key(_circleMomentsKey),
-      circleMoments.map((item) => jsonEncode(item.toJson())).toList(),
-    );
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Added to your Circle Moments.')),
-    );
+    await _shareWithCircle('win', text);
   }
 
   Future<void> _showAllPeople() {
