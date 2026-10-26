@@ -1364,11 +1364,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _circleOrbit(),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         _supportRequestPanel(),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         _featureShortcuts(),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         Row(children: [
           Expanded(child: Text('From your circle',
             style: GoogleFonts.playfairDisplay(color: ink, fontSize: 25,
@@ -1383,7 +1383,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             _circleUpdateCard(moment),
             const SizedBox(height: 10),
           ],
-        const SizedBox(height: 12),
+        const SizedBox(height: 7),
         OutlinedButton.icon(
           onPressed: _shareSomethingGood,
           icon: const Icon(Icons.celebration_outlined),
@@ -1419,13 +1419,13 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   Widget _supportRequestPanel() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(24)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('What do you need today?',
-          style: GoogleFonts.playfairDisplay(color: ink, fontSize: 25,
+          style: GoogleFonts.playfairDisplay(color: ink, fontSize: 21,
             fontWeight: FontWeight.w700)),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         LayoutBuilder(builder: (context, constraints) {
           final columns = constraints.maxWidth < 290 ||
               MediaQuery.textScalerOf(context).scale(14) > 20 ? 1 : 2;
@@ -1438,14 +1438,18 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
                     onTap: () => _requestSupport(choice.$2),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
                       child: Row(children: [
-                        Icon(choice.$1, color: sage, size: 23),
-                        const SizedBox(width: 9),
-                        Expanded(child: Text(choice.$2,
-                          style: const TextStyle(color: ink, fontSize: 13,
-                            fontWeight: FontWeight.w700))),
+                        Icon(choice.$1, color: sage, size: 19),
+                        const SizedBox(width: 6),
+                        Expanded(child: choice.$2 == 'Encouragement'
+                          ? FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
+                              child: Text(choice.$2, style: const TextStyle(
+                                color: ink, fontSize: 12, fontWeight: FontWeight.w700)))
+                          : Text(choice.$2, style: const TextStyle(
+                              color: ink, fontSize: 12, fontWeight: FontWeight.w700))),
                         const Icon(Icons.chevron_right_rounded, color: sage, size: 18),
                       ]),
                     ),
@@ -1454,7 +1458,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               ),
           ]);
         }),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(Icons.people_outline_rounded, color: sage, size: 18),
           SizedBox(width: 7),
@@ -1482,32 +1486,44 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     return LayoutBuilder(builder: (context, constraints) {
       final columns = constraints.maxWidth < 290 ||
           MediaQuery.textScalerOf(context).scale(14) > 20 ? 1 : 2;
-      final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
-      return Wrap(spacing: 12, runSpacing: 12, children: [
-        for (final feature in features)
-          SizedBox(width: width, child: Material(
+      Widget card((IconData, String, String, Color, VoidCallback) feature) {
+        return Material(
             color: feature.$4.withValues(alpha: .75),
             borderRadius: BorderRadius.circular(21),
             child: InkWell(
               onTap: feature.$5, borderRadius: BorderRadius.circular(21),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Icon(feature.$1, color: sage, size: 28),
-                  const SizedBox(height: 12),
+                  Icon(feature.$1, color: sage, size: 22),
+                  const SizedBox(height: 7),
                   Row(children: [
                     Expanded(child: Text(feature.$2,
-                      style: GoogleFonts.playfairDisplay(color: ink, fontSize: 18,
+                      style: GoogleFonts.playfairDisplay(color: ink, fontSize: 16,
                         fontWeight: FontWeight.w700))),
                     const Icon(Icons.chevron_right_rounded, color: sage, size: 18),
                   ]),
                   const SizedBox(height: 5),
-                  Text(feature.$3, style: const TextStyle(fontSize: 12,
-                    color: Color(0xFF667066), height: 1.4)),
+                  Text(feature.$3, style: const TextStyle(fontSize: 11,
+                    color: Color(0xFF667066), height: 1.25)),
                 ]),
               ),
             ),
+          );
+      }
+      return Column(children: [
+        for (var start = 0; start < features.length; start += columns) ...[
+          if (start > 0) const SizedBox(height: 10),
+          IntrinsicHeight(child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var offset = 0; offset < columns && start + offset < features.length; offset++) ...[
+                if (offset > 0) const SizedBox(width: 10),
+                Expanded(child: card(features[start + offset])),
+              ],
+            ],
           )),
+        ],
       ]);
     });
   }
@@ -1720,10 +1736,13 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               );
             }
 
-            return Center(
-              child: SizedBox(
+            return SizedBox(
+              height: 274.5,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: SizedBox(
                 width: width,
-                height: 344,
+                height: 366,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -1817,6 +1836,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                     ),
                   ],
                 ),
+              ),
               ),
             );
           },
