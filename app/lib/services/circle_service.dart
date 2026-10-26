@@ -89,6 +89,39 @@ class CircleService {
     return user;
   }
 
+  Stream<QuerySnapshot<Map<String, dynamic>>> activity() => _firestore
+      .collection('circles').doc(_user.uid).collection('activity')
+      .orderBy('createdAt', descending: true).limit(100).snapshots();
+
+  Stream<DocumentSnapshot<Map<String, dynamic>>> supportProfile(String uid) =>
+      _firestore.collection('circles').doc(uid).collection('settings')
+          .doc('profile').snapshots();
+
+  Future<void> saveSupportProfile({required String style,
+      required String availability, required bool muteRequests}) => _firestore
+      .collection('circles').doc(_user.uid).collection('settings')
+      .doc('profile').set({'supportStyle': style,
+        'availability': availability, 'muteRequests': muteRequests});
+
+  Future<void> shareActivity({required String kind, required String text,
+      required List<String> recipientUids, String groupId = ''}) async {
+    final recipients = {...recipientUids, _user.uid};
+    if (recipients.length > 100) {
+      throw const CircleException('Choose fewer than 100 people.');
+    }
+    final username = await ProfileService.currentUsername() ?? 'Circle member';
+    final batch = _firestore.batch();
+    for (final uid in recipients) {
+      batch.set(_firestore.collection('circles').doc(uid)
+          .collection('activity').doc(), {
+        'authorUid': _user.uid, 'authorName': username, 'kind': kind,
+        'text': text, 'groupId': groupId,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+    await batch.commit();
+  }
+
   String conversationId(String otherUid) {
     final ids = [_user.uid, otherUid]..sort();
     return ids.join('_');
