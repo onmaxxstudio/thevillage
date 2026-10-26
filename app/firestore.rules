@@ -451,6 +451,38 @@ service cloud.firestore {
         (request.auth.uid == ownerUid || request.auth.uid == memberUid);
     }
 
+    match /circles/{ownerUid}/settings/{settingId} {
+      allow get: if settingId == 'profile' && signedIn() &&
+        (isSelf(ownerUid) ||
+         exists(/databases/$(database)/documents/circles/$(ownerUid)/members/$(request.auth.uid)));
+      allow list: if false;
+      allow create, update: if settingId == 'profile' && isSelf(ownerUid) &&
+        request.resource.data.keys().hasOnly(['supportStyle', 'availability', 'muteRequests']) &&
+        request.resource.data.supportStyle in ['Listen first', 'Advice welcome', 'Practical help', 'Give me space'] &&
+        request.resource.data.availability in ['Here to listen', 'Low energy', 'Away today'] &&
+        request.resource.data.muteRequests is bool;
+      allow delete: if isSelf(ownerUid);
+    }
+
+    match /circles/{ownerUid}/activity/{activityId} {
+      allow get, list: if isSelf(ownerUid);
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly(['authorUid', 'authorName', 'kind', 'text', 'createdAt', 'groupId']) &&
+        request.resource.data.authorUid == request.auth.uid &&
+        (isSelf(ownerUid) ||
+         exists(/databases/$(database)/documents/circles/$(request.auth.uid)/members/$(ownerUid))) &&
+        request.resource.data.kind in ['win', 'moment', 'group', 'support'] &&
+        request.resource.data.text is string &&
+        request.resource.data.text.size() > 0 &&
+        request.resource.data.text.size() <= 500 &&
+        request.resource.data.authorName is string &&
+        request.resource.data.authorName.size() <= 40 &&
+        request.resource.data.groupId is string &&
+        request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isSelf(ownerUid);
+    }
+
     match /conversations/{conversationId} {
       allow get: if signedIn() &&
         request.auth.uid in resource.data.members;
