@@ -12,6 +12,7 @@ import '../services/circle_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import '../widgets/village_avatar.dart';
 import 'avatar_builder_screen.dart';
+import 'plan_my_week_screen.dart';
 
 class CircleScreen extends StatefulWidget {
   const CircleScreen({super.key});
@@ -32,23 +33,23 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   static const supportChoices = [
     (
       Icons.hearing_rounded,
-      'Just listen',
+      'Someone to listen',
       'I need a safe place to share.',
     ),
     (
       Icons.lightbulb_outline_rounded,
-      'Give me advice',
+      'A little advice',
       'I’d appreciate ideas or perspective.',
     ),
     (
-      Icons.schedule_rounded,
-      'Check on me later',
-      'Please reach back out when you can.',
+      Icons.favorite_outline_rounded,
+      'Encouragement',
+      'A few kind words would help today.',
     ),
     (
       Icons.volunteer_activism_outlined,
-      'Practical help',
-      'I could use help with something specific.',
+      'Check on me',
+      'Please reach back out when you can.',
     ),
   ];
 
@@ -487,6 +488,25 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     );
     controller.dispose();
     if (sent != null && mounted) {
+      final recipients = _visibleCircleMembers.where((member) =>
+          sent.audience == 'My whole Circle' || member.name == sent.audience).toList();
+      if (recipients.isEmpty) return;
+      try {
+        for (final member in recipients) {
+          if (member.uid == null || _isTestMember(member)) continue;
+          await circleService.sendMessage(
+            recipient: CirclePerson(uid: member.uid!,
+              username: member.name.replaceFirst('@', '')),
+            text: '${sent.type}${sent.message.isEmpty ? '' : ': ${sent.message}'}',
+          );
+        }
+      } on Object {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not send to everyone. Some messages may have sent; check your chats before retrying.')),
+        );
+        return;
+      }
+      if (!mounted) return;
       setState(() { selectedNeed = null; myReachOuts.insert(0, sent); });
       await _saveReachOuts();
       if (!mounted) return;
@@ -1261,13 +1281,12 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'REAL PEOPLE  •  DEEPER DAYS',
+                        'Your people. Your safe place.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: gold,
-                          fontSize: 9,
-                          letterSpacing: 3.1,
-                          fontWeight: FontWeight.w800,
+                          color: sage,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -1345,63 +1364,316 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _circleOrbit(),
-        const SizedBox(height: 22),
-        _sectionTitle(
-          'How are you today?',
-          'Choose the kind of support you can give or need.',
+        const SizedBox(height: 24),
+        _supportRequestPanel(),
+        const SizedBox(height: 14),
+        _featureShortcuts(),
+        const SizedBox(height: 24),
+        Row(children: [
+          Expanded(child: Text('From your circle',
+            style: GoogleFonts.playfairDisplay(color: ink, fontSize: 25,
+              fontWeight: FontWeight.w700))),
+          TextButton(onPressed: _showCircleUpdates, child: const Text('View all')),
+        ]),
+        const SizedBox(height: 8),
+        if (_visibleCircleMoments.isEmpty)
+          _momentsRow()
+        else
+          for (final moment in _visibleCircleMoments.take(3)) ...[
+            _circleUpdateCard(moment),
+            const SizedBox(height: 10),
+          ],
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: _shareSomethingGood,
+          icon: const Icon(Icons.celebration_outlined),
+          label: const Text('Share a small win'),
         ),
+        const SizedBox(height: 20),
+        _sectionTitle('How are you today?', 'Choose what you want your people to know.'),
         const SizedBox(height: 10),
         _statusChoices(),
-        const SizedBox(height: 28),
-        _sectionTitle(
-          'Good things happening',
-          'Private wins shared by your Circle.',
-        ),
-        const SizedBox(height: 12),
-        _momentsRow(),
-        const SizedBox(height: 14),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: _shareSomethingGood,
-            style: FilledButton.styleFrom(
-              backgroundColor: sage,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-            ),
-            icon: const Icon(Icons.celebration_outlined, size: 20),
-            label: const Text('Share something good'),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: TextButton.icon(
-                onPressed: _startAskMyCircle,
-                icon: const Icon(Icons.favorite_border_rounded, size: 19),
-                label: const Text('Ask for support'),
-                style: TextButton.styleFrom(foregroundColor: sage),
-              ),
-            ),
-            Container(width: 1, height: 21, color: line),
-            Expanded(
-              child: TextButton.icon(
-                onPressed: _openCheckOnSomeone,
-                icon: const Icon(Icons.waving_hand_outlined, size: 19),
-                label: const Text('Check in'),
-                style: TextButton.styleFrom(foregroundColor: sage),
-              ),
-            ),
-          ],
-        ),
-        if (_visibleCircleMembers.isNotEmpty || incomingRequests.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          _moreCircleTools(),
-        ],
+        const SizedBox(height: 18),
+        _moreCircleTools(),
+        const SizedBox(height: 18),
+        const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(Icons.lock_outline_rounded, color: sage, size: 16),
+          SizedBox(width: 8),
+          Flexible(child: Text('Share only what you choose.',
+            style: TextStyle(color: sage, fontSize: 12))),
+        ]),
       ],
     );
+  }
+
+  Future<void> _requestSupport(String need) async {
+    if (_visibleCircleMembers.isEmpty) {
+      await _findPeople();
+      return;
+    }
+    final audience = await _chooseSupportAudience();
+    if (audience == null || !mounted) return;
+    setState(() => selectedNeed = need);
+    await _openReachOut(audience: audience);
+  }
+
+  Widget _supportRequestPanel() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(24)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('What do you need today?',
+          style: GoogleFonts.playfairDisplay(color: ink, fontSize: 25,
+            fontWeight: FontWeight.w700)),
+        const SizedBox(height: 14),
+        LayoutBuilder(builder: (context, constraints) {
+          final columns = constraints.maxWidth < 290 ||
+              MediaQuery.textScalerOf(context).scale(14) > 20 ? 1 : 2;
+          return Wrap(spacing: 10, runSpacing: 10, children: [
+            for (final choice in supportChoices)
+              SizedBox(
+                width: (constraints.maxWidth - (columns - 1) * 10) / columns,
+                child: Material(
+                  color: cream, borderRadius: BorderRadius.circular(16),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => _requestSupport(choice.$2),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      child: Row(children: [
+                        Icon(choice.$1, color: sage, size: 23),
+                        const SizedBox(width: 9),
+                        Expanded(child: Text(choice.$2,
+                          style: const TextStyle(color: ink, fontSize: 13,
+                            fontWeight: FontWeight.w700))),
+                        const Icon(Icons.chevron_right_rounded, color: sage, size: 18),
+                      ]),
+                    ),
+                  ),
+                ),
+              ),
+          ]);
+        }),
+        const SizedBox(height: 14),
+        const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(Icons.people_outline_rounded, color: sage, size: 18),
+          SizedBox(width: 7),
+          Flexible(child: Text('You choose who receives your request.',
+            style: TextStyle(color: sage, fontSize: 11.5))),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _featureShortcuts() {
+    final features = <(IconData, String, String, Color, VoidCallback)>[
+      (Icons.chat_bubble_outline_rounded, 'Private chats',
+        'Safe, supportive conversations.', blush, _showCircleChats),
+      (Icons.calendar_today_outlined, 'Shared plans',
+        'Make and share your weekly plan.', paleSage, () {
+          Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => const PlanMyWeekScreen()));
+        }),
+      (Icons.emoji_events_outlined, 'Small wins',
+        'Celebrate progress, big or small.', paleSage, _showCircleUpdates),
+      (Icons.event_outlined, 'Important dates',
+        'Keep the moments that matter.', blush, _showImportantDates),
+    ];
+    return LayoutBuilder(builder: (context, constraints) {
+      final columns = constraints.maxWidth < 290 ||
+          MediaQuery.textScalerOf(context).scale(14) > 20 ? 1 : 2;
+      final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
+      return Wrap(spacing: 12, runSpacing: 12, children: [
+        for (final feature in features)
+          SizedBox(width: width, child: Material(
+            color: feature.$4.withValues(alpha: .75),
+            borderRadius: BorderRadius.circular(21),
+            child: InkWell(
+              onTap: feature.$5, borderRadius: BorderRadius.circular(21),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Icon(feature.$1, color: sage, size: 28),
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    Expanded(child: Text(feature.$2,
+                      style: GoogleFonts.playfairDisplay(color: ink, fontSize: 18,
+                        fontWeight: FontWeight.w700))),
+                    const Icon(Icons.chevron_right_rounded, color: sage, size: 18),
+                  ]),
+                  const SizedBox(height: 5),
+                  Text(feature.$3, style: const TextStyle(fontSize: 12,
+                    color: Color(0xFF667066), height: 1.4)),
+                ]),
+              ),
+            ),
+          )),
+      ]);
+    });
+  }
+
+  Widget _circleUpdateCard(_CircleMoment moment) {
+    final member = _memberForMoment(moment);
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .65),
+        border: Border.all(color: line), borderRadius: BorderRadius.circular(20)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          VillageAvatar(
+            uid: member?.uid ?? FirebaseAuth.instance.currentUser?.uid, radius: 22),
+          const SizedBox(width: 10),
+          Expanded(child: Text('${moment.author} shared a small win',
+            style: const TextStyle(color: ink, fontWeight: FontWeight.w700))),
+        ]),
+        const SizedBox(height: 10),
+        Text(moment.text, style: const TextStyle(color: ink, height: 1.4)),
+        if (member != null)
+          Align(alignment: Alignment.centerRight, child: TextButton.icon(
+            onPressed: () => _openMomentActions(moment),
+            icon: const Icon(Icons.favorite_outline_rounded, size: 18),
+            label: const Text('Celebrate'),
+          )),
+      ]),
+    );
+  }
+
+  Future<void> _showCircleChats() {
+    return Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (pageContext) => Scaffold(
+        backgroundColor: cream,
+        appBar: AppBar(backgroundColor: cream, title: const Text('Private chats')),
+        body: ListView(padding: const EdgeInsets.all(18), children: [
+          const Text('Choose someone from your Circle to read or send a private message.'),
+          const SizedBox(height: 14),
+          if (_visibleCircleMembers.isEmpty)
+            OutlinedButton.icon(onPressed: _findPeople,
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+              label: const Text('Invite your first person')),
+          for (final member in _visibleCircleMembers)
+            ListTile(
+              leading: VillageAvatar(uid: member.uid, radius: 22),
+              title: Text(member.name),
+              subtitle: Text(member.status.isEmpty ? 'Open private conversation' : member.status),
+              trailing: const Icon(Icons.chat_bubble_outline_rounded, color: sage),
+              onTap: () => _openMemberProfile(member),
+            ),
+        ]),
+      ),
+    )).then((_) {});
+  }
+
+  Future<void> _showCircleUpdates() {
+    return Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (pageContext) => Scaffold(
+        backgroundColor: cream,
+        appBar: AppBar(backgroundColor: cream, title: const Text('Small wins')),
+        body: ListView(padding: const EdgeInsets.all(18), children: [
+          OutlinedButton.icon(onPressed: () async {
+            await _shareSomethingGood();
+            if (pageContext.mounted) Navigator.of(pageContext).pop();
+          }, icon: const Icon(Icons.celebration_outlined),
+            label: const Text('Share a small win')),
+          const SizedBox(height: 12),
+          if (_visibleCircleMoments.isEmpty)
+            const Text('Your small wins will appear here.')
+          else
+            for (final moment in _visibleCircleMoments) ...[
+              _circleUpdateCard(moment),
+              const SizedBox(height: 10),
+            ],
+        ]),
+      ),
+    )).then((_) {});
+  }
+
+  Future<void> _showImportantDates() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final key = 'circle_important_dates_$uid';
+    List<String> dates;
+    try {
+      dates = await _preferences.getStringList(key) ?? [];
+    } on Object {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not load your dates. Try again.')));
+      return;
+    }
+    if (!mounted) return;
+    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (pageContext) => StatefulBuilder(
+        builder: (context, updatePage) => Scaffold(
+          backgroundColor: cream,
+          appBar: AppBar(backgroundColor: cream, title: const Text('Important dates')),
+          body: ListView(padding: const EdgeInsets.all(18), children: [
+            const Text('Your private list, saved on this device. Add birthdays, milestones, or a day to check in.'),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              icon: const Icon(Icons.add_rounded), label: const Text('Add a date'),
+              onPressed: () async {
+                final picked = await showDatePicker(context: context,
+                  initialDate: DateTime.now(), firstDate: DateTime(2000),
+                  lastDate: DateTime(2100));
+                if (picked == null || !context.mounted) return;
+                final controller = TextEditingController();
+                final label = await showDialog<String>(context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('What would you like to remember?'),
+                    content: TextField(controller: controller, autofocus: true,
+                      maxLength: 100, decoration: const InputDecoration(hintText: 'Mom’s birthday')),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(dialogContext),
+                        child: const Text('Cancel')),
+                      FilledButton(onPressed: () {
+                        if (controller.text.trim().isNotEmpty)
+                          Navigator.pop(dialogContext, controller.text.trim());
+                      }, child: const Text('Save')),
+                    ],
+                  ));
+                if (label == null || !context.mounted) return;
+                final next = [...dates, jsonEncode({
+                  'label': label, 'date': picked.toIso8601String(),
+                })]..sort((a, b) => (jsonDecode(a)['date'] as String)
+                    .compareTo(jsonDecode(b)['date'] as String));
+                try {
+                  await _preferences.setStringList(key, next);
+                  if (context.mounted) updatePage(() => dates = next);
+                } on Object {
+                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Could not save this date. Try again.')));
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            if (dates.isEmpty) const Text('No important dates yet.'),
+            for (final raw in dates)
+              Builder(builder: (context) {
+                final item = jsonDecode(raw) as Map<String, dynamic>;
+                final date = DateTime.parse(item['date'] as String);
+                return Card(elevation: 0, color: paleSage,
+                  child: ListTile(
+                    leading: const Icon(Icons.event_outlined, color: sage),
+                    title: Text(item['label'] as String),
+                    subtitle: Text(MaterialLocalizations.of(context).formatMediumDate(date)),
+                    trailing: IconButton(tooltip: 'Remove date',
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      onPressed: () async {
+                        final next = [...dates]..remove(raw);
+                        try {
+                          await _preferences.setStringList(key, next);
+                          if (context.mounted) updatePage(() => dates = next);
+                        } on Object {
+                          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not remove this date. Try again.')));
+                        }
+                      }),
+                  ));
+              }),
+          ]),
+        ),
+      ),
+    ));
   }
 
   String get _circleDisplayName {
@@ -3348,3 +3620,4 @@ class _CircleMoment {
             DateTime.now(),
       );
 }
+
