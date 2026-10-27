@@ -356,7 +356,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                             selected: anonymous,
                             icon: Icons.visibility_off_outlined,
                             title: 'Post anonymously',
-                            subtitle: anonymousName,
+                            subtitle: anonymousName == 'Loading…' ? anonymousName : '@$anonymousName',
                             onTap: () => setState(() => anonymous = true),
                           ),
                         ),
