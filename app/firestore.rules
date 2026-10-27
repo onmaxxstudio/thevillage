@@ -274,6 +274,15 @@ service cloud.firestore {
         resource.data.uid == request.auth.uid;
     }
 
+    // Account-to-alias mapping is owner-only and immutable.
+    match /anonymous_identities/{uid} {
+      allow get: if isSelf(uid);
+      allow list, update, delete: if false;
+      allow create: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly(['name']) &&
+        request.resource.data.name.matches('^Neighbor-[a-f0-9]{32}$');
+    }
+
     match /village_posts/{postId} {
       allow read: if signedIn();
 
@@ -317,13 +326,14 @@ service cloud.firestore {
         request.resource.data.audience == 'The Village' &&
         request.resource.data.author is string &&
         request.resource.data.author.size() >= 3 &&
-        request.resource.data.author.size() <= 30 &&
+        request.resource.data.author.size() <= 41 &&
         (
           (
-            request.resource.data.author == 'Anonymous Neighbor' &&
+            request.resource.data.author == get(/databases/$(database)/documents/anonymous_identities/$(request.auth.uid)).data.name &&
             !request.resource.data.keys().hasAny(['authorUid'])
           ) ||
           (
+            !request.resource.data.author.matches('^Neighbor-.*') &&
             request.resource.data.author != 'Anonymous Neighbor' &&
             request.resource.data.authorUid == request.auth.uid
           )

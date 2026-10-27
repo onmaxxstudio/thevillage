@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../navigation/village_navigation_scope.dart';
 import '../services/profile_service.dart';
+import '../services/anonymous_identity_service.dart';
 import 'post_preview_screen.dart';
 
 class AskVillageScreen extends StatefulWidget {
@@ -52,6 +53,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   String category = 'Relationships & Dating';
   String supportIntent = 'Advice';
   String currentUsername = 'VillageMember';
+  String anonymousName = 'Your permanent anonymous name';
 
   static const _draftKey = 'ask_the_village_current_draft';
   String get draftKey {
@@ -130,6 +132,9 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         ProfileService.usernameNotifier.value ?? 'VillageMember';
     ProfileService.usernameNotifier.addListener(_usernameChanged);
     ProfileService.currentUsername();
+    AnonymousIdentityService.currentName().then((name) {
+      if (mounted) setState(() => anonymousName = name);
+    }).catchError((Object _) {});
   }
 
   void _usernameChanged() {
@@ -350,8 +355,8 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                           child: _choiceCard(
                             selected: anonymous,
                             icon: Icons.visibility_off_outlined,
-                            title: 'Anonymous Neighbor',
-                            subtitle: 'Share anonymously',
+                            title: 'Post anonymously',
+                            subtitle: '$anonymousName\nYour profile stays private.',
                             onTap: () => setState(() => anonymous = true),
                           ),
                         ),

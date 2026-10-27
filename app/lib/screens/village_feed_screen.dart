@@ -10,6 +10,8 @@ import '../services/private_message_service.dart';
 import '../widgets/village_avatar.dart';
 import '../navigation/village_navigation_scope.dart';
 import 'ask_village_screen.dart';
+import 'anonymous_activity_screen.dart';
+import '../services/anonymous_identity_service.dart';
 import 'notifications_screen.dart';
 import 'private_messages_screen.dart';
 
@@ -94,14 +96,14 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   }
 
   String _postAuthor(VillagePost post) {
-    if (post.author == 'Anonymous Neighbor') return post.author;
+    if ((post.author == 'Anonymous Neighbor' || AnonymousIdentityService.isAlias(post.author))) return post.author;
     if (post.isMine) return currentHandle;
     final latestUsername = usernamesByUid[post.authorUid];
     return latestUsername == null ? post.author : '@$latestUsername';
   }
 
   String _replyAuthor(VillageReply reply) {
-    if (reply.author == 'Anonymous Neighbor') return reply.author;
+    if ((reply.author == 'Anonymous Neighbor' || AnonymousIdentityService.isAlias(reply.author))) return reply.author;
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     final isMyReply = reply.authorUid == currentUid;
     if (isMyReply) return currentHandle;
@@ -283,8 +285,19 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     });
   }
 
+  void _openAnonymousActivity(String name) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => AnonymousActivityScreen(name: name)));
+  }
+
   Future<void> _openReplies(VillagePost post) async {
     final controller = TextEditingController();
+    String? anonymousName;
+    try {
+      anonymousName = await AnonymousIdentityService.currentName();
+    } catch (_) {
+      // Named replies remain available if anonymous identity cannot be loaded.
+    }
+    if (!mounted) return;
     var anonymous = false;
     final reply = await showModalBottomSheet<VillageReply>(
       context: context,
@@ -381,6 +394,10 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                     width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: () {
+                        if (anonymous && anonymousName == null) {
+                          ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Could not load your anonymous name. Please try again.')));
+                          return;
+                        }
                         final text = controller.text.trim();
                         if (text.isEmpty) {
                           ScaffoldMessenger.of(sheetContext).showSnackBar(
@@ -397,7 +414,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                             id: now.microsecondsSinceEpoch.toString(),
                             text: text,
                             author:
-                                anonymous ? 'Anonymous Neighbor' : currentHandle,
+                                anonymous ? anonymousName! : currentHandle,
                             authorUid: anonymous
                                 ? null
                                 : FirebaseAuth.instance.currentUser?.uid,
@@ -1211,7 +1228,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     VillageReply reply, {
     VoidCallback? onChanged,
   }) {
-    final anonymous = reply.author == 'Anonymous Neighbor';
+    final anonymous = (reply.author == 'Anonymous Neighbor' || AnonymousIdentityService.isAlias(reply.author));
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(11),
@@ -1229,13 +1246,16 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                InkWell(
+                  onTap: AnonymousIdentityService.isAlias(reply.author) ? () => _openAnonymousActivity(reply.author) : null,
+                  child: Text(
                   _replyAuthor(reply),
                   style: const TextStyle(
                     color: sage,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                   ),
+                ),
                 ),
                 const SizedBox(height: 2),
                 Text(reply.text),
@@ -1333,17 +1353,20 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
               VillageAvatar(
                 uid: post.authorUid,
                 radius: 19,
-                anonymous: post.author == 'Anonymous Neighbor',
+                anonymous: (post.author == 'Anonymous Neighbor' || AnonymousIdentityService.isAlias(post.author)),
               ),
               const SizedBox(width: 9),
               Expanded(
-                child: Text(
+                child: InkWell(
+                  onTap: AnonymousIdentityService.isAlias(post.author) ? () => _openAnonymousActivity(post.author) : null,
+                  child: Text(
                   '${_postAuthor(post)}  •  ${_timeLabel(post.createdAt)}',
                   style: const TextStyle(
                     color: ink,
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
                   ),
+                ),
                 ),
               ),
               if (post.isMine)

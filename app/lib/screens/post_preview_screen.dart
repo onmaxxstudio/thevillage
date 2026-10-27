@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/anonymous_identity_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -53,7 +54,7 @@ class PostPreviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = post.anonymous ? 'Anonymous Neighbor' : '@${post.username}';
+    final name = post.anonymous ? 'Your permanent anonymous name' : '@${post.username}';
     return Scaffold(
       backgroundColor: cream,
       appBar: AppBar(
@@ -81,7 +82,7 @@ class PostPreviewScreen extends StatelessWidget {
                           children: [
                             VillageAvatar(uid: post.anonymous ? null : FirebaseAuth.instance.currentUser?.uid, anonymous: post.anonymous),
                             const SizedBox(width: 10),
-                            Expanded(child: Text('Posting as\n$name', style: const TextStyle(fontWeight: FontWeight.w700))),
+                            Expanded(child: post.anonymous ? FutureBuilder<String>(future: AnonymousIdentityService.currentName(), builder: (context, snapshot) => Text('Posting as\n${snapshot.data ?? (snapshot.hasError ? 'Unable to load anonymous name' : 'Loading anonymous name…')}', style: const TextStyle(fontWeight: FontWeight.w700))) : Text('Posting as\n$name', style: const TextStyle(fontWeight: FontWeight.w700))),
                             const Icon(Icons.groups_outlined, color: sage),
                             const SizedBox(width: 7),
                             Text('Audience\n${post.audience}', style: const TextStyle(fontSize: 12)),
