@@ -290,6 +290,24 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     });
   }
 
+  bool openingAnonymousActivity = false;
+
+  Future<void> _openMyAnonymousActivity() async {
+    if (openingAnonymousActivity) return;
+    setState(() => openingAnonymousActivity = true);
+    try {
+      final name = await AnonymousIdentityService.currentName();
+      if (!mounted) return;
+      await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => AnonymousActivityScreen(name: name, isOwner: true)));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not load your anonymous activity. Please try again.')));
+    } finally {
+      if (mounted) setState(() => openingAnonymousActivity = false);
+    }
+  }
+
   void _openAnonymousActivity(String name) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => AnonymousActivityScreen(name: anonymousLabels[name] ?? name)));
   }
@@ -1095,6 +1113,18 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                               borderRadius: BorderRadius.circular(24),
                               borderSide: const BorderSide(color: line),
                             ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: OutlinedButton.icon(
+                            onPressed: openingAnonymousActivity ? null : _openMyAnonymousActivity,
+                            icon: openingAnonymousActivity
+                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Icon(Icons.visibility_off_outlined, size: 18),
+                            label: const Text('My Anonymous Activity'),
+                            style: OutlinedButton.styleFrom(foregroundColor: sage),
                           ),
                         ),
                         const SizedBox(height: 15),
