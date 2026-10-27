@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase_options.dart';
 import 'profile_service.dart';
+import 'anonymous_identity_service.dart';
 import 'notification_service.dart';
 
 class AuthService {
@@ -29,6 +30,7 @@ class AuthService {
       password: password,
     );
     await ProfileService().ensureCurrentUserProfile();
+    await _ensureAnonymousName();
     return credential;
   }
 
@@ -45,6 +47,7 @@ class AuthService {
     await ProfileService().ensureCurrentUserProfile(
       preferredUsername: name,
     );
+    await _ensureAnonymousName();
     return credential;
   }
 
@@ -62,6 +65,7 @@ class AuthService {
       // the authentication result in the same app session.
       final credential = await _auth.signInWithPopup(provider);
       await ProfileService().ensureCurrentUserProfile();
+      await _ensureAnonymousName();
       return;
     }
 
@@ -81,6 +85,7 @@ class AuthService {
     );
     await _auth.signInWithCredential(credential);
     await ProfileService().ensureCurrentUserProfile();
+    await _ensureAnonymousName();
   }
 
   Future<UserCredential> signInWithApple() async {
@@ -91,7 +96,16 @@ class AuthService {
         ? await _auth.signInWithPopup(provider)
         : await _auth.signInWithProvider(provider);
     await ProfileService().ensureCurrentUserProfile();
+    await _ensureAnonymousName();
     return credential;
+  }
+
+  Future<void> _ensureAnonymousName() async {
+    try {
+      await AnonymousIdentityService.currentName();
+    } catch (_) {
+      // Retry from the composer if the network is temporarily unavailable.
+    }
   }
 
   User? get currentUser => _auth.currentUser;
