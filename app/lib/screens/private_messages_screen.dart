@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/private_message_service.dart';
+import '../services/anonymous_identity_service.dart';
+import 'anonymous_activity_screen.dart';
 import '../services/profile_service.dart';
 import '../widgets/village_avatar.dart';
 
@@ -29,6 +31,24 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
   final service = PrivateMessageService();
   final Map<String, Future<String?>> _usernames = {};
   String? scope;
+  bool openingAnonymousActivity = false;
+
+  Future<void> _openAnonymousActivity() async {
+    if (openingAnonymousActivity) return;
+    setState(() => openingAnonymousActivity = true);
+    try {
+      final name = await AnonymousIdentityService.currentName();
+      if (!mounted) return;
+      await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => AnonymousActivityScreen(name: name, isOwner: true)));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not load your anonymous activity. Please try again.')));
+    } finally {
+      if (mounted) setState(() => openingAnonymousActivity = false);
+    }
+  }
+
 
   @override
   void initState() {
@@ -103,12 +123,24 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(children: [
+                child: Wrap(spacing: 0, runSpacing: 4, children: [
                   _scopeChip('All messages', null),
                   _scopeChip('Village feed', 'village'),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 7),
+                    child: ActionChip(
+                      avatar: openingAnonymousActivity
+                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.visibility_off_outlined, size: 16, color: sage),
+                      label: const Text('My Anonymous Activity'),
+                      labelStyle: const TextStyle(color: ink, fontSize: 11, fontWeight: FontWeight.w700),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: line),
+                      onPressed: openingAnonymousActivity ? null : _openAnonymousActivity,
+                    ),
+                  ),
                   for (final entry in communityNames.entries)
                     _scopeChip(entry.value.isEmpty ? 'Community' : entry.value, entry.key),
                 ]),
