@@ -1437,11 +1437,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _circleOrbit(),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         _writtenStatusCard(),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         _supportRequestPanel(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Row(children: [
           Expanded(child: Text('From your people',
             style: GoogleFonts.playfairDisplay(color: ink, fontSize: 25,
@@ -1452,12 +1452,12 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         ]),
         const SizedBox(height: 8),
         _peopleStatusFeed(),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         _messagesCard(),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         _actionRow(Icons.auto_awesome_rounded, 'Share a small win',
           'Celebrate progress, big or small.', _shareSomethingGood, blush),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         _actionRow(Icons.calendar_today_outlined, 'Shared plans',
           'Make and share your weekly plan.', () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const PlanMyWeekScreen())), paleSage),
@@ -1477,20 +1477,20 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   ]);
 
   Widget _writtenStatusCard() => Container(
-    width: double.infinity, padding: const EdgeInsets.all(15),
-    decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(22)),
+    width: double.infinity, padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Expanded(child: Text('Your status', style: GoogleFonts.playfairDisplay(
-          color: ink, fontSize: 21, fontWeight: FontWeight.w700))),
+          color: ink, fontSize: 19, fontWeight: FontWeight.w700))),
         const Icon(Icons.lock_outline_rounded, size: 15, color: sage),
         const SizedBox(width: 4),
         const Text('Only my circle', style: TextStyle(fontSize: 11, color: sage)),
       ]),
-      const SizedBox(height: 8),
+      const SizedBox(height: 6),
       InkWell(onTap: _editWrittenStatus, child: Container(
-        width: double.infinity, padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(16)),
+        width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+        decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(14)),
         child: Row(children: [
           Expanded(child: Text(writtenStatus.isEmpty ? 'Share how you are feeling…' : writtenStatus,
             style: const TextStyle(fontSize: 13, height: 1.35))),
@@ -1614,35 +1614,51 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   Widget _actionRow(IconData icon, String title, String subtitle,
       VoidCallback action, Color background) => Material(
-    color: background, borderRadius: BorderRadius.circular(19),
-    child: InkWell(onTap: action, borderRadius: BorderRadius.circular(19),
-      child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [
-        Icon(icon, color: sage), const SizedBox(width: 12),
+    color: background, borderRadius: BorderRadius.circular(17),
+    child: InkWell(onTap: action, borderRadius: BorderRadius.circular(17),
+      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), child: Row(children: [
+        Icon(icon, color: sage, size: 21), const SizedBox(width: 10),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: GoogleFonts.playfairDisplay(fontSize: 18,
+          Text(title, style: GoogleFonts.playfairDisplay(fontSize: 16,
             fontWeight: FontWeight.w700)),
-          Text(subtitle, style: const TextStyle(fontSize: 11.5)),
+          Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 10.5)),
         ])),
         const Icon(Icons.chevron_right_rounded, color: sage),
       ]))));
 
   Widget _messagesCard() => Container(
-    padding: const EdgeInsets.all(13),
-    decoration: BoxDecoration(color: blush, borderRadius: BorderRadius.circular(20)),
+    padding: const EdgeInsets.all(11),
+    decoration: BoxDecoration(color: blush, borderRadius: BorderRadius.circular(18)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Messages', style: GoogleFonts.playfairDisplay(fontSize: 21,
+      Text('Messages', style: GoogleFonts.playfairDisplay(fontSize: 19,
         fontWeight: FontWeight.w700)),
-      const SizedBox(height: 8),
+      const SizedBox(height: 6),
       Row(children: [
-        Expanded(child: _actionRow(Icons.groups_outlined, 'Circle chats',
-          'Your people', _showCircleChats, cream)),
+        Expanded(child: _messageShortcut(Icons.groups_outlined, 'Circle chats',
+          'Your people', _showCircleChats)),
         const SizedBox(width: 8),
-        Expanded(child: _actionRow(Icons.chat_bubble_outline, 'Private history',
-          'Village conversations', () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const PrivateMessagesScreen())), cream)),
+        Expanded(child: _messageShortcut(Icons.chat_bubble_outline, 'Private history',
+          'Village chats', () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const PrivateMessagesScreen())))),
       ]),
     ]),
   );
+
+  Widget _messageShortcut(IconData icon, String title, String subtitle,
+      VoidCallback action) => Material(
+    color: cream, borderRadius: BorderRadius.circular(15),
+    child: InkWell(onTap: action, borderRadius: BorderRadius.circular(15),
+      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
+        child: Row(children: [
+          Icon(icon, color: sage, size: 19), const SizedBox(width: 7),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.playfairDisplay(fontSize: 14, fontWeight: FontWeight.w700)),
+            Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 10)),
+          ])),
+        ]))));
 
   Widget _sharedActivityPreview() => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
     stream: circleService.activity(),
@@ -1792,38 +1808,36 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   Widget _supportRequestPanel() {
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(24)),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('What do you need today?',
-          style: GoogleFonts.playfairDisplay(color: ink, fontSize: 21,
+          style: GoogleFonts.playfairDisplay(color: ink, fontSize: 19,
             fontWeight: FontWeight.w700)),
-        const SizedBox(height: 10),
+        const SizedBox(height: 7),
         LayoutBuilder(builder: (context, constraints) {
           final columns = constraints.maxWidth < 290 ||
               MediaQuery.textScalerOf(context).scale(14) > 20 ? 1 : 2;
-          return Wrap(spacing: 10, runSpacing: 10, children: [
+          return Wrap(spacing: 7, runSpacing: 7, children: [
             for (final choice in supportChoices)
               SizedBox(
-                width: (constraints.maxWidth - (columns - 1) * 10) / columns,
+                width: (constraints.maxWidth - (columns - 1) * 7) / columns,
                 child: Material(
                   color: selectedNeed == choice.$2 ? blush : cream,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                     onTap: () => setState(() => selectedNeed = choice.$2),
                     child: Container(
-                      constraints: const BoxConstraints(minHeight: 48),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                      constraints: const BoxConstraints(minHeight: 44),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
                       child: Row(children: [
                         Icon(choice.$1, color: sage, size: 19),
                         const SizedBox(width: 6),
-                        Expanded(child: choice.$2 == 'Encouragement'
-                          ? FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
-                              child: Text(choice.$2, style: const TextStyle(
-                                color: ink, fontSize: 12, fontWeight: FontWeight.w700)))
-                          : Text(choice.$2, style: const TextStyle(
-                              color: ink, fontSize: 12, fontWeight: FontWeight.w700))),
+                        Expanded(child: FittedBox(fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(choice.$2, style: const TextStyle(
+                            color: ink, fontSize: 12, fontWeight: FontWeight.w700)))),
                         const Icon(Icons.chevron_right_rounded, color: sage, size: 18),
                       ]),
                     ),
@@ -1832,11 +1846,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               ),
           ]);
         }),
-        const SizedBox(height: 10),
+        const SizedBox(height: 7),
         SizedBox(width: double.infinity, child: FilledButton.icon(
           onPressed: selectedNeed == null ? null : () => _requestSupport(selectedNeed!),
           style: FilledButton.styleFrom(backgroundColor: sage,
-            padding: const EdgeInsets.symmetric(vertical: 13)),
+            padding: const EdgeInsets.symmetric(vertical: 9)),
           icon: const Icon(Icons.people_outline_rounded),
           label: const Text('Choose people'))),
       ]),
@@ -2114,7 +2128,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
             return SizedBox(
               width: double.infinity,
-              height: 274.5,
+              height: 244,
               child: FittedBox(
                 fit: BoxFit.contain,
                 child: SizedBox(
