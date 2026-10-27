@@ -358,6 +358,9 @@ class VillagePostService {
         'Write between 10 and 1,500 characters.',
       );
     }
+    if (audience != 'My Circle' && !_cloudReady) {
+      throw const PostValidationException('Sign in and connect to the internet before posting. Your text is still here.');
+    }
     await _enforceRateLimit('post', const Duration(seconds: 20));
     final now = DateTime.now();
     final username =
@@ -409,7 +412,7 @@ class VillagePostService {
         await _recordAction('post', now);
         return post;
       } on FirebaseException {
-        // Fall back locally rather than lose a post the user already wrote.
+        throw const PostValidationException('Your post could not be shared. Your text is still here. Please try again.');
       }
     }
 

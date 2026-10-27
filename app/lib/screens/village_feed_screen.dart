@@ -90,6 +90,19 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     _load();
   }
 
+  int? _lastSelectedTab;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final selected = VillageNavigationScope.maybeOf(context)?.selectedIndex;
+    final previous = _lastSelectedTab;
+    _lastSelectedTab = selected;
+    if (selected == 3 && previous != null && previous != 3) {
+      _load();
+    }
+  }
+
   Map<String, String> anonymousLabels = {};
 
   String get currentHandle => '@$currentUsername';

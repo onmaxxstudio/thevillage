@@ -325,6 +325,7 @@ service cloud.firestore {
           'communityName',
           'createdAt',
           'needsSupport',
+          'welcomesPrayer',
           'supportIntent',
           'followUpStatus',
           'resolvedAt',
@@ -368,6 +369,8 @@ service cloud.firestore {
         ) &&
         request.resource.data.createdAt is timestamp &&
         request.resource.data.needsSupport is bool &&
+        (!request.resource.data.keys().hasAny(['welcomesPrayer']) ||
+          request.resource.data.welcomesPrayer is bool) &&
         request.resource.data.supportIntent is string &&
         request.resource.data.supportIntent.size() >= 1 &&
         request.resource.data.supportIntent.size() <= 100 &&
