@@ -47,6 +47,8 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   static const line = Color(0xFFE3D8C9);
 
   final questionController = TextEditingController();
+  final otherTopicController = TextEditingController();
+  final otherSupportController = TextEditingController();
   final preferences = SharedPreferencesAsync();
   bool anonymous = false;
   bool needsSupport = false;
@@ -66,6 +68,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     ('A listening ear', Icons.hearing_rounded),
     ('Encouragement', Icons.favorite_border_rounded),
     ('Resources or practical help', Icons.handshake_outlined),
+    ('Other', Icons.more_horiz_rounded),
   ];
 
   static const categories = [
@@ -148,6 +151,8 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   void dispose() {
     ProfileService.usernameNotifier.removeListener(_usernameChanged);
     questionController.dispose();
+    otherTopicController.dispose();
+    otherSupportController.dispose();
     super.dispose();
   }
 
@@ -178,6 +183,13 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     if (!categories.contains(category)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please choose a topic before previewing.')),
+      );
+      return;
+    }
+    if ((category == 'Other' && otherTopicController.text.trim().isEmpty) ||
+        (supportIntent == 'Other' && otherSupportController.text.trim().isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please describe your Other choice before previewing.')),
       );
       return;
     }
@@ -217,11 +229,11 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         builder: (_) => PostPreviewScreen(
           post: VillagePostDraft(
             question: question,
-            category: category,
+            category: category == 'Other' ? otherTopicController.text.trim() : category,
             audience: 'The Village',
             anonymous: anonymous,
             needsSupport: needsSupport,
-            supportIntent: supportIntent,
+            supportIntent: supportIntent == 'Other' ? otherSupportController.text.trim() : supportIntent,
             username: currentUsername,
             welcomesPrayer: false,
             communityId: widget.initialCommunityId,
@@ -604,7 +616,9 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   }
 
   Widget _topicChoices() {
-    return DropdownButtonFormField<String>(
+    return Column(
+      children: [
+        DropdownButtonFormField<String>(
       // Rebuild when a saved draft changes the selected topic.
       key: ValueKey(category),
       initialValue: categories.contains(category) ? category : null,
@@ -636,51 +650,65 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       onChanged: (value) {
         if (value != null) setState(() => category = value);
       },
+        ),
+        if (category == 'Other') ...[
+          const SizedBox(height: 10),
+          _otherField(otherTopicController, 'What’s the topic?'),
+        ],
+      ],
+    );
+  }
+
+  Widget _otherField(TextEditingController controller, String label) {
+    return TextField(
+      controller: controller,
+      maxLength: 100,
+      minLines: 1,
+      maxLines: 3,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: cream,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: line),
+        ),
+      ),
     );
   }
 
   Widget _supportChoices() {
     return Column(
       children: [
-        for (var row = 0; row < 2; row++) ...[
-          if (row > 0) const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (var column = 0; column < 2; column++) ...[
-                if (column > 0) const SizedBox(width: 8),
-                Expanded(child: _supportChoice(row * 2 + column)),
-              ],
-            ],
+        DropdownButtonFormField<String>(
+          key: ValueKey(supportIntent),
+          initialValue: supportIntents.any((item) => item.$1 == supportIntent)
+              ? supportIntent : null,
+          isExpanded: true,
+          menuMaxHeight: 320,
+          dropdownColor: cream,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: cream,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: line),
+            ),
           ),
+          items: [
+            for (final item in supportIntents)
+              DropdownMenuItem(value: item.$1, child: Text(item.$1)),
+          ],
+          onChanged: (value) {
+            if (value != null) setState(() => supportIntent = value);
+          },
+        ),
+        if (supportIntent == 'Other') ...[
+          const SizedBox(height: 10),
+          _otherField(otherSupportController, 'What kind of support do you need?'),
         ],
       ],
-    );
-  }
-
-  Widget _supportChoice(int index) {
-    final intent = supportIntents[index];
-    final selected = supportIntent == intent.$1;
-    return Semantics(
-      selected: selected,
-      child: OutlinedButton(
-        onPressed: () => setState(() => supportIntent = intent.$1),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: selected ? sage : ink,
-          backgroundColor: selected ? const Color(0xFFE8EBDD) : cream,
-          minimumSize: const Size(0, 56),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          side: BorderSide(color: selected ? sage : line, width: selected ? 1.5 : 1),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        child: Row(
-          children: [
-            Icon(selected ? Icons.check_rounded : intent.$2, size: 18),
-            const SizedBox(width: 6),
-            Expanded(child: Text(intent.$1, style: const TextStyle(fontSize: 12.5))),
-          ],
-        ),
-      ),
     );
   }
 
@@ -735,6 +763,8 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       jsonEncode({
         'question': questionController.text,
         'category': category,
+        'otherTopic': otherTopicController.text,
+        'otherSupport': otherSupportController.text,
         'anonymous': anonymous,
         'needsSupport': needsSupport,
         'supportIntent': supportIntent,
@@ -759,6 +789,8 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       final draft = jsonDecode(raw) as Map<String, dynamic>;
       setState(() {
         questionController.text = draft['question'] as String? ?? '';
+        otherTopicController.text = draft['otherTopic'] as String? ?? '';
+        otherSupportController.text = draft['otherSupport'] as String? ?? '';
         category = _normalizedCategory(draft['category'] as String?) ?? category;
         anonymous = draft['anonymous'] as bool? ?? anonymous;
         needsSupport = draft['needsSupport'] as bool? ?? needsSupport;

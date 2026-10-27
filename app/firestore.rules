@@ -368,13 +368,9 @@ service cloud.firestore {
         ) &&
         request.resource.data.createdAt is timestamp &&
         request.resource.data.needsSupport is bool &&
-        request.resource.data.supportIntent in [
-          'Advice',
-          'Just listen',
-          'Encouragement',
-          'Prayer',
-          'Practical help'
-        ] &&
+        request.resource.data.supportIntent is string &&
+        request.resource.data.supportIntent.size() >= 1 &&
+        request.resource.data.supportIntent.size() <= 100 &&
         request.resource.data.followUpStatus == 'Open' &&
         request.resource.data.supportCount == 0 &&
         request.resource.data.replies is list &&
@@ -410,13 +406,9 @@ service cloud.firestore {
             request.resource.data.question.size() >= 10 &&
             request.resource.data.question.size() <= 1500 &&
             request.resource.data.category is string &&
-            request.resource.data.supportIntent in [
-              'Advice',
-              'Just listen',
-              'Encouragement',
-              'Prayer',
-              'Practical help'
-            ]
+            request.resource.data.supportIntent is string &&
+        request.resource.data.supportIntent.size() >= 1 &&
+        request.resource.data.supportIntent.size() <= 100
           )
         );
 
