@@ -50,7 +50,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   final preferences = SharedPreferencesAsync();
   bool anonymous = false;
   bool needsSupport = false;
-  String category = 'Relationships & Dating';
+  String category = '';
   String supportIntent = 'Advice';
   String currentUsername = 'VillageMember';
   String anonymousName = 'Loading…';
@@ -172,6 +172,12 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     if (question.length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please write a little more before previewing.')),
+      );
+      return;
+    }
+    if (!categories.contains(category)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please choose a topic before previewing.')),
       );
       return;
     }
@@ -374,24 +380,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                 _section(
                   title: 'What would help most right now?',
                   subtitle: 'Choose the kind of response that would feel helpful.',
-                  child: Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
-                    children: [
-                      for (final intent in supportIntents)
-                        ChoiceChip(
-                          avatar: Icon(intent.$2, size: 17),
-                          label: Text(intent.$1),
-                          selected: supportIntent == intent.$1,
-                          selectedColor: const Color(0xFFE8EBDD),
-                          side: BorderSide(
-                            color: supportIntent == intent.$1 ? sage : line,
-                          ),
-                          onSelected: (_) =>
-                              setState(() => supportIntent = intent.$1),
-                        ),
-                    ],
-                  ),
+                  child: _supportChoices(),
                 ),
                 const SizedBox(height: 14),
                 Container(
@@ -595,7 +584,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
 
   Widget _section({required String title, required String subtitle, required Widget child}) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: .38),
         border: Border.all(color: line),
@@ -607,7 +596,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
           Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: ink)),
           const SizedBox(height: 3),
           Text(subtitle, style: const TextStyle(fontSize: 12.5)),
-          const SizedBox(height: 13),
+          const SizedBox(height: 10),
           child,
         ],
       ),
@@ -615,19 +604,83 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   }
 
   Widget _topicChoices() {
-    return Wrap(
-      spacing: 7,
-      runSpacing: 7,
-      children: [
+    return DropdownButtonFormField<String>(
+      // Rebuild when a saved draft changes the selected topic.
+      key: ValueKey(category),
+      initialValue: categories.contains(category) ? category : null,
+      isExpanded: true,
+      menuMaxHeight: 320,
+      dropdownColor: cream,
+      hint: const Text('Choose a topic'),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: cream,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: line),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: line),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: sage, width: 1.5),
+        ),
+      ),
+      items: [
         for (final item in categories)
-          ChoiceChip(
-            label: Text(item),
-            selected: category == item,
-            selectedColor: const Color(0xFFE8EBDD),
-            side: BorderSide(color: category == item ? sage : line),
-            onSelected: (_) => setState(() => category = item),
-          ),
+          DropdownMenuItem(value: item, child: Text(item)),
       ],
+      onChanged: (value) {
+        if (value != null) setState(() => category = value);
+      },
+    );
+  }
+
+  Widget _supportChoices() {
+    return Column(
+      children: [
+        for (var row = 0; row < 2; row++) ...[
+          if (row > 0) const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var column = 0; column < 2; column++) ...[
+                if (column > 0) const SizedBox(width: 8),
+                Expanded(child: _supportChoice(row * 2 + column)),
+              ],
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _supportChoice(int index) {
+    final intent = supportIntents[index];
+    final selected = supportIntent == intent.$1;
+    return Semantics(
+      selected: selected,
+      child: OutlinedButton(
+        onPressed: () => setState(() => supportIntent = intent.$1),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: selected ? sage : ink,
+          backgroundColor: selected ? const Color(0xFFE8EBDD) : cream,
+          minimumSize: const Size(0, 56),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          side: BorderSide(color: selected ? sage : line, width: selected ? 1.5 : 1),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: Row(
+          children: [
+            Icon(selected ? Icons.check_rounded : intent.$2, size: 18),
+            const SizedBox(width: 6),
+            Expanded(child: Text(intent.$1, style: const TextStyle(fontSize: 12.5))),
+          ],
+        ),
+      ),
     );
   }
 
@@ -706,7 +759,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       final draft = jsonDecode(raw) as Map<String, dynamic>;
       setState(() {
         questionController.text = draft['question'] as String? ?? '';
-        category = draft['category'] as String? ?? category;
+        category = _normalizedCategory(draft['category'] as String?) ?? category;
         anonymous = draft['anonymous'] as bool? ?? anonymous;
         needsSupport = draft['needsSupport'] as bool? ?? needsSupport;
         supportIntent = draft['supportIntent'] as String? ?? supportIntent;
