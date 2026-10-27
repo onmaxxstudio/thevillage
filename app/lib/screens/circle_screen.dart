@@ -14,6 +14,7 @@ import '../navigation/village_navigation_scope.dart';
 import '../widgets/village_avatar.dart';
 import 'avatar_builder_screen.dart';
 import 'plan_my_week_screen.dart';
+import 'private_messages_screen.dart';
 
 class CircleScreen extends StatefulWidget {
   const CircleScreen({super.key});
@@ -52,6 +53,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       'Check on me',
       'Please reach back out when you can.',
     ),
+    (Icons.handyman_outlined, 'Practical help', 'I could use help with something.'),
+    (Icons.people_outline_rounded, 'Company', 'I would like some company.'),
   ];
 
   static const statuses = [
@@ -82,6 +85,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   String supportStyle = 'Listen first';
   String availability = 'Here to listen';
   bool muteRequests = false;
+  String writtenStatus = '';
+  bool statusJustToday = true;
   final Set<int> completedReminders = {};
   final Set<int> dismissedReminders = {};
   final Set<int> dismissedActivity = {};
@@ -161,6 +166,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         supportStyle = profile.data()?['supportStyle'] as String? ?? supportStyle;
         availability = profile.data()?['availability'] as String? ?? availability;
         muteRequests = profile.data()?['muteRequests'] as bool? ?? false;
+        writtenStatus = profile.data()?['statusText'] as String? ?? '';
+        final expiry = profile.data()?['statusExpiresAt'] as Timestamp?;
+        statusJustToday = expiry != null;
+        if (expiry != null && expiry.toDate().isBefore(DateTime.now())) writtenStatus = '';
       });
     } on Object {
       // Keep defaults until the member's profile can load.
@@ -1428,52 +1437,212 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _circleOrbit(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
+        _writtenStatusCard(),
+        const SizedBox(height: 12),
         _supportRequestPanel(),
-        const SizedBox(height: 10),
-        _featureShortcuts(),
-        const SizedBox(height: 10),
-        _circleCareTools(),
         const SizedBox(height: 16),
         Row(children: [
-          Expanded(child: Text('From your circle',
+          Expanded(child: Text('From your people',
             style: GoogleFonts.playfairDisplay(color: ink, fontSize: 25,
               fontWeight: FontWeight.w700))),
-          TextButton(onPressed: _showCircleUpdates, child: const Text('View all')),
+          const Icon(Icons.circle, color: Color(0xFF4AA84C), size: 9),
+          const SizedBox(width: 6),
+          const Text('Live updates', style: TextStyle(color: sage, fontSize: 12)),
         ]),
         const SizedBox(height: 8),
-        _sharedActivityPreview(),
-        const SizedBox(height: 7),
-        OutlinedButton.icon(
-          onPressed: _shareSomethingGood,
-          icon: const Icon(Icons.celebration_outlined),
-          label: const Text('Share a small win'),
-        ),
-        const SizedBox(height: 20),
-        _sectionTitle('How are you today?', 'Choose what you want your people to know.'),
+        _peopleStatusFeed(),
+        const SizedBox(height: 12),
+        _messagesCard(),
         const SizedBox(height: 10),
-        _statusChoices(),
-        const SizedBox(height: 18),
-        _moreCircleTools(),
-        const SizedBox(height: 18),
-        const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(Icons.lock_outline_rounded, color: sage, size: 16),
-          SizedBox(width: 8),
-          Flexible(child: Text('Share only what you choose.',
-            style: TextStyle(color: sage, fontSize: 12))),
-        ]),
+        _actionRow(Icons.auto_awesome_rounded, 'Share a small win',
+          'Celebrate progress, big or small.', _shareSomethingGood, blush),
+        const SizedBox(height: 10),
+        _actionRow(Icons.calendar_today_outlined, 'Shared plans',
+          'Make and share your weekly plan.', () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const PlanMyWeekScreen())), paleSage),
+        const SizedBox(height: 10),
+        _circleCareTools(),
       ],
     );
   }
 
   Widget _circleCareTools() => Wrap(spacing: 10, runSpacing: 10, children: [
     OutlinedButton.icon(onPressed: _editSupportProfile,
-      icon: const Icon(Icons.tune_rounded), label: const Text('How to support me')),
+      icon: const Icon(Icons.tune_rounded), label: const Text('Circle settings')),
     OutlinedButton.icon(onPressed: _openGroupConversation,
       icon: const Icon(Icons.forum_outlined), label: const Text('Circle conversation')),
     OutlinedButton.icon(onPressed: _shareMilestone,
       icon: const Icon(Icons.event_available_outlined), label: const Text('Share a moment')),
   ]);
+
+  Widget _writtenStatusCard() => Container(
+    width: double.infinity, padding: const EdgeInsets.all(15),
+    decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(22)),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        Expanded(child: Text('Your status', style: GoogleFonts.playfairDisplay(
+          color: ink, fontSize: 21, fontWeight: FontWeight.w700))),
+        const Icon(Icons.lock_outline_rounded, size: 15, color: sage),
+        const SizedBox(width: 4),
+        const Text('Only my circle', style: TextStyle(fontSize: 11, color: sage)),
+      ]),
+      const SizedBox(height: 8),
+      InkWell(onTap: _editWrittenStatus, child: Container(
+        width: double.infinity, padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(16)),
+        child: Row(children: [
+          Expanded(child: Text(writtenStatus.isEmpty ? 'Share how you are feeling…' : writtenStatus,
+            style: const TextStyle(fontSize: 13, height: 1.35))),
+          const SizedBox(width: 8),
+          const Icon(Icons.edit_outlined, color: sage, size: 18),
+        ]),
+      )),
+      if (writtenStatus.isNotEmpty) Padding(
+        padding: const EdgeInsets.only(top: 7),
+        child: Text(statusJustToday ? 'Visible for 24 hours' : 'Visible until you change it',
+          style: const TextStyle(fontSize: 11, color: sage))),
+    ]),
+  );
+
+  Future<void> _editWrittenStatus() async {
+    final controller = TextEditingController(text: writtenStatus);
+    var today = statusJustToday;
+    final result = await showModalBottomSheet<(String, bool)>(context: context,
+      isScrollControlled: true, backgroundColor: cream, showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(builder: (context, update) =>
+        Padding(padding: EdgeInsets.fromLTRB(20, 8, 20,
+          MediaQuery.viewInsetsOf(sheetContext).bottom + 24),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('How are you feeling?', style: GoogleFonts.playfairDisplay(fontSize: 26)),
+              const SizedBox(height: 12),
+              TextField(controller: controller, maxLength: 280, minLines: 2, maxLines: 4,
+                decoration: const InputDecoration(hintText: 'Write a status in your own words…',
+                  border: OutlineInputBorder())),
+              const Text('Only people in your Circle can see this.'),
+              SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Just today'),
+                subtitle: const Text('Otherwise it stays until you change it.'),
+                value: today, onChanged: (value) => update(() => today = value)),
+              SizedBox(width: double.infinity, child: FilledButton(
+                onPressed: () => Navigator.pop(sheetContext, (controller.text.trim(), today)),
+                child: const Text('Save status')),
+            ]))),
+    );
+    controller.dispose();
+    if (result == null || !mounted) return;
+    try {
+      await circleService.saveWrittenStatus(result.$1, result.$2);
+      if (mounted) setState(() { writtenStatus = result.$1; statusJustToday = result.$2; });
+    } on Object {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save your status. Try again.')));
+    }
+  }
+
+  Widget _peopleStatusFeed() {
+    if (_visibleCircleMembers.isEmpty) return _actionRow(
+      Icons.person_add_alt_1_rounded, 'Your circle is waiting',
+      'Add your first person to see their updates.', _findPeople, paleSage);
+    return Column(children: [
+      for (final member in _visibleCircleMembers.take(5))
+        if (member.uid != null && !_isTestMember(member))
+          StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+            stream: circleService.supportProfile(member.uid!),
+            builder: (context, snapshot) {
+              final data = snapshot.data?.data();
+              final expiry = data?['statusExpiresAt'] as Timestamp?;
+              final valid = expiry == null || expiry.toDate().isAfter(DateTime.now());
+              final text = valid ? (data?['statusText'] as String? ?? '') : '';
+              if (text.isEmpty) return const SizedBox.shrink();
+              return Card(color: Colors.white.withValues(alpha: .75), elevation: 0,
+                child: Padding(padding: const EdgeInsets.all(10), child: Row(children: [
+                  VillageAvatar(uid: member.uid, radius: 21),
+                  const SizedBox(width: 10),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(member.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(text, maxLines: 3, overflow: TextOverflow.ellipsis),
+                  ])),
+                  IconButton(tooltip: 'Send support', icon: const Icon(Icons.favorite_border_rounded,
+                    color: sage), onPressed: () => _respondToStatus(member)),
+                ])));
+            }),
+      _sharedActivityPreview(),
+    ]);
+  }
+
+  Future<void> _respondToStatus(_CircleMember member) async {
+    final action = await showModalBottomSheet<String>(context: context,
+      backgroundColor: cream, showDragHandle: true,
+      builder: (sheetContext) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Support ${member.name}', style: GoogleFonts.playfairDisplay(fontSize: 24)),
+          ListTile(leading: const Icon(Icons.favorite_outline), title: const Text('Send a kind word'),
+            onTap: () => Navigator.pop(sheetContext, 'kind')),
+          ListTile(leading: const Icon(Icons.chat_bubble_outline), title: const Text('Start a private chat'),
+            onTap: () => Navigator.pop(sheetContext, 'chat')),
+          ListTile(leading: const Icon(Icons.schedule), title: const Text('Check in later'),
+            onTap: () => Navigator.pop(sheetContext, 'later')),
+        ])));
+    if (!mounted || action == null) return;
+    if (action == 'later') {
+      if (member.uid != null) {
+        try {
+          await circleService.sendMessage(recipient: CirclePerson(uid: member.uid!,
+            username: member.name.replaceFirst('@', '')),
+            text: 'I saw your update. I’ll check in with you later today.');
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Your check-in note was sent.')));
+        } on Object {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Could not send your note.')));
+        }
+      }
+      return;
+    }
+    if (action == 'chat') { _messageMember(member); return; }
+    final text = await _writeCircleText('Send a kind word', 'What would you like to say?');
+    if (text == null || member.uid == null || !mounted) return;
+    try {
+      await circleService.sendMessage(recipient: CirclePerson(uid: member.uid!,
+        username: member.name.replaceFirst('@', '')), text: text);
+    } on Object {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not send your message.')));
+    }
+  }
+
+  Widget _actionRow(IconData icon, String title, String subtitle,
+      VoidCallback action, Color background) => Material(
+    color: background, borderRadius: BorderRadius.circular(19),
+    child: InkWell(onTap: action, borderRadius: BorderRadius.circular(19),
+      child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [
+        Icon(icon, color: sage), const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: GoogleFonts.playfairDisplay(fontSize: 18,
+            fontWeight: FontWeight.w700)),
+          Text(subtitle, style: const TextStyle(fontSize: 11.5)),
+        ])),
+        const Icon(Icons.chevron_right_rounded, color: sage),
+      ]))));
+
+  Widget _messagesCard() => Container(
+    padding: const EdgeInsets.all(13),
+    decoration: BoxDecoration(color: blush, borderRadius: BorderRadius.circular(20)),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('Messages', style: GoogleFonts.playfairDisplay(fontSize: 21,
+        fontWeight: FontWeight.w700)),
+      const SizedBox(height: 8),
+      Row(children: [
+        Expanded(child: _actionRow(Icons.groups_outlined, 'Circle chats',
+          'Your people', _showCircleChats, cream)),
+        const SizedBox(width: 8),
+        Expanded(child: _actionRow(Icons.chat_bubble_outline, 'Private history',
+          'Village conversations', () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const PrivateMessagesScreen())), cream)),
+      ]),
+    ]),
+  );
 
   Widget _sharedActivityPreview() => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
     stream: circleService.activity(),
@@ -1638,10 +1807,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               SizedBox(
                 width: (constraints.maxWidth - (columns - 1) * 10) / columns,
                 child: Material(
-                  color: cream, borderRadius: BorderRadius.circular(16),
+                  color: selectedNeed == choice.$2 ? blush : cream,
+                  borderRadius: BorderRadius.circular(16),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
-                    onTap: () => _requestSupport(choice.$2),
+                    onTap: () => setState(() => selectedNeed = choice.$2),
                     child: Container(
                       constraints: const BoxConstraints(minHeight: 48),
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
@@ -1663,12 +1833,12 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           ]);
         }),
         const SizedBox(height: 10),
-        const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(Icons.people_outline_rounded, color: sage, size: 18),
-          SizedBox(width: 7),
-          Flexible(child: Text('You choose who receives your request.',
-            style: TextStyle(color: sage, fontSize: 11.5))),
-        ]),
+        SizedBox(width: double.infinity, child: FilledButton.icon(
+          onPressed: selectedNeed == null ? null : () => _requestSupport(selectedNeed!),
+          style: FilledButton.styleFrom(backgroundColor: sage,
+            padding: const EdgeInsets.symmetric(vertical: 13)),
+          icon: const Icon(Icons.people_outline_rounded),
+          label: const Text('Choose people'))),
       ]),
     );
   }

@@ -101,7 +101,18 @@ class CircleService {
       required String availability, required bool muteRequests}) => _firestore
       .collection('circles').doc(_user.uid).collection('settings')
       .doc('profile').set({'supportStyle': style,
-        'availability': availability, 'muteRequests': muteRequests});
+        'availability': availability, 'muteRequests': muteRequests}, SetOptions(merge: true));
+
+  Future<void> saveWrittenStatus(String text, bool justToday) async {
+    await _firestore.collection('circles').doc(_user.uid).collection('settings')
+        .doc('profile').set({
+      'statusText': text,
+      'statusExpiresAt': justToday
+          ? Timestamp.fromDate(DateTime.now().add(const Duration(days: 1)))
+          : null,
+      'statusUpdatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
 
   Future<void> shareActivity({required String kind, required String text,
       required List<String> recipientUids, String groupId = ''}) async {
