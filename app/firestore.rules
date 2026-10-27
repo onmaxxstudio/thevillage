@@ -457,10 +457,23 @@ service cloud.firestore {
          exists(/databases/$(database)/documents/circles/$(ownerUid)/members/$(request.auth.uid)));
       allow list: if false;
       allow create, update: if settingId == 'profile' && isSelf(ownerUid) &&
-        request.resource.data.keys().hasOnly(['supportStyle', 'availability', 'muteRequests']) &&
-        request.resource.data.supportStyle in ['Listen first', 'Advice welcome', 'Practical help', 'Give me space'] &&
-        request.resource.data.availability in ['Here to listen', 'Low energy', 'Away today'] &&
-        request.resource.data.muteRequests is bool;
+        request.resource.data.keys().hasOnly(['supportStyle', 'availability', 'muteRequests',
+          'statusText', 'statusExpiresAt', 'statusUpdatedAt']) &&
+        (!request.resource.data.keys().hasAny(['supportStyle']) ||
+          request.resource.data.supportStyle in ['Listen first', 'Advice welcome', 'Practical help', 'Give me space']) &&
+        (!request.resource.data.keys().hasAny(['availability']) ||
+          request.resource.data.availability in ['Here to listen', 'Low energy', 'Away today']) &&
+        (!request.resource.data.keys().hasAny(['muteRequests']) ||
+          request.resource.data.muteRequests is bool) &&
+        (!request.resource.data.keys().hasAny(['statusText']) ||
+          (request.resource.data.statusText is string && request.resource.data.statusText.size() <= 280)) &&
+        (!request.resource.data.keys().hasAny(['statusExpiresAt']) ||
+          request.resource.data.statusExpiresAt == null ||
+          request.resource.data.statusExpiresAt is timestamp) &&
+        (!request.resource.data.keys().hasAny(['statusUpdatedAt']) ||
+          request.method == 'create' && request.resource.data.statusUpdatedAt == request.time ||
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['statusUpdatedAt']) ||
+          request.resource.data.statusUpdatedAt == request.time);
       allow delete: if isSelf(ownerUid);
     }
 
