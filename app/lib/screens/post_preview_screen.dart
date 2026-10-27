@@ -171,6 +171,7 @@ class PostPreviewScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 FilledButton.icon(
                   onPressed: () async {
+                    try {
                     await VillagePostService().publish(
                       question: post.question,
                       category: post.category,
@@ -182,6 +183,16 @@ class PostPreviewScreen extends StatelessWidget {
                       communityId: post.communityId,
                       communityName: post.communityName,
                     );
+                    } catch (error) {
+                      if (!context.mounted) return;
+                      final message = error is PostValidationException
+                          ? error.message
+                          : 'Your post could not be shared. Please try again.';
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(message)),
+                      );
+                      return;
+                    }
                     final usedSuggestionId = suggestionId;
                     final suggestionWasUsed = usedSuggestionId != null &&
                         suggestedQuestionText?.trim().toLowerCase() ==
