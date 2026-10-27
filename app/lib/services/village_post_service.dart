@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'profile_service.dart';
+import 'anonymous_identity_service.dart';
 
 class VillageReply {
   const VillageReply({
@@ -362,7 +363,7 @@ class VillagePostService {
     final username =
         await ProfileService.currentUsername() ?? 'VillageMember';
     final resolvedAuthor =
-        anonymous ? 'Anonymous Neighbor' : '@$username';
+        anonymous ? await AnonymousIdentityService.currentName() : '@$username';
     if (_cloudReady && audience != 'My Circle') {
       try {
         final user = FirebaseAuth.instance.currentUser!;
