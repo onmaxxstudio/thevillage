@@ -53,7 +53,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   String category = 'Relationships & Dating';
   String supportIntent = 'Advice';
   String currentUsername = 'VillageMember';
-  String anonymousName = 'Your permanent anonymous name';
+  String anonymousName = 'Loading…';
 
   static const _draftKey = 'ask_the_village_current_draft';
   String get draftKey {
@@ -356,7 +356,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                             selected: anonymous,
                             icon: Icons.visibility_off_outlined,
                             title: 'Post anonymously',
-                            subtitle: '$anonymousName\nYour profile stays private.',
+                            subtitle: anonymousName,
                             onTap: () => setState(() => anonymous = true),
                           ),
                         ),
@@ -636,7 +636,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(17),
       child: Container(
-        height: 128,
+        constraints: const BoxConstraints(minHeight: 128),
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFF1F3E9) : cream,
@@ -651,8 +651,9 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                 children: [
                   CircleAvatar(backgroundColor: const Color(0xFFE5E7D9), child: Icon(icon, color: sage)),
                   const SizedBox(height: 9),
-                  Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
+                  Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 3),
+                  Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
                 ],
               ),
             ),

@@ -7,15 +7,19 @@ class AnonymousActivityScreen extends StatelessWidget {
   final String name;
 
   Future<List<Map<String, dynamic>>> _load() async {
-    final snapshot = await FirebaseFirestore.instance.collection('village_posts').get();
+    final db = FirebaseFirestore.instance;
+    final claim = await db.collection('anonymous_names').doc(name).get();
+    final legacy = claim.data()?['legacyName'];
+    final names = {name, if (legacy is String && legacy.isNotEmpty) legacy};
+    final snapshot = await db.collection('village_posts').get();
     final items = <Map<String, dynamic>>[];
     for (final doc in snapshot.docs) {
       final post = doc.data();
-      if (post['author'] == name) {
+      if (names.contains(post['author'])) {
         items.add({'kind': 'Post', 'text': post['question'], 'createdAt': post['createdAt']});
       }
       for (final reply in (post['replies'] as List? ?? const [])) {
-        if (reply is Map && reply['author'] == name) {
+        if (reply is Map && names.contains(reply['author'])) {
           items.add({'kind': 'Comment', 'text': reply['text'], 'createdAt': reply['createdAt']});
         }
       }

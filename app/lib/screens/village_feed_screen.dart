@@ -77,6 +77,9 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   @override
   void initState() {
     super.initState();
+    AnonymousIdentityService.legacyLabels().then((labels) {
+      if (mounted) setState(() => anonymousLabels = labels);
+    }).catchError((Object _) {});
     filter = filters.contains(widget.initialFilter) ? widget.initialFilter : 'All';
     searchController.text = widget.initialSearch;
     searchController.addListener(_refresh);
@@ -87,6 +90,8 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     _load();
   }
 
+  Map<String, String> anonymousLabels = {};
+
   String get currentHandle => '@$currentUsername';
 
   void _usernameChanged() {
@@ -96,14 +101,14 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   }
 
   String _postAuthor(VillagePost post) {
-    if ((post.author == 'Anonymous Neighbor' || AnonymousIdentityService.isAlias(post.author))) return post.author;
+    if ((post.author == 'Anonymous Neighbor' || AnonymousIdentityService.isAlias(post.author))) return anonymousLabels[post.author] ?? post.author;
     if (post.isMine) return currentHandle;
     final latestUsername = usernamesByUid[post.authorUid];
     return latestUsername == null ? post.author : '@$latestUsername';
   }
 
   String _replyAuthor(VillageReply reply) {
-    if ((reply.author == 'Anonymous Neighbor' || AnonymousIdentityService.isAlias(reply.author))) return reply.author;
+    if ((reply.author == 'Anonymous Neighbor' || AnonymousIdentityService.isAlias(reply.author))) return anonymousLabels[reply.author] ?? reply.author;
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     final isMyReply = reply.authorUid == currentUid;
     if (isMyReply) return currentHandle;
@@ -286,7 +291,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
   }
 
   void _openAnonymousActivity(String name) {
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => AnonymousActivityScreen(name: name)));
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => AnonymousActivityScreen(name: anonymousLabels[name] ?? name)));
   }
 
   Future<void> _openReplies(VillagePost post) async {
