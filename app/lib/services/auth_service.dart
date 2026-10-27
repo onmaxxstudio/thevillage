@@ -65,6 +65,7 @@ class AuthService {
       // the authentication result in the same app session.
       final credential = await _auth.signInWithPopup(provider);
       await ProfileService().ensureCurrentUserProfile();
+      await _ensureAnonymousName();
       return;
     }
 
