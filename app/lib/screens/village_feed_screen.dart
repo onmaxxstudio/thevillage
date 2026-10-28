@@ -265,26 +265,31 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
     return service.save(posts);
   }
 
+  final Set<String> _supportPending = {};
+
   Future<void> _toggleSupport(VillagePost post) async {
-    final index = posts.indexWhere((item) => item.id == post.id);
-    if (index < 0) return;
-    final supported = !post.supportedByMe;
-    setState(() {
-      posts[index] = post.copyWith(
-        supportedByMe: supported,
-        supportCount: post.supportCount + (supported ? 1 : -1),
-      );
-    });
-    await _persistMine();
-    if (supported) {
-      try {
-        await service.notifyPostOwner(
-          post: posts[index],
-          type: 'post_support',
-        );
-      } on Object {
-        // Supporting the post still succeeds if a notification cannot send.
+    if (post.supportedByMe || _supportPending.contains(post.id)) return;
+    setState(() => _supportPending.add(post.id));
+    try {
+      final updated = await service.support(post);
+      if (!mounted) return;
+      final index = posts.indexWhere((item) => item.id == post.id);
+      if (index >= 0) {
+        setState(() => posts[index] = posts[index].copyWith(
+          supportCount: updated.supportCount, supportedByMe: true));
       }
+      try {
+        await service.notifyPostOwner(post: updated, type: 'post_support');
+      } on Object {
+        // The support is already saved even if a notification cannot send.
+      }
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(error is PostValidationException ? error.message
+            : 'Could not save your support. Please try again.'),
+      ));
+    } finally {
+      if (mounted) setState(() => _supportPending.remove(post.id));
     }
   }
 
@@ -1507,7 +1512,8 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
           Row(
             children: [
               TextButton.icon(
-                onPressed: () => _toggleSupport(post),
+                onPressed: post.supportedByMe || _supportPending.contains(post.id)
+                    ? null : () => _toggleSupport(post),
                 icon: Icon(
                   post.supportedByMe
                       ? Icons.favorite_rounded
