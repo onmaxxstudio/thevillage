@@ -38,6 +38,11 @@ const {doc, setDoc, getDoc, updateDoc, deleteDoc, runTransaction, serverTimestam
     await assertFails(updateDoc(doc(alice, 'village_posts/post'), {supportCount: 99, replies: []}));
     await assertSucceeds(updateDoc(doc(alice, 'village_posts/post'), {replies: [{text: 'Thank you'}]}));
     console.log('Support rules: duplicate/concurrent support, distinct users, count tampering, receipt privacy, immutable receipts, and replies passed.');
+  } catch (error) {
+    const coverage = await (await fetch('http://127.0.0.1:8080/emulator/v1/projects/demo-village:ruleCoverage')).json();
+    const text = JSON.stringify(coverage);
+    console.error('RULE COVERAGE', text.slice(0, 180000));
+    throw error;
   } finally {
     await env.cleanup();
   }
