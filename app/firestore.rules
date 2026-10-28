@@ -311,6 +311,17 @@ service cloud.firestore {
          request.resource.data.legacyName.matches('^Neighbor-[a-f0-9]{32}$') && getAfter(/databases/$(database)/documents/anonymous_identities/$(request.auth.uid)).data.name == request.resource.data.legacyName);
     }
 
+    // A profile has one immutable support receipt per post; only its owner can read it.
+    match /users/{uid}/village_support/{postId} {
+      allow get, list: if isSelf(uid);
+      allow create: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly(['createdAt']) &&
+        request.resource.data.createdAt == request.time &&
+        getAfter(/databases/$(database)/documents/village_posts/$(postId)).data.supportCount ==
+          get(/databases/$(database)/documents/village_posts/$(postId)).data.supportCount + 1;
+      allow update, delete: if false;
+    }
+
     match /village_posts/{postId} {
       allow read: if signedIn();
 
@@ -383,11 +394,16 @@ service cloud.firestore {
         (
           (
             request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['supportCount', 'replies']) &&
-            request.resource.data.supportCount is int &&
-            request.resource.data.supportCount >= 0 &&
+              .hasOnly(['replies']) &&
             request.resource.data.replies is list &&
             request.resource.data.replies.size() <= 500
+          ) ||
+          (
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['supportCount']) &&
+            request.resource.data.supportCount == resource.data.supportCount + 1 &&
+            !exists(/databases/$(database)/documents/users/$(request.auth.uid)/village_support/$(postId)) &&
+            existsAfter(/databases/$(database)/documents/users/$(request.auth.uid)/village_support/$(postId))
           ) ||
           (
             ownsPost(postId) &&
