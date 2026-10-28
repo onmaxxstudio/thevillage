@@ -40,8 +40,19 @@ const {doc, setDoc, getDoc, updateDoc, deleteDoc, runTransaction, serverTimestam
     console.log('Support rules: duplicate/concurrent support, distinct users, count tampering, receipt privacy, immutable receipts, and replies passed.');
   } catch (error) {
     const coverage = await (await fetch('http://127.0.0.1:8080/emulator/v1/projects/demo-village:ruleCoverage')).json();
-    const text = JSON.stringify(coverage);
-    console.error('RULE COVERAGE', text.slice(0, 180000));
+    const report = [];
+    const walk = x => {
+      if (!x || typeof x !== 'object') return;
+      if (x.sourcePosition && x.sourcePosition.line >= 315 && x.sourcePosition.line <= 407) {
+        const own = {...x}; delete own.children;
+        report.push(own);
+      }
+      for (const [k,v] of Object.entries(x)) if (k !== 'files') {
+        if (Array.isArray(v)) v.forEach(walk); else if (typeof v === 'object') walk(v);
+      }
+    };
+    walk(coverage);
+    console.error('RULE COVERAGE', JSON.stringify(report));
     throw error;
   } finally {
     await env.cleanup();
