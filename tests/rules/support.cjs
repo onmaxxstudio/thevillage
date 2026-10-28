@@ -1,6 +1,6 @@
 const {readFileSync} = require('node:fs');
 const {initializeTestEnvironment, assertSucceeds, assertFails} = require('@firebase/rules-unit-testing');
-const {doc, setDoc, getDoc, updateDoc, deleteDoc, runTransaction, serverTimestamp} = require('firebase/firestore');
+const {doc, setDoc, getDoc, updateDoc, deleteDoc, runTransaction, serverTimestamp, getDocFromServer} = require('firebase/firestore');
 
 (async () => {
   const env = await initializeTestEnvironment({
@@ -24,6 +24,10 @@ const {doc, setDoc, getDoc, updateDoc, deleteDoc, runTransaction, serverTimestam
       if (v.exists()) return;
       tx.set(vote, {createdAt: serverTimestamp()});
       tx.update(post, {supportCount: p.data().supportCount + 1});
+    }).catch(async error => {
+      const uid = db === alice ? 'alice' : 'bob';
+      const receipt = await getDocFromServer(doc(db, 'users/' + uid + '/village_support/post'));
+      if (!receipt.exists()) throw error;
     });
     await assertFails(updateDoc(doc(alice, 'village_posts/post'), {supportCount: 1}));
     await assertFails(setDoc(doc(alice, 'users/alice/village_support/post'), {createdAt: serverTimestamp()}));
@@ -38,22 +42,6 @@ const {doc, setDoc, getDoc, updateDoc, deleteDoc, runTransaction, serverTimestam
     await assertFails(updateDoc(doc(alice, 'village_posts/post'), {supportCount: 99, replies: []}));
     await assertSucceeds(updateDoc(doc(alice, 'village_posts/post'), {replies: [{text: 'Thank you'}]}));
     console.log('Support rules: duplicate/concurrent support, distinct users, count tampering, receipt privacy, immutable receipts, and replies passed.');
-  } catch (error) {
-    const coverage = await (await fetch('http://127.0.0.1:8080/emulator/v1/projects/demo-village:ruleCoverage')).json();
-    const report = [];
-    const walk = x => {
-      if (!x || typeof x !== 'object') return;
-      if (x.sourcePosition && x.sourcePosition.line >= 315 && x.sourcePosition.line <= 407) {
-        const own = {...x}; delete own.children;
-        report.push(own);
-      }
-      for (const [k,v] of Object.entries(x)) if (k !== 'files') {
-        if (Array.isArray(v)) v.forEach(walk); else if (typeof v === 'object') walk(v);
-      }
-    };
-    walk(coverage);
-    console.error('RULE COVERAGE', JSON.stringify(report));
-    throw error;
   } finally {
     await env.cleanup();
   }

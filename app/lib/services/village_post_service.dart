@@ -448,7 +448,9 @@ class VillagePostService {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     final vote = FirebaseFirestore.instance.collection('users').doc(uid)
         .collection('village_support').doc(post.id);
-    final count = await FirebaseFirestore.instance.runTransaction<int>((tx) async {
+    int count;
+    try {
+    count = await FirebaseFirestore.instance.runTransaction<int>((tx) async {
       final current = await tx.get(_posts.doc(post.id));
       final existingVote = await tx.get(vote);
       if (!current.exists) {
@@ -460,6 +462,16 @@ class VillagePostService {
       tx.update(_posts.doc(post.id), {'supportCount': currentCount + 1});
       return currentCount + 1;
     });
+    } on FirebaseException catch (error) {
+      if (error.code != 'permission-denied' && error.code != 'aborted') rethrow;
+      // Another device may have committed this profile's receipt first.
+      final receipt = await vote.get(const GetOptions(source: Source.server));
+      if (!receipt.exists) rethrow;
+      final current = await _posts.doc(post.id).get(
+        const GetOptions(source: Source.server));
+      if (!current.exists) rethrow;
+      count = (current.data()?['supportCount'] as num?)?.toInt() ?? 0;
+    }
     final updated = post.copyWith(supportCount: count, supportedByMe: true);
     final local = await _loadLocal();
     await _saveLocal([
