@@ -1383,18 +1383,18 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
 
   Widget _postCard(VillagePost post) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: .62),
         border: Border.all(color: line),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (post.communityName?.trim().isNotEmpty ?? false) ...[
             _communityOrigin(post),
-            const SizedBox(height: 12),
+            const SizedBox(height: 7),
           ],
           Row(
             children: [
@@ -1429,6 +1429,8 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                     _deletePost(post);
                   } else if (value == 'edit') {
                     _editPost(post);
+                  } else if (value == 'followUp') {
+                    _openFollowUp(post);
                   } else if (value == 'block') {
                     _blockAuthor(post);
                   } else {
@@ -1437,6 +1439,11 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                 },
                 itemBuilder: (_) => [
                   if (post.isMine) ...[
+                    PopupMenuItem(
+                      value: 'followUp',
+                      child: Text(post.followUpStatus == 'Open'
+                          ? 'Share a follow-up' : 'Update follow-up'),
+                    ),
                     const PopupMenuItem(
                       value: 'edit',
                       child: Row(
@@ -1473,7 +1480,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 11),
+          const SizedBox(height: 6),
           Wrap(
             spacing: 7,
             runSpacing: 6,
@@ -1484,19 +1491,19 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                 _label(post.followUpStatus, const Color(0xFFDDE9DA)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 7),
           Text(
             post.question,
             style: GoogleFonts.playfairDisplay(
               color: ink,
-              fontSize: 21,
+              fontSize: 19,
               height: 1.28,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 13),
+          const SizedBox(height: 9),
           const Divider(height: 1),
-          const SizedBox(height: 7),
+          const SizedBox(height: 2),
           Row(
             children: [
               TextButton.icon(
@@ -1510,14 +1517,22 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                 label: Text('Support ${post.supportCount}'),
               ),
               TextButton.icon(
-                onPressed: () => _openReplies(post),
+                onPressed: () {
+                  if (post.replies.isEmpty) {
+                    _openReplies(post);
+                  } else {
+                    _toggleReplies(post);
+                  }
+                },
                 icon: Icon(_canRevive(post)
                     ? Icons.eco_outlined
                     : Icons.chat_bubble_outline_rounded, size: 18),
-                label: Text(_canRevive(post)
-                    ? 'Revive This Conversation'
+                label: Text(expandedReplyPosts.contains(post.id)
+                    ? 'Hide replies'
+                    : _canRevive(post)
+                    ? 'Revive'
                     : post.replies.isEmpty
-                        ? 'Be first to reply'
+                        ? 'Reply'
                         : 'Reply (${post.replies.length})',
                   maxLines: 1, softWrap: false,
                   overflow: TextOverflow.ellipsis),
@@ -1535,52 +1550,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
               ),
             ],
           ),
-          if (post.isMine) ...[
-            const SizedBox(height: 5),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => _openFollowUp(post),
-                icon: const Icon(Icons.fact_check_outlined, size: 18),
-                label: Text(
-                  post.followUpStatus == 'Open'
-                      ? 'Share a follow-up'
-                      : 'Update follow-up',
-                ),
-              ),
-            ),
-          ],
           if (post.replies.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () => _toggleReplies(post),
-                style: TextButton.styleFrom(
-                  foregroundColor: sage,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 7),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      expandedReplyPosts.contains(post.id)
-                          ? 'Hide replies'
-                          : 'View all ${post.replies.length} '
-                              '${post.replies.length == 1 ? 'reply' : 'replies'}',
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(width: 5),
-                    Icon(
-                      expandedReplyPosts.contains(post.id)
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.keyboard_arrow_down_rounded,
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
-            ),
             if (expandedReplyPosts.contains(post.id)) ...[
               const SizedBox(height: 4),
               for (final reply in post.replies) ...[
