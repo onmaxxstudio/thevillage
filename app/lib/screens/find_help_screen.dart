@@ -273,9 +273,9 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   Future<void> _loadStateShapes() async {
     final svg = await rootBundle.loadString('assets/images/us_states_map.svg');
     final shapes = <String, Path>{};
-    final tags = RegExp(r'<path\\b[^>]*>', dotAll: true);
-    final ids = RegExp(r'\\bid="([A-Z]{2})"');
-    final paths = RegExp(r'\\bd="([^"]+)"', dotAll: true);
+    final tags = RegExp(r'<path\b[^>]*>', dotAll: true);
+    final ids = RegExp(r'\bid="([A-Z]{2})"');
+    final paths = RegExp(r'\bd="([^"]+)"', dotAll: true);
     for (final tag in tags.allMatches(svg)) {
       final markup = tag.group(0)!;
       final id = ids.firstMatch(markup)?.group(1);
