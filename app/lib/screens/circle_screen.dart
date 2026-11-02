@@ -1342,10 +1342,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                         height: 18,
                       ),
                       const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          const SizedBox(width: 48),
-                          Expanded(child: Text(
+                      Text(
                         'My Circle',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.playfairDisplay(
@@ -1354,13 +1351,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                           height: .95,
                           fontWeight: FontWeight.w600,
                         ),
-                      )),
-                          IconButton(
-                            tooltip: 'Circle settings',
-                            onPressed: _editSupportProfile,
-                            icon: const Icon(Icons.settings_outlined, color: sage),
-                          ),
-                        ],
                       ),
                       const SizedBox(height: 12),
                       const Text(
@@ -1471,6 +1461,12 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         _actionRow(Icons.calendar_today_outlined, 'Shared plans',
           'Make and share your weekly plan.', () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const PlanMyWeekScreen())), paleSage),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: _editSupportProfile,
+          icon: const Icon(Icons.tune_rounded),
+          label: const Text('Circle settings'),
+        ),
       ],
     );
   }
