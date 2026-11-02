@@ -918,6 +918,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       : ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           children: [
+            ResourceCategoryBrowser(onExplore: _exploreCategory),
+            const SizedBox(height: 22),
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Stack(
@@ -1035,10 +1037,6 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ),
             const SizedBox(height: 22),
             KeyedSubtree(key: directoryResultsKey, child: _directorySearchResults()),
-            if (directoryQuery.isEmpty) ...[
-              const SizedBox(height: 22),
-              ResourceCategoryBrowser(onExplore: _exploreCategory),
-            ],
             const SizedBox(height: 16),
             TextButton.icon(
               onPressed: () => setState(() => guidedHelp = true),

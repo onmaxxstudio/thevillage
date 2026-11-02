@@ -118,7 +118,7 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columns,
               crossAxisSpacing: 10, mainAxisSpacing: 10,
-              childAspectRatio: columns == 3 ? 0.73 : 1.02,
+              childAspectRatio: columns == 3 ? 0.84 : 1.12,
             ),
             itemBuilder: (context, index) {
               final category = matching[index];
@@ -128,19 +128,19 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
                   onTap: () => setState(() => selected = category),
                   borderRadius: BorderRadius.circular(17),
                   child: Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(color: category.tint,
                       borderRadius: BorderRadius.circular(17)),
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Icon(category.icon, size: 39, color: const [Color(0xFFE97643), Color(0xFF319449), Color(0xFFD99A05), Color(0xFFE93463), Color(0xFF7948C9), Color(0xFF1386C4), Color(0xFF12845B), Color(0xFF1679C6), Color(0xFFB87715), Color(0xFFDE5673), Color(0xFF7140B7), Color(0xFF4A963C)][categories.indexOf(category)]),
-                      const SizedBox(height: 9),
+                      Icon(category.icon, size: 30, color: const [Color(0xFFE97643), Color(0xFF319449), Color(0xFFD99A05), Color(0xFFE93463), Color(0xFF7948C9), Color(0xFF1386C4), Color(0xFF12845B), Color(0xFF1679C6), Color(0xFFB87715), Color(0xFFDE5673), Color(0xFF7140B7), Color(0xFF4A963C)][categories.indexOf(category)]),
+                      const SizedBox(height: 6),
                       Text(category.title, textAlign: TextAlign.center,
                         maxLines: 3, overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w700,
                           color: ink, fontSize: 11.5)),
-                      const SizedBox(height: 7),
+                      const SizedBox(height: 5),
                       Text('${category.subcategories.length} subcategories', style: const TextStyle(fontSize: 10, color: Color(0xFF514D49))),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       const Align(alignment: Alignment.centerRight, child: Icon(Icons.chevron_right, size: 16, color: Color(0xFF443D36))),
                     ]),
                   ),
