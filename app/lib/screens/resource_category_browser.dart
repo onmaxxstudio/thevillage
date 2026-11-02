@@ -60,7 +60,24 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
           icon: const Icon(Icons.arrow_back_rounded),
           label: const Text('All categories'),
         ),
-        Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 14), decoration: BoxDecoration(color: const Color(0xFFFFDFCC), borderRadius: BorderRadius.circular(18)), child: Column(children: [Icon(selected!.icon, color: const Color(0xFFDE743F), size: 44), const SizedBox(height: 8), Text(selected!.title, textAlign: TextAlign.center, style: GoogleFonts.playfairDisplay(fontSize: 24, fontWeight: FontWeight.w700, color: ink)), const SizedBox(height: 5), const Text('Explore assistance and programs for your community.', textAlign: TextAlign.center)])),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFDFCC),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(children: [
+            Icon(selected!.icon, color: const Color(0xFFDE743F), size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(selected!.title,
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 20, height: 1.2,
+                  fontWeight: FontWeight.w700, color: ink)),
+            ),
+          ]),
+        ),
         const SizedBox(height: 10),
         Text('Explore support options', style: GoogleFonts.playfairDisplay(
           fontSize: 24, fontWeight: FontWeight.w700, color: ink)),
