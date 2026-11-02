@@ -1462,10 +1462,13 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           'Make and share your weekly plan.', () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const PlanMyWeekScreen())), paleSage),
         const SizedBox(height: 10),
-        OutlinedButton.icon(
-          onPressed: _editSupportProfile,
-          icon: const Icon(Icons.tune_rounded),
-          label: const Text('Circle settings'),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _editSupportProfile,
+            icon: const Icon(Icons.tune_rounded),
+            label: const Text('Circle settings'),
+          ),
         ),
       ],
     );
