@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:path_drawing/path_drawing.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +12,29 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/admin_content_service.dart';
 import 'resource_category_browser.dart';
 import 'guided_help_assistant.dart';
+
+class _SelectedStatePainter extends CustomPainter {
+  const _SelectedStatePainter(this.statePath, this.color);
+  final Path statePath;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.scale(size.width / 959, size.height / 593);
+    canvas.translate(-174, -100);
+    canvas.drawPath(statePath, Paint()..color = color.withValues(alpha: 0.82));
+    canvas.drawPath(statePath, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4
+      ..color = Colors.white);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _SelectedStatePainter oldDelegate) =>
+      oldDelegate.statePath != statePath || oldDelegate.color != color;
+}
 
 class FindHelpScreen extends StatefulWidget {
   const FindHelpScreen({super.key});
@@ -37,6 +62,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   String? selectedNeed;
   Set<String> saved = {};
   bool showMap = false;
+  Map<String, Path> stateShapes = {};
+  final mapTransform = TransformationController();
   bool showAllResources = false;
   String? selectedPathId;
   String? localZip;
@@ -233,12 +260,53 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   void initState() {
     super.initState();
     _loadSaved();
+    _loadStateShapes();
   }
 
   @override
   void dispose() {
     zipController.dispose();
+    mapTransform.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadStateShapes() async {
+    final svg = await rootBundle.loadString('assets/images/us_states_map.svg');
+    final shapes = <String, Path>{};
+    final tags = RegExp(r'<path\\b[^>]*>', dotAll: true);
+    final ids = RegExp(r'\\bid="([A-Z]{2})"');
+    final paths = RegExp(r'\\bd="([^"]+)"', dotAll: true);
+    for (final tag in tags.allMatches(svg)) {
+      final markup = tag.group(0)!;
+      final id = ids.firstMatch(markup)?.group(1);
+      final data = paths.firstMatch(markup)?.group(1);
+      if (id != null && data != null && stateNames.containsKey(id)) {
+        try {
+          shapes[id] = parseSvgPathData(data);
+        } catch (_) {
+          // A malformed shape must not prevent the other states from working.
+        }
+      }
+    }
+    if (mounted) setState(() => stateShapes = shapes);
+  }
+
+  void _tapState(TapDownDetails details, Size size) {
+    if (stateShapes.isEmpty) return;
+    // SVG viewBox is 174 100 959 593, and the map fills this aspect ratio.
+    final point = Offset(
+      174 + details.localPosition.dx * 959 / size.width,
+      100 + details.localPosition.dy * 593 / size.height,
+    );
+    for (final entry in stateShapes.entries.toList().reversed) {
+      if (entry.value.contains(point)) {
+        setState(() {
+          selectedState = entry.key;
+          showAllResources = true;
+        });
+        return;
+      }
+    }
   }
 
   Future<void> _loadSaved() async {
@@ -540,26 +608,44 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               ],
             ),
             const SizedBox(height: 10),
-            InkWell(
-              onTap: _chooseState,
-              borderRadius: BorderRadius.circular(17),
-              child: AspectRatio(
-                aspectRatio: 959 / 593,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(17),
-                        child: SvgPicture.asset(
-                          'assets/images/us_states_map.svg',
-                          fit: BoxFit.contain,
-                          semanticsLabel: 'United States map showing state boundaries',
-                        ),
+            const Text(
+              'Tap a state on the map or choose from the list to explore local resources. Pinch to zoom for smaller states.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF626A63)),
+            ),
+            const SizedBox(height: 10),
+            AspectRatio(
+              aspectRatio: 959 / 593,
+              child: LayoutBuilder(builder: (context, constraints) {
+                final size = Size(constraints.maxWidth, constraints.maxHeight);
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(17),
+                  child: InteractiveViewer(
+                    transformationController: mapTransform,
+                    minScale: 1,
+                    maxScale: 5,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTapDown: (details) => _tapState(details, size),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          SvgPicture.asset(
+                            'assets/images/us_states_map.svg',
+                            fit: BoxFit.fill,
+                            semanticsLabel: 'Interactive United States state selection map',
+                          ),
+                          if (selectedState != null && stateShapes.containsKey(selectedState))
+                            IgnorePointer(
+                              child: CustomPaint(
+                                painter: _SelectedStatePainter(stateShapes[selectedState]!, sage),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              }),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
