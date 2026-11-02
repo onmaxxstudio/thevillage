@@ -1342,7 +1342,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                         height: 18,
                       ),
                       const SizedBox(height: 5),
-                      Text(
+                      Row(
+                        children: [
+                          const SizedBox(width: 48),
+                          Expanded(child: Text(
                         'My Circle',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.playfairDisplay(
@@ -1351,6 +1354,13 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                           height: .95,
                           fontWeight: FontWeight.w600,
                         ),
+                      )),
+                          IconButton(
+                            tooltip: 'Circle settings',
+                            onPressed: _editSupportProfile,
+                            icon: const Icon(Icons.settings_outlined, color: sage),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       const Text(
@@ -1455,26 +1465,57 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         const SizedBox(height: 8),
         _messagesCard(),
         const SizedBox(height: 8),
-        _actionRow(Icons.auto_awesome_rounded, 'Share a small win',
-          'Celebrate progress, big or small.', _shareSomethingGood, blush),
+        _actionRow(Icons.auto_awesome_rounded, 'Share an update',
+          'A moment, a small win, or how you feel.', _shareUpdate, blush),
         const SizedBox(height: 8),
         _actionRow(Icons.calendar_today_outlined, 'Shared plans',
           'Make and share your weekly plan.', () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const PlanMyWeekScreen())), paleSage),
-        const SizedBox(height: 10),
-        _circleCareTools(),
       ],
     );
   }
 
-  Widget _circleCareTools() => Wrap(spacing: 10, runSpacing: 10, children: [
-    OutlinedButton.icon(onPressed: _editSupportProfile,
-      icon: const Icon(Icons.tune_rounded), label: const Text('Circle settings')),
-    OutlinedButton.icon(onPressed: _openGroupConversation,
-      icon: const Icon(Icons.forum_outlined), label: const Text('Circle conversation')),
-    OutlinedButton.icon(onPressed: _shareMilestone,
-      icon: const Icon(Icons.event_available_outlined), label: const Text('Share a moment')),
-  ]);
+  Future<void> _shareUpdate() async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+            leading: const Icon(Icons.event_available_outlined, color: sage),
+            title: const Text('Share a moment'),
+            subtitle: const Text('Something happening in your life'),
+            onTap: () => Navigator.pop(sheetContext, 'moment'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.auto_awesome_rounded, color: sage),
+            title: const Text('Share a small win'),
+            subtitle: const Text('Celebrate progress, big or small'),
+            onTap: () => Navigator.pop(sheetContext, 'win'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.favorite_outline, color: sage),
+            title: const Text('How I am feeling'),
+            subtitle: const Text('Update your Circle status'),
+            onTap: () => Navigator.pop(sheetContext, 'feeling'),
+          ),
+        ]),
+      ),
+    );
+    if (!mounted || choice == null) return;
+    switch (choice) {
+      case 'moment':
+        await _shareMilestone();
+        break;
+      case 'win':
+        await _shareSomethingGood();
+        break;
+      case 'feeling':
+        await _editWrittenStatus();
+        break;
+    }
+  }
 
   Widget _writtenStatusCard() => Container(
     width: double.infinity, padding: const EdgeInsets.all(12),
@@ -1949,6 +1990,14 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         backgroundColor: cream,
         appBar: AppBar(backgroundColor: cream, title: const Text('Private chats')),
         body: ListView(padding: const EdgeInsets.all(18), children: [
+          ListTile(
+            leading: const Icon(Icons.groups_outlined, color: sage),
+            title: const Text('Circle conversation'),
+            subtitle: const Text('Talk with your whole Circle'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: _openGroupConversation,
+          ),
+          const Divider(),
           const Text('Choose someone from your Circle to read or send a private message.'),
           const SizedBox(height: 14),
           if (_visibleCircleMembers.isEmpty)
