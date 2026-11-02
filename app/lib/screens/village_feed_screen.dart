@@ -523,16 +523,26 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
         currentPost.replies.indexWhere((item) => item.id == replyId);
     if (replyIndex < 0) return;
     final currentReply = currentPost.replies[replyIndex];
-    final supported = !currentReply.supportedByMe;
-    final updatedReplies = List<VillageReply>.of(currentPost.replies);
-    updatedReplies[replyIndex] = currentReply.copyWith(
-      supportedByMe: supported,
-      supportCount: currentReply.supportCount + (supported ? 1 : -1),
-    );
-    setState(() {
-      posts[postIndex] = currentPost.copyWith(replies: updatedReplies);
-    });
-    await _persistMine();
+    final key = '$postId/$replyId';
+    if (currentReply.supportedByMe || _supportPending.contains(key)) return;
+    setState(() => _supportPending.add(key));
+    try {
+      final updated = await service.supportReply(postId, replyId);
+      if (!mounted) return;
+      final latestIndex = posts.indexWhere((post) => post.id == postId);
+      if (latestIndex < 0) return;
+      final latest = posts[latestIndex];
+      setState(() {
+        posts[latestIndex] = latest.copyWith(replies: [
+          for (final reply in latest.replies) reply.id == replyId ? updated : reply,
+        ]);
+      });
+    } on Object {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save support. Please try again.')));
+    } finally {
+      if (mounted) setState(() => _supportPending.remove(key));
+    }
   }
 
 
@@ -1325,7 +1335,7 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
             children: [
               IconButton(
                 tooltip: reply.supportedByMe
-                    ? 'Remove support from reply'
+                    ? 'You supported this reply'
                     : 'Support this reply',
                 onPressed: () async {
                   await _toggleReplySupport(postId, reply.id);

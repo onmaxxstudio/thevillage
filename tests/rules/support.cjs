@@ -41,6 +41,27 @@ const {doc, setDoc, getDoc, updateDoc, deleteDoc, runTransaction, serverTimestam
     await assertFails(setDoc(doc(bob, 'users/alice/village_support/other'), {createdAt: serverTimestamp()}));
     await assertFails(updateDoc(doc(alice, 'village_posts/post'), {supportCount: 99, replies: []}));
     await assertSucceeds(updateDoc(doc(alice, 'village_posts/post'), {replies: [{text: 'Thank you'}]}));
+    await assertSucceeds(updateDoc(doc(alice, 'village_posts/post'), {
+      replies: [{id: 'reply', text: 'Thanks', supportCount: 0}],
+    }));
+    const replySupport = (db, token) => runTransaction(db, async tx => {
+      const ref = doc(db, 'village_posts/post');
+      const snapshot = await tx.get(ref);
+      const replies = snapshot.data().replies;
+      const reply = replies[0];
+      const tokens = reply.supportTokens || [];
+      if (tokens.includes(token)) return;
+      reply.supportTokens = [...tokens, token];
+      reply.supportCount += 1;
+      tx.update(ref, {replies});
+    });
+    await assertSucceeds(Promise.all([replySupport(alice, 'alice-token'), replySupport(alice, 'alice-token')]));
+    await assertSucceeds(replySupport(alice, 'alice-token'));
+    let reply = (await getDocFromServer(doc(alice, 'village_posts/post'))).data().replies[0];
+    if (reply.supportCount !== 1 || reply.supportTokens.length !== 1) throw Error('Repeated comment support counted');
+    await assertSucceeds(replySupport(bob, 'bob-token'));
+    reply = (await getDocFromServer(doc(bob, 'village_posts/post'))).data().replies[0];
+    if (reply.supportCount !== 2 || reply.supportTokens.length !== 2) throw Error('Distinct comment supporters lost');
     console.log('Support rules: duplicate/concurrent support, distinct users, count tampering, receipt privacy, immutable receipts, and replies passed.');
   } finally {
     await env.cleanup();

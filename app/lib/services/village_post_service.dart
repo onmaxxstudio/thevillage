@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,6 +15,7 @@ class VillageReply {
     required this.text,
     required this.author,
     required this.createdAt,
+    this.supportTokens = const [],
     this.supportCount = 0,
     this.supportedByMe = false,
     this.authorUid,
@@ -24,6 +26,7 @@ class VillageReply {
   final String author;
   final String? authorUid;
   final DateTime createdAt;
+  final List<String> supportTokens;
   final int supportCount;
   final bool supportedByMe;
 
@@ -33,6 +36,7 @@ class VillageReply {
         'author': author,
         if (authorUid != null) 'authorUid': authorUid!,
         'createdAt': createdAt.toIso8601String(),
+        'supportTokens': supportTokens,
         'supportCount': supportCount,
         'supportedByMe': supportedByMe,
       };
@@ -43,6 +47,7 @@ class VillageReply {
         'author': author,
         if (authorUid != null) 'authorUid': authorUid!,
         'createdAt': Timestamp.fromDate(createdAt),
+        'supportTokens': supportTokens,
         'supportCount': supportCount,
       };
 
@@ -59,6 +64,7 @@ class VillageReply {
       author: json['author'] as String? ?? 'Village neighbor',
       authorUid: json['authorUid'] as String?,
       createdAt: createdAt,
+      supportTokens: List<String>.from(json['supportTokens'] as List? ?? const []),
       supportCount: json['supportCount'] as int? ?? 0,
       supportedByMe: json['supportedByMe'] as bool? ?? false,
     );
@@ -74,6 +80,7 @@ class VillageReply {
       author: author,
       authorUid: authorUid,
       createdAt: createdAt,
+      supportTokens: supportTokens,
       supportCount: supportCount ?? this.supportCount,
       supportedByMe: supportedByMe ?? this.supportedByMe,
     );
@@ -307,6 +314,9 @@ class VillagePostService {
           return VillagePost.fromJson({
             ...cloudData,
             'id': doc.id,
+            'replies': [for (final raw in (cloudData['replies'] as List? ?? const []))
+              {...Map<String, dynamic>.from(raw as Map),
+                'supportedByMe': (raw['supportTokens'] as List? ?? const []).contains(_replyToken(doc.id, raw['id'] as String))}],
             'isMine': ownedIds.contains(doc.id),
             'saved': local?.saved ?? false,
             'supportedByMe': supportedIds.contains(doc.id),
@@ -480,6 +490,34 @@ class VillagePostService {
     return updated;
   }
 
+  // Scope the opaque voter token to this comment so anonymous activity cannot
+  // be linked across comments through a shared account identifier.
+  String _replyToken(String postId, String replyId) => sha256.convert(utf8.encode(
+      '$postId/$replyId/${FirebaseAuth.instance.currentUser!.uid}')).toString();
+
+  Future<VillageReply> supportReply(String postId, String replyId) async {
+    if (!_cloudReady) {
+      throw const PostValidationException('Connect to the Village to support this reply.');
+    }
+    final token = _replyToken(postId, replyId);
+    return FirebaseFirestore.instance.runTransaction<VillageReply>((tx) async {
+      final snapshot = await tx.get(_posts.doc(postId));
+      final replies = [for (final raw in (snapshot.data()?['replies'] as List? ?? const []))
+        Map<String, dynamic>.from(raw as Map)];
+      final index = replies.indexWhere((reply) => reply['id'] == replyId);
+      if (index < 0) throw const PostValidationException('This reply is no longer available.');
+      final reply = replies[index];
+      final tokens = List<String>.from(reply['supportTokens'] as List? ?? const []);
+      if (!tokens.contains(token)) {
+        tokens.add(token);
+        reply['supportTokens'] = tokens;
+        reply['supportCount'] = ((reply['supportCount'] as num?)?.toInt() ?? 0) + 1;
+        tx.update(_posts.doc(postId), {'replies': replies});
+      }
+      return VillageReply.fromJson({...reply, 'supportedByMe': true});
+    });
+  }
+
   Future<void> guardReply() async {
     await _enforceRateLimit('reply', const Duration(seconds: 8));
   }
@@ -514,23 +552,20 @@ class VillagePostService {
     await _saveLocal(posts);
     if (!_cloudReady || !lastLoadUsedCloud) return;
 
-    final batch = FirebaseFirestore.instance.batch();
-    var hasCloudChanges = false;
     for (final post in posts) {
-      if (post.id.startsWith('sample-') || post.audience == 'My Circle') {
-        continue;
-      }
-      batch.update(_posts.doc(post.id), {
-        'replies': post.replies.map((reply) => reply.toCloudJson()).toList(),
+      if (post.id.startsWith('sample-') || post.audience == 'My Circle') continue;
+      // Append new replies against current server data; stale feed copies must
+      // never overwrite another member's reply or its support receipts.
+      await FirebaseFirestore.instance.runTransaction<void>((tx) async {
+        final snapshot = await tx.get(_posts.doc(post.id));
+        if (!snapshot.exists) return;
+        final replies = List<dynamic>.from(snapshot.data()?['replies'] as List? ?? const []);
+        final ids = replies.map((reply) => reply['id']).toSet();
+        final additions = post.replies.where((reply) => !ids.contains(reply.id)).toList();
+        if (additions.isEmpty) return;
+        replies.addAll(additions.map((reply) => reply.toCloudJson()));
+        tx.update(_posts.doc(post.id), {'replies': replies});
       });
-      hasCloudChanges = true;
-    }
-    if (hasCloudChanges) {
-      try {
-        await batch.commit();
-      } on FirebaseException {
-        // The local copy remains available and can sync after reconnecting.
-      }
     }
   }
 
