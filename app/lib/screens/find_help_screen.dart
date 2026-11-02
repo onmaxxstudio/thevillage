@@ -55,6 +55,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   final zipController = TextEditingController();
   final directorySearchController = TextEditingController();
   final directoryResultsKey = GlobalKey();
+  final stateResultsKey = GlobalKey();
   String directoryQuery = '';
   int view = 0;
   bool guidedHelp = false;
@@ -291,6 +292,22 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     if (mounted) setState(() => stateShapes = shapes);
   }
 
+  void _selectStateAndShowResults(String state) {
+    setState(() {
+      selectedState = state;
+      showAllResources = true;
+      directoryQuery = '';
+      directorySearchController.clear();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = stateResultsKey.currentContext;
+      if (target != null) {
+        Scrollable.ensureVisible(target, duration: const Duration(milliseconds: 450), curve: Curves.easeInOut, alignment: 0.06);
+      }
+    });
+  }
+
   void _tapState(TapDownDetails details, Size size) {
     if (stateShapes.isEmpty) return;
     // SVG viewBox is 174 100 959 593, and the map fills this aspect ratio.
@@ -300,10 +317,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     );
     for (final entry in stateShapes.entries.toList().reversed) {
       if (entry.value.contains(point)) {
-        setState(() {
-          selectedState = entry.key;
-          showAllResources = true;
-        });
+        _selectStateAndShowResults(entry.key);
         return;
       }
     }
@@ -485,6 +499,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             if (view == 2) _savedHeader(),
             const SizedBox(height: 18),
             Row(
+              key: stateResultsKey,
               children: [
                 Expanded(child: Text(_resultsTitle(), style: GoogleFonts.playfairDisplay(fontSize: 23, fontWeight: FontWeight.w700, color: ink))),
                 Text('${visible.length} resources', style: const TextStyle(color: sage, fontSize: 12, fontWeight: FontWeight.w800)),
@@ -587,7 +602,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         ),
       ),
     );
-    if (choice != null && mounted) setState(() => selectedState = choice);
+    if (choice != null && mounted) _selectStateAndShowResults(choice);
   }
 
   Widget _map() => Container(
