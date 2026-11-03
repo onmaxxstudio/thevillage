@@ -87,6 +87,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   bool muteRequests = false;
   String writtenStatus = '';
   bool statusJustToday = true;
+  DateTime? statusPostedAt;
+  DateTime? statusExpiresAt;
+  Timer? _statusClock;
   final Set<int> completedReminders = {};
   final Set<int> dismissedReminders = {};
   final Set<int> dismissedActivity = {};
@@ -145,6 +148,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
+    _statusClock = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
     _orbitController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 48),
@@ -169,7 +175,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         writtenStatus = profile.data()?['statusText'] as String? ?? '';
         final expiry = profile.data()?['statusExpiresAt'] as Timestamp?;
         statusJustToday = expiry != null;
-        if (expiry != null && expiry.toDate().isBefore(DateTime.now())) writtenStatus = '';
+        statusExpiresAt = expiry?.toDate();
+        statusPostedAt = (profile.data()?['statusUpdatedAt'] as Timestamp?)?.toDate();
+        if (expiry != null && !expiry.toDate().isAfter(DateTime.now())) writtenStatus = '';
       });
     } on Object {
       // Keep defaults until the member's profile can load.
@@ -368,6 +376,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   void dispose() {
     requestSubscription?.cancel();
     memberSubscription?.cancel();
+    _statusClock?.cancel();
     statusNoteController.dispose();
     _orbitController.dispose();
     super.dispose();
@@ -1516,6 +1525,23 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     }
   }
 
+  String _statusAge(DateTime? date) {
+    if (date == null) return 'Recently posted';
+    final elapsed = DateTime.now().difference(date);
+    if (elapsed.inMinutes < 1) return 'Posted just now';
+    if (elapsed.inMinutes < 60) return 'Posted ${elapsed.inMinutes}m ago';
+    if (elapsed.inHours < 24) return 'Posted ${elapsed.inHours}h ago';
+    return 'Posted ${elapsed.inDays}d ago';
+  }
+
+  String _statusExpiry(DateTime? expiry) {
+    if (expiry == null) return 'Visible until you change it';
+    final remaining = expiry.difference(DateTime.now());
+    if (remaining <= Duration.zero) return 'Expired';
+    if (remaining.inHours > 0) return 'Expires in ${remaining.inHours}h ${remaining.inMinutes.remainder(60)}m';
+    return 'Expires in ${remaining.inMinutes + 1}m';
+  }
+
   Widget _writtenStatusCard() => Container(
     width: double.infinity, padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
@@ -1532,16 +1558,17 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
         decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(14)),
         child: Row(children: [
-          Expanded(child: Text(writtenStatus.isEmpty ? 'Share how you are feeling…' : writtenStatus,
+          Expanded(child: Text(writtenStatus.isEmpty || (statusExpiresAt != null && !statusExpiresAt!.isAfter(DateTime.now()))
+              ? 'Share how you are feeling…' : writtenStatus,
             style: const TextStyle(fontSize: 13, height: 1.35))),
           const SizedBox(width: 8),
           const Icon(Icons.edit_outlined, color: sage, size: 18),
         ]),
       )),
-      if (writtenStatus.isNotEmpty) Padding(
-        padding: const EdgeInsets.only(top: 7),
-        child: Text(statusJustToday ? 'Visible for 24 hours' : 'Visible until you change it',
-          style: const TextStyle(fontSize: 11, color: sage))),
+      if (writtenStatus.isNotEmpty && (statusExpiresAt == null || statusExpiresAt!.isAfter(DateTime.now())))
+        Padding(padding: const EdgeInsets.only(top: 7),
+          child: Text('${_statusAge(statusPostedAt)} · ${_statusExpiry(statusExpiresAt)}',
+            style: const TextStyle(fontSize: 11, color: sage))),
     ]),
   );
 
@@ -1571,13 +1598,24 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     );
     controller.dispose();
     if (result == null || !mounted) return;
+    await _saveStatusWithFeedback(result.$1, result.$2);
+  }
+
+  Future<void> _saveStatusWithFeedback(String text, bool today) async {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saving status…')));
     try {
-      await circleService.saveWrittenStatus(result.$1, result.$2);
+      await circleService.saveWrittenStatus(text, today);
       if (mounted) {
-        setState(() { writtenStatus = result.$1; statusJustToday = result.$2; });
+        setState(() {
+          writtenStatus = text;
+          statusJustToday = today;
+          statusPostedAt = DateTime.now();
+          statusExpiresAt = today ? DateTime.now().add(const Duration(days: 1)) : null;
+        });
+        await _loadSupportProfile();
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.$1.isEmpty
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text.isEmpty
           ? 'Status cleared successfully' : 'Status posted successfully')));
       }
     } on Object {
@@ -1585,7 +1623,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Could not save your status.'),
-          action: SnackBarAction(label: 'Retry', onPressed: () => _editWrittenStatus()),
+          action: SnackBarAction(label: 'Retry', onPressed: () => _saveStatusWithFeedback(text, today)),
         ));
       }
     }
@@ -1613,6 +1651,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(member.name, style: const TextStyle(fontWeight: FontWeight.w700)),
                     Text(text, maxLines: 3, overflow: TextOverflow.ellipsis),
+                    Text(_statusAge((data?['statusUpdatedAt'] as Timestamp?)?.toDate()),
+                      style: const TextStyle(fontSize: 11, color: sage)),
                   ])),
                   IconButton(tooltip: 'Send support', icon: const Icon(Icons.favorite_border_rounded,
                     color: sage), onPressed: () => _respondToStatus(member)),
