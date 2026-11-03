@@ -1571,12 +1571,23 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     );
     controller.dispose();
     if (result == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saving status…')));
     try {
       await circleService.saveWrittenStatus(result.$1, result.$2);
-      if (mounted) setState(() { writtenStatus = result.$1; statusJustToday = result.$2; });
+      if (mounted) {
+        setState(() { writtenStatus = result.$1; statusJustToday = result.$2; });
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.$1.isEmpty
+          ? 'Status cleared successfully' : 'Status posted successfully')));
+      }
     } on Object {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not save your status. Try again.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Could not save your status.'),
+          action: SnackBarAction(label: 'Retry', onPressed: () => _editWrittenStatus()),
+        ));
+      }
     }
   }
 
