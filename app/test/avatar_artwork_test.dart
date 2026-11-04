@@ -13,7 +13,7 @@ void main() {
   test('all portrait sprites decode at the compositor resolution', () async {
     final names = [
       for (var i = 0; i < 3; i++) ...['base_$i', 'starter_$i'],
-      for (var i = 0; i < 15; i++) 'layer_$i',
+      for (var i = 0; i < 18; i++) 'layer_$i',
     ];
     for (final name in names) {
       final data = await rootBundle.load('assets/avatar/$name.webp');
@@ -33,8 +33,8 @@ void main() {
   ) async {
     final frameKey = GlobalKey();
     final fields = <String, int>{
-      'skin': 12,
-      'hair': 14,
+      'skin': 14,
+      'hair': 17,
       'hairColor': 10,
       'face': 3,
       'eyes': 3,

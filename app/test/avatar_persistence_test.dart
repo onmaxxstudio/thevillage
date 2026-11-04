@@ -87,8 +87,8 @@ void main() {
         profiles.updateAvatar(
           mode: 'avatar',
           key: 'plum',
-          skin: 8,
-          hair: 13,
+          skin: 13,
+          hair: 16,
           hairColor: 9,
           face: 2,
           eyes: 1,
@@ -134,8 +134,8 @@ void main() {
       const expected = {
         'avatarMode': 'avatar',
         'avatarKey': 'plum',
-        'avatarSkin': 8,
-        'avatarHair': 13,
+        'avatarSkin': 13,
+        'avatarHair': 16,
         'avatarHairColor': 9,
         'avatarFace': 2,
         'avatarEyes': 1,
