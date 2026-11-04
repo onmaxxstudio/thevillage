@@ -144,7 +144,7 @@ class VillagePortrait extends StatelessWidget {
     final iris = _PortraitPainter._color(irises, eyeColor);
     final faceWarp = const [0.0, .35, -.38][face.clamp(0, 2)];
     final eyeWarp = const [0.0, -.55, .65][eyes.clamp(0, 2)];
-    final mouthWarp = const [0.0, -.058, .068][smile.clamp(0, 2)];
+    final cornerLift = const [0.0, .020, -.014][smile.clamp(0, 2)];
     final noseWarp = const [0.0, .46, -.65][nose.clamp(0, 2)];
     final browWarp = const [0.0, -.75, .66][brows.clamp(0, 2)];
     final eyeY = base == 1 ? .482 : .498;
@@ -164,11 +164,12 @@ class VillagePortrait extends StatelessWidget {
         if (eyeWarp != 0) {
           qy += (y - eyeY) * eyeWarp * _region(x - eyeX, y - eyeY, .081, .052);
         }
-        if (mouthWarp != 0) {
-          qy +=
-              mouthWarp *
-              (.5 - (x - .5).abs() * 12) *
-              _region(x - .5, y - eyeY - .169, .104, .062);
+        if (cornerLift != 0) {
+          final mouthX = x - .5;
+          final mouthY = y - eyeY - .169;
+          // Move the corners gently while preserving the center of the lips.
+          final cornerWeight = _smooth(0, .064, mouthX.abs());
+          qy += cornerLift * cornerWeight * _region(mouthX, mouthY, .104, .052);
         }
         if (noseWarp != 0) {
           qx +=
