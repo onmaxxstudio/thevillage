@@ -73,6 +73,14 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     'Side part',
     'Long straight',
   ];
+  // These lists reference saved hairstyle IDs, independently of picker order.
+  static const hairstylesByPresentation = [
+    [8, 9, 11, 13, 5, 4, 0, 1, 2, 3, 6, 10],
+    [7, 12, 0, 1, 2, 3, 6, 10],
+    [1, 7, 12, 2, 3, 0, 4, 5, 6, 8, 9, 10, 11, 13],
+  ];
+  List<int> get availableHairstyles => hairstylesByPresentation[presentation];
+
   static const avatarKeys = ProfileService.avatarKeys;
   static const themeColors = <Color>[
     Color(0xFF355C3B),
@@ -175,12 +183,12 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     final random = Random();
     setState(() {
       skin = random.nextInt(skinColors.length);
-      hair = random.nextInt(hairStyles.length);
       hairColor = random.nextInt(hairColors.length);
       face = random.nextInt(3);
       eyes = random.nextInt(3);
       smile = random.nextInt(3);
-      presentation = random.nextInt(3);
+      presentation = random.nextInt(hairstylesByPresentation.length);
+      hair = availableHairstyles[random.nextInt(availableHairstyles.length)];
       facialHair = random.nextInt(5);
       mole = random.nextInt(5);
       nose = random.nextInt(3);
@@ -542,44 +550,47 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
           height: 106,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: hairStyles.length,
+            itemCount: availableHairstyles.length,
             separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (context, i) => GestureDetector(
-              onTap: () => setState(() => hair = i),
-              child: Container(
-                width: 76,
-                padding: const EdgeInsets.fromLTRB(5, 7, 5, 5),
-                decoration: BoxDecoration(
-                  color: hair == i ? const Color(0xFFEAF0E4) : Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                    color: hair == i ? sage : line,
-                    width: hair == i ? 1.6 : 1,
+            itemBuilder: (context, index) {
+              final i = availableHairstyles[index];
+              return GestureDetector(
+                onTap: () => setState(() => hair = i),
+                child: Container(
+                  width: 76,
+                  padding: const EdgeInsets.fromLTRB(5, 7, 5, 5),
+                  decoration: BoxDecoration(
+                    color: hair == i ? const Color(0xFFEAF0E4) : Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: hair == i ? sage : line,
+                      width: hair == i ? 1.6 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ClipOval(child: _portrait(hairstyle: i)),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        hairStyles[i],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: hair == i ? sage : ink,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ClipOval(child: _portrait(hairstyle: i)),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      hairStyles[i],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: hair == i ? sage : ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),
