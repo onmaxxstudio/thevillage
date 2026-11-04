@@ -36,6 +36,8 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     Color(0xFFD69A70),
     Color(0xFFE0AD86),
     Color(0xFFEDC29B),
+    Color(0xFFF2D3C3),
+    Color(0xFFF8E4DC),
   ];
   static const hairColors = <Color>[
     Color(0xFF171311),
@@ -72,12 +74,15 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     'Straight bob',
     'Side part',
     'Long straight',
+    'Loose waves',
+    'Textured fringe',
+    'Curtain layers',
   ];
   // These lists reference saved hairstyle IDs, independently of picker order.
   static const hairstylesByPresentation = [
-    [8, 9, 11, 13, 5, 4, 0, 1, 2, 3, 6, 10],
-    [7, 12, 0, 1, 2, 3, 6, 10],
-    [1, 7, 12, 2, 3, 0, 4, 5, 6, 8, 9, 10, 11, 13],
+    [8, 9, 11, 13, 14, 16, 5, 4, 0, 1, 2, 3, 6, 10],
+    [7, 12, 15, 0, 1, 2, 3, 6, 10],
+    [1, 7, 12, 2, 3, 0, 4, 5, 6, 8, 9, 10, 11, 13, 14, 15, 16],
   ];
   List<int> get availableHairstyles => hairstylesByPresentation[presentation];
 
@@ -126,7 +131,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   static const glassesStyles = ['None', 'Square', 'Round'];
   static const freckleStyles = ['None', 'Light', 'More'];
 
-  late int skin = widget.profile.avatarSkin.clamp(0, 11).toInt();
+  late int skin = widget.profile.avatarSkin.clamp(0, skinColors.length - 1).toInt();
   late int hair = widget.profile.avatarHair.clamp(0, hairStyles.length - 1).toInt();
   late int hairColor = widget.profile.avatarHairColor.clamp(0, 9).toInt();
   late int face = widget.profile.avatarFace.clamp(0, 2).toInt();

@@ -55,6 +55,8 @@ class VillagePortrait extends StatelessWidget {
     '#D69A70',
     '#E0AD86',
     '#EDC29B',
+    '#F2D3C3',
+    '#F8E4DC',
   ];
   static const hairTones = [
     '#171311',
@@ -142,7 +144,7 @@ class VillagePortrait extends StatelessWidget {
     final tone = _PortraitPainter._color(skinTones, skin);
     final shirt = _PortraitPainter._color(shirts, outfit);
     final iris = _PortraitPainter._color(irises, eyeColor);
-    final faceWarp = const [0.0, .35, -.38][face.clamp(0, 2)];
+    final faceWarp = const [0.0, .16, -.18][face.clamp(0, 2)];
     final eyeWarp = const [0.0, -.55, .65][eyes.clamp(0, 2)];
     final cornerLift = const [0.0, .009, -.007][smile.clamp(0, 2)];
     final noseWarp = const [0.0, .46, -.65][nose.clamp(0, 2)];
@@ -158,8 +160,11 @@ class VillagePortrait extends StatelessWidget {
         var qx = x;
         var qy = y;
         if (faceWarp != 0) {
-          qx += (x - .5) * faceWarp * _region(x - .5, y - .62, .33, .27);
-          qy += (y - .61) * faceWarp * _region(x - .5, y - .62, .27, .27) * .5;
+          // Shape the cheeks and jaw without rescaling the eyes, nose, or lips.
+          final contour = _smooth(.075, .17, (x - .5).abs());
+          qx += (x - .5) * faceWarp * contour *
+              _region(x - .5, y - .61, .27, .20);
+          qy -= faceWarp * .10 * _region(x - .5, y - .715, .16, .053);
         }
         if (eyeWarp != 0) {
           qy += (y - eyeY) * eyeWarp * _region(x - eyeX, y - eyeY, .081, .052);
@@ -194,7 +199,17 @@ class VillagePortrait extends StatelessWidget {
         final b = source[from + 2] / 255;
         final warm = _smooth(.03, .16, r - b) * _smooth(.01, .10, r - g);
         final fabric = clothing * (1 - warm) * .36;
-        final tintedRed = r * (1 + (tone.r / .65 - 1) * warm);
+        final isFair = skin >= 12;
+        final light = (r * .30 + g * .59 + b * .11 - .48) * .68;
+        final tintedRed = isFair
+            ? r + (tone.r + light - r) * warm
+            : r * (1 + (tone.r / .65 - 1) * warm);
+        final tintedGreen = isFair
+            ? g + (tone.g + light - g) * warm
+            : g * (1 + (tone.g / .39 - 1) * warm);
+        final tintedBlue = isFair
+            ? b + (tone.b + light - b) * warm
+            : b * (1 + (tone.b / .27 - 1) * warm);
         final irisWeight =
             _region(qx - eyeX, qy - eyeY, .025, .029) *
             _smooth(.05, .19, tintedRed) *
@@ -209,14 +224,14 @@ class VillagePortrait extends StatelessWidget {
                     alpha)
                 .round();
         output[to + 1] =
-            ((g * (1 + (tone.g / .39 - 1) * warm) +
+            ((tintedGreen +
                             fabric * (shirt.g - .24) +
                             irisWeight * (iris.g - .14))
                         .clamp(0.0, 1.0) *
                     alpha)
                 .round();
         output[to + 2] =
-            ((b * (1 + (tone.b / .27 - 1) * warm) +
+            ((tintedBlue +
                             fabric * (shirt.b - .24) +
                             irisWeight * (iris.b - .12))
                         .clamp(0.0, 1.0) *
@@ -265,7 +280,7 @@ class VillagePortrait extends StatelessWidget {
       Image.asset('$assetDirectory/starter_$index.webp', fit: BoxFit.contain);
 
   Future<_PortraitArtwork> _loadArtwork() async {
-    final hasHair = hair >= 0 && hair <= 13 && hair != 10;
+    final hasHair = hair >= 0 && hair <= 16 && hair != 10;
     // Sprite slots 10 and 11 are facial hair. Bald stays at hairstyle ID 10.
     final hairLayer = hair < 10 ? hair : hair + 1;
     final layers = await Future.wait([

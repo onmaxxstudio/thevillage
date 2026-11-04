@@ -152,8 +152,8 @@ service cloud.firestore {
           'sage', 'rose', 'gold', 'sky', 'lavender', 'peach',
           'cobalt', 'plum', 'coral', 'mint', 'teal', 'amber'
         ] &&
-        request.resource.data.avatarSkin is int && request.resource.data.avatarSkin >= 0 && request.resource.data.avatarSkin <= 11 &&
-        request.resource.data.avatarHair is int && request.resource.data.avatarHair >= 0 && request.resource.data.avatarHair <= 13 &&
+        request.resource.data.avatarSkin is int && request.resource.data.avatarSkin >= 0 && request.resource.data.avatarSkin <= 13 &&
+        request.resource.data.avatarHair is int && request.resource.data.avatarHair >= 0 && request.resource.data.avatarHair <= 16 &&
         request.resource.data.avatarHairColor is int && request.resource.data.avatarHairColor >= 0 && request.resource.data.avatarHairColor <= 9 &&
         request.resource.data.avatarFace is int && request.resource.data.avatarFace >= 0 && request.resource.data.avatarFace <= 2 &&
         request.resource.data.avatarEyes is int && request.resource.data.avatarEyes >= 0 && request.resource.data.avatarEyes <= 2 &&
@@ -225,8 +225,8 @@ service cloud.firestore {
           'sage', 'rose', 'gold', 'sky', 'lavender', 'peach',
           'cobalt', 'plum', 'coral', 'mint', 'teal', 'amber'
         ] &&
-        request.resource.data.avatarSkin is int && request.resource.data.avatarSkin >= 0 && request.resource.data.avatarSkin <= 11 &&
-        request.resource.data.avatarHair is int && request.resource.data.avatarHair >= 0 && request.resource.data.avatarHair <= 13 &&
+        request.resource.data.avatarSkin is int && request.resource.data.avatarSkin >= 0 && request.resource.data.avatarSkin <= 13 &&
+        request.resource.data.avatarHair is int && request.resource.data.avatarHair >= 0 && request.resource.data.avatarHair <= 16 &&
         request.resource.data.avatarHairColor is int && request.resource.data.avatarHairColor >= 0 && request.resource.data.avatarHairColor <= 9 &&
         request.resource.data.avatarFace is int && request.resource.data.avatarFace >= 0 && request.resource.data.avatarFace <= 2 &&
         request.resource.data.avatarEyes is int && request.resource.data.avatarEyes >= 0 && request.resource.data.avatarEyes <= 2 &&
