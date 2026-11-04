@@ -51,31 +51,31 @@ class VillagePortrait extends StatelessWidget {
     final beard = facialHair == 0 ? '' : facialHair == 1 ?
       '<path d="M77 136 Q100 165 123 136" stroke="$h" stroke-opacity=".4" stroke-width="5" stroke-dasharray="1 4" fill="none"/>' :
       '<path d="M86 129 Q93 124 100 130 Q107 124 114 129" stroke="$h" stroke-width="4.5" fill="none" stroke-linecap="round"/>${facialHair>=3?'<path d="M75 138 Q80 170 100 169 Q120 170 125 138 Q116 153 100 157 Q84 153 75 138" fill="$h" opacity=".9"/>':''}';
-    final specs = glasses == 0 ? '' : '<g stroke="#453E39" stroke-width="2.6" fill="none"><rect x="67" y="100" width="28" height="22" rx="${glasses==1?5:12}"/><rect x="105" y="100" width="28" height="22" rx="${glasses==1?5:12}"/><path d="M95 110 Q100 106 105 110"/></g>';
+    final specs = glasses == 0 ? '' : '<g stroke="#453E39" stroke-width="1.8" stroke-opacity=".8" fill="none"><rect x="67" y="100" width="28" height="22" rx="${glasses==1?5:12}"/><rect x="105" y="100" width="28" height="22" rx="${glasses==1?5:12}"/><path d="M95 110 Q100 106 105 110"/></g>';
     final dots = freckles == 0 ? '' : List.generate(8,(i) => '<circle cx="${72+(i%4)*7+(i>=4?37:0)}" cy="${124+(i%3)*3}" r="${freckles==1?1:1.7}" fill="#5C342B" opacity=".45"/>').join();
     final beauty = mole == 0 ? '' : '<circle cx="${mole==2?124:mole==3?101:76}" cy="${mole==3?146:132}" r="2.2" fill="#38231D"/>';
     return '''<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
 <defs>
 <radialGradient id="bg" cx="35%" cy="22%" r="90%"><stop stop-color="#F7F4EB"/><stop offset="1" stop-color="#DCE7DB"/></radialGradient>
-<radialGradient id="skin" cx="28%" cy="25%" r="85%"><stop stop-color="#FFFFFF" stop-opacity=".25"/><stop offset=".38" stop-color="$s"/><stop offset="1" stop-color="#170C08" stop-opacity=".36"/></radialGradient>
-<linearGradient id="hair" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFFFFF" stop-opacity=".2"/><stop offset=".35" stop-color="$h"/><stop offset="1" stop-color="#080606"/></linearGradient>
+<radialGradient id="skin" cx="32%" cy="23%" r="92%"><stop stop-color="#FFFFFF" stop-opacity=".30"/><stop offset=".31" stop-color="$s"/><stop offset=".72" stop-color="$s"/><stop offset="1" stop-color="#170C08" stop-opacity=".48"/></radialGradient>
+<linearGradient id="hair" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#FFFFFF" stop-opacity=".2"/><stop offset=".35" stop-color="$h"/><stop offset="1" stop-color="#080606"/></linearGradient>
 <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFFFFF" stop-opacity=".24"/><stop offset=".4" stop-color="$shirt"/><stop offset="1" stop-color="#17241C"/></linearGradient>
 </defs>
-<rect width="200" height="200" fill="url(#bg)"/>
+<rect width="200" height="200" fill="url(#bg)"/><circle cx="100" cy="93" r="88" fill="#FFFFFF" opacity=".11"/>
 <ellipse cx="100" cy="205" rx="95" ry="62" fill="url(#shirt)"/><path d="M55 198 Q67 166 84 169 Q100 186 116 169 Q139 168 145 198" fill="none" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="7"/>
 <path d="M84 139 L84 174 Q100 190 116 174 L116 139" fill="url(#skin)"/>
 $hairBack
 <ellipse cx="${left+2}" cy="116" rx="9" ry="15" fill="$s"/>
 <ellipse cx="${left+width-2}" cy="116" rx="9" ry="15" fill="$s"/>
-<path d="$facePath" fill="url(#skin)"/><path d="M${left+11} 116 Q${left+11} 151 100 155" fill="none" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="4"/>
+<path d="$facePath" fill="url(#skin)"/><path d="M${left+10} 86 Q${left+3} 118 ${left+16} 143" stroke="#FFFFFF" stroke-width="5" stroke-opacity=".10" fill="none" stroke-linecap="round"/><path d="M${left+width-8} 87 Q${left+width+2} 118 ${left+width-13} 146" stroke="#24130F" stroke-width="4" stroke-opacity=".10" fill="none" stroke-linecap="round"/><path d="M${left+11} 116 Q${left+11} 151 100 155" fill="none" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="4"/>
 <circularGradient/>
 <path d="M70 99 Q83 ${brows==1?91:94} 94 99 M106 99 Q117 ${brows==1?91:94} 130 99" stroke="$h" stroke-width="${brows==1?4:3}" stroke-linecap="round" fill="none"/>
 <path d="M72 109 Q83 103 94 109" stroke="#31221D" stroke-opacity=".35" stroke-width="1.3" fill="none"/><ellipse cx="83" cy="111" rx="10" ry="${eyes==1?7:5.5}" fill="#FFF9F0"/>
 <path d="M106 109 Q117 103 128 109" stroke="#31221D" stroke-opacity=".35" stroke-width="1.3" fill="none"/><ellipse cx="117" cy="111" rx="10" ry="${eyes==1?7:5.5}" fill="#FFF9F0"/>
-<circle cx="84" cy="111" r="5" fill="$iris"/><circle cx="116" cy="111" r="5" fill="$iris"/>
+<circle cx="84" cy="111" r="5" fill="$iris"/><circle cx="116" cy="111" r="5" fill="$iris"/><circle cx="84" cy="111" r="2.7" fill="#171717"/><circle cx="116" cy="111" r="2.7" fill="#171717"/>
 <circle cx="85" cy="110" r="1.7" fill="white"/><circle cx="117" cy="110" r="1.7" fill="white"/>
 <path d="M100 113 Q${nose==2?91:95} 127 101 128 Q105 129 109 126" stroke="#6B4137" stroke-opacity=".65" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-<ellipse cx="75" cy="126" rx="12" ry="6" fill="#DA827C" opacity=".16"/><ellipse cx="125" cy="126" rx="12" ry="6" fill="#DA827C" opacity=".16"/>
+<ellipse cx="75" cy="126" rx="12" ry="6" fill="#DA827C" opacity=".19"/><ellipse cx="125" cy="126" rx="12" ry="6" fill="#DA827C" opacity=".19"/><ellipse cx="100" cy="125" rx="4" ry="2" fill="#FFFFFF" opacity=".15"/>
 $mouth $dots $beauty $beard $specs
 $curls
 <path d="M63 79 Q68 49 100 50 Q134 48 139 80 Q113 68 100 72 Q82 69 63 79" fill="url(#hair)" opacity="${hair==10?0:1}"/><path d="M74 75 Q100 60 126 75" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="2" fill="none"/>
