@@ -44,8 +44,8 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     Color(0xFF8A5837),
     Color(0xFFC17C36),
     Color(0xFFE1BE78),
-    Color(0xFF4A4A47),
-    Color(0xFFE1D9CC),
+    Color(0xFFB8BAC1),
+    Color(0xFFF3F2EE),
     Color(0xFF76509A),
     Color(0xFFB34E72),
   ];
@@ -557,7 +557,10 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
                 child: Column(
                   children: [
                     Expanded(
-                      child: ClipOval(child: _portrait(hairstyle: i)),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ClipOval(child: _portrait(hairstyle: i)),
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -589,7 +592,11 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
               _toneChoice(
                 hairColors[i],
                 hairColor == i,
-                'Hair colour ${i + 1}',
+                switch (i) {
+                  6 => 'Silver',
+                  7 => 'White',
+                  _ => 'Hair colour ${i + 1}',
+                },
                 () => setState(() => hairColor = i),
               ),
           ],

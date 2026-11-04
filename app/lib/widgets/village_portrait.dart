@@ -63,8 +63,8 @@ class VillagePortrait extends StatelessWidget {
     '#8A5837',
     '#C17C36',
     '#E1BE78',
-    '#4A4A47',
-    '#E1D9CC',
+    '#B8BAC1',
+    '#F3F2EE',
     '#76509A',
     '#B34E72',
   ];
@@ -346,14 +346,43 @@ class _PortraitPainter extends CustomPainter {
       canvas.restore();
     }
     final hairstyle = artwork.hairstyle;
-    if (hairstyle != null) _drawLayer(canvas, hairstyle);
+    if (hairstyle != null) {
+      // Anchor the fitted sprites at the center of the hairline so narrowing
+      // the sides does not shift the part or lift the fringe off the forehead.
+      final width = switch (look.hair) {
+        5 => .94, // Curls
+        6 => .87, // Waves
+        7 => .96, // Short crop
+        _ => 1.0,
+      };
+      final widerScalp = look.presentation == 1 || look.face == 2;
+      canvas.save();
+      canvas.translate(256, look.presentation == 1 ? -5 : 0);
+      canvas.scale(width * (widerScalp && width < 1 ? 1.035 : 1), 1);
+      canvas.translate(-256, 0);
+      _drawLayer(canvas, hairstyle);
+      canvas.restore();
+    }
     canvas.restore();
   }
 
   void _drawLayer(Canvas canvas, ui.Image image) {
     final color = _color(VillagePortrait.hairTones, look.hairColor);
     final paint = Paint()..filterQuality = FilterQuality.medium;
-    if (look.hairColor != 0) {
+    if (look.hairColor == 6 || look.hairColor == 7) {
+      // Map the source highlights and shadows into a lighter tonal range.
+      final white = look.hairColor == 7;
+      final contrast = white ? 1.3 : 1.65;
+      final red = .213 * contrast;
+      final green = .715 * contrast;
+      final blue = .072 * contrast;
+      paint.colorFilter = ColorFilter.matrix([
+        red, green, blue, 0, white ? 188 : 132,
+        red, green, blue, 0, white ? 187 : 134,
+        red, green, blue, 0, white ? 183 : 141,
+        0, 0, 0, 1, 0,
+      ]);
+    } else if (look.hairColor != 0) {
       paint.colorFilter = ColorFilter.matrix([
         1,
         0,
