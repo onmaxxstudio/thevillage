@@ -38,8 +38,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  shaders:
-    - shaders/avatar_skin.frag
   assets:
     - assets/avatar/
     - assets/images/
