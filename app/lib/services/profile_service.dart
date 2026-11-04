@@ -444,7 +444,7 @@ class ProfileService {
       'avatarNose' || 'avatarBrows' || 'avatarGlasses' || 'avatarFreckles' => 2,
       'avatarEyeColor' => 5,
       'avatarFacialHair' || 'avatarMole' => 4,
-      'avatarHair' => 10,
+      'avatarHair' => 13,
       'avatarSkin' => 11,
       'avatarHairColor' => 9,
       _ => 0,
@@ -506,7 +506,7 @@ class ProfileService {
     if (mode == 'avatar' && !avatarKeys.contains(key)) {
       throw const ProfileValidationException('Choose one of the available avatars.');
     }
-    if (skin < 0 || skin > 11 || hair < 0 || hair > 10 || hairColor < 0 || hairColor > 9 || eyeColor < 0 || eyeColor > 5 ||
+    if (skin < 0 || skin > 11 || hair < 0 || hair > 13 || hairColor < 0 || hairColor > 9 || eyeColor < 0 || eyeColor > 5 ||
         [face, eyes, smile, presentation, nose, brows, glasses, freckles]
             .any((value) => value < 0 || value > 2) ||
         [facialHair, mole].any((value) => value < 0 || value > 4)) {

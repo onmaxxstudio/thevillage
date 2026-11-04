@@ -265,14 +265,17 @@ class VillagePortrait extends StatelessWidget {
       Image.asset('$assetDirectory/starter_$index.webp', fit: BoxFit.contain);
 
   Future<_PortraitArtwork> _loadArtwork() async {
+    final hasHair = hair >= 0 && hair <= 13 && hair != 10;
+    // Sprite slots 10 and 11 are facial hair. Bald stays at hairstyle ID 10.
+    final hairLayer = hair < 10 ? hair : hair + 1;
     final layers = await Future.wait([
       _loadBase(),
-      if (hair < 10) _load('layer_${hair.clamp(0, 9)}'),
+      if (hasHair) _load('layer_$hairLayer'),
       if (facialHair >= 2) _load('layer_${facialHair == 4 ? 10 : 11}'),
     ]);
     return _PortraitArtwork(
       base: layers.first,
-      hairstyle: hair < 10 ? layers[1] : null,
+      hairstyle: hasHair ? layers[1] : null,
       beard: facialHair >= 2 ? layers.last : null,
     );
   }

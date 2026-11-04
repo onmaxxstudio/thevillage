@@ -69,6 +69,9 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     'Bun',
     'Ponytail',
     'Bald',
+    'Straight bob',
+    'Side part',
+    'Long straight',
   ];
   static const avatarKeys = ProfileService.avatarKeys;
   static const themeColors = <Color>[
@@ -116,7 +119,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   static const freckleStyles = ['None', 'Light', 'More'];
 
   late int skin = widget.profile.avatarSkin.clamp(0, 11).toInt();
-  late int hair = widget.profile.avatarHair.clamp(0, 10).toInt();
+  late int hair = widget.profile.avatarHair.clamp(0, hairStyles.length - 1).toInt();
   late int hairColor = widget.profile.avatarHairColor.clamp(0, 9).toInt();
   late int face = widget.profile.avatarFace.clamp(0, 2).toInt();
   late int eyes = widget.profile.avatarEyes.clamp(0, 2).toInt();
