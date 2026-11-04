@@ -1,10 +1,16 @@
+@TestOn('browser')
+library;
+
+import 'dart:async';
+import 'dart:js_interop';
+
 import 'package:ask_the_village/services/profile_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:web/web.dart' as web;
 
 Future<T> emulatorStep<T>(String name, Future<T> operation) =>
     operation.timeout(
@@ -14,12 +20,30 @@ Future<T> emulatorStep<T>(String name, Future<T> operation) =>
       },
     );
 
+Future<void> loadTestSdk() {
+  final loaded = Completer<void>();
+  final script = web.HTMLScriptElement()
+    ..src = 'http://127.0.0.1:8765/avatar-firebase-sdk.js';
+  script.addEventListener('load', ((web.Event _) => loaded.complete()).toJS);
+  script.addEventListener(
+    'error',
+    ((web.Event _) {
+      loaded.completeError(
+        StateError('Could not load the local Firebase test SDK.'),
+      );
+    }).toJS,
+  );
+  web.document.head!.appendChild(script);
+  return loaded.future;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test(
     'avatar fields persist through sign-out and reload in both profiles',
     () async {
+      await emulatorStep('local SDK loading', loadTestSdk());
       SharedPreferences.setMockInitialValues({});
       await emulatorStep(
         'Firebase initialization',
@@ -130,7 +154,6 @@ void main() {
         }
       }
     },
-    skip: !kIsWeb,
     timeout: const Timeout(Duration(minutes: 3)),
   );
 }
