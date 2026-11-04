@@ -232,7 +232,7 @@ class _VillageAvatarPainter extends CustomPainter {
       RRect.fromRectAndRadius(const Rect.fromLTWH(27, 41, 10, 13), const Radius.circular(4)),
       fill,
     );
-    fill.color = _clothes[i];
+    fill.shader = LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color.lerp(_clothes[i], Colors.white, .23)!, _clothes[i], Color.lerp(_clothes[i], Colors.black, .24)!]).createShader(const Rect.fromLTWH(8, 46, 48, 18));
     final shoulders = Path()
       ..moveTo(8, 64)
       ..lineTo(10, 55)
@@ -243,9 +243,10 @@ class _VillageAvatarPainter extends CustomPainter {
       ..lineTo(56, 64)
       ..close();
     canvas.drawPath(shoulders, fill);
+    fill.shader = null;
 
     // Hair silhouettes are deliberately distinct at small avatar sizes.
-    fill.color = hairColor;
+    fill.shader = LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color.lerp(hairColor, Colors.white, .18)!, hairColor, Color.lerp(hairColor, Colors.black, .24)!]).createShader(const Rect.fromLTWH(12, 8, 44, 49));
     switch (hairStyle) {
       case 0: // Afro
         canvas.drawOval(const Rect.fromLTWH(13, 9, 38, 37), fill);
@@ -308,6 +309,7 @@ class _VillageAvatarPainter extends CustomPainter {
         break;
     }
 
+    fill.shader = null;
     // Head covering for one of the portraits, with a clear face opening.
     if (i == 2 || i == 8) {
       fill.color = i == 2 ? const Color(0xFF536E78) : const Color(0xFFAA755F);
@@ -337,7 +339,10 @@ class _VillageAvatarPainter extends CustomPainter {
                     : 25.0;
     final faceLeft = (64 - faceWidth) / 2;
     final faceHeight = faceStyle == 1 ? 36.0 : faceStyle == 2 ? 30.0 : presentationStyle == 0 ? 35.0 : 33.0;
-    canvas.drawOval(Rect.fromLTWH(faceLeft, faceStyle == 2 ? 18 : 17, faceWidth, faceHeight), fill);
+    final faceRect = Rect.fromLTWH(faceLeft, faceStyle == 2 ? 18 : 17, faceWidth, faceHeight);
+    fill.shader = RadialGradient(center: const Alignment(-.4, -.36), radius: 1.05, colors: [Color.lerp(skinColor, Colors.white, .24)!, skinColor, Color.lerp(skinColor, Colors.black, .23)!], stops: const [0, .57, 1]).createShader(faceRect);
+    canvas.drawOval(faceRect, fill);
+    fill.shader = null;
 
     // A short fringe for waves and a neat hairline for cropped styles.
     fill.color = hairColor;
