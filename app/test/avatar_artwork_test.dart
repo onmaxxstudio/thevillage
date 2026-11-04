@@ -25,7 +25,9 @@ void main() {
   });
 
   test('portrait shader can be loaded from the Flutter asset bundle', () async {
-    final program = await ui.FragmentProgram.fromAsset('shaders/avatar_skin.frag');
+    final program = await ui.FragmentProgram.fromAsset(
+      'shaders/avatar_skin.frag',
+    );
     program.fragmentShader().dispose();
   });
 }

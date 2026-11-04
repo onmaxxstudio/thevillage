@@ -21,5 +21,6 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter test test/auth_attempt_state_test.dart
+      - run: flutter test test/avatar_artwork_test.dart
       - run: flutter analyze --no-fatal-warnings --no-fatal-infos
       - run: flutter build web
