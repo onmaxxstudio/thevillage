@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/profile_service.dart';
 import '../widgets/village_avatar.dart';
+import '../widgets/village_portrait.dart';
 
 class AvatarBuilderScreen extends StatefulWidget {
   const AvatarBuilderScreen({super.key, required this.profile});
@@ -169,29 +170,20 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
         Positioned(left: -30, top: -30, child: _orb(const Color(0xFFE1E8D9), 115)),
         Positioned(right: -22, bottom: -40, child: _orb(const Color(0xFFF1E1D5), 140)),
         Positioned(
-          bottom: 25,
+          bottom: 31,
           left: 0,
           right: 0,
           child: Center(
-            child: CustomPaint(
-              size: const Size(240, 190),
-              painter: _AvatarCharacterPainter(
-                skin: skin,
-                hair: hair,
-                hairColor: hairColor,
-                presentation: presentation,
-                facialHair: facialHair,
-                outfit: avatarKeys.indexOf(avatarKey).clamp(0, 11).toInt(),
-                face: face,
-                eyes: eyes,
-                smile: smile,
-                nose: nose,
-                brows: brows,
-                glasses: glasses,
-                freckles: freckles,
-                mole: mole,
-                eyeColor: eyeColor,
-              ),
+            child: SizedBox(
+              width: 245, height: 245,
+              child: ClipOval(child: VillagePortrait(
+                skin: skin, hair: hair, hairColor: hairColor,
+                presentation: presentation, facialHair: facialHair,
+                outfit: avatarKeys.indexOf(avatarKey).clamp(0, 11),
+                face: face, eyes: eyes, smile: smile, nose: nose,
+                brows: brows, glasses: glasses, freckles: freckles,
+                mole: mole, eyeColor: eyeColor,
+              )),
             ),
           ),
         ),
