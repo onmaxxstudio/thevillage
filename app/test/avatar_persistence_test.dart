@@ -6,6 +6,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+Future<T> emulatorStep<T>(String name, Future<T> operation) =>
+    operation.timeout(
+      const Duration(seconds: 55),
+      onTimeout: () {
+        throw StateError('Avatar persistence test timed out during $name.');
+      },
+    );
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -13,49 +21,67 @@ void main() {
     'avatar fields persist through sign-out and reload in both profiles',
     () async {
       SharedPreferences.setMockInitialValues({});
-      await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: 'fake-api-key',
-          appId: '1:123:web:abc',
-          messagingSenderId: '123',
-          projectId: 'demo-village',
+      await emulatorStep(
+        'Firebase initialization',
+        Firebase.initializeApp(
+          options: const FirebaseOptions(
+            apiKey: 'fake-api-key',
+            appId: '1:123:web:abc',
+            messagingSenderId: '123',
+            projectId: 'demo-village',
+          ),
         ),
       );
       final auth = FirebaseAuth.instance;
       final firestore = FirebaseFirestore.instance;
-      await auth.useAuthEmulator('127.0.0.1', 9099);
+      await emulatorStep(
+        'Auth emulator connection',
+        auth.useAuthEmulator('127.0.0.1', 9099),
+      );
       firestore.useFirestoreEmulator('127.0.0.1', 8080);
       const email = 'avatar-builder-test@example.test';
       const password = 'emulator-test-password';
-      final account = await auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+      final account = await emulatorStep(
+        'test member creation',
+        auth.createUserWithEmailAndPassword(email: email, password: password),
       );
       final uid = account.user!.uid;
       final profiles = ProfileService();
-      await profiles.ensureCurrentUserProfile(preferredUsername: 'avatar_test');
-      await profiles.updateAvatar(
-        mode: 'avatar',
-        key: 'plum',
-        skin: 8,
-        hair: 4,
-        hairColor: 9,
-        face: 2,
-        eyes: 1,
-        smile: 2,
-        presentation: 2,
-        facialHair: 3,
-        mole: 4,
-        nose: 1,
-        brows: 2,
-        glasses: 1,
-        freckles: 2,
-        eyeColor: 5,
+      await emulatorStep(
+        'test profile setup',
+        profiles.ensureCurrentUserProfile(preferredUsername: 'avatar_test'),
+      );
+      await emulatorStep(
+        'avatar save',
+        profiles.updateAvatar(
+          mode: 'avatar',
+          key: 'plum',
+          skin: 8,
+          hair: 4,
+          hairColor: 9,
+          face: 2,
+          eyes: 1,
+          smile: 2,
+          presentation: 2,
+          facialHair: 3,
+          mole: 4,
+          nose: 1,
+          brows: 2,
+          glasses: 1,
+          freckles: 2,
+          eyeColor: 5,
+        ),
       );
 
-      await auth.signOut();
-      await auth.signInWithEmailAndPassword(email: email, password: password);
-      final profile = await profiles.loadProfile();
+      await emulatorStep('sign-out', auth.signOut());
+      await emulatorStep(
+        'sign-in',
+        auth.signInWithEmailAndPassword(email: email, password: password),
+      );
+      final profile = await emulatorStep(
+        'profile reload',
+        profiles.loadProfile(),
+      );
       final appearance = {
         'avatarMode': profile.avatarMode,
         'avatarKey': profile.avatarKey,
@@ -105,5 +131,6 @@ void main() {
       }
     },
     skip: !kIsWeb,
+    timeout: const Timeout(Duration(minutes: 3)),
   );
 }
