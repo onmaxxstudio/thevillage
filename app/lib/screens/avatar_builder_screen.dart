@@ -554,73 +554,69 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final i = availableHairstyles[index];
-              return _hairstyleChoice(i);
+              return GestureDetector(
+                onTap: () => setState(() => hair = i),
+                child: Container(
+                  width: 76,
+                  padding: const EdgeInsets.fromLTRB(5, 7, 5, 5),
+                  decoration: BoxDecoration(
+                    color: hair == i ? const Color(0xFFEAF0E4) : Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: hair == i ? sage : line,
+                      width: hair == i ? 1.6 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ClipOval(child: _portrait(hairstyle: i)),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        hairStyles[i],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: hair == i ? sage : ink,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
             },
           ),
         ),
       ),
       const SizedBox(height: 15),
-      _hairColourOptions(),
-    ],
-  );
-
-  Widget _hairstyleChoice(int i) => GestureDetector(
-    onTap: () => setState(() => hair = i),
-    child: Container(
-      width: 76,
-      padding: const EdgeInsets.fromLTRB(5, 7, 5, 5),
-      decoration: BoxDecoration(
-        color: hair == i ? const Color(0xFFEAF0E4) : Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: hair == i ? sage : line,
-          width: hair == i ? 1.6 : 1,
+      _optionPanel(
+        'Hair colour',
+        'Make it natural or try something new.',
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (var i = 0; i < hairColors.length; i++)
+              _toneChoice(
+                hairColors[i],
+                hairColor == i,
+                switch (i) {
+                  6 => 'Silver',
+                  7 => 'White',
+                  _ => 'Hair colour ${i + 1}',
+                },
+                () => setState(() => hairColor = i),
+              ),
+          ],
         ),
       ),
-      child: Column(
-        children: [
-          Expanded(
-            child: SizedBox(
-              width: double.infinity,
-              child: ClipOval(child: _portrait(hairstyle: i)),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            hairStyles[i],
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 10,
-              color: hair == i ? sage : ink,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-
-  Widget _hairColourOptions() => _optionPanel(
-    'Hair colour',
-    'Make it natural or try something new.',
-    Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-  for (var i = 0; i < hairColors.length; i++)
-    _toneChoice(
-      hairColors[i],
-      hairColor == i,
-      switch (i) {
-        6 => 'Silver',
-        7 => 'White',
-        _ => 'Hair colour ${i + 1}',
-      },
-      () => setState(() => hairColor = i),
-    ),
-      ],
-    ),
+    ],
   );
 
   Widget _faceOptions() => Column(
