@@ -408,9 +408,9 @@ class _AvatarCharacterPainter extends CustomPainter {
     // Soft portrait backdrop and shoulders.
     p.color=const Color(0xFFE9EDE3); canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(14,5,162,145),const Radius.circular(72)),p);
     p.color=s; canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(77,88,36,35),const Radius.circular(15)),p);
-    p.color=shirt; final shoulders=Path()..moveTo(77,105)..lineTo(95,116)..lineTo(113,105)..quadraticBezierTo(153,109,164,150)..lineTo(26,150)..quadraticBezierTo(37,109,77,105)..close(); canvas.drawPath(shoulders,p);
+    p.shader=LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color.lerp(shirt,Colors.white,.22)!,shirt,Color.lerp(shirt,Colors.black,.25)!]).createShader(const Rect.fromLTWH(25,102,145,55)); final shoulders=Path()..moveTo(77,105)..lineTo(95,116)..lineTo(113,105)..quadraticBezierTo(153,109,164,150)..lineTo(26,150)..quadraticBezierTo(37,109,77,105)..close(); canvas.drawPath(shoulders,p); p.shader=null;
     // Hair behind face; locks fall to shoulder line.
-    p.color=h;
+    p.shader=LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color.lerp(h,Colors.white,.17)!,h,Color.lerp(h,Colors.black,.27)!]).createShader(const Rect.fromLTWH(42,12,120,120));
     if([1,2,3,9].contains(hair)){canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(52,35,86,92),const Radius.circular(38)),p); if([1,2,3].contains(hair)){for(double x=57;x<137;x+=hair==3?8:12){canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x,67, hair==3?5:8,54+(x.toInt()%2)*8),const Radius.circular(5)),p);}}}
     // Hair silhouette variations.
     if(hair==0){canvas.drawOval(const Rect.fromLTWH(43,14,104,78),p); for(final q in const [Offset(50,41),Offset(62,23),Offset(80,16),Offset(102,15),Offset(125,24),Offset(140,44),Offset(49,64),Offset(139,64)]) canvas.drawCircle(q,15,p);}
@@ -418,13 +418,13 @@ class _AvatarCharacterPainter extends CustomPainter {
     else if(hair==5||hair==6||hair==8||hair==9){canvas.drawOval(const Rect.fromLTWH(53,23,84,65),p); if(hair==8)canvas.drawCircle(const Offset(96,17),17,p); if(hair==9)canvas.drawOval(const Rect.fromLTWH(127,43,32,74),p);}
     else if(hair==7){canvas.drawOval(const Rect.fromLTWH(59,25,72,43),p);}
     // Ears and softly shaped face.
-    p.color=s; canvas.drawOval(const Rect.fromLTWH(50,51,20,29),p); canvas.drawOval(const Rect.fromLTWH(120,51,20,29),p);
+    p.shader=null; p.color=s; canvas.drawOval(const Rect.fromLTWH(50,51,20,29),p); canvas.drawOval(const Rect.fromLTWH(120,51,20,29),p);
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(61,35,68,77), const Radius.circular(30)),p);
     // Face is drawn over the hairline for a clean portrait silhouette.
-    p.color=s; canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(61,36,68,76),const Radius.circular(31)),p);
+    p.shader=RadialGradient(center:const Alignment(-.42,-.35),radius:1.05,colors:[Color.lerp(s,Colors.white,.22)!,s,Color.lerp(s,Colors.black,.24)!],stops:const [.0,.57,1]).createShader(const Rect.fromLTWH(61,36,68,76)); canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(61,36,68,76),const Radius.circular(31)),p); p.shader=null;
     // Eyes, brows, nose, blush and mouth.
     final ey=70.0; p.color=const Color(0xFFFFF8EF); canvas.drawOval(Rect.fromCenter(center:Offset(79,ey),width:15,height:eyes==1?9:7),p); canvas.drawOval(Rect.fromCenter(center:Offset(111,ey),width:15,height:eyes==1?9:7),p);
-    p.color=eyesC[eyeColor.clamp(0,5)]; canvas.drawCircle(Offset(79,ey),3.6,p); canvas.drawCircle(Offset(111,ey),3.6,p); p.color=const Color(0xFF30231F); canvas.drawCircle(Offset(79,ey),1.8,p); canvas.drawCircle(Offset(111,ey),1.8,p);
+    p.shader=RadialGradient(center:const Alignment(-.4,-.5),colors:[Color.lerp(eyesC[eyeColor.clamp(0,5)],Colors.white,.38)!,eyesC[eyeColor.clamp(0,5)]]).createShader(const Rect.fromLTWH(74,94,42,12)); canvas.drawCircle(Offset(79,ey),3.6,p); canvas.drawCircle(Offset(111,ey),3.6,p); p.shader=null; p.color=const Color(0xFF30231F); canvas.drawCircle(Offset(79,ey),1.8,p); canvas.drawCircle(Offset(111,ey),1.8,p);
     line.color=h; line.strokeWidth=brows==1?3.5:2.4; canvas.drawLine(const Offset(70,59),const Offset(87,57),line); canvas.drawLine(const Offset(103,57),const Offset(120,59),line);
     p.color=Color.lerp(const Color(0xFFB56F54),s,.55)!; canvas.drawOval(Rect.fromCenter(center:Offset(95,83),width:nose==2?9:6,height:5),p);
     p.color=Color.lerp(const Color(0xFFE79D8E),s,.72)!; canvas.drawOval(const Rect.fromLTWH(67,81,16,7),p); canvas.drawOval(const Rect.fromLTWH(107,81,16,7),p);
