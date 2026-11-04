@@ -355,23 +355,44 @@ class _PortraitPainter extends CustomPainter {
     _paintDetails(canvas);
     final beard = artwork.beard;
     if (beard != null) {
+      final masculine = look.presentation == 1;
+      final jawWidth = switch (look.face) {
+        1 => .96,
+        2 => 1.04,
+        _ => 1.0,
+      };
       canvas.save();
-      canvas.translate(0, look.presentation == 1 ? -9 : -3);
       if (look.facialHair == 4) {
         // Keep the moustache anchored while fitting the beard to the jaw.
-        final jawWidth = switch (look.face) {
-          1 => .96,
-          2 => 1.04,
-          _ => 1.0,
-        };
-        canvas.translate(256, 320);
-        canvas.scale((look.presentation == 1 ? .89 : .81) * jawWidth, .86);
+        canvas.translate(256, masculine ? 311 : 317);
+        canvas.scale((masculine ? .89 : .81) * jawWidth, .86);
         canvas.translate(-256, -320);
+        _drawLayer(canvas, beard);
+      } else {
+        final mouthOffset = masculine ? 0.0 : 8.0;
+        _drawLayer(
+          canvas,
+          beard,
+          source: const Rect.fromLTRB(165, 308, 350, 370),
+          destination: Rect.fromCenter(
+            center: Offset(256, 306 + mouthOffset),
+            width: 92 * jawWidth,
+            height: 22,
+          ),
+        );
+        if (look.facialHair == 3) {
+          _drawLayer(
+            canvas,
+            beard,
+            source: const Rect.fromLTRB(185, 380, 331, 468),
+            destination: Rect.fromCenter(
+              center: Offset(256, 348 + mouthOffset),
+              width: 66 * jawWidth,
+              height: 33,
+            ),
+          );
+        }
       }
-      if (look.facialHair == 2) {
-        canvas.clipRect(const Rect.fromLTWH(0, 0, 512, 340));
-      }
-      _drawLayer(canvas, beard);
       canvas.restore();
     }
     final hairstyle = artwork.hairstyle;
@@ -409,7 +430,12 @@ class _PortraitPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawLayer(Canvas canvas, ui.Image image) {
+  void _drawLayer(
+    Canvas canvas,
+    ui.Image image, {
+    Rect? source,
+    Rect? destination,
+  }) {
     final color = _color(VillagePortrait.hairTones, look.hairColor);
     final paint = Paint()..filterQuality = FilterQuality.medium;
     if (look.hairColor == 6 || look.hairColor == 7) {
@@ -449,7 +475,11 @@ class _PortraitPainter extends CustomPainter {
         0,
       ]);
     }
-    canvas.drawImage(image, Offset.zero, paint);
+    if (source != null && destination != null) {
+      canvas.drawImageRect(image, source, destination, paint);
+    } else {
+      canvas.drawImage(image, Offset.zero, paint);
+    }
   }
 
   void _paintDetails(Canvas canvas) {
@@ -471,16 +501,24 @@ class _PortraitPainter extends CustomPainter {
     if (look.mole == 3) canvas.drawCircle(Offset(262, eyeY + 105), 3.3, mark);
 
     if (look.facialHair == 1) {
-      final stubble = Paint()
-        ..color = _color(
-          VillagePortrait.hairTones,
-          look.hairColor,
-        ).withValues(alpha: .56);
-      for (var i = 0; i < 156; i++) {
-        final x = 196.0 + (i * 29 % 121);
-        final width = (x - 256).abs() / 60;
-        final y = eyeY + 99 - width * width * 32 + (i * 13 % 23);
-        canvas.drawCircle(Offset(x, y), 1.1, stubble);
+      final paint = Paint();
+      final color = _color(VillagePortrait.hairTones, look.hairColor);
+      // A fixed seed keeps the texture stable when the portrait repaints.
+      final random = math.Random(72);
+      final width = look.presentation == 1 ? 76.0 : 68.0;
+      for (var i = 0; i < 920; i++) {
+        final side = random.nextDouble() * 2 - 1;
+        final depth = random.nextDouble();
+        final edge = side.abs();
+        final top = eyeY + 82 - edge * edge * 32;
+        final bottom = eyeY + 113 - edge * edge * 38;
+        final fade = (1 - (depth * 2 - 1).abs()) * (1 - edge * edge);
+        paint.color = color.withValues(alpha: .10 + .24 * fade);
+        canvas.drawCircle(
+          Offset(256 + side * width, top + (bottom - top) * depth),
+          .34 + random.nextDouble() * .43,
+          paint,
+        );
       }
     }
     if (look.glasses > 0) {
