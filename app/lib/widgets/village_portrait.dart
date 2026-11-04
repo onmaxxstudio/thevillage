@@ -24,9 +24,9 @@ class VillagePortrait extends StatelessWidget {
     final shirt = shirts[outfit.clamp(0,11)];
     final iris = irises[eyeColor.clamp(0,5)];
     final masculine = presentation == 1;
-    final width = face == 2 ? 66 : face == 1 ? 52 : masculine ? 62 : 57;
+    final width = face == 2 ? 73 : face == 1 ? 49 : masculine ? 70 : presentation == 0 ? 55 : 62;
     final left = 100 - width / 2;
-    final facePath = 'M ${left+7} 78 Q ${left+width/2} 54 ${left+width-7} 78 Q ${left+width+6} 117 ${left+width-12} 148 Q 100 166 ${left+12} 148 Q ${left-6} 117 ${left+7} 78 Z';
+    final facePath = masculine ? 'M ${left+6} 78 Q 100 54 ${left+width-6} 78 L ${left+width+1} 130 Q ${left+width-2} 153 115 162 L 85 162 Q ${left+2} 153 ${left-1} 130 Z' : 'M ${left+7} 78 Q 100 54 ${left+width-7} 78 Q ${left+width+6} 117 ${left+width-12} 148 Q 100 ${presentation==0?177:166} ${left+12} 148 Q ${left-6} 117 ${left+7} 78 Z';
     final hairBack = hair == 10 ? '' : '<path d="M43 107 Q32 33 98 29 Q168 31 157 109 L151 169 Q139 180 135 162 L136 94 L65 94 L65 164 Q49 178 46 153Z" fill="url(#hair)" />';
     String curls = '';
     if (hair == 0 || hair == 4 || hair == 5) {
@@ -54,6 +54,8 @@ class VillagePortrait extends StatelessWidget {
     final specs = glasses == 0 ? '' : '<g stroke="#453E39" stroke-width="1.8" stroke-opacity=".8" fill="none"><rect x="67" y="100" width="28" height="22" rx="${glasses==1?5:12}"/><rect x="105" y="100" width="28" height="22" rx="${glasses==1?5:12}"/><path d="M95 110 Q100 106 105 110"/></g>';
     final dots = freckles == 0 ? '' : List.generate(8,(i) => '<circle cx="${72+(i%4)*7+(i>=4?37:0)}" cy="${124+(i%3)*3}" r="${freckles==1?1:1.7}" fill="#5C342B" opacity=".45"/>').join();
     final beauty = mole == 0 ? '' : '<circle cx="${mole==2?124:mole==3?101:76}" cy="${mole==3?146:132}" r="2.2" fill="#38231D"/>';
+    final jawDetail = masculine ? '<path d="M70 140 Q77 159 88 161 L112 161 Q124 158 130 140" fill="none" stroke="#291610" stroke-opacity=".16" stroke-width="3"/>' : '<path d="M81 151 Q100 168 119 151" fill="none" stroke="#FFFFFF" stroke-opacity=".15" stroke-width="2"/>';
+    final presentationDetail = masculine ? '<path d="M66 194 L78 175 L100 185 L122 175 L134 194" fill="none" stroke="#101B14" stroke-opacity=".22" stroke-width="5"/>' : presentation == 0 ? '<path d="M73 181 Q100 200 127 181" fill="none" stroke="#FFFFFF" stroke-opacity=".26" stroke-width="3"/>' : '';
     return '''<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
 <defs>
 <radialGradient id="bg" cx="35%" cy="22%" r="90%"><stop stop-color="#F7F4EB"/><stop offset="1" stop-color="#DCE7DB"/></radialGradient>
@@ -76,7 +78,7 @@ $hairBack
 <circle cx="85" cy="110" r="1.7" fill="white"/><circle cx="117" cy="110" r="1.7" fill="white"/>
 <path d="M100 113 Q${nose==2?91:95} 127 101 128 Q105 129 109 126" stroke="#6B4137" stroke-opacity=".65" stroke-width="2.4" fill="none" stroke-linecap="round"/>
 <ellipse cx="75" cy="126" rx="12" ry="6" fill="#DA827C" opacity=".19"/><ellipse cx="125" cy="126" rx="12" ry="6" fill="#DA827C" opacity=".19"/><ellipse cx="100" cy="125" rx="4" ry="2" fill="#FFFFFF" opacity=".15"/>
-$mouth $dots $beauty $beard $specs
+$mouth $dots $beauty $beard $specs $jawDetail $presentationDetail
 $curls
 <path d="M63 79 Q68 49 100 50 Q134 48 139 80 Q113 68 100 72 Q82 69 63 79" fill="url(#hair)" opacity="${hair==10?0:1}"/><path d="M74 75 Q100 60 126 75" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="2" fill="none"/>
 </svg>'''.replaceAll('<circularGradient/>','');

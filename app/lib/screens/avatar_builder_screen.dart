@@ -242,10 +242,13 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   };
 
   Widget _genderOptions() => _optionPanel(
-    'Choose your starting character', 'Every feature is available to everyone. Pick a starting look and make it yours.',
+    'Choose your starting character', 'Choose a starting look. You can still change every feature afterward.',
     Wrap(spacing: 9, runSpacing: 9, children: [
       for (var i = 0; i < presentations.length; i++) _selectCard(presentations[i], Icons.person_outline_rounded, presentation == i, () => setState(() {
         presentation = i;
+        if (i == 0) { hair = 5; facialHair = 0; face = 1; }
+        if (i == 1) { hair = 6; facialHair = 1; face = 2; }
+        if (i == 2) { hair = 2; facialHair = 0; face = 0; }
       })),
     ]),
   );
