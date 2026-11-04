@@ -24,3 +24,15 @@ jobs:
       - run: flutter test test/avatar_artwork_test.dart
       - run: flutter analyze --no-fatal-warnings --no-fatal-infos
       - run: flutter build web
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify avatar saves with Firebase emulators
+        run: >-
+          npx --yes firebase-tools emulators:exec
+          --only auth,firestore --project demo-village --config firebase.json
+          "flutter test --platform chrome test_driver/avatar_persistence_test.dart"
