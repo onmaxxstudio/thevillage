@@ -364,10 +364,18 @@ class _PortraitPainter extends CustomPainter {
       // Anchor the fitted sprites at the center of the hairline so narrowing
       // the sides does not shift the part or lift the fringe off the forehead.
       final width = switch (look.hair) {
+        0 => .97, // Afro
+        1 => .98, // Locs
+        2 => .97, // Twists
+        3 => .98, // Braids
         4 => .82, // Bantu knots
         5 => .94, // Curls
         6 => .75, // Waves
         7 => .84, // Short crop
+        8 => .96, // Bun
+        9 => .96, // Ponytail
+        11 => .97, // Straight bob
+        12 => .96, // Side part
         _ => 1.0,
       };
       final scalpWidth = switch (look.face) {
@@ -378,7 +386,7 @@ class _PortraitPainter extends CustomPainter {
       final presentationWidth = look.presentation == 1 ? 1.035 : 1.0;
       canvas.save();
       canvas.translate(256, look.presentation == 1 ? -5 : 0);
-      canvas.scale(width < 1 ? width * scalpWidth * presentationWidth : 1.0, 1);
+      canvas.scale(width * scalpWidth * presentationWidth, 1);
       canvas.translate(-256, 0);
       _drawLayer(canvas, hairstyle);
       canvas.restore();
