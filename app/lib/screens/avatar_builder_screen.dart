@@ -49,7 +49,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     Color(0xFF485D83), Color(0xFF855A74), Color(0xFFBD735D),
     Color(0xFF567663), Color(0xFF397778), Color(0xFF967241),
   ];
-  static const tabs = ['Skin tone', 'Hairstyle', 'Features', 'More'];
+  static const tabs = ['Your base', 'Skin tone', 'Hairstyle', 'Features', 'Facial hair', 'Style'];
   static const presentations = ['Feminine', 'Masculine', 'Androgynous'];
   static const facialHairStyles = ['None', 'Stubble', 'Mustache', 'Goatee', 'Full beard'];
   static const faceShapes = ['Soft', 'Long', 'Round'];
@@ -113,7 +113,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
       eyes = random.nextInt(3);
       smile = random.nextInt(3);
       presentation = random.nextInt(3);
-      facialHair = presentation == 0 ? 0 : random.nextInt(5);
+      facialHair = random.nextInt(5);
       mole = random.nextInt(5);
       nose = random.nextInt(3);
       brows = random.nextInt(3);
@@ -133,7 +133,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
         foregroundColor: ink,
         elevation: 0,
         centerTitle: true,
-        title: Text('Build your avatar', style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 20)),
+        title: Text('Create your character', style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 20)),
         actions: [
           TextButton(onPressed: saving ? null : save, child: const Text('Save', style: TextStyle(color: sage, fontWeight: FontWeight.w800))),
           const SizedBox(width: 8),
@@ -198,9 +198,9 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
         Positioned(
           top: 14, left: 16,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('YOUR LOOK', style: GoogleFonts.dmSans(color: muted, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+            Text('YOUR CHARACTER', style: GoogleFonts.dmSans(color: muted, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
             const SizedBox(height: 3),
-            Text('Make it feel like you.', style: GoogleFonts.playfairDisplay(color: ink, fontSize: 17, fontWeight: FontWeight.w700)),
+            Text('Your look. Your way.', style: GoogleFonts.playfairDisplay(color: ink, fontSize: 17, fontWeight: FontWeight.w700)),
           ]),
         ),
         Positioned(
@@ -213,7 +213,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
         ),
         Positioned(
           bottom: 12, left: 0, right: 0,
-          child: Center(child: Text('Your portrait updates as you customize', style: GoogleFonts.dmSans(color: muted, fontSize: 11, fontWeight: FontWeight.w600))),
+          child: Center(child: Text('Preview updates as you customize', style: GoogleFonts.dmSans(color: muted, fontSize: 11, fontWeight: FontWeight.w600))),
         ),
       ],
     ),
@@ -250,11 +250,10 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   };
 
   Widget _genderOptions() => _optionPanel(
-    'Gender expression', 'Choose the look that feels most like you.',
+    'Choose your starting character', 'Every feature is available to everyone. Pick a starting look and make it yours.',
     Wrap(spacing: 9, runSpacing: 9, children: [
       for (var i = 0; i < presentations.length; i++) _selectCard(presentations[i], Icons.person_outline_rounded, presentation == i, () => setState(() {
         presentation = i;
-        if (i == 0) facialHair = 0;
       })),
     ]),
   );
