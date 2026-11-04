@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
+
+import 'package:flutter/material.dart';
 
 import 'package:flutter/services.dart';
 
@@ -90,9 +93,159 @@ class VillagePortrait extends StatelessWidget {
 
   static const assetDirectory = 'assets/avatar';
   static final _layers = <String, Future<ui.Image>>{};
-  static final _program = ui.FragmentProgram.fromAsset(
-    'shaders/avatar_skin.frag',
-  );
+  static final _basePixels = <int, Future<Uint8List>>{};
+  static final _bases =
+      <(int, int, int, int, int, int, int, int, int), Future<ui.Image>>{};
+  static const _resolution = 384;
+
+  Future<ui.Image> _loadBase() {
+    final base = presentation.clamp(0, 2);
+    final key = (base, skin, outfit, eyeColor, face, eyes, smile, nose, brows);
+    final cached = _bases.remove(key);
+    if (cached != null) {
+      _bases[key] = cached;
+      return cached;
+    }
+    if (_bases.length >= 32) _bases.remove(_bases.keys.first);
+    return _bases[key] = _renderBase(base);
+  }
+
+  // Bake a regular image instead of sampling the base texture in a fragment
+  // shader. Safari can then paint it through the same path as the hair sprites.
+  Future<ui.Image> _renderBase(int base) async {
+    const size = _resolution;
+    final source = await _basePixels.putIfAbsent(base, () async {
+      final data = await rootBundle.load('$assetDirectory/base_$base.webp');
+      final codec = await ui.instantiateImageCodec(
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+        targetWidth: size,
+        targetHeight: size,
+      );
+      try {
+        final frame = await codec.getNextFrame();
+        try {
+          final pixels = (await frame.image.toByteData(
+            format: ui.ImageByteFormat.rawStraightRgba,
+          ))!;
+          return pixels.buffer.asUint8List(
+            pixels.offsetInBytes,
+            pixels.lengthInBytes,
+          );
+        } finally {
+          frame.image.dispose();
+        }
+      } finally {
+        codec.dispose();
+      }
+    });
+    final output = Uint8List(source.length);
+    final tone = _PortraitPainter._color(skinTones, skin);
+    final shirt = _PortraitPainter._color(shirts, outfit);
+    final iris = _PortraitPainter._color(irises, eyeColor);
+    final faceWarp = const [0.0, .35, -.38][face.clamp(0, 2)];
+    final eyeWarp = const [0.0, -.55, .65][eyes.clamp(0, 2)];
+    final mouthWarp = const [0.0, -.058, .068][smile.clamp(0, 2)];
+    final noseWarp = const [0.0, .46, -.65][nose.clamp(0, 2)];
+    final browWarp = const [0.0, -.75, .66][brows.clamp(0, 2)];
+    final eyeY = base == 1 ? .482 : .498;
+
+    for (var row = 0; row < size; row++) {
+      final y = (row + .5) / size;
+      final clothing = _smooth(.72, .82, y);
+      for (var col = 0; col < size; col++) {
+        final x = (col + .5) / size;
+        final eyeX = x < .5 ? .421 : .579;
+        var qx = x;
+        var qy = y;
+        if (faceWarp != 0) {
+          qx += (x - .5) * faceWarp * _region(x - .5, y - .62, .33, .27);
+          qy += (y - .61) * faceWarp * _region(x - .5, y - .62, .27, .27) * .5;
+        }
+        if (eyeWarp != 0) {
+          qy += (y - eyeY) * eyeWarp * _region(x - eyeX, y - eyeY, .081, .052);
+        }
+        if (mouthWarp != 0) {
+          qy +=
+              mouthWarp *
+              (.5 - (x - .5).abs() * 12) *
+              _region(x - .5, y - eyeY - .169, .104, .062);
+        }
+        if (noseWarp != 0) {
+          qx +=
+              (x - .5) *
+              noseWarp *
+              _region(x - .5, y - eyeY - .103, .105, .067);
+        }
+        if (browWarp != 0) {
+          qy +=
+              (y - eyeY + .065) *
+              browWarp *
+              _region(x - eyeX, y - eyeY + .065, .08, .04);
+        }
+        final from =
+            ((qy * size).floor().clamp(0, size - 1) * size +
+                (qx * size).floor().clamp(0, size - 1)) *
+            4;
+        final alpha = source[from + 3];
+        if (alpha == 0) continue;
+        final r = source[from] / 255;
+        final g = source[from + 1] / 255;
+        final b = source[from + 2] / 255;
+        final warm = _smooth(.03, .16, r - b) * _smooth(.01, .10, r - g);
+        final fabric = clothing * (1 - warm) * .36;
+        final tintedRed = r * (1 + (tone.r / .65 - 1) * warm);
+        final irisWeight =
+            _region(qx - eyeX, qy - eyeY, .025, .029) *
+            _smooth(.05, .19, tintedRed) *
+            .45;
+        final to = (row * size + col) * 4;
+        // decodeImageFromPixels expects premultiplied RGBA.
+        output[to] =
+            ((tintedRed +
+                            fabric * (shirt.r - .24) +
+                            irisWeight * (iris.r - .19))
+                        .clamp(0.0, 1.0) *
+                    alpha)
+                .round();
+        output[to + 1] =
+            ((g * (1 + (tone.g / .39 - 1) * warm) +
+                            fabric * (shirt.g - .24) +
+                            irisWeight * (iris.g - .14))
+                        .clamp(0.0, 1.0) *
+                    alpha)
+                .round();
+        output[to + 2] =
+            ((b * (1 + (tone.b / .27 - 1) * warm) +
+                            fabric * (shirt.b - .24) +
+                            irisWeight * (iris.b - .12))
+                        .clamp(0.0, 1.0) *
+                    alpha)
+                .round();
+        output[to + 3] = alpha;
+      }
+    }
+    final decoded = Completer<ui.Image>();
+    ui.decodeImageFromPixels(
+      output,
+      size,
+      size,
+      ui.PixelFormat.rgba8888,
+      decoded.complete,
+    );
+    return decoded.future;
+  }
+
+  static double _smooth(double start, double end, double value) {
+    final t = ((value - start) / (end - start)).clamp(0.0, 1.0);
+    return t * t * (3 - 2 * t);
+  }
+
+  static double _region(double x, double y, double width, double height) {
+    final dx = x / width;
+    final dy = y / height;
+    final distance = dx * dx + dy * dy;
+    return distance >= 1 ? 0 : 1 - _smooth(.12, 1, math.sqrt(distance));
+  }
 
   static Future<ui.Image> _load(String name) =>
       _layers.putIfAbsent(name, () async {
@@ -112,12 +265,11 @@ class VillagePortrait extends StatelessWidget {
 
   Future<_PortraitArtwork> _loadArtwork() async {
     final layers = await Future.wait([
-      _load('base_${presentation.clamp(0, 2)}'),
+      _loadBase(),
       if (hair < 10) _load('layer_${hair.clamp(0, 9)}'),
       if (facialHair >= 2) _load('layer_${facialHair == 4 ? 10 : 11}'),
     ]);
     return _PortraitArtwork(
-      program: await _program,
       base: layers.first,
       hairstyle: hair < 10 ? layers[1] : null,
       beard: facialHair >= 2 ? layers.last : null,
@@ -139,13 +291,11 @@ class VillagePortrait extends StatelessWidget {
 
 class _PortraitArtwork {
   const _PortraitArtwork({
-    required this.program,
     required this.base,
     required this.hairstyle,
     required this.beard,
   });
 
-  final ui.FragmentProgram program;
   final ui.Image base;
   final ui.Image? hairstyle;
   final ui.Image? beard;
@@ -172,7 +322,17 @@ class _PortraitPainter extends CustomPainter {
     canvas.save();
     canvas.translate((size.width - side) / 2, (size.height - side) / 2);
     canvas.scale(side / 512);
-    _paintBase(canvas);
+    canvas.drawImageRect(
+      artwork.base,
+      Rect.fromLTWH(
+        0,
+        0,
+        artwork.base.width.toDouble(),
+        artwork.base.height.toDouble(),
+      ),
+      const Rect.fromLTWH(0, 0, 512, 512),
+      Paint()..filterQuality = FilterQuality.medium,
+    );
     _paintDetails(canvas);
     final beard = artwork.beard;
     if (beard != null) {
@@ -187,44 +347,6 @@ class _PortraitPainter extends CustomPainter {
     final hairstyle = artwork.hairstyle;
     if (hairstyle != null) _drawLayer(canvas, hairstyle);
     canvas.restore();
-  }
-
-  void _paintBase(Canvas canvas) {
-    final shader = artwork.program.fragmentShader();
-    try {
-      final skin = _color(VillagePortrait.skinTones, look.skin);
-      final outfit = _color(VillagePortrait.shirts, look.outfit);
-      final iris = _color(VillagePortrait.irises, look.eyeColor);
-      final values = <double>[
-        512,
-        512,
-        skin.r / .65,
-        skin.g / .39,
-        skin.b / .27,
-        (outfit.r - .24) * .36,
-        (outfit.g - .24) * .36,
-        (outfit.b - .24) * .36,
-        (iris.r - .19) * .45,
-        (iris.g - .14) * .45,
-        (iris.b - .12) * .45,
-        const [0.0, .35, -.38][look.face.clamp(0, 2)],
-        const [0.0, -.55, .65][look.eyes.clamp(0, 2)],
-        const [0.0, -.058, .068][look.smile.clamp(0, 2)],
-        const [0.0, .46, -.65][look.nose.clamp(0, 2)],
-        const [0.0, -.75, .66][look.brows.clamp(0, 2)],
-        look.presentation.toDouble(),
-      ];
-      for (var i = 0; i < values.length; i++) {
-        shader.setFloat(i, values[i]);
-      }
-      shader.setImageSampler(0, artwork.base);
-      canvas.drawRect(
-        const Rect.fromLTWH(0, 0, 512, 512),
-        Paint()..shader = shader,
-      );
-    } finally {
-      shader.dispose();
-    }
   }
 
   void _drawLayer(Canvas canvas, ui.Image image) {

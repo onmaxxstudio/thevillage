@@ -28,13 +28,6 @@ void main() {
     }
   });
 
-  test('portrait shader can be loaded from the Flutter asset bundle', () async {
-    final program = await ui.FragmentProgram.fromAsset(
-      'shaders/avatar_skin.frag',
-    );
-    program.fragmentShader().dispose();
-  });
-
   testWidgets('every appearance field changes the painted portrait', (
     tester,
   ) async {
@@ -57,7 +50,11 @@ void main() {
       'outfit': 12,
     };
 
-    Future<Uint8List> render(String field, int value) async {
+    Future<Uint8List> render(
+      String field,
+      int value, {
+      bool bald = false,
+    }) async {
       int option(String name, [int initial = 0]) =>
           name == field ? value : initial;
       await tester.pumpWidget(
@@ -69,9 +66,9 @@ void main() {
               child: SizedBox.square(
                 dimension: 256,
                 child: VillagePortrait(
-                  key: ValueKey((field, value)),
+                  key: ValueKey((field, value, bald)),
                   skin: option('skin', 5),
-                  hair: option('hair'),
+                  hair: bald ? 10 : option('hair'),
                   hairColor: option('hairColor'),
                   face: option('face'),
                   eyes: option('eyes'),
@@ -120,6 +117,18 @@ void main() {
         return bytes!.buffer.asUint8List();
       } finally {
         image!.dispose();
+      }
+    }
+
+    for (var presentation = 0; presentation < 3; presentation++) {
+      final pixels = await render('presentation', presentation, bald: true);
+      for (final row in [139, 218]) {
+        expect(
+          pixels[(row * 256 + 128) * 4 + 3],
+          greaterThan(240),
+          reason:
+              'Presentation $presentation must paint its face and shoulders',
+        );
       }
     }
 
