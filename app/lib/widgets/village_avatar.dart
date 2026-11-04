@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'village_portrait.dart';
 
 class VillageAvatar extends StatelessWidget {
   const VillageAvatar({super.key, this.uid, this.radius = 20, this.anonymous = false, this.photoUrl, this.avatarMode, this.avatarKey, this.avatarSkin, this.avatarHair, this.avatarHairColor, this.avatarFace, this.avatarEyes, this.avatarSmile, this.avatarPresentation, this.avatarFacialHair, this.avatarMole, this.avatarNose, this.avatarBrows, this.avatarGlasses, this.avatarFreckles, this.avatarEyeColor});
@@ -111,28 +112,23 @@ class VillageAvatar extends StatelessWidget {
       };
       return value is num ? value.toInt() : null;
     }
-    return ClipOval(
-      child: CustomPaint(
-        size: Size.square(radius * 2),
-        painter: _VillageAvatarPainter(
-          index < 0 ? 0 : index,
-          skin: appearance('avatarSkin'),
-          hair: appearance('avatarHair'),
-          hairColor: appearance('avatarHairColor'),
-          face: appearance('avatarFace'),
-          eyes: appearance('avatarEyes'),
-          smile: appearance('avatarSmile'),
-          presentation: appearance('avatarPresentation'),
-          facialHair: appearance('avatarFacialHair'),
-          mole: appearance('avatarMole'),
-          nose: appearance('avatarNose'),
-          brows: appearance('avatarBrows'),
-          glasses: appearance('avatarGlasses'),
-          freckles: appearance('avatarFreckles'),
-          eyeColor: appearance('avatarEyeColor'),
-        ),
-      ),
-    );
+    return ClipOval(child: SizedBox.square(dimension: radius * 2, child: VillagePortrait(
+      outfit: index < 0 ? 0 : index,
+      skin: appearance('avatarSkin') ?? 5,
+      hair: appearance('avatarHair') ?? 0,
+      hairColor: appearance('avatarHairColor') ?? 0,
+      face: appearance('avatarFace') ?? 0,
+      eyes: appearance('avatarEyes') ?? 0,
+      smile: appearance('avatarSmile') ?? 0,
+      presentation: appearance('avatarPresentation') ?? 2,
+      facialHair: appearance('avatarFacialHair') ?? 0,
+      mole: appearance('avatarMole') ?? 0,
+      nose: appearance('avatarNose') ?? 0,
+      brows: appearance('avatarBrows') ?? 0,
+      glasses: appearance('avatarGlasses') ?? 0,
+      freckles: appearance('avatarFreckles') ?? 0,
+      eyeColor: appearance('avatarEyeColor') ?? 0,
+    )));
   }
 
 }
