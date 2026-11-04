@@ -6,9 +6,13 @@ import 'dart:js_interop';
 
 import 'package:ask_the_village/services/profile_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore_web/cloud_firestore_web.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth_web/firebase_auth_web.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core_web/firebase_core_web.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web/web.dart' as web;
 
@@ -44,6 +48,9 @@ void main() {
     'avatar fields persist through sign-out and reload in both profiles',
     () async {
       await emulatorStep('local SDK loading', loadTestSdk());
+      FirebaseCoreWeb.registerWith(webPluginRegistrar);
+      FirebaseAuthWeb.registerWith(webPluginRegistrar);
+      FirebaseFirestoreWeb.registerWith(webPluginRegistrar);
       SharedPreferences.setMockInitialValues({});
       await emulatorStep(
         'Firebase initialization',
