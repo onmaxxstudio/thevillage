@@ -54,6 +54,8 @@ void main() {
       String field,
       int value, {
       bool bald = false,
+      int? base,
+      int? faceShape,
     }) async {
       int option(String name, [int initial = 0]) =>
           name == field ? value : initial;
@@ -66,14 +68,14 @@ void main() {
               child: SizedBox.square(
                 dimension: 256,
                 child: VillagePortrait(
-                  key: ValueKey((field, value, bald)),
+                  key: ValueKey((field, value, bald, base, faceShape)),
                   skin: option('skin', 5),
                   hair: bald ? 10 : option('hair'),
                   hairColor: option('hairColor'),
-                  face: option('face'),
+                  face: faceShape ?? option('face'),
                   eyes: option('eyes'),
                   smile: option('smile'),
-                  presentation: option('presentation'),
+                  presentation: base ?? option('presentation'),
                   facialHair: option('facialHair'),
                   mole: option('mole'),
                   nose: option('nose'),
@@ -150,6 +152,21 @@ void main() {
         lessThan(bare[temple] - 20),
         reason: 'Bantu knots should cover the temple at column $column',
       );
+    }
+
+    for (var base = 0; base < 3; base++) {
+      for (var face = 0; face < 3; face++) {
+        final bald = await render('hair', 10, base: base, faceShape: face);
+        for (var hair = 0; hair < fields['hair']!; hair++) {
+          if (hair == 10) continue;
+          final styled = await render('hair', hair, base: base, faceShape: face);
+          expect(
+            listEquals(styled, bald),
+            isFalse,
+            reason: 'Hair $hair must render on base $base, face $face',
+          );
+        }
+      }
     }
 
     for (final entry in fields.entries) {
