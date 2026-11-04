@@ -21,5 +21,26 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter test test/auth_attempt_state_test.dart
+      - run: flutter test test/avatar_artwork_test.dart
       - run: flutter analyze --no-fatal-warnings --no-fatal-infos
       - run: flutter build web
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify avatar saves with Firebase emulators
+        run: |
+          sdk_dir=$(mktemp -d)
+          cp test/avatar_firebase_sdk.js "$sdk_dir/sdk.js"
+          npm install --prefix "$sdk_dir" --no-save firebase@12.12.0 esbuild firebase-tools
+          "$sdk_dir/node_modules/.bin/esbuild" "$sdk_dir/sdk.js" --bundle --outfile="$sdk_dir/avatar-firebase-sdk.js"
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory "$sdk_dir" &
+          sdk_pid=$!
+          trap 'kill "$sdk_pid"' EXIT
+          curl --fail --silent --retry 5 --retry-connrefused --output /dev/null http://127.0.0.1:8765/avatar-firebase-sdk.js
+          "$sdk_dir/node_modules/.bin/firebase" emulators:exec \
+            --only auth,firestore --project demo-village --config firebase.json \
+            "flutter test --platform chrome test/avatar_persistence_test.dart"
