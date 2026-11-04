@@ -62,23 +62,23 @@ class VillagePortrait extends StatelessWidget {
 <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFFFFF" stop-opacity=".24"/><stop offset=".4" stop-color="$shirt"/><stop offset="1" stop-color="#17241C"/></linearGradient>
 </defs>
 <rect width="200" height="200" fill="url(#bg)"/>
-<ellipse cx="100" cy="205" rx="95" ry="62" fill="url(#shirt)"/>
+<ellipse cx="100" cy="205" rx="95" ry="62" fill="url(#shirt)"/><path d="M55 198 Q67 166 84 169 Q100 186 116 169 Q139 168 145 198" fill="none" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="7"/>
 <path d="M84 139 L84 174 Q100 190 116 174 L116 139" fill="url(#skin)"/>
 $hairBack
 <ellipse cx="${left+2}" cy="116" rx="9" ry="15" fill="$s"/>
 <ellipse cx="${left+width-2}" cy="116" rx="9" ry="15" fill="$s"/>
-<path d="$facePath" fill="url(#skin)"/>
+<path d="$facePath" fill="url(#skin)"/><path d="M${left+11} 116 Q${left+11} 151 100 155" fill="none" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="4"/>
 <circularGradient/>
 <path d="M70 99 Q83 ${brows==1?91:94} 94 99 M106 99 Q117 ${brows==1?91:94} 130 99" stroke="$h" stroke-width="${brows==1?4:3}" stroke-linecap="round" fill="none"/>
-<ellipse cx="83" cy="111" rx="10" ry="${eyes==1?7:5.5}" fill="#FFF9F0"/>
-<ellipse cx="117" cy="111" rx="10" ry="${eyes==1?7:5.5}" fill="#FFF9F0"/>
+<path d="M72 109 Q83 103 94 109" stroke="#31221D" stroke-opacity=".35" stroke-width="1.3" fill="none"/><ellipse cx="83" cy="111" rx="10" ry="${eyes==1?7:5.5}" fill="#FFF9F0"/>
+<path d="M106 109 Q117 103 128 109" stroke="#31221D" stroke-opacity=".35" stroke-width="1.3" fill="none"/><ellipse cx="117" cy="111" rx="10" ry="${eyes==1?7:5.5}" fill="#FFF9F0"/>
 <circle cx="84" cy="111" r="5" fill="$iris"/><circle cx="116" cy="111" r="5" fill="$iris"/>
 <circle cx="85" cy="110" r="1.7" fill="white"/><circle cx="117" cy="110" r="1.7" fill="white"/>
 <path d="M100 113 Q${nose==2?91:95} 127 101 128 Q105 129 109 126" stroke="#6B4137" stroke-opacity=".65" stroke-width="2.4" fill="none" stroke-linecap="round"/>
 <ellipse cx="75" cy="126" rx="12" ry="6" fill="#DA827C" opacity=".16"/><ellipse cx="125" cy="126" rx="12" ry="6" fill="#DA827C" opacity=".16"/>
 $mouth $dots $beauty $beard $specs
 $curls
-<path d="M63 79 Q68 49 100 50 Q134 48 139 80 Q113 68 100 72 Q82 69 63 79" fill="url(#hair)" opacity="${hair==10?0:1}"/>
+<path d="M63 79 Q68 49 100 50 Q134 48 139 80 Q113 68 100 72 Q82 69 63 79" fill="url(#hair)" opacity="${hair==10?0:1}"/><path d="M74 75 Q100 60 126 75" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="2" fill="none"/>
 </svg>'''.replaceAll('<circularGradient/>','');
   }
 
