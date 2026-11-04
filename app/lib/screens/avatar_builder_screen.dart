@@ -242,15 +242,71 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   };
 
   Widget _genderOptions() => _optionPanel(
-    'Choose your starting character', 'Choose a starting look. You can still change every feature afterward.',
-    Wrap(spacing: 9, runSpacing: 9, children: [
-      for (var i = 0; i < presentations.length; i++) _selectCard(presentations[i], Icons.person_outline_rounded, presentation == i, () => setState(() {
-        presentation = i;
-        if (i == 0) { hair = 5; facialHair = 0; face = 1; }
-        if (i == 1) { hair = 6; facialHair = 1; face = 2; }
-        if (i == 2) { hair = 2; facialHair = 0; face = 0; }
-      })),
-    ]),
+    'Choose your starting character',
+    'Choose a starting look. You can change every feature afterward.',
+    LayoutBuilder(builder: (context, constraints) {
+      final cardWidth = ((constraints.maxWidth - 16) / 3).clamp(78.0, 180.0);
+      return Wrap(spacing: 8, runSpacing: 10, children: [
+        for (var i = 0; i < presentations.length; i++)
+          Semantics(
+            label: '${presentations[i]} starting character',
+            selected: presentation == i,
+            button: true,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => setState(() {
+                presentation = i;
+                if (i == 0) { hair = 5; facialHair = 0; face = 1; }
+                if (i == 1) { hair = 7; facialHair = 4; face = 2; }
+                if (i == 2) { hair = 2; facialHair = 0; face = 0; }
+              }),
+              child: Container(
+                width: cardWidth,
+                padding: const EdgeInsets.fromLTRB(5, 8, 5, 10),
+                decoration: BoxDecoration(
+                  color: presentation == i ? const Color(0xFFEAF0E4) : cream,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: presentation == i ? sage : line, width: presentation == i ? 2 : 1),
+                ),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: VillagePortrait(
+                        skin: skin,
+                        hair: i == 0 ? 5 : i == 1 ? 7 : 2,
+                        hairColor: hairColor,
+                        face: i == 0 ? 1 : i == 1 ? 2 : 0,
+                        eyes: eyes,
+                        smile: smile,
+                        presentation: i,
+                        facialHair: i == 1 ? 4 : 0,
+                        mole: mole,
+                        nose: nose,
+                        brows: brows,
+                        glasses: glasses,
+                        freckles: freckles,
+                        eyeColor: eyeColor,
+                        outfit: avatarKeys.indexOf(avatarKey).clamp(0, 11),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(presentations[i], maxLines: 1,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800,
+                        color: presentation == i ? sage : ink)),
+                  ),
+                  if (presentation == i)
+                    const Icon(Icons.check_circle_rounded, color: sage, size: 17),
+                ]),
+              ),
+            ),
+          ),
+      ]);
+    }),
   );
 
   Widget _skinOptions() => _optionPanel(
