@@ -144,7 +144,7 @@ class VillagePortrait extends StatelessWidget {
     final iris = _PortraitPainter._color(irises, eyeColor);
     final faceWarp = const [0.0, .35, -.38][face.clamp(0, 2)];
     final eyeWarp = const [0.0, -.55, .65][eyes.clamp(0, 2)];
-    final cornerLift = const [0.0, .020, -.014][smile.clamp(0, 2)];
+    final cornerLift = const [0.0, .009, -.007][smile.clamp(0, 2)];
     final noseWarp = const [0.0, .46, -.65][nose.clamp(0, 2)];
     final browWarp = const [0.0, -.75, .66][brows.clamp(0, 2)];
     final eyeY = base == 1 ? .482 : .498;
