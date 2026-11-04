@@ -142,6 +142,16 @@ void main() {
       );
     }
 
+    final knots = await render('hair', 4);
+    for (final column in [86, 170]) {
+      final temple = (115 * 256 + column) * 4;
+      expect(
+        knots[temple],
+        lessThan(bare[temple] - 20),
+        reason: 'Bantu knots should cover the temple at column $column',
+      );
+    }
+
     for (final entry in fields.entries) {
       final variants = <Uint8List>[];
       for (var value = 0; value < entry.value; value++) {

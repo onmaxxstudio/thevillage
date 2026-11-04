@@ -342,6 +342,17 @@ class _PortraitPainter extends CustomPainter {
     if (beard != null) {
       canvas.save();
       canvas.translate(0, look.presentation == 1 ? -9 : -3);
+      if (look.facialHair == 4) {
+        // Keep the moustache anchored while fitting the beard to the jaw.
+        final jawWidth = switch (look.face) {
+          1 => .96,
+          2 => 1.04,
+          _ => 1.0,
+        };
+        canvas.translate(256, 320);
+        canvas.scale((look.presentation == 1 ? .89 : .81) * jawWidth, .86);
+        canvas.translate(-256, -320);
+      }
       if (look.facialHair == 2) {
         canvas.clipRect(const Rect.fromLTWH(0, 0, 512, 340));
       }
@@ -353,9 +364,10 @@ class _PortraitPainter extends CustomPainter {
       // Anchor the fitted sprites at the center of the hairline so narrowing
       // the sides does not shift the part or lift the fringe off the forehead.
       final width = switch (look.hair) {
+        4 => .82, // Bantu knots
         5 => .94, // Curls
         6 => .75, // Waves
-        7 => .96, // Short crop
+        7 => .84, // Short crop
         _ => 1.0,
       };
       final scalpWidth = switch (look.face) {
