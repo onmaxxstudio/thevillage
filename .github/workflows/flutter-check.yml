@@ -35,4 +35,4 @@ jobs:
         run: >-
           npx --yes firebase-tools emulators:exec
           --only auth,firestore --project demo-village --config firebase.json
-          "flutter test --platform chrome test_driver/avatar_persistence_test.dart"
+          "flutter test --platform chrome test/avatar_persistence_test.dart"
