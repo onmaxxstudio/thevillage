@@ -354,14 +354,19 @@ class _PortraitPainter extends CustomPainter {
       // the sides does not shift the part or lift the fringe off the forehead.
       final width = switch (look.hair) {
         5 => .94, // Curls
-        6 => .87, // Waves
+        6 => .75, // Waves
         7 => .96, // Short crop
         _ => 1.0,
       };
-      final widerScalp = look.presentation == 1 || look.face == 2;
+      final scalpWidth = switch (look.face) {
+        1 => .97, // Long
+        2 => 1.035, // Round
+        _ => 1.0,
+      };
+      final presentationWidth = look.presentation == 1 ? 1.035 : 1.0;
       canvas.save();
       canvas.translate(256, look.presentation == 1 ? -5 : 0);
-      canvas.scale(width * (widerScalp && width < 1 ? 1.035 : 1), 1);
+      canvas.scale(width < 1 ? width * scalpWidth * presentationWidth : 1.0, 1);
       canvas.translate(-256, 0);
       _drawLayer(canvas, hairstyle);
       canvas.restore();

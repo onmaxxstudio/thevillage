@@ -132,6 +132,16 @@ void main() {
       }
     }
 
+    final waves = await render('hair', 6);
+    final bare = await render('hair', 10);
+    for (final column in [82, 174]) {
+      expect(
+        waves[(132 * 256 + column) * 4],
+        lessThan(bare[(132 * 256 + column) * 4] - 20),
+        reason: 'Waves should reach both temples without a transparent gap',
+      );
+    }
+
     for (final entry in fields.entries) {
       final variants = <Uint8List>[];
       for (var value = 0; value < entry.value; value++) {
