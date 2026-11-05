@@ -1447,25 +1447,26 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       children: [
         _circleOrbit(),
         const SizedBox(height: 6),
-        Row(children: [
-          Expanded(child: Text('From your people',
-            style: GoogleFonts.playfairDisplay(color: ink, fontSize: 25,
-              fontWeight: FontWeight.w700))),
-          const Icon(Icons.circle, color: Color(0xFF4AA84C), size: 9),
-          const SizedBox(width: 6),
-          const Text('Live updates', style: TextStyle(color: sage, fontSize: 12)),
-        ]),
-        const SizedBox(height: 8),
-        _peopleStatusFeed(),
-        const SizedBox(height: 8),
-        _actionRow(Icons.auto_awesome_rounded, 'Share an update',
-          'A moment, a small win, or how you feel.', _shareUpdate, blush),
-        const SizedBox(height: 8),
         _writtenStatusCard(),
         const SizedBox(height: 8),
         _supportRequestPanel(),
         const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: Text('From your people',
+            style: GoogleFonts.playfairDisplay(color: ink, fontSize: 25,
+              fontWeight: FontWeight.w700))),
+          if (_visibleCircleMembers.isNotEmpty)
+            TextButton(
+              onPressed: _showPeopleUpdates,
+              child: const Text('See all'),
+            ),
+        ]),
+        _peopleStatusFeed(),
+        const SizedBox(height: 8),
         _messagesCard(),
+        const SizedBox(height: 8),
+        _actionRow(Icons.auto_awesome_rounded, 'Share an update',
+          'A moment, a small win, or how you feel.', _shareUpdate, blush),
         const SizedBox(height: 8),
         _actionRow(Icons.calendar_today_outlined, 'Shared plans',
           'Make and share your weekly plan.', () => Navigator.of(context).push(
@@ -1629,7 +1630,20 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     }
   }
 
-  Widget _peopleStatusFeed() {
+  void _showPeopleUpdates() {
+    Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (_) => Scaffold(
+        backgroundColor: cream,
+        appBar: AppBar(backgroundColor: cream, title: const Text('From your people')),
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [_peopleStatusFeed(showAll: true)],
+        ),
+      ),
+    ));
+  }
+
+  Widget _peopleStatusFeed({bool showAll = false}) {
     if (_visibleCircleMembers.isEmpty) return _actionRow(
       Icons.person_add_alt_1_rounded, 'Your circle is waiting',
       'Add your first person to see their updates.', _findPeople, paleSage);
@@ -1658,7 +1672,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                     color: sage), onPressed: () => _respondToStatus(member)),
                 ])));
             }),
-      _sharedActivityPreview(),
+      _sharedActivityPreview(showAll: showAll),
     ]);
   }
 
@@ -1751,13 +1765,13 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           ])),
         ]))));
 
-  Widget _sharedActivityPreview() => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+  Widget _sharedActivityPreview({required bool showAll}) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
     stream: circleService.activity(),
     builder: (context, snapshot) {
       if (snapshot.hasError) return const Text('Circle updates are unavailable right now.');
       if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-      final items = snapshot.data!.docs.where((item) => item.data()['kind'] != 'group')
-          .take(3).toList();
+      final updates = snapshot.data!.docs.where((item) => item.data()['kind'] != 'group');
+      final items = showAll ? updates : updates.take(2);
       if (items.isEmpty) return const Text('When someone shares with you, it will appear here.');
       return Column(children: [for (final item in items) Card(
         color: Colors.white.withValues(alpha: .7), elevation: 0,
@@ -1907,43 +1921,48 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             fontWeight: FontWeight.w700)),
         const SizedBox(height: 7),
         LayoutBuilder(builder: (context, constraints) {
-          final columns = constraints.maxWidth < 290 ||
-              MediaQuery.textScalerOf(context).scale(14) > 20 ? 1 : 2;
-          return Wrap(spacing: 7, runSpacing: 7, children: [
-            for (final choice in supportChoices)
-              SizedBox(
-                width: (constraints.maxWidth - (columns - 1) * 7) / columns,
-                child: Material(
-                  color: selectedNeed == choice.$2 ? blush : cream,
-                  borderRadius: BorderRadius.circular(14),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(14),
-                    onTap: () => setState(() => selectedNeed = choice.$2),
-                    child: Container(
-                      constraints: const BoxConstraints(minHeight: 44),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-                      child: Row(children: [
-                        Icon(choice.$1, color: sage, size: 19),
-                        const SizedBox(width: 6),
-                        Expanded(child: FittedBox(fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(choice.$2, style: const TextStyle(
-                            color: ink, fontSize: 12, fontWeight: FontWeight.w700)))),
-                        const Icon(Icons.chevron_right_rounded, color: sage, size: 18),
-                      ]),
-                    ),
-                  ),
-                ),
-              ),
+          final dropdown = DropdownButtonFormField<String>(
+            initialValue: selectedNeed,
+            isExpanded: true,
+            dropdownColor: cream,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: cream,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            hint: const Text('Choose what you need', overflow: TextOverflow.ellipsis),
+            items: [
+              for (final choice in supportChoices)
+                DropdownMenuItem(value: choice.$2, child: Row(children: [
+                  Icon(choice.$1, color: sage, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(choice.$2, overflow: TextOverflow.ellipsis)),
+                ])),
+            ],
+            onChanged: (value) => setState(() => selectedNeed = value),
+          );
+          final choosePeople = FilledButton.icon(
+            onPressed: selectedNeed == null ? null : () => _requestSupport(selectedNeed!),
+            style: FilledButton.styleFrom(backgroundColor: sage),
+            icon: const Icon(Icons.people_outline_rounded),
+            label: const Text('Choose people'),
+          );
+          if (constraints.maxWidth >= 340 &&
+              MediaQuery.textScalerOf(context).scale(14) <= 18) {
+            return Row(children: [
+              Expanded(child: dropdown),
+              const SizedBox(width: 8),
+              choosePeople,
+            ]);
+          }
+          return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            dropdown,
+            const SizedBox(height: 6),
+            choosePeople,
           ]);
         }),
-        const SizedBox(height: 7),
-        SizedBox(width: double.infinity, child: FilledButton.icon(
-          onPressed: selectedNeed == null ? null : () => _requestSupport(selectedNeed!),
-          style: FilledButton.styleFrom(backgroundColor: sage,
-            padding: const EdgeInsets.symmetric(vertical: 9)),
-          icon: const Icon(Icons.people_outline_rounded),
-          label: const Text('Choose people'))),
       ]),
     );
   }
