@@ -146,7 +146,7 @@ class VillagePortrait extends StatelessWidget {
     final iris = _PortraitPainter._color(irises, eyeColor);
     final faceWarp = const [0.0, .16, -.18][face.clamp(0, 2)];
     final eyeWarp = const [0.0, -.55, .65][eyes.clamp(0, 2)];
-    final cornerLift = const [0.0, .009, -.007][smile.clamp(0, 2)];
+    final cornerLift = const [0.0, .024, -.017][smile.clamp(0, 2)];
     final noseWarp = const [0.0, .46, -.65][nose.clamp(0, 2)];
     final browWarp = const [0.0, -.75, .66][brows.clamp(0, 2)];
     final eyeY = base == 1 ? .482 : .498;
@@ -172,9 +172,11 @@ class VillagePortrait extends StatelessWidget {
         if (cornerLift != 0) {
           final mouthX = x - .5;
           final mouthY = y - eyeY - .169;
-          // Move the corners gently while preserving the center of the lips.
-          final cornerWeight = _smooth(0, .064, mouthX.abs());
-          qy += cornerLift * cornerWeight * _region(mouthX, mouthY, .104, .052);
+          // Lift and widen the smile while keeping the center of the lips steady.
+          final falloff = _region(mouthX, mouthY, .121, .052);
+          final cornerWeight = _smooth(.015, .072, mouthX.abs());
+          qy += cornerLift * cornerWeight * falloff;
+          qx -= mouthX * cornerLift * 7 * falloff;
         }
         if (noseWarp != 0) {
           qx +=
@@ -197,9 +199,11 @@ class VillagePortrait extends StatelessWidget {
         final r = source[from] / 255;
         final g = source[from + 1] / 255;
         final b = source[from + 2] / 255;
-        final warm = _smooth(.03, .16, r - b) * _smooth(.01, .10, r - g);
-        final fabric = clothing * (1 - warm) * .36;
         final isFair = skin >= 12;
+        final warm = isFair
+            ? _smooth(.035, .14, r - b) * _smooth(.018, .078, r - g)
+            : _smooth(.03, .16, r - b) * _smooth(.01, .10, r - g);
+        final fabric = clothing * (1 - warm) * .36;
         final light = (r * .30 + g * .59 + b * .11 - .48) * .68;
         final tintedRed = isFair
             ? r + (tone.r + light - r) * warm

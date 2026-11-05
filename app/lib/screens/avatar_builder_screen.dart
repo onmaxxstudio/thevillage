@@ -530,17 +530,26 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   Widget _skinOptions() => _optionPanel(
     'Skin tone',
     'Choose from a range of natural tones.',
-    Wrap(
-      spacing: 13,
-      runSpacing: 14,
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (var i = 0; i < skinColors.length; i++)
-          _toneChoice(
-            skinColors[i],
-            skin == i,
-            'Skin tone ${i + 1}',
-            () => setState(() => skin = i),
-          ),
+        _choiceRow(const ['Fair', 'Very fair'], skin - 12, (value) {
+          setState(() => skin = 12 + value);
+        }),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 13,
+          runSpacing: 14,
+          children: [
+            for (var i = 0; i < 12; i++)
+              _toneChoice(
+                skinColors[i],
+                skin == i,
+                'Skin tone ${i + 1}',
+                () => setState(() => skin = i),
+              ),
+          ],
+        ),
       ],
     ),
   );
