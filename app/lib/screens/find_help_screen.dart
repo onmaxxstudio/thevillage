@@ -1019,123 +1019,59 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       : ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           children: [
-            ResourceCategoryBrowser(onExplore: _exploreCategory),
-            const SizedBox(height: 22),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                children: [
-                  SizedBox(
-                    height: 340,
-                    width: double.infinity,
-                    child: Image.asset(
-                      'assets/images/home_breathing_hero_v2.jpg',
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
-                      errorBuilder: (_, __, ___) => const SizedBox.expand(),
-                    ),
-                  ),
-                  Container(
-                    height: 340,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xDFFFF1E4),
-                          Color(0xEFFFF2D7),
-                          Color(0xFDF7DABF),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 25, 18, 18),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Resource Directory',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 31,
-                            height: 1,
-                            fontWeight: FontWeight.w800,
-                            color: ink,
-                          ),
-                        ),
-                        const SizedBox(height: 9),
-                        const Text(
-                          'Find free and low-cost programs\nand services in your area.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14.5, height: 1.35, color: ink),
-                        ),
-                        const SizedBox(height: 19),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: .96),
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: const [
-                              BoxShadow(color: Color(0x22000000), blurRadius: 10, offset: Offset(0, 4)),
-                            ],
-                          ),
-                          child: TextField(
-                            controller: directorySearchController,
-                            textInputAction: TextInputAction.search,
-                            onSubmitted: (_) => _submitDirectorySearch(),
-                            onChanged: (value) => setState(() {
-                              directoryQuery = value.trim();
-                              showAllResources = value.trim().isNotEmpty;
-                            }),
-                            decoration: InputDecoration(
-                              hintText: 'What do you need help with?',
-                              prefixIcon: const Icon(Icons.search_rounded, color: ink),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 15),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: _submitDirectorySearch,
-                            icon: const Icon(Icons.search_rounded),
-                            label: const Text('Search Resources'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: sage,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size.fromHeight(44),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _locationButton(
-                                icon: Icons.location_on_rounded,
-                                label: selectedState == null
-                                    ? 'Choose state'
-                                    : stateNames[selectedState]!,
-                                onTap: _chooseState,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _locationButton(
-                                icon: Icons.my_location_rounded,
-                                label: localZip == null ? 'County or ZIP' : localZip!,
-                                onTap: _chooseZip,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+            Text('Resource Directory', style: GoogleFonts.playfairDisplay(
+              fontSize: 29, fontWeight: FontWeight.w800, color: ink)),
+            const SizedBox(height: 4),
+            const Text('Find support in your area.'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: directorySearchController,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => _submitDirectorySearch(),
+              onChanged: (value) => setState(() {
+                directoryQuery = value.trim();
+                showAllResources = value.trim().isNotEmpty;
+              }),
+              decoration: InputDecoration(
+                hintText: 'What do you need help with?',
+                prefixIcon: const Icon(Icons.search_rounded, color: sage),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
               ),
             ),
+            const SizedBox(height: 9),
+            Row(children: [
+              Expanded(child: _locationButton(
+                icon: Icons.location_on_outlined,
+                label: localZip == null ? 'Enter ZIP code' : localZip!,
+                onTap: _chooseZip,
+              )),
+              const SizedBox(width: 8),
+              Expanded(child: _locationButton(
+                icon: Icons.my_location_rounded,
+                label: 'Locate me',
+                onTap: _chooseZip,
+              )),
+            ]),
+            const SizedBox(height: 9),
+            Row(children: [
+              Expanded(child: FilledButton(
+                onPressed: _submitDirectorySearch,
+                style: FilledButton.styleFrom(backgroundColor: sage),
+                child: const Text('Find resources'),
+              )),
+              const SizedBox(width: 8),
+              Expanded(child: OutlinedButton.icon(
+                onPressed: () => setState(() => showMap = !showMap),
+                icon: const Icon(Icons.map_outlined, size: 18),
+                label: const Text('Browse by map'),
+              )),
+            ]),
+            if (showMap) ...[
+              const SizedBox(height: 12),
+              _map(),
+            ],
+            const SizedBox(height: 22),
+            ResourceCategoryBrowser(onExplore: _exploreCategory),
             const SizedBox(height: 22),
             KeyedSubtree(key: directoryResultsKey, child: _directorySearchResults()),
             const SizedBox(height: 16),
