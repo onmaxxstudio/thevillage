@@ -1276,12 +1276,22 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             const SizedBox(height: 12),
             ListTile(
               leading: const CircleAvatar(backgroundColor: paleSage, child: Icon(Icons.groups_2_outlined, color: sage)),
-              title: const Text('My whole Circle', style: TextStyle(fontWeight: FontWeight.w800)),
-              subtitle: const Text('Everyone in your private Circle'),
+              title: const Text('Share with my whole Circle', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: Text(members.isEmpty
+                  ? 'Add someone to your Circle to share a request'
+                  : 'Everyone in your private Circle'),
               trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
-              onTap: () => Navigator.pop(sheetContext, 'My whole Circle'),
+              onTap: members.isEmpty
+                  ? null
+                  : () => Navigator.pop(sheetContext, 'My whole Circle'),
             ),
             const Divider(color: line),
+            if (members.isEmpty)
+              ListTile(
+                leading: const Icon(Icons.person_add_alt_1_rounded, color: sage),
+                title: const Text('Add people'),
+                onTap: () => Navigator.pop(sheetContext, ''),
+              ),
             for (final member in members)
               ListTile(
                 leading: VillageAvatar(uid: member.uid, radius: 20),
@@ -1325,10 +1335,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       ),
     );
     if (need == null || !mounted) return;
-    final audience = await _chooseSupportAudience();
-    if (audience == null || !mounted) return;
-    setState(() => selectedNeed = need);
-    await _openReachOut(audience: audience);
+    await _requestSupport(need);
   }
 
   @override
@@ -1900,13 +1907,13 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       )));
   }
 
-  Future<void> _requestSupport(String need, {bool wholeCircle = false}) async {
-    if (_visibleCircleMembers.isEmpty) {
+  Future<void> _requestSupport(String need) async {
+    final audience = await _chooseSupportAudience();
+    if (audience == null || !mounted) return;
+    if (audience.isEmpty) {
       await _findPeople();
       return;
     }
-    final audience = wholeCircle ? 'My whole Circle' : await _chooseSupportAudience();
-    if (audience == null || !mounted) return;
     setState(() => selectedNeed = need);
     await _openReachOut(audience: audience);
   }
@@ -1915,7 +1922,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('What do you need today?',
           style: GoogleFonts.playfairDisplay(color: ink, fontSize: 19,
             fontWeight: FontWeight.w700)),
@@ -1963,14 +1970,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             choosePeople,
           ]);
         }),
-        const SizedBox(height: 6),
-        OutlinedButton.icon(
-          onPressed: selectedNeed == null
-              ? null
-              : () => _requestSupport(selectedNeed!, wholeCircle: true),
-          icon: const Icon(Icons.groups_outlined),
-          label: const Text('Share with my whole Circle'),
-        ),
       ]),
     );
   }
