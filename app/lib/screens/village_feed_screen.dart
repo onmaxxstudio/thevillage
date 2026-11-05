@@ -1143,18 +1143,6 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: OutlinedButton.icon(
-                            onPressed: openingAnonymousActivity ? null : _openMyAnonymousActivity,
-                            icon: openingAnonymousActivity
-                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                : const Icon(Icons.visibility_off_outlined, size: 18),
-                            label: const Text('My Anonymous Activity'),
-                            style: OutlinedButton.styleFrom(foregroundColor: sage),
-                          ),
-                        ),
                         const SizedBox(height: 15),
                         const Text(
                           'BROWSE BY TOPIC',
@@ -1195,6 +1183,20 @@ class _VillageFeedScreenState extends State<VillageFeedScreen> {
                             ],
                           ),
                         ),
+                        if (filter == 'My Posts') ...[
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: OutlinedButton.icon(
+                              onPressed: openingAnonymousActivity ? null : _openMyAnonymousActivity,
+                              icon: openingAnonymousActivity
+                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                  : const Icon(Icons.visibility_off_outlined, size: 18),
+                              label: const Text('My Anonymous Activity'),
+                              style: OutlinedButton.styleFrom(foregroundColor: sage),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 13),
                         Row(
                           children: [
