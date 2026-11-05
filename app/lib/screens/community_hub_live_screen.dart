@@ -313,7 +313,8 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                         crossAxisCount: columns,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
-                        childAspectRatio: constraints.maxWidth < 420 ? .65 : .78,
+                        mainAxisExtent: 184 +
+                            (MediaQuery.textScalerOf(context).scale(90) - 90).clamp(0.0, double.infinity).toDouble(),
                       ),
                       itemBuilder: (_, i) => _directoryCard(browseResults[i]),
                     );
@@ -358,20 +359,20 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: line)),
       clipBehavior: Clip.antiAlias,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Expanded(flex: 5, child: InkWell(
+        SizedBox(height: 64, child: InkWell(
           onTap: () => _open(community),
           child: community.imageUrl.isEmpty
               ? _fallback()
               : Image.network(community.imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallback()),
         )),
-        Expanded(flex: 6, child: Padding(
-          padding: const EdgeInsets.all(10),
+        Expanded(child: Padding(
+          padding: const EdgeInsets.all(8),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(community.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.playfairDisplay(fontSize: 16, height: 1.1, fontWeight: FontWeight.w700, color: ink)),
             const SizedBox(height: 4),
             Text('$count ${count == 1 ? 'member' : 'members'}', style: const TextStyle(color: sage, fontSize: 11)),
             const SizedBox(height: 5),
-            Expanded(child: Text(community.description, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, height: 1.25))),
+            Expanded(child: Text(community.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, height: 1.25))),
             SizedBox(width: double.infinity, height: 34, child: OutlinedButton(
               onPressed: isJoined ? () => _open(community) : () => _toggleJoin(community),
               style: OutlinedButton.styleFrom(foregroundColor: sage, padding: EdgeInsets.zero, side: const BorderSide(color: sage)),
