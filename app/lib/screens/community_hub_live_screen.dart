@@ -256,9 +256,11 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         .where((community) => joined.contains(community.id))
         .toList();
     final browseResults = _filter(communities);
-    final featured = [
-      for (final id in ['men', 'women', 'relationships'])
-        ...communities.where((community) => community.id == id),
+    const featuredIds = ['men', 'women', 'relationships'];
+    final carouselItems = [
+      for (final id in featuredIds)
+        ...browseResults.where((community) => community.id == id),
+      ...browseResults.where((community) => !featuredIds.contains(community.id)),
     ];
     return Column(
       children: [
@@ -304,10 +306,10 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                if (query.isEmpty && featured.isNotEmpty) ...[
-                  _clubhousePager(featured),
+                if (query.isEmpty && carouselItems.isNotEmpty) ...[
+                  _clubhousePager(carouselItems),
                   const SizedBox(height: 10),
-                  _pagerDots(featured.length),
+                  _carouselPosition(carouselItems.length),
                   const SizedBox(height: 16),
                   _quickSpaces(communities),
                   const SizedBox(height: 10),
@@ -1029,22 +1031,19 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     return 'A PLACE TO BELONG';
   }
 
-  Widget _pagerDots(int count) => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(
-          count.clamp(0, 5).toInt(),
-          (index) => AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            width: index == featuredIndex ? 8 : 7,
-            height: index == featuredIndex ? 8 : 7,
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            decoration: BoxDecoration(
-              color: index == featuredIndex ? gold : const Color(0xFFE1DDD2),
-              shape: BoxShape.circle,
-            ),
-          ),
+  Widget _carouselPosition(int count) {
+    final position = (featuredIndex + 1).clamp(1, count);
+    return Center(
+      child: Semantics(
+        label: 'Community $position of $count',
+        excludeSemantics: true,
+        child: Text(
+          '$position / $count',
+          style: const TextStyle(color: ink, fontSize: 12),
         ),
-      );
+      ),
+    );
+  }
 
   Widget _quickSpaces(List<_Community> communities) => SizedBox(
         height: 78,
