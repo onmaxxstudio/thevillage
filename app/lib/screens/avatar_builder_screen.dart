@@ -108,7 +108,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     'Features',
     'Accessories',
   ];
-  static const presentations = ['Feminine', 'Masculine', 'Androgynous'];
+  static const presentations = ['Feminine', 'Masculine', 'Neutral'];
   static const facialHairStyles = [
     'None',
     'Stubble',
@@ -287,7 +287,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
         child: Stack(
           children: [
             Positioned(
-              right: width < 430 ? -height * .12 : width * .12,
+              right: width < 430 ? -height * (hair == 0 ? .06 : .12) : width * .12,
               bottom: 0,
               width: height,
               height: height,
