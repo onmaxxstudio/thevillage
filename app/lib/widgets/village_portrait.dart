@@ -56,7 +56,6 @@ class VillagePortrait extends StatelessWidget {
     '#E0AD86',
     '#EDC29B',
     '#EAC8B5',
-    '#F3D9CA',
     '#FBC19F',
   ];
   static const hairTones = [

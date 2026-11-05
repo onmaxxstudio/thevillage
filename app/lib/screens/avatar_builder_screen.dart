@@ -37,7 +37,6 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     Color(0xFFE0AD86),
     Color(0xFFEDC29B),
     Color(0xFFEAC8B5),
-    Color(0xFFF3D9CA),
     Color(0xFFFBC19F),
   ];
   static const hairColors = <Color>[
