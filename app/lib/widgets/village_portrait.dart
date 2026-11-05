@@ -292,7 +292,7 @@ class VillagePortrait extends StatelessWidget {
       Image.asset('$assetDirectory/starter_$index.webp', fit: BoxFit.contain);
 
   Future<_PortraitArtwork> _loadArtwork() async {
-    final hasHair = hair >= 0 && hair <= 16 && hair != 10 && hair != 3;
+    final hasHair = hair >= 0 && hair <= 16 && hair != 10;
     // Sprite slots 10 and 11 are facial hair. Bald stays at hairstyle ID 10.
     final hairLayer = hair < 10 ? hair : hair + 1;
     final layers = await Future.wait([
@@ -408,9 +408,7 @@ class _PortraitPainter extends CustomPainter {
       canvas.restore();
     }
     final hairstyle = artwork.hairstyle;
-    if (look.hair == 3) {
-      _paintCornrows(canvas);
-    } else if (hairstyle != null) {
+    if (hairstyle != null) {
       // Anchor the fitted sprites at the center of the hairline so narrowing
       // the sides does not shift the part or lift the fringe off the forehead.
       final width = switch (look.hair) {
@@ -449,98 +447,6 @@ class _PortraitPainter extends CustomPainter {
       canvas.translate(-256, -hairlineY);
       _drawLayer(canvas, hairstyle);
       canvas.restore();
-    }
-    canvas.restore();
-  }
-
-  void _paintCornrows(Canvas canvas) {
-    final color = _color(VillagePortrait.hairTones, look.hairColor);
-    final shadow = Paint()
-      ..color = Color.lerp(color, Colors.black, .40)!
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 13
-      ..strokeCap = StrokeCap.butt;
-    final braid = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 10
-      ..strokeCap = StrokeCap.butt;
-    final weave = Paint()
-      ..color = Color.lerp(color, Colors.white, .10)!
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.25
-      ..strokeCap = StrokeCap.round;
-
-    canvas.save();
-    canvas.translate(256, look.presentation == 1 ? -4 : 0);
-    canvas.scale(switch (look.face) { 1 => .97, 2 => 1.03, _ => 1.0 }, 1);
-    final scalp = Path()
-      ..moveTo(-88, 233)
-      ..cubicTo(-91, 166, -48, 137, 0, 138)
-      ..cubicTo(48, 137, 91, 166, 88, 233)
-      ..cubicTo(77, 204, 43, 183, 0, 186)
-      ..cubicTo(-43, 183, -77, 204, -88, 233)
-      ..close();
-    final roots = Color.lerp(color, Colors.black, .26)!;
-    canvas.drawPath(
-      scalp,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [roots, roots, roots.withAlpha(175)],
-          stops: const [0, .72, 1],
-        ).createShader(const Rect.fromLTRB(-91, 137, 91, 233)),
-    );
-    canvas.clipPath(scalp);
-    final part = Paint()
-      ..color = Color.lerp(
-        _color(VillagePortrait.skinTones, look.skin),
-        roots,
-        .42,
-      )!
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5;
-    canvas.drawLine(const Offset(0, 139), const Offset(0, 187), part);
-    for (final side in [-1, 1]) {
-      for (var row = 0; row < 4; row++) {
-        final x = side * (10.0 + row * 20);
-        final path = Path()
-          ..moveTo(x, 190.0 + row * row * 4.5)
-          ..quadraticBezierTo(
-            x + side * (8 + row * 2),
-            151.0 + row * 12,
-            side * (8.0 + row * 15),
-            143.0 + row * row * 6,
-          );
-        if (row < 3) {
-          final betweenRows = Path()
-            ..moveTo(x + side * 10, 190.0 + (row + .5) * (row + .5) * 4.5)
-            ..quadraticBezierTo(
-              x + side * (18 + row * 2),
-              157.0 + row * 12,
-              side * (15.5 + row * 15),
-              143.0 + (row + .5) * (row + .5) * 6,
-            );
-          canvas.drawPath(betweenRows, part);
-        }
-        canvas.drawPath(path, shadow);
-        canvas.drawPath(path, braid);
-        final metric = path.computeMetrics().first;
-        for (var distance = 3.0; distance < metric.length - 2; distance += 5) {
-          final tangent = metric.getTangentForOffset(distance)!;
-          final direction = tangent.vector;
-          final across = Offset(-direction.dy, direction.dx) * 4;
-          final center = tangent.position;
-          canvas.drawPath(
-            Path()
-              ..moveTo(center.dx + across.dx, center.dy + across.dy)
-              ..lineTo(center.dx + direction.dx * 2, center.dy + direction.dy * 2)
-              ..lineTo(center.dx - across.dx, center.dy - across.dy),
-            weave,
-          );
-        }
-      }
     }
     canvas.restore();
   }
