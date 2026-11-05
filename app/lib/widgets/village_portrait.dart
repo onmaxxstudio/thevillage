@@ -412,10 +412,10 @@ class _PortraitPainter extends CustomPainter {
       // Anchor the fitted sprites at the center of the hairline so narrowing
       // the sides does not shift the part or lift the fringe off the forehead.
       final width = switch (look.hair) {
-        0 => .76, // Afro
+        0 => .84, // Afro
         1 => .98, // Locs
         2 => .97, // Twists
-        3 => .98, // Braids
+        3 => .62, // Cornrows
         4 => .82, // Bantu knots
         5 => .94, // Curls
         6 => .75, // Waves
@@ -435,7 +435,9 @@ class _PortraitPainter extends CustomPainter {
       // Compress tall crowns around the forehead opening. This leaves
       // the hairline in place and keeps the tips inside the portrait canvas.
       final height = switch (look.hair) {
-        0 => .64, // Afro
+        0 => .77, // Afro
+        3 => .68, // Cornrows
+        4 => .72, // Bantu knots
         1 || 8 || 9 => .90, // Locs, bun, ponytail
         _ => 1.0,
       };
@@ -445,6 +447,20 @@ class _PortraitPainter extends CustomPainter {
       canvas.translate(256, hairlineY + presentationOffset);
       canvas.scale(width * scalpWidth * presentationWidth, height);
       canvas.translate(-256, -hairlineY);
+      if (look.hair == 3) {
+        // Keep the braided texture over the scalp and taper the rows
+        // back at the temples before they can hang beside the face.
+        canvas.clipPath(
+          Path()
+            ..moveTo(0, 0)
+            ..lineTo(512, 0)
+            ..lineTo(512, 240)
+            ..quadraticBezierTo(407, 303, 352, 243)
+            ..quadraticBezierTo(256, 165, 160, 243)
+            ..quadraticBezierTo(105, 303, 0, 240)
+            ..close(),
+        );
+      }
       _drawLayer(canvas, hairstyle);
       canvas.restore();
     }

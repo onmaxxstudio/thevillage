@@ -63,7 +63,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     'Afro',
     'Locs',
     'Twists',
-    'Braids',
+    'Cornrows',
     'Bantu knots',
     'Curls',
     'Waves',
