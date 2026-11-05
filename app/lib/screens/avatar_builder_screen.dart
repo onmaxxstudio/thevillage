@@ -108,7 +108,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     'Features',
     'Accessories',
   ];
-  static const presentations = ['Feminine', 'Masculine', 'Androgynous'];
+  static const presentations = ['Feminine', 'Masculine', 'Neutral'];
   static const facialHairStyles = [
     'None',
     'Stubble',
