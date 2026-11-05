@@ -446,7 +446,7 @@ class ProfileService {
       'avatarFacialHair' || 'avatarMole' => 4,
       'avatarHair' => 16,
       'avatarSkin' => 13,
-      'avatarHairColor' => 9,
+      'avatarHairColor' => 10,
       _ => 0,
     };
     return value is int && value >= 0 && value <= max ? value : 0;
