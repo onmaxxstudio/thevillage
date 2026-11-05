@@ -69,6 +69,7 @@ class VillagePortrait extends StatelessWidget {
     '#F3F2EE',
     '#76509A',
     '#B34E72',
+    '#A83228',
   ];
   static const shirts = [
     '#355C3B',

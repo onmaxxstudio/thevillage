@@ -35,7 +35,7 @@ void main() {
     final fields = <String, int>{
       'skin': 14,
       'hair': 17,
-      'hairColor': 10,
+      'hairColor': 11,
       'face': 3,
       'eyes': 3,
       'smile': 3,

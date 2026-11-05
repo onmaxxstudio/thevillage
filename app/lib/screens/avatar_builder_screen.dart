@@ -50,6 +50,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     Color(0xFFF3F2EE),
     Color(0xFF76509A),
     Color(0xFFB34E72),
+    Color(0xFFA83228),
   ];
   static const eyeColors = <Color>[
     Color(0xFF30231F),
@@ -133,7 +134,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
 
   late int skin = widget.profile.avatarSkin.clamp(0, skinColors.length - 1).toInt();
   late int hair = widget.profile.avatarHair.clamp(0, hairStyles.length - 1).toInt();
-  late int hairColor = widget.profile.avatarHairColor.clamp(0, 9).toInt();
+  late int hairColor = widget.profile.avatarHairColor.clamp(0, hairColors.length - 1).toInt();
   late int face = widget.profile.avatarFace.clamp(0, 2).toInt();
   late int eyes = widget.profile.avatarEyes.clamp(0, 2).toInt();
   late int smile = widget.profile.avatarSmile.clamp(0, 2).toInt();
@@ -602,7 +603,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
       const SizedBox(height: 15),
       _optionPanel(
         'Hair colour',
-        'Make it natural or try something new.',
+        'Applies to your hairstyle and facial hair.',
         Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -614,6 +615,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
                 switch (i) {
                   6 => 'Silver',
                   7 => 'White',
+                  10 => 'Red',
                   _ => 'Hair colour ${i + 1}',
                 },
                 () => setState(() => hairColor = i),
