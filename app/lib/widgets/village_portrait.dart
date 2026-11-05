@@ -292,7 +292,7 @@ class VillagePortrait extends StatelessWidget {
       Image.asset('$assetDirectory/starter_$index.webp', fit: BoxFit.contain);
 
   Future<_PortraitArtwork> _loadArtwork() async {
-    final hasHair = hair >= 0 && hair <= 16 && hair != 10;
+    final hasHair = hair >= 0 && hair <= 16 && hair != 10 && hair != 3;
     // Sprite slots 10 and 11 are facial hair. Bald stays at hairstyle ID 10.
     final hairLayer = hair < 10 ? hair : hair + 1;
     final layers = await Future.wait([
@@ -408,14 +408,15 @@ class _PortraitPainter extends CustomPainter {
       canvas.restore();
     }
     final hairstyle = artwork.hairstyle;
-    if (hairstyle != null) {
+    if (look.hair == 3) {
+      _paintCornrows(canvas);
+    } else if (hairstyle != null) {
       // Anchor the fitted sprites at the center of the hairline so narrowing
       // the sides does not shift the part or lift the fringe off the forehead.
       final width = switch (look.hair) {
         0 => .84, // Afro
         1 => .98, // Locs
         2 => .97, // Twists
-        3 => .62, // Cornrows
         4 => .82, // Bantu knots
         5 => .94, // Curls
         6 => .75, // Waves
@@ -436,7 +437,6 @@ class _PortraitPainter extends CustomPainter {
       // the hairline in place and keeps the tips inside the portrait canvas.
       final height = switch (look.hair) {
         0 => .77, // Afro
-        3 => .68, // Cornrows
         4 => .72, // Bantu knots
         1 || 8 || 9 => .90, // Locs, bun, ponytail
         _ => 1.0,
@@ -447,22 +447,61 @@ class _PortraitPainter extends CustomPainter {
       canvas.translate(256, hairlineY + presentationOffset);
       canvas.scale(width * scalpWidth * presentationWidth, height);
       canvas.translate(-256, -hairlineY);
-      if (look.hair == 3) {
-        // Keep the braided texture over the scalp and taper the rows
-        // back at the temples before they can hang beside the face.
-        canvas.clipPath(
-          Path()
-            ..moveTo(0, 0)
-            ..lineTo(512, 0)
-            ..lineTo(512, 240)
-            ..quadraticBezierTo(407, 303, 352, 243)
-            ..quadraticBezierTo(256, 165, 160, 243)
-            ..quadraticBezierTo(105, 303, 0, 240)
-            ..close(),
-        );
-      }
       _drawLayer(canvas, hairstyle);
       canvas.restore();
+    }
+    canvas.restore();
+  }
+
+  void _paintCornrows(Canvas canvas) {
+    final color = _color(VillagePortrait.hairTones, look.hairColor);
+    final shadow = Paint()
+      ..color = Color.lerp(color, Colors.black, .40)!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 14
+      ..strokeCap = StrokeCap.round;
+    final braid = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 11
+      ..strokeCap = StrokeCap.round;
+    final weave = Paint()
+      ..color = Color.lerp(color, Colors.white, .17)!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.7
+      ..strokeCap = StrokeCap.round;
+
+    canvas.save();
+    canvas.translate(256, look.presentation == 1 ? -4 : 0);
+    canvas.scale(switch (look.face) { 1 => .97, 2 => 1.03, _ => 1.0 }, 1);
+    for (final side in [-1, 1]) {
+      for (var row = 0; row < 4; row++) {
+        final x = side * (11.0 + row * 21);
+        final path = Path()
+          ..moveTo(x, 188.0 + row * row * 4.5)
+          ..quadraticBezierTo(
+            x + side * (8 + row * 2),
+            151.0 + row * 12,
+            side * (8.0 + row * 15),
+            143.0 + row * row * 6,
+          );
+        canvas.drawPath(path, shadow);
+        canvas.drawPath(path, braid);
+        final metric = path.computeMetrics().first;
+        for (var distance = 3.0; distance < metric.length - 2; distance += 5) {
+          final tangent = metric.getTangentForOffset(distance)!;
+          final direction = tangent.vector;
+          final across = Offset(-direction.dy, direction.dx) * 4;
+          final center = tangent.position;
+          canvas.drawPath(
+            Path()
+              ..moveTo(center.dx + across.dx, center.dy + across.dy)
+              ..lineTo(center.dx + direction.dx * 2, center.dy + direction.dy * 2)
+              ..lineTo(center.dx - across.dx, center.dy - across.dy),
+            weave,
+          );
+        }
+      }
     }
     canvas.restore();
   }
