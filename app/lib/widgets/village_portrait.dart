@@ -216,30 +216,36 @@ class VillagePortrait extends StatelessWidget {
         final tintedBlue = isFair
             ? b + (tone.b + light - b) * warm
             : b * (1 + (tone.b / .27 - 1) * warm);
-        final irisWeight =
-            _region(qx - eyeX, qy - eyeY, .025, .029) *
-            _smooth(.05, .19, tintedRed) *
-            .45;
+        // Match the iris in source coordinates so eye-shape warps move
+        // the recoloring with the artwork. Keep pupils and highlights intact.
+        final irisY = base == 1 ? .498 : .519;
+        final dx = (qx - eyeX) / .019;
+        final dy = (qy - irisY) / .018;
+        final irisWeight = (1 - _smooth(.60, 1, dx * dx + dy * dy)) *
+            _smooth(.045, .16, r) *
+            (1 - _smooth(.19, .30, g)) *
+            _smooth(.015, .055, r - b);
+        final irisShade = .7 + r;
         final to = (row * size + col) * 4;
         // decodeImageFromPixels expects premultiplied RGBA.
         output[to] =
             ((tintedRed +
                             fabric * (shirt.r - .24) +
-                            irisWeight * (iris.r - .19))
+                            irisWeight * (iris.r * irisShade - tintedRed))
                         .clamp(0.0, 1.0) *
                     alpha)
                 .round();
         output[to + 1] =
             ((tintedGreen +
                             fabric * (shirt.g - .24) +
-                            irisWeight * (iris.g - .14))
+                            irisWeight * (iris.g * irisShade - tintedGreen))
                         .clamp(0.0, 1.0) *
                     alpha)
                 .round();
         output[to + 2] =
             ((tintedBlue +
                             fabric * (shirt.b - .24) +
-                            irisWeight * (iris.b - .12))
+                            irisWeight * (iris.b * irisShade - tintedBlue))
                         .clamp(0.0, 1.0) *
                     alpha)
                 .round();
