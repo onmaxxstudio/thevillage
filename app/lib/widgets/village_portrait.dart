@@ -458,33 +458,72 @@ class _PortraitPainter extends CustomPainter {
     final shadow = Paint()
       ..color = Color.lerp(color, Colors.black, .40)!
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 14
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 13
+      ..strokeCap = StrokeCap.butt;
     final braid = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 11
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 10
+      ..strokeCap = StrokeCap.butt;
     final weave = Paint()
-      ..color = Color.lerp(color, Colors.white, .17)!
+      ..color = Color.lerp(color, Colors.white, .10)!
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.7
+      ..strokeWidth = 1.25
       ..strokeCap = StrokeCap.round;
 
     canvas.save();
     canvas.translate(256, look.presentation == 1 ? -4 : 0);
     canvas.scale(switch (look.face) { 1 => .97, 2 => 1.03, _ => 1.0 }, 1);
+    final scalp = Path()
+      ..moveTo(-88, 233)
+      ..cubicTo(-91, 166, -48, 137, 0, 138)
+      ..cubicTo(48, 137, 91, 166, 88, 233)
+      ..cubicTo(77, 204, 43, 183, 0, 186)
+      ..cubicTo(-43, 183, -77, 204, -88, 233)
+      ..close();
+    final roots = Color.lerp(color, Colors.black, .26)!;
+    canvas.drawPath(
+      scalp,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [roots, roots, roots.withAlpha(175)],
+          stops: const [0, .72, 1],
+        ).createShader(const Rect.fromLTRB(-91, 137, 91, 233)),
+    );
+    canvas.clipPath(scalp);
+    final part = Paint()
+      ..color = Color.lerp(
+        _color(VillagePortrait.skinTones, look.skin),
+        roots,
+        .42,
+      )!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    canvas.drawLine(const Offset(0, 139), const Offset(0, 187), part);
     for (final side in [-1, 1]) {
       for (var row = 0; row < 4; row++) {
-        final x = side * (11.0 + row * 21);
+        final x = side * (10.0 + row * 20);
         final path = Path()
-          ..moveTo(x, 188.0 + row * row * 4.5)
+          ..moveTo(x, 190.0 + row * row * 4.5)
           ..quadraticBezierTo(
             x + side * (8 + row * 2),
             151.0 + row * 12,
             side * (8.0 + row * 15),
             143.0 + row * row * 6,
           );
+        if (row < 3) {
+          final betweenRows = Path()
+            ..moveTo(x + side * 10, 190.0 + (row + .5) * (row + .5) * 4.5)
+            ..quadraticBezierTo(
+              x + side * (18 + row * 2),
+              157.0 + row * 12,
+              side * (15.5 + row * 15),
+              143.0 + (row + .5) * (row + .5) * 6,
+            );
+          canvas.drawPath(betweenRows, part);
+        }
         canvas.drawPath(path, shadow);
         canvas.drawPath(path, braid);
         final metric = path.computeMetrics().first;
