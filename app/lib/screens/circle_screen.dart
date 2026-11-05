@@ -1447,10 +1447,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       children: [
         _circleOrbit(),
         const SizedBox(height: 6),
-        _writtenStatusCard(),
-        const SizedBox(height: 8),
-        _supportRequestPanel(),
-        const SizedBox(height: 12),
         Row(children: [
           Expanded(child: Text('From your people',
             style: GoogleFonts.playfairDisplay(color: ink, fontSize: 25,
@@ -1462,10 +1458,14 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         const SizedBox(height: 8),
         _peopleStatusFeed(),
         const SizedBox(height: 8),
-        _messagesCard(),
-        const SizedBox(height: 8),
         _actionRow(Icons.auto_awesome_rounded, 'Share an update',
           'A moment, a small win, or how you feel.', _shareUpdate, blush),
+        const SizedBox(height: 8),
+        _writtenStatusCard(),
+        const SizedBox(height: 8),
+        _supportRequestPanel(),
+        const SizedBox(height: 12),
+        _messagesCard(),
         const SizedBox(height: 8),
         _actionRow(Icons.calendar_today_outlined, 'Shared plans',
           'Make and share your weekly plan.', () => Navigator.of(context).push(
@@ -1634,7 +1634,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       Icons.person_add_alt_1_rounded, 'Your circle is waiting',
       'Add your first person to see their updates.', _findPeople, paleSage);
     return Column(children: [
-      for (final member in _visibleCircleMembers.take(5))
+      for (final member in _visibleCircleMembers)
         if (member.uid != null && !_isTestMember(member))
           StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
             stream: circleService.supportProfile(member.uid!),
