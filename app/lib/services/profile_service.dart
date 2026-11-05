@@ -445,7 +445,7 @@ class ProfileService {
       'avatarEyeColor' => 5,
       'avatarFacialHair' || 'avatarMole' => 4,
       'avatarHair' => 16,
-      'avatarSkin' => 13,
+      'avatarSkin' => 14,
       'avatarHairColor' => 9,
       _ => 0,
     };

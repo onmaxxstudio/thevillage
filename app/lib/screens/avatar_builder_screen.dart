@@ -36,8 +36,9 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
     Color(0xFFD69A70),
     Color(0xFFE0AD86),
     Color(0xFFEDC29B),
-    Color(0xFFF2D3C3),
-    Color(0xFFF8E4DC),
+    Color(0xFFEAC8B5),
+    Color(0xFFF3D9CA),
+    Color(0xFFFBC19F),
   ];
   static const hairColors = <Color>[
     Color(0xFF171311),
@@ -103,7 +104,7 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   ];
   static const tabs = [
     'Your Base',
-    'Skin Tone',
+    'Skin Colors',
     'Hairstyle',
     'Features',
     'Accessories',
@@ -528,28 +529,19 @@ class _AvatarBuilderScreenState extends State<AvatarBuilderScreen> {
   );
 
   Widget _skinOptions() => _optionPanel(
-    'Skin tone',
+    'Skin colors',
     'Choose from a range of natural tones.',
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    Wrap(
+      spacing: 13,
+      runSpacing: 14,
       children: [
-        _choiceRow(const ['Fair', 'Very fair'], skin - 12, (value) {
-          setState(() => skin = 12 + value);
-        }),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 13,
-          runSpacing: 14,
-          children: [
-            for (var i = 0; i < 12; i++)
-              _toneChoice(
-                skinColors[i],
-                skin == i,
-                'Skin tone ${i + 1}',
-                () => setState(() => skin = i),
-              ),
-          ],
-        ),
+        for (var i = 0; i < skinColors.length; i++)
+          _toneChoice(
+            skinColors[i],
+            skin == i,
+            'Skin tone ${i + 1}',
+            () => setState(() => skin = i),
+          ),
       ],
     ),
   );
