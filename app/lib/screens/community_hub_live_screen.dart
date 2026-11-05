@@ -256,6 +256,10 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         .where((community) => joined.contains(community.id))
         .toList();
     final browseResults = _filter(communities);
+    final featured = [
+      for (final id in ['men', 'women', 'relationships'])
+        ...communities.where((community) => community.id == id),
+    ];
     return Column(
       children: [
         Padding(
@@ -300,6 +304,14 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                if (query.isEmpty && featured.isNotEmpty) ...[
+                  _clubhousePager(featured),
+                  const SizedBox(height: 10),
+                  _pagerDots(featured.length),
+                  const SizedBox(height: 16),
+                  _quickSpaces(communities),
+                  const SizedBox(height: 10),
+                ],
                 if (browseResults.isEmpty)
                   const Padding(padding: EdgeInsets.all(20), child: Text('No communities found. Try another search or create your own.'))
                 else
@@ -906,7 +918,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   }
 
   Widget _clubhousePager(List<_Community> items) => SizedBox(
-        height: 270,
+        height: (MediaQuery.sizeOf(context).width * .86).clamp(280.0, 390.0).toDouble(),
         child: PageView.builder(
           controller: featurePager,
           itemCount: items.length,
@@ -986,7 +998,9 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                   ),
                   const SizedBox(height: 13),
                   FilledButton(
-                    onPressed: () => _toggleJoin(community),
+                    onPressed: joinedAlready
+                        ? () => _open(community)
+                        : () => _toggleJoin(community),
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFFD0A456),
                       foregroundColor: Colors.white,
@@ -996,7 +1010,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                       ),
                       shape: const StadiumBorder(),
                     ),
-                    child: Text(joinedAlready ? 'Joined' : 'Join'),
+                    child: Text(joinedAlready ? 'Open' : 'Join'),
                   ),
                 ],
               ),
