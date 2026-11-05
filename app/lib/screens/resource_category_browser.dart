@@ -127,43 +127,84 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
         ),
         const SizedBox(height: 14),
         LayoutBuilder(builder: (context, constraints) {
-          final columns = constraints.maxWidth >= 760 ? 4 : 3;
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: matching.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columns,
-              crossAxisSpacing: 10, mainAxisSpacing: 10,
-              childAspectRatio: columns == 3 ? 0.84 : 1.12,
-            ),
-            itemBuilder: (context, index) {
-              final category = matching[index];
-              return Semantics(
-                button: true, label: 'Browse ${category.title}',
-                child: InkWell(
-                  onTap: () => setState(() => selected = category),
-                  borderRadius: BorderRadius.circular(17),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: category.tint,
-                      borderRadius: BorderRadius.circular(17)),
-                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Icon(category.icon, size: 30, color: const [Color(0xFFE97643), Color(0xFF319449), Color(0xFFD99A05), Color(0xFFE93463), Color(0xFF7948C9), Color(0xFF1386C4), Color(0xFF12845B), Color(0xFF1679C6), Color(0xFFB87715), Color(0xFFDE5673), Color(0xFF7140B7), Color(0xFF4A963C)][categories.indexOf(category)]),
-                      const SizedBox(height: 6),
-                      Text(category.title, textAlign: TextAlign.center,
-                        maxLines: 3, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w700,
-                          color: ink, fontSize: 11.5)),
-                      const SizedBox(height: 5),
-                      Text('${category.subcategories.length} subcategories', style: const TextStyle(fontSize: 10, color: Color(0xFF514D49))),
-                      const SizedBox(height: 2),
-                      const Align(alignment: Alignment.centerRight, child: Icon(Icons.chevron_right, size: 16, color: Color(0xFF443D36))),
-                    ]),
+          final columns = constraints.maxWidth < 300
+              ? 1
+              : constraints.maxWidth >= 1000
+                  ? 4
+                  : constraints.maxWidth >= 760
+                      ? 3
+                      : 2;
+          final width = (constraints.maxWidth - (columns - 1) * 10) / columns;
+          const labels = [
+            'Housing', 'Basic Needs', 'Money', 'Health',
+            'Kids & Teens', 'Family', 'Jobs & Education',
+            'Transport & Tech', 'Legal & Safety', 'Specialized Support',
+            'Emergencies', 'Community & Pets',
+          ];
+          const iconColors = [
+            Color(0xFFE97643), Color(0xFF319449), Color(0xFFD99A05),
+            Color(0xFFE93463), Color(0xFF7948C9), Color(0xFF1386C4),
+            Color(0xFF12845B), Color(0xFF1679C6), Color(0xFFB87715),
+            Color(0xFFDE5673), Color(0xFF7140B7), Color(0xFF4A963C),
+          ];
+          return Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (final category in matching)
+                SizedBox(
+                  width: width,
+                  child: Semantics(
+                    button: true,
+                    label: 'Browse ${category.title}',
+                    excludeSemantics: true,
+                    child: Tooltip(
+                      message: category.title,
+                      child: Material(
+                        color: const Color(0xFFFFFAF1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(32),
+                          side: const BorderSide(color: Color(0xFFD8CFC1)),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () => setState(() => selected = category),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 52),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 7),
+                              child: Row(children: [
+                                Container(
+                                  width: 34, height: 34,
+                                  decoration: BoxDecoration(
+                                    color: category.tint,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    category.icon,
+                                    size: 22,
+                                    color: iconColors[categories.indexOf(category)],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    labels[categories.indexOf(category)],
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: ink, fontSize: 12, height: 1.2),
+                                  ),
+                                ),
+                              ]),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              );
-            },
+            ],
           );
         }),
         if (matching.isEmpty)
