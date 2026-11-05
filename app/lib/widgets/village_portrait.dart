@@ -55,8 +55,8 @@ class VillagePortrait extends StatelessWidget {
     '#D69A70',
     '#E0AD86',
     '#EDC29B',
-    '#F2D3C3',
-    '#F8E4DC',
+    '#EAC8B5',
+    '#FBC19F',
   ];
   static const hairTones = [
     '#171311',
@@ -204,7 +204,9 @@ class VillagePortrait extends StatelessWidget {
             ? _smooth(.035, .14, r - b) * _smooth(.018, .078, r - g)
             : _smooth(.03, .16, r - b) * _smooth(.01, .10, r - g);
         final fabric = clothing * (1 - warm) * .36;
-        final light = (r * .30 + g * .59 + b * .11 - .48) * .68;
+        // Preserve the base's sculpted shadows while softening the
+        // contrast of the warm source artwork for fair complexions.
+        final light = (r * .30 + g * .59 + b * .11 - .48) * .45;
         final tintedRed = isFair
             ? r + (tone.r + light - r) * warm
             : r * (1 + (tone.r / .65 - 1) * warm);
@@ -404,7 +406,7 @@ class _PortraitPainter extends CustomPainter {
       // Anchor the fitted sprites at the center of the hairline so narrowing
       // the sides does not shift the part or lift the fringe off the forehead.
       final width = switch (look.hair) {
-        0 => .97, // Afro
+        0 => .88, // Afro
         1 => .98, // Locs
         2 => .97, // Twists
         3 => .98, // Braids
@@ -424,10 +426,15 @@ class _PortraitPainter extends CustomPainter {
         _ => 1.0,
       };
       final presentationWidth = look.presentation == 1 ? 1.035 : 1.0;
+      // The Afro sprite's forehead opening starts near y=190. Scale
+      // around it to bring the crown and lower edges closer to the head.
+      final isAfro = look.hair == 0;
+      final hairlineY = isAfro ? 190.0 : 0.0;
+      final presentationOffset = look.presentation == 1 ? -5.0 : 0.0;
       canvas.save();
-      canvas.translate(256, look.presentation == 1 ? -5 : 0);
-      canvas.scale(width * scalpWidth * presentationWidth, 1);
-      canvas.translate(-256, 0);
+      canvas.translate(256, hairlineY + presentationOffset);
+      canvas.scale(width * scalpWidth * presentationWidth, isAfro ? .87 : 1);
+      canvas.translate(-256, -hairlineY);
       _drawLayer(canvas, hairstyle);
       canvas.restore();
     }
