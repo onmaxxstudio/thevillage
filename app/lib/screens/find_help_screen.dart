@@ -1048,8 +1048,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               const SizedBox(width: 8),
               Expanded(child: _locationButton(
                 icon: Icons.my_location_rounded,
-                label: 'Locate me',
-                onTap: _chooseZip,
+                label: selectedState == null ? 'Choose state' : stateNames[selectedState]!,
+                onTap: _chooseState,
               )),
             ]),
             const SizedBox(height: 9),
