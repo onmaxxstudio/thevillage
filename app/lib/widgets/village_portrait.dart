@@ -432,14 +432,18 @@ class _PortraitPainter extends CustomPainter {
         _ => 1.0,
       };
       final presentationWidth = look.presentation == 1 ? 1.035 : 1.0;
-      // The Afro sprite's forehead opening starts near y=190. Scale
-      // around it to bring the crown and lower edges closer to the head.
-      final isAfro = look.hair == 0;
-      final hairlineY = isAfro ? 190.0 : 0.0;
+      // Compress tall crowns around the forehead opening. This leaves
+      // the hairline in place and keeps the tips inside the portrait canvas.
+      final height = switch (look.hair) {
+        0 => .64, // Afro
+        1 || 8 || 9 => .90, // Locs, bun, ponytail
+        _ => 1.0,
+      };
+      final hairlineY = height < 1 ? 190.0 : 0.0;
       final presentationOffset = look.presentation == 1 ? -5.0 : 0.0;
       canvas.save();
       canvas.translate(256, hairlineY + presentationOffset);
-      canvas.scale(width * scalpWidth * presentationWidth, isAfro ? .64 : 1);
+      canvas.scale(width * scalpWidth * presentationWidth, height);
       canvas.translate(-256, -hairlineY);
       _drawLayer(canvas, hairstyle);
       canvas.restore();

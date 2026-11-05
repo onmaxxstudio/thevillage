@@ -160,6 +160,13 @@ void main() {
         for (var hair = 0; hair < fields['hair']!; hair++) {
           if (hair == 10) continue;
           final styled = await render('hair', hair, base: base, faceShape: face);
+          if ([0, 1, 8, 9].contains(hair)) {
+            expect(
+              styled.take(256 * 4).every((channel) => channel == 0),
+              isTrue,
+              reason: 'Hair $hair must clear the top edge on base $base, face $face',
+            );
+          }
           expect(
             listEquals(styled, bald),
             isFalse,
