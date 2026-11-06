@@ -1050,25 +1050,20 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               )),
               const SizedBox(width: 8),
               Expanded(child: _locationButton(
-                icon: Icons.my_location_rounded,
-                label: 'Use my location',
-                onTap: _useMyLocation,
+                icon: Icons.map_outlined,
+                label: 'Browse by map',
+                onTap: () => setState(() => showMap = !showMap),
               )),
             ]),
             const SizedBox(height: 9),
-            Row(children: [
-              Expanded(child: FilledButton(
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
                 onPressed: _submitDirectorySearch,
                 style: FilledButton.styleFrom(backgroundColor: sage),
                 child: const Text('Find resources'),
-              )),
-              const SizedBox(width: 8),
-              Expanded(child: OutlinedButton.icon(
-                onPressed: () => setState(() => showMap = !showMap),
-                icon: const Icon(Icons.map_outlined, size: 18),
-                label: const Text('Browse by map'),
-              )),
-            ]),
+              ),
+            ),
             if (showMap) ...[
               const SizedBox(height: 12),
               _map(),
