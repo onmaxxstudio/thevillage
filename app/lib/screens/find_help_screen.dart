@@ -2023,24 +2023,38 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       LayoutBuilder(builder: (context, constraints) {
         final columns = constraints.maxWidth >= 1080 ? 3 : constraints.maxWidth >= 690 ? 2 : 1;
         const gap = 14.0;
-        final cardWidth = (constraints.maxWidth - gap * (columns - 1)) / columns;
-        // One shared height keeps every card and its footer aligned, including
-        // listings without a phone number. Grow with accessibility text sizing.
-        final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
-        final hasVerification = resources.any((resource) =>
-            resource.verified.isNotEmpty && resource.verified != 'Check availability');
-        final cardHeight = (620.0 + (hasVerification ? 60 : 0)) *
-            (textScale < 1 ? 1 : textScale);
-        return Wrap(
-          spacing: gap, runSpacing: gap,
+        // Single-column cards hug their content. Multi-column rows stretch
+        // only to their tallest card, without a fixed minimum card height.
+        return Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            for (final resource in resources)
-              SizedBox(width: cardWidth, height: cardHeight, child: _resourceCard(resource)),
+            for (var offset = 0; offset < resources.length; offset += columns) ...[
+              if (offset > 0) const SizedBox(height: gap),
+              if (columns == 1)
+                SizedBox(width: double.infinity,
+                  child: _resourceCard(resources[offset]))
+              else
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var column = 0; column < columns; column++) ...[
+                        if (column > 0) const SizedBox(width: gap),
+                        Expanded(
+                          child: offset + column < resources.length
+                              ? _resourceCard(resources[offset + column], alignFooter: true)
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+            ],
           ],
         );
       });
 
-  Widget _resourceCard(HelpResource resource) => Container(
+  Widget _resourceCard(HelpResource resource, {bool alignFooter = false}) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: Colors.white,
@@ -2048,7 +2062,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       border: Border.all(color: line),
       boxShadow: [BoxShadow(color: sage.withValues(alpha: 0.06), blurRadius: 14, offset: const Offset(0, 5))],
     ),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    child: Column(mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Expanded(child: Wrap(spacing: 6, runSpacing: 6, children: [
           for (final need in resource.needs.take(2))
@@ -2097,7 +2112,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           ])),
       ],
       const SizedBox(height: 10),
-      const Spacer(),
+      if (alignFooter) const Spacer(),
       // Individual votes are private; aggregate counts require trusted
       // server-side calculation before they can be displayed publicly.
       const Text('Not enough community feedback yet',
