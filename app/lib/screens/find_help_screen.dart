@@ -13,6 +13,8 @@ import '../services/admin_content_service.dart';
 import 'resource_category_browser.dart';
 import 'guided_help_assistant.dart';
 
+part 'state_resource_catalog.dart';
+
 class _SelectedStatePainter extends CustomPainter {
   const _SelectedStatePainter(this.statePath, this.color);
   final Path statePath;
@@ -73,6 +75,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   String? costFilter;
   String eligibilityFilter = '';
   bool allCategoriesOpen = false;
+  int directoryLimit = 20;
 
   static const stateNames = <String, String>{
     'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California',
@@ -107,7 +110,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     HelpPath('work', 'Work, legal or other support', 'Get connected to jobs, legal aid, safety planning and someone who can help.', Icons.handshake_outlined, ['Employment', 'Legal Help', 'Crisis & Safety']),
   ];
 
-  static const builtIns = <HelpResource>[
+  static final builtIns = <HelpResource>[
     HelpResource(
       id: "fl-myaccess",
       title: "MyACCESS — SNAP, Medicaid & Cash Assistance",
@@ -940,6 +943,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       label: 'Florida official resource',
       verified: '',
     ),
+    ...allStateResourceCatalog,
   ];
 
   @override
@@ -1809,6 +1813,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     );
     Future<void>.delayed(const Duration(milliseconds: 500), eligibilityController.dispose);
     if (applied == true && mounted) setState(() {
+      directoryLimit = 20;
       providerFilter = provider; areaFilter = area; costFilter = cost;
       eligibilityFilter = eligibility.trim(); showAllResources = true;
     });
@@ -1830,6 +1835,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       )),
     );
     if (value != null && mounted) setState(() {
+      directoryLimit = 20;
       selectedState = value == 'ALL' ? null : value;
       showAllResources = true;
     });
@@ -1924,7 +1930,16 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           if (items.isEmpty)
             const Padding(padding: EdgeInsets.symmetric(vertical: 20),
               child: Text('No matching resources found. Try fewer filters or another location.'))
-          else _resourceGrid(items),
+          else ...[
+            _resourceGrid(items.take(directoryLimit).toList()),
+            if (items.length > directoryLimit) ...[
+              const SizedBox(height: 14),
+              Center(child: OutlinedButton(
+                onPressed: () => setState(() => directoryLimit += 20),
+                child: Text('Show more resources (${items.length - directoryLimit} remaining)'),
+              )),
+            ],
+          ],
         ]);
       },
     );
@@ -1948,7 +1963,10 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           TextField(controller: directorySearchController,
             textInputAction: TextInputAction.search,
             onSubmitted: (_) => _submitDirectorySearch(),
-            onChanged: (value) => setState(() => directoryQuery = value.trim()),
+            onChanged: (value) => setState(() {
+              directoryQuery = value.trim();
+              directoryLimit = 20;
+            }),
             decoration: InputDecoration(hintText: 'What do you need help with?',
               prefixIcon: const Icon(Icons.search_rounded, color: sage),
               suffixIcon: IconButton(tooltip: 'Search resources',
@@ -2118,6 +2136,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     setState(() {
       selectedPathId = null;
       selectedNeed = mapping[category];
+      directoryLimit = 20;
       showAllResources = true;
       allCategoriesOpen = false;
     });
