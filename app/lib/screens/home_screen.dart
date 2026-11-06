@@ -223,6 +223,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Preserve the existing phone layout; let tablets use their available width.
+    final tabletLayout = MediaQuery.sizeOf(context).width >= 700;
+    final homeMaxWidth = tabletLayout ? 1100.0 : 620.0;
     return Scaffold(
       backgroundColor: cream,
       drawer: _buildDrawer(),
@@ -232,14 +235,14 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 620),
+                constraints: BoxConstraints(maxWidth: homeMaxWidth),
                 child: _buildHeader(),
               ),
             ),
             Expanded(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 620),
+                  constraints: BoxConstraints(maxWidth: homeMaxWidth),
                   child: CustomScrollView(
                     slivers: [
                       SliverPadding(
@@ -279,6 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           childAspectRatio: columns == 1 ? 2.05 : 1.78,
+          mainAxisExtent: constraints.maxWidth >= 664 ? 156 : null,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
