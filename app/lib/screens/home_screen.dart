@@ -281,8 +281,9 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisCount: columns,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: columns == 1 ? 2.05 : 1.78,
-          mainAxisExtent: constraints.maxWidth >= 664 ? 156 : null,
+          childAspectRatio: constraints.maxWidth >= 664
+              ? (constraints.maxWidth - 12) / 2 / 156
+              : columns == 1 ? 2.05 : 1.78,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
