@@ -21,8 +21,6 @@ class ResourceCategoryBrowser extends StatefulWidget {
 class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
   static const sage = Color(0xFF355C3B);
   static const ink = Color(0xFF172019);
-  final search = TextEditingController();
-  String query = '';
   ResourceBrowseCategory? selected;
 
   static const categories = <ResourceBrowseCategory>[
@@ -42,17 +40,12 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
 
   @override
   void dispose() {
-    search.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final matching = categories.where((category) {
-      final q = query.trim().toLowerCase();
-      return q.isEmpty || category.title.toLowerCase().contains(q) ||
-          category.subcategories.any((s) => s.toLowerCase().contains(q));
-    }).toList();
+    final matching = categories;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       if (selected != null) ...[
         TextButton.icon(
@@ -108,23 +101,6 @@ class _ResourceCategoryBrowserState extends State<ResourceCategoryBrowser> {
         const SizedBox(height: 5),
         const Text('12 categories · 67 subcategories',
           style: TextStyle(fontSize: 12.5, color: Color(0xFF626A63))),
-        const SizedBox(height: 14),
-        TextField(
-          controller: search,
-          onChanged: (value) => setState(() => query = value),
-          decoration: InputDecoration(
-            hintText: 'What do you need help with?',
-            prefixIcon: const Icon(Icons.search_rounded, color: sage),
-            suffixIcon: query.isEmpty ? null : IconButton(
-              tooltip: 'Clear search',
-              icon: const Icon(Icons.close),
-              onPressed: () { search.clear(); setState(() => query = ''); },
-            ),
-            filled: true, fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Color(0xFFE3D8C9))),
-          ),
-        ),
         const SizedBox(height: 14),
         LayoutBuilder(builder: (context, constraints) {
           final columns = constraints.maxWidth < 300
