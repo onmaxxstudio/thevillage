@@ -2024,11 +2024,15 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         final columns = constraints.maxWidth >= 1080 ? 3 : constraints.maxWidth >= 690 ? 2 : 1;
         const gap = 14.0;
         final cardWidth = (constraints.maxWidth - gap * (columns - 1)) / columns;
+        // One shared height keeps every card and its footer aligned, including
+        // listings without a phone number. Grow with accessibility text sizing.
+        final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final cardHeight = 760.0 * (textScale < 1 ? 1 : textScale);
         return Wrap(
           spacing: gap, runSpacing: gap,
           children: [
             for (final resource in resources)
-              SizedBox(width: cardWidth, child: _resourceCard(resource)),
+              SizedBox(width: cardWidth, height: cardHeight, child: _resourceCard(resource)),
           ],
         );
       });
@@ -2058,11 +2062,14 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(13)),
         child: const Icon(Icons.volunteer_activism_outlined, color: sage, size: 34)),
       const SizedBox(height: 12),
-      Text(resource.title, style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
+      Text(resource.title, maxLines: 2, overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
       const SizedBox(height: 6),
-      Text(resource.description, style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: ink)),
+      Text(resource.description, maxLines: 3, overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: ink)),
       const SizedBox(height: 10),
-      Text(resource.label, style: const TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w800)),
+      Text(resource.label, maxLines: 2, overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w800)),
       if (resource.serviceArea.isNotEmpty) ...[
         const SizedBox(height: 6),
         Text(resource.serviceArea,
@@ -2082,10 +2089,12 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             const Icon(Icons.verified_outlined, color: sage, size: 17),
             const SizedBox(width: 7),
             Expanded(child: Text('Verification on record: ${resource.verified}',
+              maxLines: 2, overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 11, color: sage, fontWeight: FontWeight.w700))),
           ])),
       ],
       const SizedBox(height: 10),
+      const Spacer(),
       // Individual votes are private; aggregate counts require trusted
       // server-side calculation before they can be displayed publicly.
       const Text('Not enough community feedback yet',
@@ -2140,10 +2149,12 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         style: FilledButton.styleFrom(backgroundColor: sage),
         icon: const Icon(Icons.info_outline_rounded, size: 17),
         label: const Text('View Program Details'))),
-      if (resource.phone.isNotEmpty)
-        Align(alignment: Alignment.centerRight, child: TextButton.icon(
-          onPressed: () => _call(resource.phone),
-          icon: const Icon(Icons.call_outlined, size: 17), label: const Text('Call'))),
+      SizedBox(height: 48,
+        child: resource.phone.isEmpty ? null
+          : Align(alignment: Alignment.centerRight, child: TextButton.icon(
+              onPressed: () => _call(resource.phone),
+              icon: const Icon(Icons.call_outlined, size: 17), label: const Text('Call')))),
+
     ]),
   );
 
