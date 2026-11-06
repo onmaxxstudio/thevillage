@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -402,14 +400,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         AspectRatio(aspectRatio: 4 / 3, child: InkWell(
           onTap: () => _open(community),
-          child: ClipRect(child: Stack(fit: StackFit.expand, children: [
-            ImageFiltered(
-              imageFilter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: photo(BoxFit.cover),
-            ),
-            const ColoredBox(color: Color(0x30726D55)),
-            photo(BoxFit.contain),
-          ])),
+          child: SizedBox.expand(child: photo(BoxFit.cover)),
         )),
         Expanded(child: Padding(
           padding: const EdgeInsets.fromLTRB(11, 10, 11, 10),
