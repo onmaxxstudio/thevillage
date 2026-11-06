@@ -1232,9 +1232,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   Future<void> _respondToRequest(_CircleCandidate person,
       {required bool accept}) async {
-    final request = requestByUid[person.uid];
-    if (request == null || _respondingToRequests.contains(person.uid)) return;
-    setState(() => _respondingToRequests.add(person.uid));
+    final uid = person.uid;
+    if (uid == null) return;
+    final request = requestByUid[uid];
+    if (request == null || _respondingToRequests.contains(uid)) return;
+    setState(() => _respondingToRequests.add(uid));
     try {
       if (accept) {
         await circleService.acceptRequest(request);
@@ -3613,7 +3615,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           ),
           const SizedBox(height: 8),
           if (_requestLoadFailed)
-            const Text('Could not load requests. Reopen My Circle to try again.')
+            const Text('Could not load requests. Refresh the page to try again.')
           else if (incomingRequests.isEmpty)
             const Text('No pending requests right now.')
           else
