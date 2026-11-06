@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_drawing/path_drawing.dart';
@@ -1116,50 +1113,6 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           ),
         ),
       );
-
-  Future<void> _useMyLocation() async {
-    try {
-      // On web, requesting the position itself triggers the browser prompt.
-      // Permission APIs can report denied before that prompt is shown.
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.low,
-          timeLimit: Duration(seconds: 15),
-        ),
-      );
-      final uri = Uri.https('api.bigdatacloud.net',
-          '/data/reverse-geocode-client', {
-        'latitude': position.latitude.toString(),
-        'longitude': position.longitude.toString(),
-        'localityLanguage': 'en',
-      });
-      final response = await http.get(uri).timeout(const Duration(seconds: 12));
-      if (response.statusCode != 200) {
-        throw Exception('Location lookup is unavailable. Enter a ZIP code instead.');
-      }
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final postcode = data['postcode']?.toString() ?? '';
-      final zip = RegExp(r'^\\d{5}$').hasMatch(postcode) ? postcode : null;
-      final stateCode = data['principalSubdivisionCode']?.toString() ?? '';
-      final state = stateCode.startsWith('US-')
-          ? stateCode.substring(3).toUpperCase()
-          : null;
-      if (!mounted) return;
-      if (zip == null && state == null) {
-        throw Exception('Could not find resources for this location. Enter a ZIP code instead.');
-      }
-      setState(() {
-        localZip = zip;
-        selectedState = state;
-      });
-      _submitDirectorySearch();
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
-      );
-    }
-  }
 
   Future<void> _chooseZip() async {
     final enteredZip = await showModalBottomSheet<String>(
