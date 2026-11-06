@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_drawing/path_drawing.dart';
@@ -64,6 +66,14 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   String? selectedState;
   String? selectedNeed;
   Set<String> saved = {};
+  StreamSubscription<User?>? _savedAuthChanges;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _savedChanges;
+  String? _savedUid;
+  int _savedGeneration = 0;
+  bool _savedLoading = true;
+  bool _legacySavesPending = false;
+  String? _savedSyncError;
+  final Set<String> _savingResourceIds = {};
   bool showMap = false;
   Map<String, Path> stateShapes = {};
   final mapTransform = TransformationController();
@@ -955,6 +965,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
 
   @override
   void dispose() {
+    _savedAuthChanges?.cancel();
+    _savedChanges?.cancel();
     zipController.dispose();
     directorySearchController.dispose();
     mapTransform.dispose();
@@ -1014,16 +1026,153 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   }
 
   Future<void> _loadSaved() async {
+    _savedAuthChanges ??= FirebaseAuth.instance.authStateChanges().listen(
+      (user) => _bindSavedUser(user),
+    );
+  }
+
+  Future<void> _bindSavedUser(User? user) async {
+    final generation = ++_savedGeneration;
+    final oldSubscription = _savedChanges;
+    _savedChanges = null;
+    final uid = user == null || user.isAnonymous ? null : user.uid;
+    if (mounted) setState(() {
+      _savedUid = uid;
+      saved = {};
+      _savingResourceIds.clear();
+      _savedLoading = uid != null;
+      _legacySavesPending = false;
+      _savedSyncError = null;
+    });
+    await oldSubscription?.cancel();
+    if (uid == null || !mounted || generation != _savedGeneration) return;
+
     final preferences = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() => saved = (preferences.getStringList('saved_help_resources') ?? const <String>[]).toSet());
+    if (!mounted || generation != _savedGeneration) return;
+    final cacheKey = 'saved_help_resources_$uid';
+    final cached = (preferences.getStringList(cacheKey) ?? <String>[]).toSet();
+    // The old unscoped list is claimed once, so switching profiles on a
+    // shared device cannot import another member's older bookmarks.
+    final legacy = (preferences.getStringList('saved_help_resources') ?? <String>[]).toSet();
+    var legacyOwner = preferences.getString('saved_help_resources_legacy_owner');
+    if (legacy.isNotEmpty && legacyOwner == null) {
+      await preferences.setString('saved_help_resources_legacy_owner', uid);
+      legacyOwner = uid;
     }
+    final legacyForUser = legacyOwner == uid ? legacy : <String>{};
+    if (!mounted || generation != _savedGeneration) return;
+    setState(() => saved = {...cached, ...legacyForUser});
+
+    final bookmarks = FirebaseFirestore.instance
+        .collection('users').doc(uid).collection('saved_resources');
+    try {
+      final ids = legacyForUser
+          .where((id) => RegExp(r'^[A-Za-z0-9_-]{1,160}$').hasMatch(id)).toList();
+      for (var offset = 0; offset < ids.length; offset += 400) {
+        if (generation != _savedGeneration ||
+            FirebaseAuth.instance.currentUser?.uid != uid) return;
+        final batch = FirebaseFirestore.instance.batch();
+        for (final id in ids.skip(offset).take(400)) {
+          batch.set(bookmarks.doc(id), {
+            'resourceId': id,
+            'savedAt': FieldValue.serverTimestamp(),
+          });
+        }
+        await batch.commit().timeout(const Duration(seconds: 15));
+      }
+      if (legacyForUser.isNotEmpty) {
+        await preferences.remove('saved_help_resources');
+      }
+    } catch (_) {
+      if (!mounted || generation != _savedGeneration) return;
+      setState(() {
+        _legacySavesPending = legacyForUser.isNotEmpty;
+        _savedSyncError = 'Your older saves could not finish syncing. Check your connection and tap Retry.';
+      });
+    }
+    if (!mounted || generation != _savedGeneration) return;
+    _savedChanges = bookmarks.snapshots(includeMetadataChanges: true).listen(
+      (snapshot) {
+        if (!mounted || generation != _savedGeneration ||
+            FirebaseAuth.instance.currentUser?.uid != uid) return;
+        final next = snapshot.docs.map((document) => document.id).toSet();
+        if (_legacySavesPending) next.addAll(legacyForUser);
+        setState(() {
+          saved = next;
+          _savedLoading = false;
+          if (!_legacySavesPending) {
+            _savedSyncError = snapshot.metadata.hasPendingWrites
+              ? 'Changes are waiting to sync. Keep this device online.'
+              : snapshot.metadata.isFromCache
+                ? 'Showing cached saves. Connect to the internet to sync your profile.'
+                : null;
+          }
+        });
+        preferences.setStringList(cacheKey, next.toList());
+      },
+      onError: (Object error) {
+        if (!mounted || generation != _savedGeneration) return;
+        setState(() {
+          _savedLoading = false;
+          _savedSyncError = 'Saved resources could not sync. Check your connection and tap Retry.';
+        });
+      },
+    );
   }
 
   Future<void> _toggleSaved(String id) async {
-    setState(() => saved.contains(id) ? saved.remove(id) : saved.add(id));
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.setStringList('saved_help_resources', saved.toList());
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.isAnonymous || user.uid != _savedUid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign in to save resources to your profile.')));
+      return;
+    }
+    if (_savedLoading || _legacySavesPending) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your saved resources are syncing. Please try again shortly.')));
+      return;
+    }
+    if (!_savingResourceIds.add(id)) return;
+    final uid = user.uid;
+    final wasSaved = saved.contains(id);
+    try {
+      final reference = FirebaseFirestore.instance.collection('users')
+          .doc(uid).collection('saved_resources').doc(id);
+      if (wasSaved) {
+        await reference.delete().timeout(const Duration(seconds: 15));
+      } else {
+        await reference.set({
+          'resourceId': id,
+          'savedAt': FieldValue.serverTimestamp(),
+        }).timeout(const Duration(seconds: 15));
+      }
+    } catch (_) {
+      if (mounted && _savedUid == uid) {
+        setState(() => _savedSyncError = 'Could not confirm your save was synced. Check your connection and tap Retry.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not confirm sync. Your save may still be waiting for a connection.')));
+      }
+    } finally {
+      _savingResourceIds.remove(id);
+    }
+  }
+
+  Widget _savedSyncStatus() {
+    final message = _savedUid == null
+        ? 'Sign in to see your profile’s saved resources on every device.'
+        : _savedLoading ? 'Loading saved resources from your profile…'
+        : _savedSyncError;
+    if (message == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(children: [
+        Expanded(child: Text(message,
+          style: const TextStyle(fontSize: 12, color: sage))),
+        if (_savedUid != null && !_savedLoading)
+          TextButton(onPressed: () => _bindSavedUser(FirebaseAuth.instance.currentUser),
+            child: const Text('Retry')),
+      ]),
+    );
   }
 
   Future<void> _open(String url) async {
@@ -1514,10 +1663,11 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       Text('Saved resources', style: GoogleFonts.playfairDisplay(
         fontSize: 29, fontWeight: FontWeight.w800, color: ink)),
       const SizedBox(height: 6),
-      Text('${resources.length} saved • Stored on this device/browser',
+      Text('${resources.length} saved • Private to your profile',
         style: const TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+      _savedSyncStatus(),
       const SizedBox(height: 16),
-      if (resources.isEmpty)
+      if (resources.isEmpty && !_savedLoading)
         Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(color: paleSage,
@@ -2000,6 +2150,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             label: Text('Saved resources (${saved.length})'),
             style: TextButton.styleFrom(foregroundColor: sage),
           )),
+          _savedSyncStatus(),
           const SizedBox(height: 12),
           TextField(controller: directorySearchController,
             textInputAction: TextInputAction.search,
