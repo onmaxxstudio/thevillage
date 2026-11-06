@@ -465,6 +465,20 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         return ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           children: [
+            TextButton.icon(
+              onPressed: () => setState(() {
+                selectedNeed = null;
+                selectedPathId = null;
+                selectedState = null;
+                showAllResources = false;
+              }),
+              icon: const Icon(Icons.arrow_back_rounded),
+              label: const Text('Back to Resource Directory'),
+              style: TextButton.styleFrom(
+                foregroundColor: sage,
+                alignment: Alignment.centerLeft,
+              ),
+            ),
             Text('Find Help', style: GoogleFonts.playfairDisplay(fontSize: 30, fontWeight: FontWeight.w700, color: ink)),
             const SizedBox(height: 4),
             Text('Free and low-cost support, organized by location and need.', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF626A63))),
