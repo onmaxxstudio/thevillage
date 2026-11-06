@@ -1159,6 +1159,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             : visible.where((resource) => resource.states.isEmpty).toList();
         if (view == 1) return _courses(snapshot.data ?? const <ManagedContentItem>[]);
         if (view == 0) return _helpStart();
+        if (view == 2) return _savedResources(visible);
         return Column(
           children: [
             SafeArea(
@@ -1500,6 +1501,40 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ),
         ],
       );
+
+  Widget _savedResources(List<HelpResource> resources) => ListView(
+    padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
+    children: [
+      Align(alignment: Alignment.centerLeft, child: TextButton.icon(
+        onPressed: () => setState(() => view = 0),
+        icon: const Icon(Icons.arrow_back_rounded),
+        label: const Text('Back to Resource Directory'),
+        style: TextButton.styleFrom(foregroundColor: sage),
+      )),
+      Text('Saved resources', style: GoogleFonts.playfairDisplay(
+        fontSize: 29, fontWeight: FontWeight.w800, color: ink)),
+      const SizedBox(height: 6),
+      Text('${resources.length} saved • Stored on this device/browser',
+        style: const TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+      const SizedBox(height: 16),
+      if (resources.isEmpty)
+        Container(
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(color: paleSage,
+            borderRadius: BorderRadius.circular(16)),
+          child: const Column(children: [
+            Icon(Icons.bookmark_border_rounded, color: sage, size: 32),
+            SizedBox(height: 8),
+            Text('No saved resources yet.',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+            SizedBox(height: 4),
+            Text('Tap the bookmark on a card or Save resource inside Details.',
+              textAlign: TextAlign.center),
+          ]),
+        )
+      else _resourceGrid(resources),
+    ],
+  );
 
   Widget _savedHeader() => Container(
         padding: const EdgeInsets.all(15),
@@ -1959,6 +1994,12 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             fontSize: 29, fontWeight: FontWeight.w800, color: ink)),
           const SizedBox(height: 4),
           const Text('Find support near you.'),
+          Align(alignment: Alignment.centerLeft, child: TextButton.icon(
+            onPressed: () => setState(() => view = 2),
+            icon: const Icon(Icons.bookmark_outline_rounded, size: 19),
+            label: Text('Saved resources (${saved.length})'),
+            style: TextButton.styleFrom(foregroundColor: sage),
+          )),
           const SizedBox(height: 12),
           TextField(controller: directorySearchController,
             textInputAction: TextInputAction.search,
@@ -2322,7 +2363,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   Future<void> _showResourceDetails(HelpResource resource) async {
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, updateDialog) => AlertDialog(
         title: Text(resource.title,
           style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700)),
         content: SingleChildScrollView(
@@ -2330,6 +2372,17 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await _toggleSaved(resource.id);
+                  if (dialogContext.mounted) updateDialog(() {});
+                },
+                icon: Icon(saved.contains(resource.id)
+                  ? Icons.bookmark_rounded : Icons.bookmark_border_rounded),
+                label: Text(saved.contains(resource.id) ? 'Saved — remove' : 'Save resource'),
+                style: OutlinedButton.styleFrom(foregroundColor: sage),
+              ),
+              const SizedBox(height: 12),
               Text(resource.description),
               const SizedBox(height: 12),
               Text(resource.label, style: const TextStyle(color: sage)),
@@ -2428,6 +2481,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               child: const Text('Visit program website'),
             ),
         ],
+      ),
       ),
     );
   }
