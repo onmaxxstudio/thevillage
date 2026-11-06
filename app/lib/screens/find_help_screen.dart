@@ -462,10 +462,15 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             : visible.where((resource) => resource.states.isEmpty).toList();
         if (view == 1) return _courses(snapshot.data ?? const <ManagedContentItem>[]);
         if (view == 0 && selectedPathId == null && selectedNeed == null) return _helpStart();
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
+        return Column(
           children: [
-            TextButton.icon(
+            SafeArea(
+              bottom: false,
+              child: Container(
+                width: double.infinity,
+                color: cream,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: TextButton.icon(
               onPressed: () => setState(() {
                 selectedNeed = null;
                 selectedPathId = null;
@@ -479,6 +484,11 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                 alignment: Alignment.centerLeft,
               ),
             ),
+              ),
+            ),
+            Expanded(child: ListView(
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
+              children: [
             Text('Find Help', style: GoogleFonts.playfairDisplay(fontSize: 30, fontWeight: FontWeight.w700, color: ink)),
             const SizedBox(height: 4),
             Text('Free and low-cost support, organized by location and need.', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF626A63))),
@@ -555,6 +565,8 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 10.5, color: Color(0xFF737873), height: 1.4),
             ),
+              ],
+            )),
           ],
         );
       },
