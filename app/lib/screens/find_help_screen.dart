@@ -338,7 +338,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
 
   Future<void> _open(String url) async {
     final uri = Uri.tryParse(url);
-    if (uri == null || !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    if (uri == null || !await launchUrl(uri, mode: LaunchMode.externalApplication, webOnlyWindowName: '_blank')) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('That resource could not be opened.')));
     }
@@ -1429,9 +1429,9 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       ]),
       const SizedBox(height: 8),
       SizedBox(width: double.infinity, child: FilledButton.icon(
-        onPressed: resource.url.isEmpty ? null : () => _open(resource.url),
+        onPressed: () => _showResourceDetails(resource),
         style: FilledButton.styleFrom(backgroundColor: sage),
-        icon: const Icon(Icons.open_in_new_rounded, size: 17),
+        icon: const Icon(Icons.info_outline_rounded, size: 17),
         label: const Text('View Program Details'))),
       if (resource.phone.isNotEmpty)
         Align(alignment: Alignment.centerRight, child: TextButton.icon(
@@ -1439,6 +1439,43 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           icon: const Icon(Icons.call_outlined, size: 17), label: const Text('Call'))),
     ]),
   );
+
+  Future<void> _showResourceDetails(HelpResource resource) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(resource.title,
+          style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(resource.description),
+              const SizedBox(height: 12),
+              Text(resource.label, style: const TextStyle(color: sage)),
+              if (resource.phone.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text('Phone: ${resource.phone}'),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            icon: const Icon(Icons.arrow_back_rounded),
+            label: const Text('Back to resources'),
+          ),
+          if (resource.url.isNotEmpty)
+            FilledButton(
+              onPressed: () => _open(resource.url),
+              child: const Text('Visit program website'),
+            ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _reportResource(HelpResource resource) async {
     final reason = await showDialog<String>(context: context, builder: (dialogContext) =>
