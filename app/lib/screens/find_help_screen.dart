@@ -2027,7 +2027,10 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         // One shared height keeps every card and its footer aligned, including
         // listings without a phone number. Grow with accessibility text sizing.
         final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
-        final cardHeight = 760.0 * (textScale < 1 ? 1 : textScale);
+        final hasVerification = resources.any((resource) =>
+            resource.verified.isNotEmpty && resource.verified != 'Check availability');
+        final cardHeight = (620.0 + (hasVerification ? 60 : 0)) *
+            (textScale < 1 ? 1 : textScale);
         return Wrap(
           spacing: gap, runSpacing: gap,
           children: [
@@ -2058,7 +2061,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           style: const TextStyle(fontSize: 11, color: ink)),
       ]),
       const SizedBox(height: 12),
-      Container(height: 76, width: double.infinity,
+      Container(height: 48, width: double.infinity,
         decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(13)),
         child: const Icon(Icons.volunteer_activism_outlined, color: sage, size: 34)),
       const SizedBox(height: 12),
@@ -2144,16 +2147,22 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             child: Text('Report', maxLines: 1, softWrap: false)))),
       ]),
       const SizedBox(height: 8),
-      SizedBox(width: double.infinity, child: FilledButton.icon(
-        onPressed: () => _showResourceDetails(resource),
-        style: FilledButton.styleFrom(backgroundColor: sage),
-        icon: const Icon(Icons.info_outline_rounded, size: 17),
-        label: const Text('View Program Details'))),
-      SizedBox(height: 48,
-        child: resource.phone.isEmpty ? null
-          : Align(alignment: Alignment.centerRight, child: TextButton.icon(
-              onPressed: () => _call(resource.phone),
-              icon: const Icon(Icons.call_outlined, size: 17), label: const Text('Call')))),
+      Row(children: [
+        Expanded(child: FilledButton.icon(
+          onPressed: () => _showResourceDetails(resource),
+          style: FilledButton.styleFrom(backgroundColor: sage),
+          icon: const Icon(Icons.info_outline_rounded, size: 17),
+          label: const Text('View Program Details'))),
+        if (resource.phone.isNotEmpty) ...[
+          const SizedBox(width: 6),
+          IconButton(
+            tooltip: 'Call program',
+            onPressed: () => _call(resource.phone),
+            icon: const Icon(Icons.call_outlined, size: 19),
+            color: sage,
+          ),
+        ],
+      ]),
 
     ]),
   );
