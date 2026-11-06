@@ -1133,43 +1133,30 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
         throw Exception('Location permission was not granted. Enter a ZIP code instead.');
       }
       final position = await Geolocator.getCurrentPosition();
-      final uri = Uri.https('geocoding.geo.census.gov',
-          '/geocoder/geographies/coordinates', {
-        'x': position.longitude.toString(),
-        'y': position.latitude.toString(),
-        'benchmark': 'Public_AR_Current',
-        'vintage': 'Current_Current',
-        'format': 'json',
+      final uri = Uri.https('api.bigdatacloud.net',
+          '/data/reverse-geocode-client', {
+        'latitude': position.latitude.toString(),
+        'longitude': position.longitude.toString(),
+        'localityLanguage': 'en',
       });
       final response = await http.get(uri).timeout(const Duration(seconds: 12));
-      if (response.statusCode != 200) throw Exception('Location lookup is unavailable. Enter a ZIP code instead.');
+      if (response.statusCode != 200) {
+        throw Exception('Location lookup is unavailable. Enter a ZIP code instead.');
+      }
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final geographies = (data['result'] as Map<String, dynamic>)['geographies'] as Map<String, dynamic>;
-      final zipAreas = geographies['ZIP Code Tabulation Areas'] as List<dynamic>?;
-      final states = geographies['States'] as List<dynamic>?;
-      final zip = zipAreas?.isNotEmpty == true
-          ? (zipAreas!.first as Map<String, dynamic>)['ZCTA5']?.toString()
+      final postcode = data['postcode']?.toString() ?? '';
+      final zip = RegExp(r'^\\d{5}$').hasMatch(postcode) ? postcode : null;
+      final stateCode = data['principalSubdivisionCode']?.toString() ?? '';
+      final state = stateCode.startsWith('US-')
+          ? stateCode.substring(3).toUpperCase()
           : null;
-      final stateFips = states?.isNotEmpty == true
-          ? (states!.first as Map<String, dynamic>)['STATE']?.toString()
-          : null;
-      const fips = <String, String>{
-        '01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT',
-        '10':'DE','11':'DC','12':'FL','13':'GA','15':'HI','16':'ID','17':'IL',
-        '18':'IN','19':'IA','20':'KS','21':'KY','22':'LA','23':'ME','24':'MD',
-        '25':'MA','26':'MI','27':'MN','28':'MS','29':'MO','30':'MT','31':'NE',
-        '32':'NV','33':'NH','34':'NJ','35':'NM','36':'NY','37':'NC','38':'ND',
-        '39':'OH','40':'OK','41':'OR','42':'PA','44':'RI','45':'SC','46':'SD',
-        '47':'TN','48':'TX','49':'UT','50':'VT','51':'VA','53':'WA','54':'WV',
-        '55':'WI','56':'WY',
-      };
       if (!mounted) return;
-      if (zip == null && fips[stateFips] == null) {
+      if (zip == null && state == null) {
         throw Exception('Could not find resources for this location. Enter a ZIP code instead.');
       }
       setState(() {
         localZip = zip;
-        selectedState = fips[stateFips];
+        selectedState = state;
       });
       _submitDirectorySearch();
     } catch (error) {
