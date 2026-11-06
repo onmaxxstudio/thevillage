@@ -1,6 +1,6 @@
 const {readFileSync} = require('node:fs');
 const {initializeTestEnvironment, assertSucceeds, assertFails} = require('@firebase/rules-unit-testing');
-const {doc, setDoc, getDoc, updateDoc, deleteDoc, runTransaction, serverTimestamp, getDocFromServer} = require('firebase/firestore');
+const {doc, setDoc, getDoc, updateDoc, deleteDoc, runTransaction, serverTimestamp, getDocFromServer, collection, getDocs} = require('firebase/firestore');
 
 (async () => {
   const env = await initializeTestEnvironment({
@@ -62,6 +62,34 @@ const {doc, setDoc, getDoc, updateDoc, deleteDoc, runTransaction, serverTimestam
     await assertSucceeds(replySupport(bob, 'bob-token'));
     reply = (await getDocFromServer(doc(bob, 'village_posts/post'))).data().replies[0];
     if (reply.supportCount !== 2 || reply.supportTokens.length !== 2) throw Error('Distinct comment supporters lost');
+
+    // Two devices signed into the same profile share the same bookmarks.
+    const alicePhone = env.authenticatedContext('alice').firestore();
+    const guest = env.unauthenticatedContext().firestore();
+    const bookmarkPath = 'users/alice/saved_resources/fl-wic';
+    await assertSucceeds(setDoc(doc(alice, bookmarkPath),
+      {resourceId: 'fl-wic', savedAt: serverTimestamp()}));
+    const fromPhone = await assertSucceeds(getDocFromServer(doc(alicePhone, bookmarkPath)));
+    if (!fromPhone.exists()) throw Error('Same-profile second device cannot see saved resource');
+    const phoneList = await assertSucceeds(getDocs(collection(alicePhone, 'users/alice/saved_resources')));
+    if (phoneList.size !== 1) throw Error('Saved-resource library did not sync across devices');
+    await assertFails(getDoc(doc(bob, bookmarkPath)));
+    await assertFails(getDocs(collection(bob, 'users/alice/saved_resources')));
+    await assertFails(getDoc(doc(guest, bookmarkPath)));
+    await assertFails(setDoc(doc(bob, bookmarkPath),
+      {resourceId: 'fl-wic', savedAt: serverTimestamp()}));
+    await assertFails(setDoc(doc(alice, bookmarkPath),
+      {resourceId: 'wrong-id', savedAt: serverTimestamp()}));
+    await assertFails(setDoc(doc(alice, bookmarkPath),
+      {resourceId: 'fl-wic', savedAt: serverTimestamp(), public: true}));
+    await assertFails(setDoc(doc(alice, bookmarkPath),
+      {resourceId: 'fl-wic', savedAt: new Date(0)}));
+    await assertFails(deleteDoc(doc(bob, bookmarkPath)));
+    await assertSucceeds(deleteDoc(doc(alicePhone, bookmarkPath)));
+    if ((await getDocFromServer(doc(alice, bookmarkPath))).exists())
+      throw Error('Removing a saved resource on a second device did not sync');
+    console.log('Resource bookmarks: cross-device reads/removal, private listing, ownership, schema and timestamps passed.');
+
     console.log('Support rules: duplicate/concurrent support, distinct users, count tampering, receipt privacy, immutable receipts, and replies passed.');
   } finally {
     await env.cleanup();
