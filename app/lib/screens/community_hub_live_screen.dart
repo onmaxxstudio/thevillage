@@ -327,8 +327,8 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                         crossAxisCount: columns,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
-                        mainAxisExtent: 184 +
-                            (MediaQuery.textScalerOf(context).scale(90) - 90).clamp(0.0, double.infinity).toDouble(),
+                        mainAxisExtent: ((constraints.maxWidth - 12 * (columns - 1)) / columns).clamp(216.0, 280.0).toDouble() +
+                            (MediaQuery.textScalerOf(context).scale(120) - 120).clamp(0.0, double.infinity).toDouble(),
                       ),
                       itemBuilder: (_, i) => _directoryCard(browseResults[i]),
                     );
@@ -366,32 +366,75 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     );
   }
 
+  static const _directorySummaries = <String, String>{
+    'men': 'Real talk, purpose, and support.',
+    'relationships': 'Love, trust, and connection.',
+    'women': 'Support for every season of life.',
+    'moms': 'Motherhood, shared together.',
+    'friendship': 'Find connection. Build belonging.',
+    'faith': 'Prayer, hope, and encouragement.',
+    'wellness': 'Small steps toward feeling better.',
+    'career': 'Confidence for your next move.',
+    'grief': 'A gentle place to heal.',
+    'new_beginnings': 'Support for your fresh start.',
+    'caregivers': 'Care for the ones who care.',
+  };
+
   Widget _directoryCard(_Community community) {
     final isJoined = joined.contains(community.id);
     final count = memberCounts[community.id] ?? 0;
+    final summary = _directorySummaries[community.id] ?? community.description;
+    Widget photoFallback() => Image.asset(
+      'assets/images/my_space_growth.jpg',
+      fit: BoxFit.cover,
+    );
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: line)),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFDF8),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: line.withValues(alpha: .75)),
+        boxShadow: const [BoxShadow(color: Color(0x08355C3B), blurRadius: 10, offset: Offset(0, 3))],
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        SizedBox(height: 64, child: InkWell(
+        Expanded(flex: 4, child: InkWell(
           onTap: () => _open(community),
-          child: community.imageUrl.isEmpty
-              ? _fallback()
-              : Image.network(community.imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallback()),
+          child: SizedBox.expand(child: ColorFiltered(
+            colorFilter: const ColorFilter.mode(Color(0x147E8151), BlendMode.srcATop),
+            child: community.imageUrl.isEmpty
+                ? photoFallback()
+                : Image.network(community.imageUrl, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => photoFallback()),
+          )),
         )),
-        Expanded(child: Padding(
-          padding: const EdgeInsets.all(8),
+        Expanded(flex: 6, child: Padding(
+          padding: const EdgeInsets.fromLTRB(11, 10, 11, 10),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(community.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.playfairDisplay(fontSize: 16, height: 1.1, fontWeight: FontWeight.w700, color: ink)),
-            const SizedBox(height: 4),
-            Text('$count ${count == 1 ? 'member' : 'members'}', style: const TextStyle(color: sage, fontSize: 11)),
+            Text(community.name, maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.playfairDisplay(fontSize: 16, height: 1.1,
+                fontWeight: FontWeight.w700, color: sage)),
             const SizedBox(height: 5),
-            Expanded(child: Text(community.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, height: 1.25))),
-            SizedBox(width: double.infinity, height: 34, child: OutlinedButton(
-              onPressed: isJoined ? () => _open(community) : () => _toggleJoin(community),
-              style: OutlinedButton.styleFrom(foregroundColor: sage, padding: EdgeInsets.zero, side: const BorderSide(color: sage)),
-              child: Text(isJoined ? 'Open' : 'Join'),
-            )),
+            Expanded(child: Text(summary, maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11, height: 1.3, color: Color(0xFF60665E)))),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(child: count > 0
+                ? Text('$count ${count == 1 ? 'member' : 'members'}',
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: sage, fontSize: 10))
+                : const SizedBox.shrink()),
+              SizedBox(height: 32, child: FilledButton(
+                onPressed: isJoined ? () => _open(community) : () => _toggleJoin(community),
+                style: FilledButton.styleFrom(
+                  backgroundColor: sage, foregroundColor: Colors.white,
+                  minimumSize: const Size(62, 32),
+                  padding: const EdgeInsets.symmetric(horizontal: 13),
+                  tapTargetSize: MaterialTapTargetSize.padded,
+                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                child: Text(isJoined ? 'Open →' : 'Join'),
+              )),
+            ]),
           ]),
         )),
       ]),
