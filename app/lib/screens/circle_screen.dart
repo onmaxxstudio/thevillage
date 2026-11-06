@@ -101,7 +101,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   List<_CircleMessage> circleMessages = [];
   List<_CircleMoment> circleMoments = [];
   List<_CircleCandidate> incomingRequests = [];
-  late final List<_CircleMember> circleMembers;
+  List<_CircleMember> circleMembers = [];
   late final AnimationController _orbitController;
 
   String _key(String base) {
@@ -157,7 +157,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       vsync: this,
       duration: const Duration(seconds: 48),
     )..repeat();
-    circleMembers = <_CircleMember>[];
     _loadStatus();
     _connectCircleData();
     _loadMyProfile();
@@ -1403,9 +1402,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _incomingRequestsCard(),
-        const SizedBox(height: 12),
         _circleOrbit(),
+        const SizedBox(height: 8),
+        _incomingRequestsCard(),
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
@@ -1458,9 +1457,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _incomingRequestsCard(),
-        const SizedBox(height: 12),
         _circleOrbit(),
+        const SizedBox(height: 8),
+        _incomingRequestsCard(),
         const SizedBox(height: 6),
         _writtenStatusCard(),
         const SizedBox(height: 8),
@@ -3600,30 +3599,43 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   Widget _incomingRequestsCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: .62),
         border: Border.all(color: line),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionTitle(
-            'Circle requests (${incomingRequests.length})',
-            'Accept people you trust to add them to your Circle.',
-          ),
-          const SizedBox(height: 8),
-          if (_requestLoadFailed)
-            const Text('Could not load requests. Refresh the page to try again.')
-          else if (incomingRequests.isEmpty)
-            const Text('No pending requests right now.')
-          else
-            for (final person in incomingRequests) ...[
-              _requestTile(person),
-              const SizedBox(height: 8),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          leading: const Icon(Icons.person_add_alt_1_rounded, color: sage),
+          title: const Text('Circle requests',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (incomingRequests.isNotEmpty) ...[
+                Text('${incomingRequests.length}',
+                    style: const TextStyle(color: sage,
+                        fontWeight: FontWeight.w800)),
+                const SizedBox(width: 8),
+              ],
+              const Icon(Icons.expand_more_rounded, color: sage),
             ],
-        ],
+          ),
+          children: [
+            if (_requestLoadFailed)
+              const Text('Could not load requests. Refresh the page to try again.')
+            else if (incomingRequests.isEmpty)
+              const Text('No pending requests right now.')
+            else
+              for (final person in incomingRequests) ...[
+                _requestTile(person),
+                const SizedBox(height: 8),
+              ],
+          ],
+        ),
       ),
     );
   }
