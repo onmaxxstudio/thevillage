@@ -2294,9 +2294,6 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       FilledButton(onPressed: () => _showResourceDetails(resource),
         style: FilledButton.styleFrom(backgroundColor: sage),
         child: const Text('Details')),
-      if (resource.phone.isNotEmpty)
-        IconButton(tooltip: 'Call program', onPressed: () => _call(resource.phone),
-          color: sage, icon: const Icon(Icons.call_outlined, size: 21)),
     ]);
     return Container(
       padding: const EdgeInsets.all(14),
@@ -2419,6 +2416,12 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             icon: const Icon(Icons.arrow_back_rounded),
             label: const Text('Back to resources'),
           ),
+          if (resource.phone.isNotEmpty)
+            TextButton.icon(
+              onPressed: () => _call(resource.phone),
+              icon: const Icon(Icons.call_outlined),
+              label: const Text('Call program'),
+            ),
           if (resource.url.isNotEmpty)
             FilledButton(
               onPressed: () => _open(resource.url),
