@@ -620,6 +620,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
+        final tabletText = width >= 664;
         // Keep the original banner framing as the tablet layout widens.
         // A fixed height on wider screens crops the top and bottom of the photo.
         final heroHeight = width >= 664
@@ -699,7 +700,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   softWrap: false,
                                   style: GoogleFonts.playfairDisplay(
                                     color: ink,
-                                    fontSize: 21,
+                                    fontSize: tabletText ? 30 : 21,
                                     height: 1,
                                   ),
                                 ),
@@ -718,7 +719,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           text: currentUsername,
                                           style: GoogleFonts.playfairDisplay(
                                             color: sage,
-                                            fontSize: 25,
+                                            fontSize: tabletText ? 35 : 25,
                                             height: 1.05,
                                             fontWeight: FontWeight.w600,
                                           ),
