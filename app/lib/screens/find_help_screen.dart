@@ -952,6 +952,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   @override
   void dispose() {
     zipController.dispose();
+    directorySearchController.dispose();
     mapTransform.dispose();
     super.dispose();
   }
@@ -1813,7 +1814,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     });
   }
 
-  Future<void> _chooseState() async {
+  Future<void> _chooseDirectoryState() async {
     final value = await showModalBottomSheet<String>(
       context: context, showDragHandle: true, backgroundColor: cream,
       builder: (sheetContext) => SafeArea(child: ListView(
@@ -1957,7 +1958,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
           Row(children: [
             Expanded(flex: 5, child: _locationButton(icon: Icons.location_on_outlined,
               label: selectedState == null ? 'All states' : stateNames[selectedState]!,
-              onTap: _chooseState)),
+              onTap: _chooseDirectoryState)),
             const SizedBox(width: 8),
             Expanded(flex: 4, child: _locationButton(icon: Icons.pin_drop_outlined,
               label: localZip ?? 'ZIP code', onTap: _chooseZip)),
