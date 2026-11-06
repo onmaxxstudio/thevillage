@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../services/profile_service.dart';
 
 import '../screens/ask_village_screen.dart';
 import '../screens/circle_screen.dart';
@@ -46,6 +50,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
       ),
     );
     _loadPersonalization();
+    unawaited(ProfileService().refreshDirectoryProfile());
   }
 
   Future<void> _loadPersonalization() async {

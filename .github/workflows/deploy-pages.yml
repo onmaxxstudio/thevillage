@@ -49,6 +49,10 @@ jobs:
         working-directory: app
         run: flutter test test/anonymous_name_test.dart
 
+      - name: Test member discovery
+        working-directory: app
+        run: flutter test test/username_directory_test.dart
+
       - name: Test all-state resource coverage
         working-directory: app
         run: flutter test test/resource_catalog_test.dart

@@ -1047,10 +1047,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   Future<void> _findPeople() async {
     final searchController = TextEditingController();
-    CirclePerson? result;
+    var results = <CirclePerson>[];
+    final requested = <String>{};
     String? message;
     var searching = false;
-    var sending = false;
+    String? sendingUid;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -1058,175 +1059,161 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       backgroundColor: cream,
       showDragHandle: true,
       builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            22,
-            4,
-            22,
-            MediaQuery.viewInsetsOf(context).bottom + 24,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Find Your People',
-                  style: GoogleFonts.playfairDisplay(
-                    color: sage,
-                    fontSize: 30,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Text(
-                  'Enter their exact username, then send a Circle request.',
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: searchController,
-                  autofocus: true,
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    hintText: 'Search @username',
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: .62),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
+        builder: (context, setSheetState) {
+          Future<void> search() async {
+            if (searching || sendingUid != null) return;
+            final query = searchController.text.trim().replaceFirst(RegExp(r'^@+'), '');
+            if (query.length < 2) {
+              setSheetState(() {
+                results = [];
+                message = 'Enter at least 2 characters of their username.';
+              });
+              return;
+            }
+            setSheetState(() {
+              searching = true;
+              results = [];
+              message = null;
+            });
+            try {
+              final found = await circleService.searchPeople(query);
+              if (!sheetContext.mounted) return;
+              setSheetState(() {
+                results = found;
+                message = found.isEmpty
+                    ? 'No matching members yet. Try their public @username.'
+                    : null;
+              });
+            } on ProfileValidationException catch (error) {
+              if (!sheetContext.mounted) return;
+              setSheetState(() => message = error.message);
+            } on Object {
+              if (!sheetContext.mounted) return;
+              setSheetState(() => message =
+                  'Member search could not connect. Please try again.');
+            } finally {
+              if (sheetContext.mounted) setSheetState(() => searching = false);
+            }
+          }
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              22, 4, 22, MediaQuery.viewInsetsOf(context).bottom + 24,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Find Your People',
+                    style: GoogleFonts.playfairDisplay(
+                      color: sage, fontSize: 30, fontWeight: FontWeight.w600,
                     ),
                   ),
-                  onSubmitted: (_) async {
-                    setSheetState(() {
-                      searching = true;
-                      result = null;
-                      message = null;
-                    });
-                    final found =
-                        await circleService.findPerson(searchController.text);
-                    if (!sheetContext.mounted) return;
-                    setSheetState(() {
-                      searching = false;
-                      result = found;
-                      message = found == null
-                          ? 'No username found. Check the spelling.'
-                          : null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: searching
-                        ? null
-                        : () async {
-                            setSheetState(() {
-                              searching = true;
-                              result = null;
-                              message = null;
-                            });
-                            final found = await circleService
-                                .findPerson(searchController.text);
-                            if (!sheetContext.mounted) return;
-                            setSheetState(() {
-                              searching = false;
-                              result = found;
-                              message = found == null
-                                  ? 'No username found. Check the spelling.'
-                                  : null;
-                            });
-                          },
-                    style: FilledButton.styleFrom(backgroundColor: sage),
-                    icon: searching
-                        ? const SizedBox(
-                            width: 17,
-                            height: 17,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.search_rounded),
-                    label: Text(searching ? 'Searching…' : 'Search'),
+                  const Text(
+                    'Search the start of their public username, then send a Circle request.',
                   ),
-                ),
-                if (message != null) ...[
                   const SizedBox(height: 16),
-                  Center(child: Text(message!)),
-                ],
-                if (result != null) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(13),
-                    decoration: BoxDecoration(
-                      color: paleSage,
-                      border: Border.all(color: line),
-                      borderRadius: BorderRadius.circular(17),
-                    ),
-                    child: Row(
-                      children: [
-                        VillageAvatar(uid: result!.uid, radius: 20),
-                        const SizedBox(width: 11),
-                        Expanded(
-                          child: Text(
-                            '@${result!.username}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        FilledButton(
-                          onPressed: sending
-                              ? null
-                              : () async {
-                                  setSheetState(() => sending = true);
-                                  try {
-                                    await circleService.sendRequest(result!);
-                                    if (!sheetContext.mounted) return;
-                                    setState(() {
-                                      sentRequests.add('@${result!.username}');
-                                    });
-                                    setSheetState(() {
-                                      sending = false;
-                                      message = 'Circle request sent.';
-                                    });
-                                  } on CircleException catch (error) {
-                                    if (!sheetContext.mounted) return;
-                                    setSheetState(() {
-                                      sending = false;
-                                      message = error.message;
-                                    });
-                                  } on Object {
-                                    if (!sheetContext.mounted) return;
-                                    setSheetState(() {
-                                      sending = false;
-                                      message =
-                                          'Could not send the request. Try again.';
-                                    });
-                                  }
-                                },
-                          child: Text(sending ? 'Sending…' : 'Add'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 12),
-                const Row(
-                  children: [
-                    Icon(Icons.shield_outlined, color: sage, size: 17),
-                    SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'They join your Circle only after accepting.',
-                        style: TextStyle(fontSize: 12),
+                  TextField(
+                    controller: searchController,
+                    autofocus: true,
+                    textInputAction: TextInputAction.search,
+                    autocorrect: false,
+                    decoration: InputDecoration(
+                      hintText: 'Search @username',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: .62),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
+                    onSubmitted: (_) => search(),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: searching || sendingUid != null ? null : search,
+                      style: FilledButton.styleFrom(backgroundColor: sage),
+                      icon: searching
+                          ? const SizedBox(width: 17, height: 17,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.search_rounded),
+                      label: Text(searching ? 'Searching…' : 'Search'),
+                    ),
+                  ),
+                  if (message != null) ...[
+                    const SizedBox(height: 16),
+                    Center(child: Text(message!)),
                   ],
-                ),
-              ],
+                  for (final person in results)
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      padding: const EdgeInsets.all(13),
+                      decoration: BoxDecoration(
+                        color: paleSage,
+                        border: Border.all(color: line),
+                        borderRadius: BorderRadius.circular(17),
+                      ),
+                      child: Row(
+                        children: [
+                          VillageAvatar(uid: person.uid, radius: 20),
+                          const SizedBox(width: 11),
+                          Expanded(child: Text('@${person.username}',
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          )),
+                          FilledButton(
+                            onPressed: sendingUid != null || requested.contains(person.uid)
+                                ? null
+                                : () async {
+                                    setSheetState(() => sendingUid = person.uid);
+                                    try {
+                                      await circleService.sendRequest(person);
+                                      if (!sheetContext.mounted) return;
+                                      setState(() => sentRequests.add('@${person.username}'));
+                                      setSheetState(() {
+                                        requested.add(person.uid);
+                                        message = 'Circle request sent.';
+                                      });
+                                    } on CircleException catch (error) {
+                                      if (!sheetContext.mounted) return;
+                                      setSheetState(() => message = error.message);
+                                    } on Object {
+                                      if (!sheetContext.mounted) return;
+                                      setSheetState(() => message =
+                                          'Could not send the request. Try again.');
+                                    } finally {
+                                      if (sheetContext.mounted) {
+                                        setSheetState(() => sendingUid = null);
+                                      }
+                                    }
+                                  },
+                            child: Text(requested.contains(person.uid)
+                                ? 'Sent'
+                                : sendingUid == person.uid ? 'Sending…' : 'Add'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  const Row(
+                    children: [
+                      Icon(Icons.shield_outlined, color: sage, size: 17),
+                      SizedBox(width: 6),
+                      Expanded(child: Text(
+                        'They join your Circle only after accepting.',
+                        style: TextStyle(fontSize: 12),
+                      )),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
     searchController.dispose();

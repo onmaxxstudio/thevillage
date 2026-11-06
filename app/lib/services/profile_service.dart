@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'username_directory.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -176,15 +178,42 @@ class ProfileService {
           } on Object {
             // Firestore remains the source of truth if Auth profile sync fails.
           }
+          await _claimUsername(user: user, username: saved);
           return;
         }
       }
 
-      await _claimUsername(user: user, username: desired);
+      await _claimAvailableUsername(user: user, username: desired);
     } on Object {
       // Authentication remains usable while Firestore rules are being deployed.
       await _saveLocalUsername(user.uid, desired);
       usernameNotifier.value = desired;
+    }
+  }
+
+  /// Repair directory records for returning sessions as well as fresh sign-ins.
+  Future<void> refreshDirectoryProfile() async {
+    if (Firebase.apps.isEmpty || _auth.currentUser == null) return;
+    await ensureCurrentUserProfile();
+  }
+
+  Future<void> _claimAvailableUsername({
+    required User user,
+    required String username,
+  }) async {
+    for (var attempt = 0; attempt < 5; attempt++) {
+      final suffix = '${user.uid.substring(0, 6)}${attempt == 0 ? '' : attempt}';
+      final stemLength = (19 - suffix.length).clamp(3, 19);
+      final stem = username.length > stemLength
+          ? username.substring(0, stemLength)
+          : username;
+      final candidate = attempt == 0 ? username : '${stem}_$suffix';
+      try {
+        await _claimUsername(user: user, username: candidate);
+        return;
+      } on ProfileValidationException {
+        if (attempt == 4) rethrow;
+      }
     }
   }
 
@@ -341,34 +370,47 @@ class ProfileService {
     }
   }
 
+  static UsernameDirectory _directory() {
+    final firestore = FirebaseFirestore.instance;
+    return UsernameDirectory(
+      readClaim: (key) async =>
+          (await firestore.collection('usernames').doc(key).get()).data(),
+      readProfile: (uid) async =>
+          (await firestore.collection('public_profiles').doc(uid).get()).data(),
+      searchProfiles: (prefix) async {
+        final snapshot = await firestore.collection('public_profiles')
+            .orderBy('usernameLower')
+            .startAt([prefix])
+            .endAt(['$prefix\uf8ff'])
+            .limit(20)
+            .get();
+        return snapshot.docs.map((doc) => {...doc.data(), 'uid': doc.id}).toList();
+      },
+    );
+  }
+
   static Future<UsernameLookup?> findUsername(String value) async {
-    final query = _cleanUsername(value).toLowerCase();
-    if (query.isEmpty || Firebase.apps.isEmpty) return null;
-
+    if (Firebase.apps.isEmpty) return null;
     try {
-      final claim = await FirebaseFirestore.instance
-          .collection('usernames')
-          .doc(query)
-          .get();
-      final uid = claim.data()?['uid'] as String?;
-      if (uid == null || uid.isEmpty) return null;
-
-      final profile = await FirebaseFirestore.instance
-          .collection('public_profiles')
-          .doc(uid)
-          .get();
-      final data = profile.data();
-      if (data == null) return null;
-      return UsernameLookup(
-        uid: uid,
-        username: data['username'] as String? ??
-            claim.data()?['username'] as String? ??
-            value,
-        email: '',
+      final member = await _directory().findExact(value);
+      return member == null ? null : UsernameLookup(
+        uid: member.uid, username: member.username, email: '',
       );
     } on FirebaseException {
       return null;
     }
+  }
+
+  static Future<List<UsernameLookup>> searchUsernames(String value) async {
+    if (Firebase.apps.isEmpty || FirebaseAuth.instance.currentUser == null) {
+      throw const ProfileValidationException('Please sign in to find people.');
+    }
+    final members = await _directory().search(
+      value, excludeUid: FirebaseAuth.instance.currentUser!.uid,
+    );
+    return members.map((member) => UsernameLookup(
+      uid: member.uid, username: member.username, email: '',
+    )).toList();
   }
 
   Future<VillageProfile> loadProfile() async {

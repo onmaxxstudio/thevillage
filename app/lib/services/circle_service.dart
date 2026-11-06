@@ -147,6 +147,13 @@ class CircleService {
     );
   }
 
+  Future<List<CirclePerson>> searchPeople(String username) async {
+    final matches = await ProfileService.searchUsernames(username);
+    return matches.map((person) => CirclePerson(
+      uid: person.uid, username: person.username,
+    )).toList();
+  }
+
   Future<void> sendRequest(CirclePerson recipient) async {
     final user = _user;
     if (recipient.uid == user.uid) {
