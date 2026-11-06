@@ -49,6 +49,10 @@ jobs:
         working-directory: app
         run: flutter test test/anonymous_name_test.dart
 
+      - name: Test all-state resource coverage
+        working-directory: app
+        run: flutter test test/resource_catalog_test.dart
+
       - name: Analyze Flutter app
         working-directory: app
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
