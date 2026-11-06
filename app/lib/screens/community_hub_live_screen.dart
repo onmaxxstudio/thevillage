@@ -35,7 +35,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   late final PageController featurePager;
 
   int selected = 0;
-  _CommunityTab communityTab = _CommunityTab.mine;
+  _CommunityTab communityTab = _CommunityTab.browse;
   int featuredIndex = 1;
   String query = '';
   Set<String> joined = {};
@@ -271,8 +271,8 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
             spacing: 6,
             children: [
               for (final (tab, label) in const [
-                (_CommunityTab.mine, 'My Communities'),
                 (_CommunityTab.browse, 'Browse All'),
+                (_CommunityTab.mine, 'My Communities'),
                 (_CommunityTab.create, 'Create a Community'),
               ])
                 ChoiceChip(
