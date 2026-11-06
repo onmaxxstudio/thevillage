@@ -251,11 +251,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             _buildWelcomeHero(),
                             const SizedBox(height: 14),
-                            _buildDashboardRow(),
+                            _tabletCardText(_buildDashboardRow()),
                             const SizedBox(height: 14),
                             _buildAskCard(),
                             const SizedBox(height: 14),
-                            _buildFeatureGrid(),
+                            _tabletCardText(_buildFeatureGrid()),
                             const SizedBox(height: 14),
                             const DailyVillageCensusCard(),
                           ],
@@ -270,6 +270,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _tabletCardText(Widget child) {
+    final media = MediaQuery.of(context);
+    if (media.size.width < 700) return child;
+    return MediaQuery(
+      data: media.copyWith(
+        textScaler: TextScaler.linear(media.textScaler.scale(1) * 1.22),
+      ),
+      child: child,
     );
   }
 
