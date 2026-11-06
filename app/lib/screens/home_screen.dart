@@ -663,7 +663,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: LayoutBuilder(
                       builder: (context, textConstraints) {
                         final textWidth = textConstraints.maxWidth * .54;
-                        final messageFontSize = textWidth < 155 ? 9.5 : 10.5;
+                        final messageFontSize = tabletText ? 14.0 : textWidth < 155 ? 9.5 : 10.5;
                         final messageStyle = GoogleFonts.inter(
                           fontSize: messageFontSize,
                           height: 1.18,
@@ -700,7 +700,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   softWrap: false,
                                   style: GoogleFonts.playfairDisplay(
                                     color: ink,
-                                    fontSize: tabletText ? 30 : 21,
+                                    fontSize: tabletText ? 38 : 21,
                                     height: 1,
                                   ),
                                 ),
@@ -719,7 +719,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           text: currentUsername,
                                           style: GoogleFonts.playfairDisplay(
                                             color: sage,
-                                            fontSize: tabletText ? 35 : 25,
+                                            fontSize: tabletText ? 44 : 25,
                                             height: 1.05,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -730,11 +730,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              const Text(
+                              Text(
                                 'TODAY’S ENCOURAGEMENT',
                                 style: TextStyle(
                                   color: gold,
-                                  fontSize: 8.5,
+                                  fontSize: tabletText ? 11 : 8.5,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 1.5,
                                 ),
