@@ -178,19 +178,21 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                 ],
               ),
             ),
-            Expanded(child: IndexedStack(index: selected, children: [_communities(), const FindHelpScreen(), _managedList('events', 'Happening in the Village', Icons.calendar_month_outlined)])),
+            Expanded(child: IndexedStack(index: selected, children: [_communities(), const FindHelpScreen(), _managedList('events', 'Happening in the Village', Icons.calendar_month_outlined), _shopView()])),
           ],
         ),
       ),
     );
   }
 
-  Widget _tabs() => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _tabs() => Wrap(
+        alignment: WrapAlignment.center,
+        runSpacing: 4,
         children: [
           _topTab('Communities', 0),
           _topTab('Resources', 1),
           _topTab('Events', 2),
+          _topTab('Shop', 3),
         ],
       );
 
@@ -1448,6 +1450,74 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     await Navigator.of(context).push(MaterialPageRoute(builder: (_) => CommunityDetailScreen(id: community.id, name: community.name, description: community.description, category: community.category, imageUrl: community.imageUrl)));
     if (mounted) await _loadMemberships();
   }
+
+  Widget _shopView() => Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 32),
+            children: [
+              Text(
+                'The Village Shop',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 27,
+                  fontWeight: FontWeight.w700,
+                  color: ink,
+                ),
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                'Practical tools for everyday life.',
+                style: TextStyle(color: Color(0xFF626A63), height: 1.4),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: line),
+                ),
+                child: Column(
+                  children: [
+                    const CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Color(0xFFE9EEE4),
+                      child: Icon(Icons.storefront_outlined, color: sage, size: 30),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'COMING SOON',
+                      style: TextStyle(
+                        color: gold,
+                        fontSize: 10,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tools for your next chapter',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.playfairDisplay(
+                        color: sage,
+                        fontSize: 23,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Explore journals, workbooks, and practical guides here when the shop opens.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xFF626A63), height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 
   Widget _managedList(String type, String title, IconData icon) {
     if (!admin.cloudReady) return Center(child: Text(title));
