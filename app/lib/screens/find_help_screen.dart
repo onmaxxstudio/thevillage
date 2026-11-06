@@ -68,6 +68,11 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
   bool showAllResources = false;
   String? selectedPathId;
   String? localZip;
+  String? providerFilter;
+  String? areaFilter;
+  String? costFilter;
+  String eligibilityFilter = '';
+  bool allCategoriesOpen = false;
 
   static const stateNames = <String, String>{
     'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California',
@@ -1042,6 +1047,13 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               phone: item.text('phone'),
               label: item.text('freeLabel', 'Community resource'),
               verified: item.text('verifiedAt', 'Check availability'),
+              providerType: item.text('providerType'),
+              costType: item.text('costType'),
+              serviceScope: item.text('serviceScope'),
+              serviceArea: item.text('serviceArea'),
+              eligibility: item.text('eligibility'),
+              howToApply: item.text('howToApply'),
+              cost: item.text('cost'),
             ))
         .toList();
   }
@@ -1141,7 +1153,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             ? visible
             : visible.where((resource) => resource.states.isEmpty).toList();
         if (view == 1) return _courses(snapshot.data ?? const <ManagedContentItem>[]);
-        if (view == 0 && selectedPathId == null && selectedNeed == null) return _helpStart();
+        if (view == 0) return _helpStart();
         return Column(
           children: [
             SafeArea(
@@ -1669,14 +1681,212 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     });
   }
 
+
+  String _providerType(HelpResource resource) {
+    if (resource.providerType.isNotEmpty) return resource.providerType;
+    const government = {
+      'fl-myaccess','fl-wic','fl-ship','fl-liheap','fl-csbg','fl-weatherization',
+      'fl-school-readiness','fl-kidcare','fl-legal-directory','fl-elder',
+      'fl-senior-legal','fl-shine','fl-veterans','fl-transport','fl-apd',
+      'fl-early-steps','fl-child-support','fl-dv-centers','fl-disaster',
+      'fl-benefits','fl-homelessness','usa-benefits','food-help','rent-help',
+      'utility-help','housing-help','state-social-services','emergency-food',
+      'health-center','jobs-local',
+    };
+    if (government.contains(resource.id)) return 'Government';
+    if (resource.id == 'fl-ccjax' || resource.id == 'fl-beam' ||
+        resource.id == 'fl-mercy') return 'Faith-based';
+    const nonprofits = {
+      'fl-career','fl-feeding-florida','fl-food-ne','fl-food-central','fl-food-gulf',
+      'fl-food-bigbend','fl-food-tampa','fl-food-allfaiths','fl-food-treasure',
+      'fl-food-chapin','fl-food-south','fl-sulzbacher','fl-jala','fl-metro',
+      'fl-metro-financial','fl-up-orlando','fl-chapman','fl-pet-tampa',
+      '211','childcare-referral','legal-aid','988',
+    };
+    if (nonprofits.contains(resource.id) || resource.id.startsWith('local_')) return 'Nonprofit';
+    if (resource.id == 'local-programs') return 'Business';
+    return '';
+  }
+
+  String _serviceScope(HelpResource resource) {
+    if (resource.serviceScope.isNotEmpty) return resource.serviceScope;
+    if (resource.states.isEmpty) return 'Nationwide';
+    if (resource.serviceArea == 'Florida statewide' ||
+        resource.id == 'fl-benefits' || resource.id == 'fl-homelessness') return 'Statewide';
+    return 'Local';
+  }
+
+  String _costType(HelpResource resource) {
+    if (resource.costType.isNotEmpty) return resource.costType;
+    // Tag only services with a documented free access route. A free
+    // application does not mean that the underlying service is free.
+    const free = {'fl-wic','fl-senior-legal','fl-shine','fl-veterans',
+      'fl-early-steps','211','988','usa-benefits','fl-legal-directory'};
+    if (free.contains(resource.id)) return 'Free';
+    return '';
+  }
+
+  bool _matchesFilters(HelpResource resource) {
+    final provider = _providerType(resource);
+    if (providerFilter != null && provider != providerFilter &&
+        !(providerFilter == 'Nonprofit' && provider == 'Faith-based')) return false;
+    if (areaFilter != null && _serviceScope(resource) != areaFilter) return false;
+    if (costFilter != null && _costType(resource) != costFilter) return false;
+    final eligibility = eligibilityFilter.trim().toLowerCase();
+    return eligibility.isEmpty ||
+        resource.eligibility.toLowerCase().contains(eligibility) ||
+        resource.description.toLowerCase().contains(eligibility);
+  }
+
+  int get _filterCount => [providerFilter, areaFilter, costFilter]
+      .where((value) => value != null).length + (eligibilityFilter.isEmpty ? 0 : 1);
+
+  Future<void> _showFilters() async {
+    var provider = providerFilter;
+    var area = areaFilter;
+    var cost = costFilter;
+    var eligibility = eligibilityFilter;
+    final eligibilityController = TextEditingController(text: eligibility);
+    final applied = await showModalBottomSheet<bool>(
+      context: context, isScrollControlled: true, showDragHandle: true,
+      backgroundColor: cream,
+      builder: (sheetContext) => StatefulBuilder(builder: (context, update) {
+        Widget choices(String title, List<String> values, String? current,
+            void Function(String?) change) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            Wrap(spacing: 8, runSpacing: 6, children: [
+              ChoiceChip(label: const Text('All'), selected: current == null,
+                onSelected: (_) => update(() => change(null))),
+              for (final value in values)
+                ChoiceChip(label: Text(value), selected: current == value,
+                  onSelected: (selected) => update(() => change(selected ? value : null))),
+            ]),
+            const SizedBox(height: 18),
+          ],
+        );
+        return SafeArea(child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(20, 0, 20,
+            20 + MediaQuery.viewInsetsOf(sheetContext).bottom),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min, children: [
+              Text('Filter resources', style: GoogleFonts.playfairDisplay(
+                fontSize: 26, fontWeight: FontWeight.w700, color: sage)),
+              const SizedBox(height: 18),
+              choices('Who provides the help?',
+                ['Government','Nonprofit','Faith-based','Community','Business'],
+                provider, (value) => provider = value),
+              choices('Service area', ['Local','Statewide','Nationwide'],
+                area, (value) => area = value),
+              choices('Cost', ['Free','Reduced cost','Sliding scale'],
+                cost, (value) => cost = value),
+              TextField(controller: eligibilityController,
+                onChanged: (value) => eligibility = value,
+                decoration: const InputDecoration(
+                  labelText: 'Eligibility keywords',
+                  hintText: 'For example: veterans, children, seniors',
+                  border: OutlineInputBorder())),
+              const SizedBox(height: 8),
+              const Text('Eligibility is determined by each program. Some listings may not have all filter details.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+              const SizedBox(height: 18),
+              Row(children: [
+                TextButton(onPressed: () => update(() {
+                  provider = null; area = null; cost = null; eligibility = '';
+                  eligibilityController.clear();
+                }), child: const Text('Clear filters')),
+                const Spacer(),
+                FilledButton(onPressed: () => Navigator.pop(sheetContext, true),
+                  style: FilledButton.styleFrom(backgroundColor: sage),
+                  child: const Text('Show resources')),
+              ]),
+            ]),
+        ));
+      }),
+    );
+    Future<void>.delayed(const Duration(milliseconds: 500), eligibilityController.dispose);
+    if (applied == true && mounted) setState(() {
+      providerFilter = provider; areaFilter = area; costFilter = cost;
+      eligibilityFilter = eligibility.trim(); showAllResources = true;
+    });
+  }
+
+  Future<void> _chooseState() async {
+    final value = await showModalBottomSheet<String>(
+      context: context, showDragHandle: true, backgroundColor: cream,
+      builder: (sheetContext) => SafeArea(child: ListView(
+        children: [
+          const ListTile(title: Text('Choose a state',
+            style: TextStyle(fontWeight: FontWeight.w700))),
+          ListTile(title: const Text('All states'),
+            onTap: () => Navigator.pop(sheetContext, 'ALL')),
+          for (final entry in stateNames.entries)
+            ListTile(title: Text(entry.value), selected: selectedState == entry.key,
+              onTap: () => Navigator.pop(sheetContext, entry.key)),
+        ],
+      )),
+    );
+    if (value != null && mounted) setState(() {
+      selectedState = value == 'ALL' ? null : value;
+      showAllResources = true;
+    });
+  }
+
+  Widget _quickCategories() {
+    const categories = <(String, String, IconData)>[
+      ('Housing', 'Rent & Housing', Icons.home_outlined),
+      ('Food', 'Food', Icons.restaurant_outlined),
+      ('Money & Bills', 'Utilities', Icons.account_balance_wallet_outlined),
+      ('Health', 'Healthcare', Icons.favorite_border_rounded),
+      ('Kids & Family', 'Childcare', Icons.family_restroom_outlined),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('Browse by Category', style: GoogleFonts.playfairDisplay(
+        fontSize: 22, fontWeight: FontWeight.w700, color: ink)),
+      const SizedBox(height: 10),
+      LayoutBuilder(builder: (context, constraints) {
+        final columns = constraints.maxWidth < 350 ? 2 : 3;
+        final width = (constraints.maxWidth - (columns - 1) * 8) / columns;
+        Widget chip(String label, IconData icon, bool active, VoidCallback tap) =>
+          SizedBox(width: width, child: OutlinedButton.icon(
+            onPressed: tap, icon: Icon(icon, size: 18),
+            label: Text(label, textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12)),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              backgroundColor: active ? paleSage : cream, foregroundColor: sage,
+              side: const BorderSide(color: line),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13))),
+          ));
+        return Wrap(spacing: 8, runSpacing: 8, children: [
+          for (final category in categories)
+            chip(category.$1, category.$3, selectedNeed == category.$2,
+              () => setState(() {
+                selectedNeed = selectedNeed == category.$2 ? null : category.$2;
+                selectedPathId = null; showAllResources = true;
+              })),
+          chip('All categories', Icons.grid_view_outlined, allCategoriesOpen,
+            () => setState(() => allCategoriesOpen = !allCategoriesOpen)),
+        ]);
+      }),
+      if (allCategoriesOpen) ...[
+        const SizedBox(height: 12),
+        ResourceCategoryBrowser(onExplore: _exploreCategory),
+      ],
+    ]);
+  }
+
   Widget _directorySearchResults() {
     return StreamBuilder<List<ManagedContentItem>>(
-      stream: admin.cloudReady
-          ? admin.watchPublished('resources')
+      stream: admin.cloudReady ? admin.watchPublished('resources')
           : Stream.value(const <ManagedContentItem>[]),
       builder: (context, snapshot) {
         final query = directoryQuery.toLowerCase();
         final items = _visible(_managed(snapshot.data ?? const <ManagedContentItem>[]))
+            .where(_matchesFilters)
             .where((resource) => query.isEmpty ||
                 resource.title.toLowerCase().contains(query) ||
                 resource.description.toLowerCase().contains(query) ||
@@ -1685,22 +1895,35 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
                 resource.needs.any((need) => need.toLowerCase().contains(query)))
             .toList();
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Expanded(child: Text(directoryQuery.isEmpty ? 'Featured Resources' : 'Search Results',
-                style: GoogleFonts.playfairDisplay(fontSize: 23, fontWeight: FontWeight.w700, color: ink))),
-            TextButton(onPressed: () => setState(() {
-              selectedNeed = null;
-              selectedPathId = null;
-              directoryQuery = '';
-              directorySearchController.clear();
-              showAllResources = true;
-            }), child: Text(directoryQuery.isEmpty ? 'View all results →' : 'Clear search')),
-          ]),
+          Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(14)),
+            child: Row(children: [
+              const Expanded(child: Text('Resources for you',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: sage))),
+              OutlinedButton.icon(onPressed: _showFilters,
+                icon: const Icon(Icons.tune_rounded, size: 18),
+                label: Text(_filterCount == 0 ? 'Filters' : 'Filters ($_filterCount)'),
+                style: OutlinedButton.styleFrom(foregroundColor: sage)),
+            ])),
+          const SizedBox(height: 7),
+          Text('${items.length} resources • ${selectedState == null ? 'All states' : stateNames[selectedState]}',
+            style: const TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+          if (selectedNeed != null || _filterCount > 0 || directoryQuery.isNotEmpty)
+            Row(children: [
+              Expanded(child: Text(selectedNeed ?? 'Filtered results',
+                style: const TextStyle(fontSize: 12, color: sage))),
+              TextButton(onPressed: () => setState(() {
+                selectedNeed = null; selectedPathId = null;
+                providerFilter = null; areaFilter = null; costFilter = null;
+                eligibilityFilter = ''; directoryQuery = '';
+                directorySearchController.clear();
+              }), child: const Text('Clear filters')),
+            ]),
           const SizedBox(height: 10),
           if (items.isEmpty)
             const Padding(padding: EdgeInsets.symmetric(vertical: 20),
-                child: Text('No matching resources found. Try another keyword or category.'))
-          else _resourceGrid((directoryQuery.isEmpty && !showAllResources ? items.take(3).toList() : items)),
+              child: Text('No matching resources found. Try fewer filters or another location.'))
+          else _resourceGrid(items),
         ]);
       },
     );
@@ -1708,84 +1931,56 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
 
   Widget _helpStart() => guidedHelp
       ? ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 32), children: [
-          TextButton.icon(
-            onPressed: () => setState(() => guidedHelp = false),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Browse all categories'),
-          ),
-          GuidedHelpAssistant(onBrowse: (need, state, zip) {
-            setState(() {
-              guidedHelp = false;
-              selectedNeed = need;
-              selectedPathId = null;
-              selectedState = state;
-              localZip = zip;
-              showAllResources = false;
-            });
-          }),
+          TextButton.icon(onPressed: () => setState(() => guidedHelp = false),
+            icon: const Icon(Icons.arrow_back), label: const Text('Back to resources')),
+          GuidedHelpAssistant(onBrowse: (need, state, zip) => setState(() {
+            guidedHelp = false; selectedNeed = need; selectedPathId = null;
+            selectedState = state; localZip = zip; showAllResources = true;
+          })),
         ])
-      : ListView(
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
-          children: [
-            Text('Resource Directory', style: GoogleFonts.playfairDisplay(
-              fontSize: 29, fontWeight: FontWeight.w800, color: ink)),
-            const SizedBox(height: 4),
-            const Text('Find support in your area.'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: directorySearchController,
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _submitDirectorySearch(),
-              onChanged: (value) => setState(() {
-                directoryQuery = value.trim();
-                showAllResources = value.trim().isNotEmpty;
-              }),
-              decoration: InputDecoration(
-                hintText: 'What do you need help with?',
-                prefixIcon: const Icon(Icons.search_rounded, color: sage),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
-              ),
-            ),
-            const SizedBox(height: 9),
-            Row(children: [
-              Expanded(child: _locationButton(
-                icon: Icons.location_on_outlined,
-                label: localZip == null ? 'Enter ZIP code' : localZip!,
-                onTap: _chooseZip,
-              )),
-              const SizedBox(width: 8),
-              Expanded(child: _locationButton(
-                icon: Icons.map_outlined,
-                label: 'Browse by map',
-                onTap: () => setState(() => showMap = !showMap),
-              )),
-            ]),
-            const SizedBox(height: 9),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _submitDirectorySearch,
-                style: FilledButton.styleFrom(backgroundColor: sage),
-                child: const Text('Find resources'),
-              ),
-            ),
-            if (showMap) ...[
-              const SizedBox(height: 12),
-              _map(),
-            ],
-            const SizedBox(height: 22),
-            ResourceCategoryBrowser(onExplore: _exploreCategory),
-            const SizedBox(height: 22),
-            KeyedSubtree(key: directoryResultsKey, child: _directorySearchResults()),
-            const SizedBox(height: 16),
-            TextButton.icon(
-              onPressed: () => setState(() => guidedHelp = true),
-              icon: const Icon(Icons.auto_awesome_outlined),
-              label: const Text('Help me find the right support'),
-              style: TextButton.styleFrom(foregroundColor: sage),
-            ),
+      : ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 32), children: [
+          Text('Resource Directory', style: GoogleFonts.playfairDisplay(
+            fontSize: 29, fontWeight: FontWeight.w800, color: ink)),
+          const SizedBox(height: 4),
+          const Text('Find support near you.'),
+          const SizedBox(height: 12),
+          TextField(controller: directorySearchController,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _submitDirectorySearch(),
+            onChanged: (value) => setState(() => directoryQuery = value.trim()),
+            decoration: InputDecoration(hintText: 'What do you need help with?',
+              prefixIcon: const Icon(Icons.search_rounded, color: sage),
+              suffixIcon: IconButton(tooltip: 'Search resources',
+                onPressed: _submitDirectorySearch, icon: const Icon(Icons.arrow_forward)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)))),
+          const SizedBox(height: 9),
+          Row(children: [
+            Expanded(flex: 5, child: _locationButton(icon: Icons.location_on_outlined,
+              label: selectedState == null ? 'All states' : stateNames[selectedState]!,
+              onTap: _chooseState)),
+            const SizedBox(width: 8),
+            Expanded(flex: 4, child: _locationButton(icon: Icons.pin_drop_outlined,
+              label: localZip ?? 'ZIP code', onTap: _chooseZip)),
+            const SizedBox(width: 6),
+            IconButton.filled(tooltip: 'Browse by map',
+              onPressed: () => setState(() => showMap = !showMap),
+              style: IconButton.styleFrom(backgroundColor: sage),
+              icon: const Icon(Icons.map_outlined)),
+          ]),
+          if (showMap) ...[const SizedBox(height: 10), _map()],
+          if (localZip != null) ...[
+            const SizedBox(height: 10), _localResultsPanel(),
           ],
-        );
+          const SizedBox(height: 16),
+          _quickCategories(),
+          const SizedBox(height: 16),
+          KeyedSubtree(key: directoryResultsKey, child: _directorySearchResults()),
+          const SizedBox(height: 12),
+          TextButton.icon(onPressed: () => setState(() => guidedHelp = true),
+            icon: const Icon(Icons.auto_awesome_outlined),
+            label: const Text('Help me find the right support'),
+            style: TextButton.styleFrom(foregroundColor: sage)),
+        ]);
 
   Widget _locationButton({
     required IconData icon,
@@ -1884,7 +2079,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       ),
     );
     if (enteredZip == null) return;
-    if (!RegExp(r'^\\d{5}$').hasMatch(enteredZip)) {
+    if (!RegExp(r'^\d{5}.hasMatch(enteredZip)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Enter a 5-digit ZIP code.')),
@@ -1922,8 +2117,463 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     setState(() {
       selectedPathId = null;
       selectedNeed = mapping[category];
-      selectedState = null;
-      showAllResources = false;
+      showAllResources = true;
+      allCategoriesOpen = false;
+    });
+  }
+
+  Widget _helpPathCard(HelpPath path) => InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => setState(() {
+          selectedPathId = path.id;
+          selectedState = null;
+          showAllResources = false;
+        }),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+          child: Row(children: [
+            Container(width: 48, height: 48, decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(15)), child: Icon(path.icon, color: sage)),
+            const SizedBox(width: 13),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(path.title, style: GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w700, color: ink)),
+              const SizedBox(height: 3),
+              Text(path.detail, style: const TextStyle(fontSize: 12, height: 1.35, color: Color(0xFF626A63))),
+            ])),
+            const Icon(Icons.arrow_forward_rounded, color: sage),
+          ]),
+        ),
+      );
+
+  Widget _selectedHelpHeader() {
+    final path = _selectedPath!;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(18)),
+      child: Row(children: [
+        Icon(path.icon, color: sage),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Looking for help with', style: TextStyle(fontSize: 11.5, color: Color(0xFF626A63))),
+          Text(path.title, style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w700, color: ink)),
+        ])),
+        TextButton(onPressed: () => setState(() {
+          selectedPathId = null;
+          selectedNeed = null;
+          selectedState = null;
+          showAllResources = false;
+        }), child: const Text('Change')),
+      ]),
+    );
+  }
+
+  Widget _stateBrowser() => Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(color: const Color(0xFFF4F0E8), borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+        child: Column(
+          children: [
+            Row(children: [
+              const Icon(Icons.map_outlined, color: gold),
+              const SizedBox(width: 9),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Browse help by state', style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w700, color: ink)),
+                const Text('State benefits and programs come first.', style: TextStyle(fontSize: 11.5, color: Color(0xFF626A63))),
+              ])),
+              TextButton(
+                onPressed: () => setState(() => showMap = !showMap),
+                child: Text(showMap ? 'Hide map' : 'Open map'),
+              ),
+            ]),
+            if (showMap) ...[
+              const SizedBox(height: 12),
+              _map(),
+            ],
+          ],
+        ),
+      );
+
+
+  String _resultsTitle() {
+    if (view == 2) return 'Saved resources';
+    final path = _selectedPath;
+    if (path != null) return 'Support for ' + path.title;
+    if (selectedNeed != null) return selectedNeed!;
+    if (selectedState != null) return 'Help in ' + (stateNames[selectedState] ?? '');
+    return 'Trusted nationwide help';
+  }
+
+  Widget _empty() => Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: line)),
+        child: Column(children: [
+          const Icon(Icons.search_off_rounded, color: sage, size: 32),
+          const SizedBox(height: 7),
+          Text(view == 2 ? 'No saved resources yet.' : 'No matching resources yet.', style: const TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          const Text('Try another need or use 211 to find local help.', textAlign: TextAlign.center),
+        ]),
+      );
+
+
+  Widget _resourceGrid(List<HelpResource> resources) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      for (var i = 0; i < resources.length; i++) ...[
+        if (i > 0) const SizedBox(height: 10),
+        _resourceCard(resources[i]),
+      ],
+    ],
+  );
+
+  IconData _resourceIcon(HelpResource resource) {
+    if (resource.needs.contains('Food')) return Icons.restaurant_outlined;
+    if (resource.needs.contains('Rent & Housing')) return Icons.home_outlined;
+    if (resource.needs.contains('Utilities')) return Icons.account_balance_wallet_outlined;
+    if (resource.needs.contains('Healthcare')) return Icons.favorite_border_rounded;
+    if (resource.needs.contains('Childcare')) return Icons.child_care_outlined;
+    if (resource.needs.contains('Employment')) return Icons.work_outline_rounded;
+    if (resource.needs.contains('Legal Help')) return Icons.gavel_outlined;
+    if (resource.needs.contains('Transportation')) return Icons.directions_bus_outlined;
+    if (resource.needs.contains('Community & Pets')) return Icons.pets_outlined;
+    return Icons.volunteer_activism_outlined;
+  }
+
+  Widget _resourceCard(HelpResource resource) {
+    final provider = _providerType(resource);
+    final scope = _serviceScope(resource);
+    final cost = _costType(resource);
+    Widget tag(String text, Color background) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(8)),
+      child: Text(text, style: const TextStyle(fontSize: 11, color: ink)));
+    final body = Column(mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(resource.title, maxLines: 2, overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.playfairDisplay(fontSize: 20,
+            fontWeight: FontWeight.w700, color: ink)),
+        const SizedBox(height: 6),
+        Wrap(spacing: 5, runSpacing: 5, children: [
+          if (provider.isNotEmpty) tag(provider, paleSage),
+          tag(scope, const Color(0xFFF3EBDD)),
+          if (cost.isNotEmpty) tag(cost, const Color(0xFFFFE3AF)),
+        ]),
+        const SizedBox(height: 7),
+        Text(resource.description, maxLines: 2, overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.inter(fontSize: 12.5, height: 1.4, color: ink)),
+        if (resource.serviceArea.isNotEmpty && scope == 'Local') ...[
+          const SizedBox(height: 4),
+          Text(resource.serviceArea, maxLines: 1, overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 11.5, color: Color(0xFF626A63))),
+        ],
+      ]);
+    final actions = Row(mainAxisSize: MainAxisSize.min, children: [
+      IconButton(tooltip: saved.contains(resource.id) ? 'Unsave resource' : 'Save resource',
+        onPressed: () => _toggleSaved(resource.id), color: sage,
+        icon: Icon(saved.contains(resource.id) ? Icons.bookmark : Icons.bookmark_border)),
+      const SizedBox(width: 4),
+      FilledButton(onPressed: () => _showResourceDetails(resource),
+        style: FilledButton.styleFrom(backgroundColor: sage),
+        child: const Text('Details')),
+      if (resource.phone.isNotEmpty)
+        IconButton(tooltip: 'Call program', onPressed: () => _call(resource.phone),
+          color: sage, icon: const Icon(Icons.call_outlined, size: 21)),
+    ]);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: Colors.white,
+        borderRadius: BorderRadius.circular(18), border: Border.all(color: line)),
+      child: LayoutBuilder(builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 650;
+        final icon = Container(width: 44, height: 44,
+          decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(12)),
+          child: Icon(_resourceIcon(resource), color: sage, size: 27));
+        if (wide) return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          icon, const SizedBox(width: 14), Expanded(child: body),
+          const SizedBox(width: 14), actions,
+        ]);
+        return Column(mainAxisSize: MainAxisSize.min, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            icon, const SizedBox(width: 11), Expanded(child: body),
+          ]),
+          const SizedBox(height: 8),
+          Align(alignment: Alignment.centerRight, child: actions),
+        ]);
+      }),
+    );
+  }
+
+  Future<void> _showResourceDetails(HelpResource resource) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(resource.title,
+          style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(resource.description),
+              const SizedBox(height: 12),
+              Text(resource.label, style: const TextStyle(color: sage)),
+              const SizedBox(height: 10),
+              Wrap(spacing: 8, runSpacing: 6, children: [
+                if (_providerType(resource).isNotEmpty)
+                  Chip(label: Text(_providerType(resource))),
+                Chip(label: Text(_serviceScope(resource))),
+                if (_costType(resource).isNotEmpty)
+                  Chip(label: Text(_costType(resource))),
+              ]),
+              if (resource.serviceArea.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                const Text('Service area', style: TextStyle(fontWeight: FontWeight.w700)),
+                Text(resource.serviceArea),
+              ],
+              if (resource.eligibility.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                const Text('Who may qualify', style: TextStyle(fontWeight: FontWeight.w700)),
+                Text(resource.eligibility),
+              ],
+              if (resource.howToApply.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                const Text('How to apply', style: TextStyle(fontWeight: FontWeight.w700)),
+                Text(resource.howToApply),
+              ],
+              if (resource.cost.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                const Text('Cost and availability', style: TextStyle(fontWeight: FontWeight.w700)),
+                Text(resource.cost),
+              ],
+              if (resource.reviewedAt.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Text('Website research reviewed: ${resource.reviewedAt}'),
+                const SizedBox(height: 4),
+                const Text('Website information was reviewed; the provider has not confirmed current funding, openings or eligibility for you. Contact the program before traveling or applying.'),
+              ],
+              if (resource.sourceUrls.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                const Text('Research sources', style: TextStyle(fontWeight: FontWeight.w700)),
+                for (var i = 0; i < resource.sourceUrls.length; i++)
+                  TextButton(
+                    onPressed: () => _open(resource.sourceUrls[i]),
+                    child: Text('Source ${i + 1}: ${Uri.parse(resource.sourceUrls[i]).host}'),
+                  ),
+              ],
+              if (resource.phone.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text('Phone: ${resource.phone}'),
+              ],
+              if (resource.verified.isNotEmpty && resource.verified != 'Check availability') ...[
+                const SizedBox(height: 12),
+                Text('Verification on record: ${resource.verified}'),
+              ],
+              const SizedBox(height: 16),
+              const Text('Community feedback',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+              const Text('Not enough community feedback yet',
+                style: TextStyle(fontSize: 12)),
+              Wrap(spacing: 6, children: [
+                TextButton.icon(onPressed: () => _voteResource(resource, true),
+                  icon: const Icon(Icons.thumb_up_outlined, size: 18),
+                  label: const Text('Helpful')),
+                TextButton.icon(onPressed: () => _voteResource(resource, false),
+                  icon: const Icon(Icons.thumb_down_outlined, size: 18),
+                  label: const Text('Not helpful')),
+              ]),
+              Wrap(spacing: 6, children: [
+                TextButton.icon(
+                  onPressed: resource.url.isEmpty ? null
+                    : () => Share.share(resource.url, subject: resource.title),
+                  icon: const Icon(Icons.share_outlined, size: 18),
+                  label: const Text('Share')),
+                TextButton.icon(onPressed: () => _reportResource(resource),
+                  icon: const Icon(Icons.flag_outlined, size: 18),
+                  label: const Text('Report')),
+              ]),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            icon: const Icon(Icons.arrow_back_rounded),
+            label: const Text('Back to resources'),
+          ),
+          if (resource.url.isNotEmpty)
+            FilledButton(
+              onPressed: () => _open(resource.url),
+              child: const Text('Visit program website'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _reportResource(HelpResource resource) async {
+    final reason = await showDialog<String>(context: context, builder: (dialogContext) =>
+      SimpleDialog(title: Text('Report ${resource.title}'), children: [
+        for (final issue in ['Outdated information', 'Broken link', 'Program closed', 'Incorrect details', 'Other'])
+          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, issue),
+            child: Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Text(issue))),
+      ]));
+    if (!mounted || reason == null) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign in to report a resource.')));
+      return;
+    }
+    try {
+      await FirebaseFirestore.instance.collection('resource_reports').add({
+        'resourceId': resource.id,
+        'reporterUid': uid,
+        'reason': reason,
+        'status': 'open',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Report submitted for review. Thank you.')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Report could not be submitted. Please try again.')));
+    }
+  }
+
+  Future<void> _voteResource(HelpResource resource, bool helpful) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    String reason = '';
+    if (!helpful) {
+      final selected = await showDialog<String>(context: context, builder: (dialogContext) =>
+        SimpleDialog(title: const Text('Why was it not helpful?'), children: [
+          for (final issue in ['Unavailable', 'Ineligible', 'No response', 'Incorrect information'])
+            SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, issue),
+              child: Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Text(issue))),
+        ]));
+      if (selected == null) return;
+      reason = selected;
+    }
+    try {
+      await FirebaseFirestore.instance.collection('resource_votes')
+        .doc(resource.id).collection('members').doc(uid).set({
+          'uid': uid, 'helpful': helpful, 'reason': reason,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your feedback has been saved.')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to save feedback. Please try again.')));
+    }
+  }
+
+}
+
+class HelpPath {
+  const HelpPath(this.id, this.title, this.detail, this.icon, this.needs);
+  final String id;
+  final String title;
+  final String detail;
+  final IconData icon;
+  final List<String> needs;
+}
+
+class SupportCourse {
+  const SupportCourse({
+    required this.title,
+    required this.description,
+    required this.community,
+    required this.length,
+    this.url = '',
+  });
+
+  final String title;
+  final String description;
+  final String community;
+  final String length;
+  final String url;
+}
+
+class HelpResource {
+  const HelpResource({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.needs,
+    required this.url,
+    required this.label,
+    required this.verified,
+    this.states = const <String>[],
+    this.phone = '',
+    this.providerType = '',
+    this.costType = '',
+    this.serviceScope = '',
+    this.serviceArea = '',
+    this.eligibility = '',
+    this.howToApply = '',
+    this.cost = '',
+    this.reviewedAt = '',
+    this.sourceUrls = const <String>[],
+  });
+
+  final String providerType;
+  final String costType;
+  final String serviceScope;
+  final String serviceArea;
+  final String eligibility;
+  final String howToApply;
+  final String cost;
+  final String reviewedAt;
+  final List<String> sourceUrls;
+  final String id;
+  final String title;
+  final String description;
+  final List<String> needs;
+  final List<String> states;
+  final String url;
+  final String phone;
+  final String label;
+  final String verified;
+}
+).hasMatch(enteredZip)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Enter a 5-digit ZIP code.')),
+        );
+      }
+      return;
+    }
+    if (mounted) setState(() => localZip = enteredZip);
+  }
+
+  void _exploreCategory(String category) {
+    directoryQuery = '';
+    directorySearchController.clear();
+    // Existing resource data supports nine broad needs. Do not falsely label
+    // unmatched listings as category-specific until tags are migrated.
+    const mapping = <String, String>{
+      'Housing & Home Assistance': 'Rent & Housing',
+      'Food, Clothing & Basic Needs': 'Food',
+      'Money, Bills & Financial Support': 'Utilities',
+      'Health, Mental Health & Recovery': 'Healthcare',
+      'Little Villagers — Kids & Teens': 'Childcare',
+      'Parenting, Family & Relationships': 'Childcare',
+      'Jobs, Education & Business': 'Employment',
+      'Transportation & Technology': 'Transportation',
+      'Legal, Safety & Life Transitions': 'Legal Help',
+      'Emergencies & Disaster Relief': 'Crisis & Safety',
+      'Specialized Community Support': 'Specialized Support',
+      'Community, Recreation & Pets': 'Community & Pets',
+    };
+    if (!mapping.containsKey(category)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Specific listings for $category are being added. Showing currently available resources.')),
+      );
+    }
+    setState(() {
+      selectedPathId = null;
+      selectedNeed = mapping[category];
+      showAllResources = true;
+      allCategoriesOpen = false;
     });
   }
 
