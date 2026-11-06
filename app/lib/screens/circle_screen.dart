@@ -94,6 +94,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   final Set<int> dismissedReminders = {};
   final Set<int> dismissedActivity = {};
   final Set<String> sentRequests = {};
+  final Set<String> _respondingToRequests = {};
+  bool _requestLoadFailed = false;
   final Set<String> heartedMoments = {};
   List<_ReachOut> myReachOuts = [];
   List<_CircleMessage> circleMessages = [];
@@ -219,6 +221,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                 MapEntry(request.sender.uid, request)),
           );
         setState(() {
+          _requestLoadFailed = false;
           incomingRequests = requests.map((request) {
             final username = request.sender.username;
             return _CircleCandidate(
@@ -231,7 +234,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           }).toList();
         });
       },
-      onError: (_) {},
+      onError: (_) {
+        if (mounted) setState(() => _requestLoadFailed = true);
+      },
     );
 
     memberSubscription = circleService.members().listen(
@@ -1219,33 +1224,43 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     searchController.dispose();
   }
 
-  Future<void> _acceptRequest(_CircleCandidate person) async {
+  Future<void> _acceptRequest(_CircleCandidate person) =>
+      _respondToRequest(person, accept: true);
+
+  Future<void> _declineRequest(_CircleCandidate person) =>
+      _respondToRequest(person, accept: false);
+
+  Future<void> _respondToRequest(_CircleCandidate person,
+      {required bool accept}) async {
     final request = requestByUid[person.uid];
-    if (request == null) return;
+    if (request == null || _respondingToRequests.contains(person.uid)) return;
+    setState(() => _respondingToRequests.add(person.uid));
     try {
-      await circleService.acceptRequest(request);
+      if (accept) {
+        await circleService.acceptRequest(request);
+      } else {
+        await circleService.declineRequest(request);
+      }
       if (!mounted) return;
-      setState(() => incomingRequests.remove(person));
+      setState(() {
+        incomingRequests.removeWhere((item) => item.uid == person.uid);
+        requestByUid.remove(person.uid);
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${person.username} joined your Circle.')),
+        SnackBar(content: Text(accept
+            ? '${person.username} joined your Circle.'
+            : '${person.username} request declined.')),
       );
     } on Object {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not accept the request. Try again.')),
+        SnackBar(content: Text(accept
+            ? 'Could not accept the request. Try again.'
+            : 'Could not decline the request. Try again.')),
       );
+    } finally {
+      if (mounted) setState(() => _respondingToRequests.remove(person.uid));
     }
-  }
-
-  Future<void> _declineRequest(_CircleCandidate person) async {
-    final request = requestByUid[person.uid];
-    if (request == null) return;
-    await circleService.declineRequest(request);
-    if (!mounted) return;
-    setState(() => incomingRequests.remove(person));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${person.username} request declined.')),
-    );
   }
 
   Future<String?> _chooseSupportAudience() {
@@ -1386,6 +1401,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _incomingRequestsCard(),
+        const SizedBox(height: 12),
         _circleOrbit(),
         const SizedBox(height: 12),
         Container(
@@ -1439,6 +1456,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _incomingRequestsCard(),
+        const SizedBox(height: 12),
         _circleOrbit(),
         const SizedBox(height: 6),
         _writtenStatusCard(),
@@ -3576,7 +3595,39 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     );
   }
 
+  Widget _incomingRequestsCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .62),
+        border: Border.all(color: line),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle(
+            'Circle requests (${incomingRequests.length})',
+            'Accept people you trust to add them to your Circle.',
+          ),
+          const SizedBox(height: 8),
+          if (_requestLoadFailed)
+            const Text('Could not load requests. Reopen My Circle to try again.')
+          else if (incomingRequests.isEmpty)
+            const Text('No pending requests right now.')
+          else
+            for (final person in incomingRequests) ...[
+              _requestTile(person),
+              const SizedBox(height: 8),
+            ],
+        ],
+      ),
+    );
+  }
+
   Widget _requestTile(_CircleCandidate person) {
+    final responding = _respondingToRequests.contains(person.uid);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -3584,34 +3635,30 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         border: Border.all(color: line),
         borderRadius: BorderRadius.circular(17),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          VillageAvatar(uid: person.uid, radius: 20),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  person.name,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                Text(
-                  person.username,
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            tooltip: 'Decline request',
-            onPressed: () => _declineRequest(person),
-            icon: const Icon(Icons.close_rounded),
-          ),
-          FilledButton(
-            onPressed: () => _acceptRequest(person),
-            style: FilledButton.styleFrom(backgroundColor: sage),
-            child: const Text('Accept'),
+          Row(children: [
+            VillageAvatar(uid: person.uid, radius: 20),
+            const SizedBox(width: 11),
+            Expanded(child: Text(person.username,
+                style: const TextStyle(fontWeight: FontWeight.w800))),
+          ]),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              FilledButton(
+                onPressed: responding ? null : () => _acceptRequest(person),
+                style: FilledButton.styleFrom(backgroundColor: sage),
+                child: Text(responding ? 'Please wait…' : 'Accept'),
+              ),
+              OutlinedButton(
+                onPressed: responding ? null : () => _declineRequest(person),
+                child: const Text('Decline'),
+              ),
+            ],
           ),
         ],
       ),
