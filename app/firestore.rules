@@ -170,6 +170,16 @@ service cloud.firestore {
       allow delete: if isSelf(uid);
     }
 
+    // Resource bookmarks are private to the signed-in member on every device.
+    match /users/{uid}/saved_resources/{resourceId} {
+      allow get, list, delete: if isSelf(uid);
+      allow create, update: if isSelf(uid) &&
+        resourceId.matches('^[A-Za-z0-9_-]{1,160}$') &&
+        request.resource.data.keys().hasOnly(['resourceId', 'savedAt']) &&
+        request.resource.data.resourceId == resourceId &&
+        request.resource.data.savedAt == request.time;
+    }
+
     match /users/{uid}/blocked/{blockedUid} {
       allow get, list, create, update, delete: if isSelf(uid) &&
         (
