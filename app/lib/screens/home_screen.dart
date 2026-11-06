@@ -620,7 +620,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final heroHeight = width < 360 ? 176.0 : width < 500 ? 180.0 : 185.0;
+        // Keep the original banner framing as the tablet layout widens.
+        // A fixed height on wider screens crops the top and bottom of the photo.
+        final heroHeight = width >= 664
+            ? width * (185.0 / 584.0)
+            : width < 360 ? 176.0 : width < 500 ? 180.0 : 185.0;
         final horizontalPadding = width < 400 ? 18.0 : 22.0;
         final verticalPadding = width < 400 ? 10.0 : 12.0;
 
