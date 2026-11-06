@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -327,7 +329,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                         crossAxisCount: columns,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
-                        mainAxisExtent: ((constraints.maxWidth - 12 * (columns - 1)) / columns).clamp(216.0, 280.0).toDouble() +
+                        mainAxisExtent: ((constraints.maxWidth - 12 * (columns - 1)) / columns) * .75 + 112 +
                             (MediaQuery.textScalerOf(context).scale(120) - 120).clamp(0.0, double.infinity).toDouble(),
                       ),
                       itemBuilder: (_, i) => _directoryCard(browseResults[i]),
@@ -384,10 +386,11 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     final isJoined = joined.contains(community.id);
     final count = memberCounts[community.id] ?? 0;
     final summary = _directorySummaries[community.id] ?? community.description;
-    Widget photoFallback() => Image.asset(
-      'assets/images/my_space_growth.jpg',
-      fit: BoxFit.cover,
-    );
+    Widget photo(BoxFit fit) => community.imageUrl.isEmpty
+        ? Image.asset('assets/images/my_space_growth.jpg', fit: fit)
+        : Image.network(community.imageUrl, fit: fit,
+            errorBuilder: (_, __, ___) => Image.asset(
+              'assets/images/my_space_growth.jpg', fit: fit));
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFFFFDF8),
@@ -397,25 +400,27 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Expanded(flex: 4, child: InkWell(
+        AspectRatio(aspectRatio: 4 / 3, child: InkWell(
           onTap: () => _open(community),
-          child: SizedBox.expand(child: ColorFiltered(
-            colorFilter: const ColorFilter.mode(Color(0x147E8151), BlendMode.srcATop),
-            child: community.imageUrl.isEmpty
-                ? photoFallback()
-                : Image.network(community.imageUrl, fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => photoFallback()),
-          )),
+          child: ClipRect(child: Stack(fit: StackFit.expand, children: [
+            ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: photo(BoxFit.cover),
+            ),
+            const ColoredBox(color: Color(0x30726D55)),
+            photo(BoxFit.contain),
+          ])),
         )),
-        Expanded(flex: 6, child: Padding(
+        Expanded(child: Padding(
           padding: const EdgeInsets.fromLTRB(11, 10, 11, 10),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(community.name, maxLines: 2, overflow: TextOverflow.ellipsis,
+            Text(community.name, maxLines: 1, overflow: TextOverflow.ellipsis,
               style: GoogleFonts.playfairDisplay(fontSize: 16, height: 1.1,
                 fontWeight: FontWeight.w700, color: sage)),
             const SizedBox(height: 5),
-            Expanded(child: Text(summary, maxLines: 2, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, height: 1.3, color: Color(0xFF60665E)))),
+            Text(summary, maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11, height: 1.3, color: Color(0xFF60665E))),
+            const Spacer(),
             const SizedBox(height: 8),
             Row(children: [
               Expanded(child: count > 0
