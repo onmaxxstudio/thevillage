@@ -1460,11 +1460,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       children: [
         _circleOrbit(),
         const SizedBox(height: 8),
-        _incomingRequestsCard(),
-        const SizedBox(height: 6),
         _writtenStatusCard(),
         const SizedBox(height: 8),
-        _supportRequestPanel(),
+        _supportRequestPanel(title: 'Ask your Circle'),
+        const SizedBox(height: 8),
+        _incomingRequestsCard(),
         const SizedBox(height: 12),
         Row(children: [
           Expanded(child: Text('From your people',
@@ -1483,8 +1483,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         const SizedBox(height: 8),
         _messagesCard(),
         const SizedBox(height: 8),
-        _actionRow(Icons.auto_awesome_rounded, 'Share an update',
-          'A moment, a small win, or how you feel.', _shareUpdate, blush),
+        _actionRow(Icons.emoji_events_outlined, 'Share a win',
+          'Celebrate something good with your people.', _shareSomethingGood, blush),
         const SizedBox(height: 8),
         _actionRow(Icons.calendar_today_outlined, 'Shared plans',
           'Make and share your weekly plan.', () => Navigator.of(context).push(
