@@ -57,6 +57,10 @@ jobs:
         working-directory: app
         run: flutter test test/resource_catalog_test.dart
 
+      - name: Test cycle estimates
+        working-directory: app
+        run: flutter test test/cycle_estimate_test.dart
+
       - name: Analyze Flutter app
         working-directory: app
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
