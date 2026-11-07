@@ -1088,8 +1088,16 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
 
   Widget _quickSpaces(List<_Community> communities) => SizedBox(
         height: 78,
-        child: ListView.separated(
-          padding: const EdgeInsets.symmetric(horizontal: 19),
+        child: LayoutBuilder(builder: (context, constraints) {
+          const bubblesWidth = 60.0 * categoryGroups.length +
+              12.0 * (categoryGroups.length - 1);
+          final centered = MediaQuery.sizeOf(context).width >= 700 &&
+              constraints.maxWidth >= bubblesWidth + 38;
+          final horizontalPadding = centered
+              ? (constraints.maxWidth - bubblesWidth) / 2
+              : 19.0;
+          return ListView.separated(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
           scrollDirection: Axis.horizontal,
           itemCount: categoryGroups.length,
           separatorBuilder: (_, __) => const SizedBox(width: 12),
@@ -1133,7 +1141,8 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
               ),
             );
           },
-        ),
+          );
+        }),
       );
 
   IconData _groupIcon(String id) {
