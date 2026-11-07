@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/profile_service.dart';
 
@@ -12,6 +14,12 @@ import '../screens/personalization_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/private_messages_screen.dart';
 import '../screens/settings_screen.dart';
+import '../screens/my_space_screen.dart';
+import '../screens/my_space_tools_screen.dart';
+import '../screens/plan_my_week_screen.dart';
+import '../screens/find_help_screen.dart';
+import '../screens/write_freely_screen.dart';
+import '../services/private_journal_service.dart';
 import '../services/personalization_service.dart';
 import '../screens/village_feed_screen.dart';
 import 'village_navigation_scope.dart';
@@ -31,6 +39,9 @@ class _VillageAppShellState extends State<VillageAppShell> {
   final GlobalKey<ScaffoldState> _shellScaffoldKey =
       GlobalKey<ScaffoldState>();
   int selectedIndex = 0;
+  String? _restoredPage;
+  bool _loadingNavigation = true;
+  final List<String?> _currentPages = List<String?>.filled(5, null);
   final List<int> _tabRouteDepth = List<int>.filled(5, 0);
   late final List<_VillageTabRouteObserver> _routeObservers;
   final personalizationService = PersonalizationService();
@@ -47,8 +58,10 @@ class _VillageAppShellState extends State<VillageAppShell> {
       (index) => _VillageTabRouteObserver(
         rootRouteName: 'village-tab-$index',
         onDepthChanged: (depth) => _setTabRouteDepth(index, depth),
+        onRouteChanged: (route) => _onRouteChanged(index, route),
       ),
     );
+    _loadNavigation();
     _loadPersonalization();
     unawaited(ProfileService().refreshDirectoryProfile());
   }
@@ -63,6 +76,80 @@ class _VillageAppShellState extends State<VillageAppShell> {
   }
 
   final navigatorKeys = List.generate(5, (_) => GlobalKey<NavigatorState>());
+
+  String get _navigationKey =>
+      'villageNavigation_${FirebaseAuth.instance.currentUser?.uid ?? 'guest'}';
+
+  Future<void> _loadNavigation() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_navigationKey)?.split('|');
+      if (!mounted) return;
+      setState(() {
+        if (saved != null && saved.length == 2) {
+          final index = int.tryParse(saved[0]);
+          if (index != null && index >= 0 && index < 5) {
+            selectedIndex = index;
+            _restoredPage = saved[1].isEmpty ? null : saved[1];
+            _currentPages[index] = _restoredPage;
+          }
+        }
+        _loadingNavigation = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingNavigation = false);
+    }
+  }
+
+  void _saveNavigation() {
+    final page = _currentPages[selectedIndex] ?? '';
+    final value = '$selectedIndex|$page';
+    SharedPreferences.getInstance().then((prefs) {
+      if (mounted) prefs.setString(_navigationKey, value);
+    });
+  }
+
+  String? _pageKey(Route<dynamic> route) {
+    final name = route.settings.name;
+    if (name != null && name.startsWith('village-tab-')) return null;
+    if (route is! MaterialPageRoute<dynamic>) return null;
+    final page = route.builder(navigatorKeys[selectedIndex].currentContext ?? context);
+    if (page is MySpaceToolsScreen) return 'my_space/${page.mode}';
+    if (page is MyEntriesScreen) return 'my_space/library';
+    if (page is WriteFreelyEditorScreen) return 'my_space/write';
+    if (page is MySpaceScreen) return 'my_space';
+    if (page is PlanMyWeekScreen) return 'plan_my_week';
+    if (page is FindHelpScreen) return 'find_help';
+    if (page is PrivateMessagesScreen) return 'messages';
+    if (page is ProfileScreen) return 'profile';
+    if (page is SettingsScreen) return 'settings';
+    return null;
+  }
+
+  Widget? _restorePage(String key) {
+    if (key.startsWith('my_space/')) {
+      return MySpaceScreen(initialDestination: key.substring('my_space/'.length));
+    }
+    return switch (key) {
+      'my_space' => const MySpaceScreen(),
+      'plan_my_week' => const PlanMyWeekScreen(),
+      'find_help' => const FindHelpScreen(),
+      'messages' => const PrivateMessagesScreen(),
+      'profile' => const ProfileScreen(),
+      'settings' => const SettingsScreen(),
+      _ => null,
+    };
+  }
+
+  void _onRouteChanged(int index, Route<dynamic>? route) {
+    if (_loadingNavigation || index != selectedIndex) return;
+    final page = route == null ? null : _pageKey(route);
+    // The root arrives first while restoring a saved detail route.
+    if (page == null && _restoredPage != null && _tabRouteDepth[index] == 0) return;
+    _restoredPage = null;
+    _currentPages[index] = page;
+    _saveNavigation();
+  }
 
   List<Widget> get rootPages => <Widget>[
     const HomeScreen(),
@@ -79,16 +166,28 @@ class _VillageAppShellState extends State<VillageAppShell> {
       return;
     }
     setState(() => selectedIndex = index);
+    _saveNavigation();
   }
+
+  MaterialPageRoute<void> _rootRoute(int index) => MaterialPageRoute<void>(
+        builder: (_) => rootPages[index],
+        settings: RouteSettings(name: 'village-tab-$index'),
+      );
 
   Widget buildTabNavigator(int index) {
     return Navigator(
       key: navigatorKeys[index],
       observers: [_routeObservers[index]],
-      onGenerateRoute: (_) => MaterialPageRoute<void>(
-        builder: (_) => rootPages[index],
-        settings: RouteSettings(name: 'village-tab-$index'),
-      ),
+      onGenerateInitialRoutes: (_, __) {
+        final page = index == selectedIndex && _restoredPage != null
+            ? _restorePage(_restoredPage!)
+            : null;
+        return <Route<dynamic>>[
+          _rootRoute(index),
+          if (page != null) MaterialPageRoute<void>(builder: (_) => page),
+        ];
+      },
+      onGenerateRoute: (_) => _rootRoute(index),
     );
   }
 
@@ -173,7 +272,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
 
   @override
   Widget build(BuildContext context) {
-    if (checkingPersonalization) {
+    if (checkingPersonalization || _loadingNavigation) {
       return const Scaffold(
         backgroundColor: cream,
         body: Center(child: CircularProgressIndicator(color: sage)),
@@ -256,15 +355,18 @@ class _VillageTabRouteObserver extends NavigatorObserver {
   _VillageTabRouteObserver({
     required this.rootRouteName,
     required this.onDepthChanged,
+    required this.onRouteChanged,
   });
 
   final String rootRouteName;
   final ValueChanged<int> onDepthChanged;
+  final ValueChanged<Route<dynamic>?> onRouteChanged;
   int _depth = 0;
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     if (route.settings.name != rootRouteName) onDepthChanged(++_depth);
+    onRouteChanged(route);
   }
 
   @override
@@ -273,6 +375,7 @@ class _VillageTabRouteObserver extends NavigatorObserver {
       _depth = _depth > 0 ? _depth - 1 : 0;
       onDepthChanged(_depth);
     }
+    onRouteChanged(previousRoute);
   }
 
   @override
@@ -281,5 +384,11 @@ class _VillageTabRouteObserver extends NavigatorObserver {
       _depth = _depth > 0 ? _depth - 1 : 0;
       onDepthChanged(_depth);
     }
+    onRouteChanged(previousRoute);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    onRouteChanged(newRoute);
   }
 }
