@@ -1457,9 +1457,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       _circleOrbit(),
       const SizedBox(height: 8),
-      _writtenStatusCard(),
-      const SizedBox(height: 10),
-      _supportRequestPanel(title: 'Ask your Circle'),
+      _combinedCheckInCard(),
       const SizedBox(height: 10),
       _incomingRequestsCard(),
       const SizedBox(height: 14),
@@ -1544,9 +1542,23 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     return 'Expires in ${remaining.inMinutes + 1}m';
   }
 
-  Widget _writtenStatusCard() => Container(
-    width: double.infinity, padding: const EdgeInsets.all(12),
+  Widget _combinedCheckInCard() => Container(
+    padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('What do you need today?', style: GoogleFonts.playfairDisplay(
+        color: ink, fontSize: 21, fontWeight: FontWeight.w700)),
+      const SizedBox(height: 10),
+      _writtenStatusCard(embedded: true),
+      const Padding(padding: EdgeInsets.symmetric(vertical: 10),
+        child: Divider(height: 1, color: line)),
+      _supportRequestPanel(title: 'Ask your Circle', embedded: true),
+    ]),
+  );
+
+  Widget _writtenStatusCard({bool embedded = false}) => Container(
+    width: double.infinity, padding: embedded ? EdgeInsets.zero : const EdgeInsets.all(12),
+    decoration: embedded ? null : BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Expanded(child: Text('Your status', style: GoogleFonts.playfairDisplay(
@@ -1920,10 +1932,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     await _openReachOut(audience: audience);
   }
 
-  Widget _supportRequestPanel({String title = 'What do you need today?'}) {
+  Widget _supportRequestPanel({String title = 'What do you need today?', bool embedded = false}) {
     return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
+      padding: embedded ? EdgeInsets.zero : const EdgeInsets.all(10),
+      decoration: embedded ? null : BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(title,
           style: GoogleFonts.playfairDisplay(color: ink, fontSize: 19,
