@@ -1687,7 +1687,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           duration: const Duration(seconds: 12),
           content: Text(error is FirebaseException
             ? 'Could not save status (${error.code}): ${error.message ?? "Please try again."}'
-            : 'Could not save status: $error'),
+            : 'Could not save status: ${error.toString().split("\\n").first.split(" CONTEXT:").first}'),
           action: SnackBarAction(label: 'Retry', onPressed: () => _saveStatusWithFeedback(text, today, need: need)),
         ));
       }
