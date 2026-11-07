@@ -1412,8 +1412,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       children: [
         _circleOrbit(),
         const SizedBox(height: 8),
-        _incomingRequestsCard(),
-        const SizedBox(height: 12),
+        if (incomingRequests.isNotEmpty || _requestLoadFailed) ...[
+          _incomingRequestsCard(),
+          const SizedBox(height: 12),
+        ],
         Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(18, 16, 18, 17),
@@ -1467,8 +1469,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       const SizedBox(height: 8),
       _combinedCheckInCard(),
       const SizedBox(height: 10),
-      _incomingRequestsCard(),
-      const SizedBox(height: 14),
+      if (incomingRequests.isNotEmpty || _requestLoadFailed) ...[
+        _incomingRequestsCard(),
+        const SizedBox(height: 14),
+      ],
       _messagesCard(),
       const SizedBox(height: 10),
       _actionRow(Icons.emoji_events_outlined, 'Share a win',
