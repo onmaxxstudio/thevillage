@@ -35,14 +35,11 @@ class AboutContactScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 17, height: 1.5, color: _sage)),
                 const SizedBox(height: 28),
                 _section(context, 'About Ask the Village',
-                    'Ask the Village is a space to find connection, share lived '
-                    'experience, and feel supported through life’s different seasons. '
-                    'Ask questions, connect with your circle, explore communities, '
-                    'and find resources that can help.'),
-                _section(context, 'A little space for you',
-                    'Check in with yourself, write freely, and plan your week. '
-                    'Whether you need a listening ear or a place to celebrate '
-                    'a small win, there is room for you here.'),
+                    'Ask the Village is a community where people share, learn, and grow together—because no one should have to navigate life’s different seasons alone.\n\n'
+                    'Here, your neighbors’ experiences become shared wisdom. Learn from their mistakes, find encouragement in their wins, and share the lessons you’ve gathered along the way. Your story might be the support someone else needs.\n\n'
+                    'We make room for honest conversations, including the topics too often left unspoken. Come with your questions, your struggles, your small victories, and your unfinished chapters.\n\n'
+                    'You don’t have to pretend you’re okay just because you’re capable. You deserve support, too.\n\n'
+                    'Everyone deserves a village. Welcome to yours.'),
                 const Divider(height: 36),
                 _section(context, 'Contact us',
                     'Have a question, need technical support, want to share '
