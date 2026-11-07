@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -175,11 +176,22 @@ class _FounderSection extends StatelessWidget {
                 key: const ValueKey('founder-portrait'),
                 width: sideBySide ? 210 : 240,
                 height: (sideBySide ? 210 : 240) * 1250 / 1086,
-                child: Image.asset(
-                  'assets/images/ariel-founder.webp',
-                  fit: BoxFit.contain,
-                  semanticLabel: 'Ariel Mitchell, founder of Ask the Village',
-                ),
+                child: kIsWeb
+                    ? Image.network(
+                        Uri.base
+                            .resolve('assets/assets/images/ariel-founder.webp')
+                            .toString(),
+                        webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+                        fit: BoxFit.contain,
+                        semanticLabel:
+                            'Ariel Mitchell, founder of Ask the Village',
+                      )
+                    : Image.asset(
+                        'assets/images/ariel-founder.webp',
+                        fit: BoxFit.contain,
+                        semanticLabel:
+                            'Ariel Mitchell, founder of Ask the Village',
+                      ),
               );
               final message = Column(
                 key: const ValueKey('founder-message'),
