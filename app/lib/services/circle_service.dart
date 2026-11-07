@@ -103,10 +103,11 @@ class CircleService {
       .doc('profile').set({'supportStyle': style,
         'availability': availability, 'muteRequests': muteRequests}, SetOptions(merge: true));
 
-  Future<void> saveWrittenStatus(String text, bool justToday) async {
+  Future<void> saveWrittenStatus(String text, bool justToday, {String? need}) async {
     await _firestore.collection('circles').doc(_user.uid).collection('settings')
         .doc('profile').set({
       'statusText': text,
+      'statusNeed': need,
       'statusExpiresAt': justToday
           ? Timestamp.fromDate(DateTime.now().add(const Duration(days: 1)))
           : null,
