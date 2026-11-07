@@ -18,82 +18,124 @@ class AboutContactScreen extends StatelessWidget {
         foregroundColor: _sage,
         title: const Text('About & Contact'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 680),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.diversity_1_outlined, size: 44, color: _sage),
-                const SizedBox(height: 20),
-                Text(
-                  'Everyone deserves a village.',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: _sage,
-                    fontWeight: FontWeight.w700,
+      body: LayoutBuilder(
+        builder: (context, viewport) => SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 48),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1050),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 18),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [Color(0xFFF0F1E2), Color(0xFFFFFAF1)]),
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    child: Column(children: [
+                      const Icon(Icons.diversity_1_outlined, size: 52, color: _sage),
+                      const SizedBox(height: 12),
+                      Text('Everyone deserves a village.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: _sage, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 12),
+                      const Text('REAL PEOPLE.  REAL SUPPORT.  REAL ANSWERS.',
+                        textAlign: TextAlign.center, style: TextStyle(color: _sage, fontWeight: FontWeight.w600, fontSize: 13, letterSpacing: 0.7)),
+                    ]),
                   ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Real people. Real support. Real answers.',
-                  style: TextStyle(fontSize: 17, height: 1.5, color: _sage),
-                ),
-                const SizedBox(height: 28),
-                _section(
-                  context,
-                  'About Ask the Village',
-                  'Ask the Village is a community where people share, learn, and grow together—because no one should have to navigate life’s different seasons alone.\n\n'
-                      'Here, your neighbors’ experiences become shared wisdom. Learn from their mistakes, find encouragement in their wins, and share the lessons you’ve gathered along the way. Your story might be the support someone else needs.\n\n'
-                      'We make room for honest conversations, including the topics too often left unspoken. Come with your questions, your struggles, your small victories, and your unfinished chapters.\n\n'
-                      'You don’t have to pretend you’re okay just because you’re capable. You deserve support, too.\n\n'
-                      'Everyone deserves a village. Welcome to yours.',
-                ),
-                const SizedBox(height: 8),
-                const _FounderSection(),
-                const Divider(height: 36),
-                _section(
-                  context,
-                  'Contact us',
-                  'Have a question, need technical support, want to share '
-                      'feedback, or interested in partnering with Ask the Village?',
-                ),
-                SelectableText(
-                  'support@askthevillage.app',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    height: 1.6,
-                    color: _sage,
+                  const SizedBox(height: 22),
+                  Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.75),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: const Color(0xFFE0E5D7))),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(color: _sage, borderRadius: BorderRadius.circular(24)),
+                        child: const Text('About Ask the Village', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700)),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text('Ask the Village is a community where people share, learn, and grow together—because no one should have to navigate life’s different seasons alone.\n\nHere, your neighbors’ experiences become shared wisdom. Learn from their mistakes, find encouragement in their wins, and share the lessons you’ve gathered along the way. Your story might be the support someone else needs.',
+                        style: TextStyle(fontSize: 16, height: 1.55, color: Color(0xFF172019))),
+                      const SizedBox(height: 18),
+                      Wrap(spacing: 8, runSpacing: 8, children: [
+                        _valueChip(Icons.forum_outlined, 'Honest Conversations'),
+                        _valueChip(Icons.favorite_border, 'Real Support'),
+                        _valueChip(Icons.menu_book_outlined, 'Shared Learning'),
+                        _valueChip(Icons.spa_outlined, 'A Welcoming Space'),
+                      ]),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: const Color(0xFFF0F2E9), borderRadius: BorderRadius.circular(20)),
+                        child: const Text('We make room for honest conversations, including the topics too often left unspoken. Come with your questions, your struggles, your small victories, and your unfinished chapters.',
+                          style: TextStyle(fontSize: 16, height: 1.55, color: Color(0xFF172019))),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(color: _sage, borderRadius: BorderRadius.circular(18)),
+                        child: const Text('You don’t have to pretend you’re okay just because you’re capable. You deserve support, too.',
+                          textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 17, height: 1.5)),
+                      ),
+                      const SizedBox(height: 18),
+                      const Text('Everyone deserves a village. Welcome to yours.',
+                        textAlign: TextAlign.center, style: TextStyle(color: _sage, fontWeight: FontWeight.w600, fontSize: 17)),
+                    ]),
                   ),
-                ),
-                const SizedBox(height: 14),
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(backgroundColor: _sage),
-                  onPressed: () => _emailSupport(context),
-                  icon: const Icon(Icons.mail_outline_rounded),
-                  label: const Text('Email support'),
-                ),
-                TextButton.icon(
-                  onPressed: () async {
-                    await Clipboard.setData(
-                      const ClipboardData(text: 'support@askthevillage.app'),
-                    );
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Email address copied.')),
-                    );
-                  },
-                  icon: const Icon(Icons.copy_outlined),
-                  label: const Text('Copy email address'),
-                ),
-              ],
+                  const SizedBox(height: 22),
+                  const _FounderSection(),
+                  const SizedBox(height: 22),
+                  Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(color: _sage, borderRadius: BorderRadius.circular(24)),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Row(children: [
+                        Icon(Icons.mail_outline_rounded, color: Color(0xFFF5E4AC), size: 30),
+                        SizedBox(width: 12),
+                        Text('Contact Us', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 23)),
+                      ]),
+                      const SizedBox(height: 12),
+                      const Text('Have a question, need technical support, want to share feedback, or interested in partnering with Ask the Village?',
+                        style: TextStyle(color: Colors.white, fontSize: 15, height: 1.5)),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE4ECD7), foregroundColor: _sage),
+                        onPressed: () => _emailSupport(context),
+                        icon: const Icon(Icons.send_outlined),
+                        label: const Text('support@askthevillage.app'),
+                      ),
+                      TextButton.icon(
+                        onPressed: () async {
+                          await Clipboard.setData(const ClipboardData(text: 'support@askthevillage.app'));
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email address copied.')));
+                        },
+                        icon: const Icon(Icons.copy_outlined, color: Colors.white),
+                        label: const Text('Copy email address', style: TextStyle(color: Colors.white)),
+                      ),
+                    ]),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+
+  Widget _valueChip(IconData icon, String title) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+    decoration: BoxDecoration(color: const Color(0xFFF0F2E9), borderRadius: BorderRadius.circular(30)),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, color: _sage, size: 18), const SizedBox(width: 7),
+      Text(title, style: const TextStyle(color: _sage, fontWeight: FontWeight.w600)),
+    ]),
+  );
 
   Future<void> _emailSupport(BuildContext context) async {
     try {
