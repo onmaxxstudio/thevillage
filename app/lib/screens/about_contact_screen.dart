@@ -40,6 +40,8 @@ class AboutContactScreen extends StatelessWidget {
                     'We make room for honest conversations, including the topics too often left unspoken. Come with your questions, your struggles, your small victories, and your unfinished chapters.\n\n'
                     'You don’t have to pretend you’re okay just because you’re capable. You deserve support, too.\n\n'
                     'Everyone deserves a village. Welcome to yours.'),
+                const SizedBox(height: 12),
+                const _FounderSection(),
                 const Divider(height: 36),
                 _section(context, 'Contact us',
                     'Have a question, need technical support, want to share '
@@ -103,6 +105,67 @@ class AboutContactScreen extends StatelessWidget {
               color: Color(0xFF172019))),
         ],
       ),
+    );
+  }
+}
+
+/// Kept local to About so the founder layout cannot affect other destinations.
+class _FounderSection extends StatelessWidget {
+  const _FounderSection();
+
+  @override
+  Widget build(BuildContext context) {
+    const sage = Color(0xFF355C3B);
+    return Container(
+      key: const ValueKey('founder-section'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEEF2E8),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFD8E1D1)),
+      ),
+      child: LayoutBuilder(builder: (context, constraints) {
+        final sideBySide = constraints.maxWidth >= 540;
+        final photo = SizedBox(
+          key: const ValueKey('founder-photo'),
+          width: sideBySide ? 210 : 240,
+          child: Image.asset(
+            'assets/images/ariel-mitchell-founder.png',
+            fit: BoxFit.contain,
+            semanticLabel: 'Ariel Mitchell, founder of Ask the Village',
+          ),
+        );
+        final message = Column(
+          key: const ValueKey('founder-message'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Meet the Founder',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: sage, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 14),
+            const Text('Ariel Mitchell | Founder of Ask the Village',
+                style: TextStyle(color: sage, fontSize: 16,
+                    fontWeight: FontWeight.w600, height: 1.5)),
+            const SizedBox(height: 18),
+            const Text(
+              '“I created Ask the Village because I believe no one should have to navigate every season of life alone. Sometimes we don’t need someone to fix everything. We just need somewhere to be heard, understood, and reminded that we’re not alone.”',
+              style: TextStyle(fontSize: 16, height: 1.65,
+                  color: Color(0xFF172019)),
+            ),
+          ],
+        );
+        if (sideBySide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [photo, const SizedBox(width: 28), Expanded(child: message)],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [Center(child: photo), const SizedBox(height: 24), message],
+        );
+      }),
     );
   }
 }
