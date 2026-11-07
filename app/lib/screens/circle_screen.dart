@@ -1843,8 +1843,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         Expanded(child: _messageShortcut(Icons.groups_outlined, 'Circle chats',
           'Your people', _showCircleChats)),
         const SizedBox(width: 8),
-        Expanded(child: _messageShortcut(Icons.chat_bubble_outline, 'Private history',
-          'Village chats', () => Navigator.of(context).push(
+        Expanded(child: _messageShortcut(Icons.chat_bubble_outline, 'Village chats',
+          'Private conversations', () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const PrivateMessagesScreen())))),
       ]),
     ]),
