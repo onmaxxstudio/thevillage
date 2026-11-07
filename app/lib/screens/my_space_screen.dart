@@ -897,70 +897,67 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   }
 
   Widget _heroBanner() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 600;
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(18),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/my_space_hero.jpg',
-                  fit: BoxFit.cover,
-                  alignment: Alignment.centerRight,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/my_space_hero.jpg',
+              fit: BoxFit.cover,
+              alignment: Alignment.centerRight,
+              excludeFromSemantics: true,
+            ),
+          ),
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFF5EBDD), Color(0xF2F5EBDD), Color(0x00F5EBDD)],
+                  stops: [0, .42, 1],
                 ),
               ),
-              const Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [Color(0xCC172019), Color(0x55172019)],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: FractionallySizedBox(
+              widthFactor: .72,
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'A safe space to be you.',
+                    style: GoogleFonts.playfairDisplay(
+                      color: green, fontSize: 25, height: 1.12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(wide ? 24 : 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'A safe space to be you.',
-                      style: GoogleFonts.playfairDisplay(
-                        color: cream,
-                        fontSize: wide ? 32 : 25,
-                        height: 1.12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Clearer thoughts. A calmer you. A brighter tomorrow.',
-                      style: TextStyle(color: cream, fontSize: 13, height: 1.4),
-                    ),
-                    const SizedBox(height: 16),
-                    const Row(
-                      children: [
-                        Icon(Icons.lock_outline_rounded, color: cream, size: 15),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Your thoughts stay yours. Private by default.',
-                            style: TextStyle(color: cream, fontSize: 11, height: 1.4),
-                          ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Clearer thoughts. A calmer you. A brighter tomorrow.',
+                    style: TextStyle(color: ink, fontSize: 12, height: 1.4),
+                  ),
+                  const SizedBox(height: 12),
+                  const Row(
+                    children: [
+                      Icon(Icons.lock_outline_rounded, color: green, size: 16),
+                      SizedBox(width: 7),
+                      Expanded(
+                        child: Text(
+                          'Your thoughts stay yours. Private by default.',
+                          style: TextStyle(color: ink, fontSize: 11, height: 1.35),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -1072,17 +1069,51 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       _SpaceFeature('Letters', Icons.mail_outline_rounded, const Color(0xFFE5EBDD), () => _openTool('letters')),
       _SpaceFeature('Budget', Icons.account_balance_wallet_outlined, const Color(0xFFF9EBD7), () => _openTool('budget')),
     ];
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: features.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 7,
-        mainAxisSpacing: 7,
-        childAspectRatio: MediaQuery.textScalerOf(context).scale(14) > 18 ? .78 : 1.05,
-      ),
-      itemBuilder: (context, index) => _featureCard(features[index], index),
+    const descriptions = [
+      'Notice and honor the good in your life.',
+      'Check in and process your feelings.',
+      'Celebrate progress along the way.',
+      'Dream, plan and take meaningful steps.',
+      'Write to yourself or someone else.',
+      'Plan, track and feel more in control.',
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Wrap lets the paired cards grow naturally with text size.
+        final columns = constraints.maxWidth < 320 ? 1 : 2;
+        final width = (constraints.maxWidth - (columns - 1) * 10) / columns;
+        final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final compactHeight = (width < 190 ? 108.0 : 94.0) * scale;
+        return Column(
+          children: [
+            _featuredWritingCard(),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10, runSpacing: 10,
+              children: [
+                for (var i = 1; i <= 2; i++)
+                  SizedBox(
+                    width: width,
+                    height: 168 * scale,
+                    child: _starterCard(features[i], guided: i == 1),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10, runSpacing: 10,
+              children: [
+                for (var i = 3; i < features.length; i++)
+                  SizedBox(
+                    width: width,
+                    height: compactHeight,
+                    child: _featureCard(features[i], descriptions[i - 3]),
+                  ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1106,92 +1137,184 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     ));
   }
 
-  Widget _featureCard(_SpaceFeature feature, int index) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
-        return Semantics(
-          button: true,
-          label: feature.title.replaceAll('\n', ' '),
-          onTap: feature.onTap,
-          excludeSemantics: true,
-          child: Material(
-            color: feature.color,
-            borderRadius: BorderRadius.circular(14),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // One bundled atlas keeps all nine photographs consistent and
-                // avoids nine network requests. Overflow reveals one exact cell.
-                ClipRect(
-                  child: OverflowBox(
-                    alignment: Alignment(
-                      (index % 3) - 1.0,
-                      (index ~/ 3) - 1.0,
-                    ),
-                    minWidth: constraints.maxWidth * 3,
-                    maxWidth: constraints.maxWidth * 3,
-                    minHeight: constraints.maxHeight * 3,
-                    maxHeight: constraints.maxHeight * 3,
-                    child: Image.asset(
-                      'assets/images/my_space_collection.webp',
-                      fit: BoxFit.fill,
-                      excludeFromSemantics: true,
-                      errorBuilder: (_, error, stack) => ColoredBox(
-                        color: feature.color,
-                        child: Center(
-                          child: Icon(feature.icon, color: feature.accent, size: 32),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0x00172019),
-                        Color(0x33172019),
-                        Color(0xED172019),
-                      ],
-                      stops: [0, .35, 1],
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(5, 8, 5, 10),
-                    child: Text(
-                      feature.title,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.playfairDisplay(
-                        color: cream,
-                        fontSize: constraints.maxWidth >= 170 ? 20 : 13,
-                        height: 1.15,
-                        fontWeight: FontWeight.w700,
-                        shadows: const [
-                          Shadow(color: Color(0x99000000), blurRadius: 4),
-                        ],
-                      ),
-                      maxLines: largeText ? 3 : 2,
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: InkWell(onTap: feature.onTap),
-                  ),
-                ),
-              ],
+  Widget _featuredWritingCard() {
+    return Semantics(
+      button: true,
+      label: 'Write Freely. A blank, judgment-free space for your thoughts.',
+      onTap: () => openWriteFreely(),
+      excludeSemantics: true,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/my_space_modern_journal.webp',
+                fit: BoxFit.cover,
+                alignment: Alignment.centerRight,
+                errorBuilder: (_, error, stack) => const ColoredBox(color: green),
+              ),
             ),
-          ),
-        );
-      },
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xF2294932), Color(0xD9294932), Color(0x00294932)],
+                    stops: [0, .40, .78],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+              child: FractionallySizedBox(
+                widthFactor: .60,
+                alignment: Alignment.centerLeft,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Write Freely',
+                      style: GoogleFonts.playfairDisplay(
+                        color: cream, fontSize: 28, height: 1.1,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'A blank, judgment-free space for your thoughts, feelings, and everything in between.',
+                      style: TextStyle(color: cream, fontSize: 12, height: 1.5),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(width: 28, height: 2, color: const Color(0xFFD4B572)),
+                  ],
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(onTap: () => openWriteFreely()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _botanicalAccent({double width = 64, double opacity = .5}) {
+    return ExcludeSemantics(
+      child: Opacity(
+        opacity: opacity,
+        child: Image.asset('assets/images/welcome_branch.png', width: width),
+      ),
+    );
+  }
+
+  Widget _starterCard(_SpaceFeature feature, {required bool guided}) {
+    return Material(
+      color: guided ? const Color(0xFFE4E8D4) : const Color(0xFFF4DFCF),
+      borderRadius: BorderRadius.circular(15),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: feature.onTap,
+        child: Stack(
+          children: [
+            if (guided)
+              Positioned(right: -6, bottom: 5, child: _botanicalAccent(width: 76, opacity: .65))
+            else ...[
+              const Positioned(
+                right: 8, top: 8,
+                child: ExcludeSemantics(
+                  child: Icon(Icons.wb_sunny_outlined, size: 38, color: Color(0x779E712E)),
+                ),
+              ),
+              const Positioned(
+                right: -8, bottom: -8,
+                child: ExcludeSemantics(
+                  child: Icon(Icons.landscape_rounded, size: 88, color: Color(0x18A3654B)),
+                ),
+              ),
+            ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 16, 14, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    feature.title,
+                    style: GoogleFonts.playfairDisplay(
+                      color: green, fontSize: 21, height: 1.12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    guided
+                        ? 'Gentle, structured exercises for deeper self-discovery.'
+                        : 'Thoughtful prompts to spark clarity, reflection, and new perspective.',
+                    style: const TextStyle(color: ink, fontSize: 11.5, height: 1.45),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _featureCard(_SpaceFeature feature, String description) {
+    return Material(
+      color: const Color(0xFFFFFCF6),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: Color(0xFFDCC6A2)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: feature.onTap,
+        child: Stack(
+          children: [
+            Positioned(
+              right: -15, top: -2,
+              child: _botanicalAccent(width: 54, opacity: .18),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+              child: Row(
+                children: [
+                  ExcludeSemantics(
+                    child: Icon(feature.icon, color: feature.accent, size: 25),
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          feature.title.replaceAll('\n', ' '),
+                          style: GoogleFonts.playfairDisplay(
+                            color: green, fontSize: 15, height: 1.1,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          description,
+                          style: const TextStyle(color: ink, fontSize: 10.5, height: 1.35),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1283,75 +1406,62 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     }).toList();
     return Container(
       key: libraryKey,
-      padding: const EdgeInsets.fromLTRB(13, 13, 13, 14),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 14),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFDF9),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF0E8DC)),
+        border: Border.all(color: Colors.transparent),
         boxShadow: [BoxShadow(color: ink.withValues(alpha: .035), blurRadius: 12, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Material(
-              color: green,
-              child: InkWell(
-                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                  builder: (_) => MyEntriesScreen(
-                    journal: PrivateJournalService(
-                      uid: FirebaseAuth.instance.currentUser!.uid,
-                    ),
-                  ),
-                )),
-                child: Stack(
+          Material(
+            color: cream,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: const BorderSide(color: green, width: 1.2),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => MyEntriesScreen(
+                  journal: PrivateJournalService(uid: FirebaseAuth.instance.currentUser!.uid),
+                ),
+              )),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
                   children: [
-                    Positioned.fill(
-                      child: Ink.image(
-                        image: const AssetImage('assets/images/my_space_books.jpg'),
-                        fit: BoxFit.cover,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        'assets/images/my_space_books.jpg',
+                        width: 58, height: 64, fit: BoxFit.cover,
+                        excludeFromSemantics: true,
                       ),
                     ),
-                    const Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Color(0x66172019), Color(0xE6172019)],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                      child: Row(
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.menu_book_rounded, color: cream, size: 26),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'My Journal Library',
-                                  style: GoogleFonts.playfairDisplay(
-                                    color: cream,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                const Text(
-                                  'All your entries, letters and reflections in one place.',
-                                  style: TextStyle(color: cream, fontSize: 11.5, height: 1.4),
-                                ),
-                              ],
+                          Text(
+                            'My Journal Library',
+                            style: GoogleFonts.playfairDisplay(
+                              color: green, fontSize: 21,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const Icon(Icons.chevron_right_rounded, color: cream),
+                          const SizedBox(height: 5),
+                          const Text(
+                            'All your journal entries in one place.',
+                            style: TextStyle(color: ink, fontSize: 11.5, height: 1.4),
+                          ),
                         ],
                       ),
                     ),
+                    const Icon(Icons.chevron_right_rounded, color: green, size: 20),
                   ],
                 ),
               ),
