@@ -1680,11 +1680,14 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text.isEmpty
           ? 'Status cleared successfully' : 'Status posted successfully')));
       }
-    } on Object {
+    } on Object catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Could not save your status.'),
+          duration: const Duration(seconds: 12),
+          content: Text(error is FirebaseException
+            ? 'Could not save status (${error.code}): ${error.message ?? "Please try again."}'
+            : 'Could not save status: $error'),
           action: SnackBarAction(label: 'Retry', onPressed: () => _saveStatusWithFeedback(text, today, need: need)),
         ));
       }
