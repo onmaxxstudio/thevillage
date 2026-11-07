@@ -80,7 +80,10 @@ class CircleMessage {
 }
 
 class CircleService {
-  static const _needMarker = '\u001fCIRCLE_NEED:';
+  static const _needMarker = '[circle-need]';
+
+  final Map<String, Stream<DocumentSnapshot<Map<String, dynamic>>>> _profileStreams = {};
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _activityStream;
 
   static ({String text, String? need}) readWrittenStatus(String raw) {
     if (!raw.startsWith(_needMarker)) return (text: raw, need: null);
@@ -99,13 +102,17 @@ class CircleService {
     return user;
   }
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> activity() => _firestore
+  Stream<QuerySnapshot<Map<String, dynamic>>> activity() => _activityStream ??= _firestore
       .collection('circles').doc(_user.uid).collection('activity')
       .orderBy('createdAt', descending: true).limit(100).snapshots();
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> supportProfile(String uid) =>
+      _profileStreams.putIfAbsent(uid, () => _firestore.collection('circles')
+          .doc(uid).collection('settings').doc('profile').snapshots());
+
+  Future<DocumentSnapshot<Map<String, dynamic>>> fetchSupportProfile(String uid) =>
       _firestore.collection('circles').doc(uid).collection('settings')
-          .doc('profile').snapshots();
+          .doc('profile').get();
 
   Future<void> saveSupportProfile({required String style,
       required String availability, required bool muteRequests}) => _firestore
