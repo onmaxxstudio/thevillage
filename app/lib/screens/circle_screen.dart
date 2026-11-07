@@ -169,7 +169,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return;
-      final profile = await circleService.supportProfile(uid).first;
+      final profile = await circleService.fetchSupportProfile(uid);
       if (!mounted || !profile.exists) return;
       setState(() {
         supportStyle = profile.data()?['supportStyle'] as String? ?? supportStyle;
@@ -546,7 +546,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         var delivered = 0;
         for (final member in recipients) {
           if (member.uid == null || _isTestMember(member)) continue;
-          final preferences = await circleService.supportProfile(member.uid!).first;
+          final preferences = await circleService.fetchSupportProfile(member.uid!);
           if (preferences.data()?['muteRequests'] == true ||
               preferences.data()?['availability'] == 'Away today') continue;
           await circleService.sendMessage(
