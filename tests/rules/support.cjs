@@ -88,6 +88,27 @@ const {doc, setDoc, getDoc, updateDoc, deleteDoc, runTransaction, serverTimestam
     await assertSucceeds(deleteDoc(doc(alicePhone, bookmarkPath)));
     if ((await getDocFromServer(doc(alice, bookmarkPath))).exists())
       throw Error('Removing a saved resource on a second device did not sync');
+    // A Circle member can react to a post, but cannot impersonate another member.
+    await env.withSecurityRulesDisabled(async ctx => {
+      await setDoc(doc(ctx.firestore(), 'circles/alice/members/bob'), {username: 'bob'});
+    });
+    const heartPath = 'circles/alice/post_interactions/status_alice_123/hearts/bob';
+    const commentsPath = 'circles/alice/post_interactions/status_alice_123/comments';
+    await assertSucceeds(setDoc(doc(bob, heartPath), {createdAt: serverTimestamp()}));
+    await assertSucceeds(getDoc(doc(bob, heartPath)));
+    await assertFails(setDoc(doc(bob, heartPath), {createdAt: serverTimestamp()}));
+    await assertFails(setDoc(doc(alice, heartPath), {createdAt: serverTimestamp()}));
+    await assertFails(getDoc(doc(guest, heartPath)));
+    await assertSucceeds(deleteDoc(doc(bob, heartPath)));
+    await assertSucceeds(setDoc(doc(collection(bob, commentsPath)), {
+      authorUid: 'bob', authorName: 'bob', text: 'You have this!', createdAt: serverTimestamp(),
+    }));
+    await assertSucceeds(getDocs(collection(bob, commentsPath)));
+    await assertFails(setDoc(doc(collection(bob, commentsPath)), {
+      authorUid: 'alice', authorName: 'bob', text: 'Impersonated', createdAt: serverTimestamp(),
+    }));
+    await assertFails(getDocs(collection(guest, commentsPath)));
+
     console.log('Resource bookmarks: cross-device reads/removal, private listing, ownership, schema and timestamps passed.');
 
     console.log('Support rules: duplicate/concurrent support, distinct users, count tampering, receipt privacy, immutable receipts, and replies passed.');
