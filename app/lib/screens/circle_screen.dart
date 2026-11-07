@@ -1965,10 +1965,16 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             onChanged: (value) => setState(() => selectedNeed = value),
           );
           final choosePeople = FilledButton.icon(
-            onPressed: selectedNeed == null ? null : () => _requestSupport(selectedNeed!),
+            onPressed: selectedNeed == null ? null : () async {
+              if (_visibleCircleMembers.isEmpty) {
+                await _findPeople();
+                return;
+              }
+              await _openReachOut(audience: 'My whole Circle');
+            },
             style: FilledButton.styleFrom(backgroundColor: sage),
             icon: const Icon(Icons.people_outline_rounded),
-            label: const Text('Choose people'),
+            label: const Text('Share to Circle'),
           );
           if (constraints.maxWidth >= 340 &&
               MediaQuery.textScalerOf(context).scale(14) <= 18) {
