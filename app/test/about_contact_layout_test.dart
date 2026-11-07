@@ -23,6 +23,7 @@ void main() {
       final card = find.byKey(const ValueKey('founder-section'));
       final photoRect = tester.getRect(photo);
       final messageRect = tester.getRect(message);
+      expect(photoRect.height, greaterThan(200));
       final cardRect = tester.getRect(card);
       expect(cardRect.left, greaterThanOrEqualTo(0));
       expect(cardRect.right, lessThanOrEqualTo(size.width));

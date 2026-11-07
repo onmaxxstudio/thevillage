@@ -174,6 +174,7 @@ class _FounderSection extends StatelessWidget {
               final portrait = SizedBox(
                 key: const ValueKey('founder-portrait'),
                 width: sideBySide ? 210 : 240,
+                height: (sideBySide ? 210 : 240) * 1250 / 1086,
                 child: Image.asset(
                   'assets/images/ariel-founder.webp',
                   fit: BoxFit.contain,
