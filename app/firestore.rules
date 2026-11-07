@@ -555,6 +555,37 @@ service cloud.firestore {
       allow delete: if isSelf(ownerUid);
     }
 
+    match /circles/{ownerUid}/post_interactions/{postId} {
+      allow read, write: if false;
+
+      match /hearts/{heartUid} {
+        allow get: if signedIn() && request.auth.uid == heartUid &&
+          (isSelf(ownerUid) || exists(/databases/$(database)/documents/circles/$(ownerUid)/members/$(request.auth.uid)));
+        allow list: if false;
+        allow create: if signedIn() && request.auth.uid == heartUid &&
+          (isSelf(ownerUid) || exists(/databases/$(database)/documents/circles/$(ownerUid)/members/$(request.auth.uid))) &&
+          request.resource.data.keys().hasOnly(['createdAt']) &&
+          request.resource.data.createdAt == request.time;
+        allow delete: if signedIn() && request.auth.uid == heartUid;
+        allow update: if false;
+      }
+
+      match /comments/{commentId} {
+        allow get, list: if signedIn() &&
+          (isSelf(ownerUid) || exists(/databases/$(database)/documents/circles/$(ownerUid)/members/$(request.auth.uid)));
+        allow create: if signedIn() &&
+          (isSelf(ownerUid) || exists(/databases/$(database)/documents/circles/$(ownerUid)/members/$(request.auth.uid))) &&
+          request.resource.data.keys().hasOnly(['authorUid', 'authorName', 'text', 'createdAt']) &&
+          request.resource.data.authorUid == request.auth.uid &&
+          request.resource.data.authorName is string && request.resource.data.authorName.size() <= 40 &&
+          request.resource.data.text is string && request.resource.data.text.size() > 0 &&
+          request.resource.data.text.size() <= 500 &&
+          request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+
     match /conversations/{conversationId} {
       allow get: if signedIn() &&
         request.auth.uid in resource.data.members;
