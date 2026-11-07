@@ -1089,7 +1089,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   Widget _quickSpaces(List<_Community> communities) => SizedBox(
         height: 78,
         child: LayoutBuilder(builder: (context, constraints) {
-          const bubblesWidth = 60.0 * categoryGroups.length +
+          final bubblesWidth = 60.0 * categoryGroups.length +
               12.0 * (categoryGroups.length - 1);
           final centered = MediaQuery.sizeOf(context).width >= 700 &&
               constraints.maxWidth >= bubblesWidth + 38;
