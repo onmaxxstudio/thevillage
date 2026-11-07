@@ -1543,18 +1543,84 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   }
 
   Widget _combinedCheckInCard() => Container(
+    width: double.infinity,
     padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('What do you need today?', style: GoogleFonts.playfairDisplay(
-        color: ink, fontSize: 21, fontWeight: FontWeight.w700)),
+      Row(children: [
+        Expanded(child: Text('What do you need today?', style: GoogleFonts.playfairDisplay(
+          color: ink, fontSize: 21, fontWeight: FontWeight.w700))),
+        const Icon(Icons.lock_outline_rounded, size: 15, color: sage),
+        const SizedBox(width: 4),
+        const Text('Only my circle', style: TextStyle(fontSize: 11, color: sage)),
+      ]),
+      if (writtenStatus.isNotEmpty &&
+          (statusExpiresAt == null || statusExpiresAt!.isAfter(DateTime.now()))) ...[
+        const SizedBox(height: 8),
+        Text(writtenStatus, style: const TextStyle(fontSize: 14)),
+        const SizedBox(height: 3),
+        Text('${_statusAge(statusPostedAt)} · ${_statusExpiry(statusExpiresAt)}',
+          style: const TextStyle(fontSize: 11, color: sage)),
+      ],
       const SizedBox(height: 10),
-      _writtenStatusCard(embedded: true),
-      const Padding(padding: EdgeInsets.symmetric(vertical: 10),
-        child: Divider(height: 1, color: line)),
-      _supportRequestPanel(title: 'Ask your Circle', embedded: true),
+      SizedBox(width: double.infinity, child: FilledButton.icon(
+        onPressed: _composeCircleCheckIn,
+        style: FilledButton.styleFrom(backgroundColor: sage),
+        icon: const Icon(Icons.edit_outlined),
+        label: const Text('Share with your Circle'),
+      )),
     ]),
   );
+
+  Future<void> _composeCircleCheckIn() async {
+    final currentStatus = writtenStatus;
+    final controller = TextEditingController(text: currentStatus);
+    var today = statusJustToday;
+    String? need;
+    final result = await showModalBottomSheet<(String, bool, String?)>(
+      context: context, isScrollControlled: true, backgroundColor: cream,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(builder: (context, update) =>
+        SafeArea(child: SingleChildScrollView(child: Padding(
+          padding: EdgeInsets.fromLTRB(20, 8, 20,
+            MediaQuery.viewInsetsOf(sheetContext).bottom + 20),
+          child: Column(mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('What do you need today?', style: GoogleFonts.playfairDisplay(fontSize: 25)),
+            const SizedBox(height: 12),
+            TextField(controller: controller, maxLength: 280, minLines: 2, maxLines: 4,
+              decoration: const InputDecoration(labelText: 'How are you feeling? (optional)',
+                border: OutlineInputBorder())),
+            SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Just today'),
+              value: today, onChanged: (value) => update(() => today = value)),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(initialValue: need, isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Ask for support (optional)',
+                border: OutlineInputBorder()),
+              items: [for (final choice in supportChoices)
+                DropdownMenuItem(value: choice.$2, child: Text(choice.$2))],
+              onChanged: (value) => update(() => need = value)),
+            const SizedBox(height: 14),
+            SizedBox(width: double.infinity, child: FilledButton(
+              onPressed: () => Navigator.pop(sheetContext,
+                (controller.text.trim(), today, need)),
+              child: const Text('Continue')),
+          ]))))),
+    );
+    controller.dispose();
+    if (result == null || !mounted) return;
+    if (result.$1 != currentStatus || result.$2 != statusJustToday) {
+      await _saveStatusWithFeedback(result.$1, result.$2);
+    }
+    if (result.$3 != null && mounted) {
+      setState(() => selectedNeed = result.$3);
+      if (_visibleCircleMembers.isEmpty) {
+        await _findPeople();
+      } else {
+        await _openReachOut(audience: 'My whole Circle');
+      }
+    }
+  }
 
   Widget _writtenStatusCard({bool embedded = false}) => Container(
     width: double.infinity, padding: embedded ? EdgeInsets.zero : const EdgeInsets.all(12),
