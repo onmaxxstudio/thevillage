@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -252,12 +251,7 @@ class _BrushBanner extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = _green;
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(8,4,size.width-16,size.height-8), const Radius.circular(24)), paint);
-    for(var i=0;i<14;i++) {
-      final y = 7 + i*(size.height-14)/13;
-      final inset = 3 + math.sin(i*2.3).abs()*12;
-      canvas.drawLine(Offset(inset,y),Offset(size.width-inset,y),
-        Paint()..color=_green.withValues(alpha:.8)..strokeWidth=5..strokeCap=StrokeCap.round);
-    }
+
   }
   @override
   bool shouldRepaint(covariant _BrushBanner oldDelegate) => false;
