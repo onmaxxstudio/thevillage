@@ -1470,9 +1470,12 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             style: GoogleFonts.playfairDisplay(color: ink, fontSize: 25,
               fontWeight: FontWeight.w700))),
           if (_visibleCircleMembers.isNotEmpty)
-            TextButton(
-              onPressed: _showPeopleUpdates,
-              child: const Text('See all'),
+            SizedBox(
+              width: 88,
+              child: TextButton(
+                onPressed: _showPeopleUpdates,
+                child: const Text('See all'),
+              ),
             ),
         ]),
         _peopleStatusFeed(),
@@ -1673,7 +1676,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               final text = valid ? (data?['statusText'] as String? ?? '') : '';
               if (text.isEmpty) return const SizedBox.shrink();
               return Card(color: Colors.white.withValues(alpha: .75), elevation: 0,
-                child: Padding(padding: const EdgeInsets.all(10), child: Row(children: [
+                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), child: Row(children: [
                   VillageAvatar(uid: member.uid, radius: 21),
                   const SizedBox(width: 10),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1682,8 +1685,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                     Text(_statusAge((data?['statusUpdatedAt'] as Timestamp?)?.toDate()),
                       style: const TextStyle(fontSize: 11, color: sage)),
                   ])),
-                  IconButton(tooltip: 'Send support', icon: const Icon(Icons.favorite_border_rounded,
-                    color: sage), onPressed: () => _respondToStatus(member)),
+                  SizedBox(width: 48, height: 48, child: IconButton(
+                    tooltip: 'Send support',
+                    icon: const Icon(Icons.favorite_border_rounded, color: sage),
+                    onPressed: () => _respondToStatus(member))),
                 ])));
             }),
       _sharedActivityPreview(showAll: showAll),
@@ -1789,18 +1794,24 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       if (items.isEmpty) return const Text('When someone shares with you, it will appear here.');
       return Column(children: [for (final item in items) Card(
         color: Colors.white.withValues(alpha: .7), elevation: 0,
-        child: ListTile(
-          leading: VillageAvatar(uid: item.data()['authorUid'] as String?, radius: 20),
-          title: Text('@${item.data()['authorName']} · ${item.data()['kind']}'),
-          subtitle: Text(item.data()['text'] as String? ?? ''),
-          trailing: IconButton(tooltip: 'Respond privately',
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(children: [
+          VillageAvatar(uid: item.data()['authorUid'] as String?, radius: 20),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('@${item.data()['authorName']} · ${item.data()['kind']}'),
+            Text(item.data()['text'] as String? ?? ''),
+          ])),
+          SizedBox(width: 48, height: 48, child: IconButton(tooltip: 'Respond privately',
             icon: const Icon(Icons.chat_bubble_outline_rounded, color: sage),
             onPressed: () {
               final authorUid = item.data()['authorUid'] as String?;
               for (final member in _visibleCircleMembers) {
                 if (member.uid == authorUid) { _messageMember(member); return; }
               }
-            }),
+            })),
+          ]),
         ),
       )]);
     },
