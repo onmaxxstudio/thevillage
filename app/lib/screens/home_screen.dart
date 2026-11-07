@@ -17,6 +17,7 @@ import '../widgets/daily_village_census_card.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
+import 'about_contact_screen.dart';
 import 'my_space_screen.dart';
 import 'plan_my_week_screen.dart';
 
@@ -524,6 +525,7 @@ class _HomeScreenState extends State<HomeScreen> {
               (Icons.groups_2_outlined, 'My Circle'),
               (Icons.forum_outlined, 'Village'),
               (Icons.person_outline_rounded, 'Profile'),
+              (Icons.info_outline_rounded, 'About & Contact'),
               (Icons.settings_outlined, 'Settings'),
             ])
               ListTile(
@@ -537,6 +539,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     openVillage();
                   } else if (item.$2 == 'Profile') {
                     openProfile();
+                  } else if (item.$2 == 'About & Contact') {
+                    Navigator.of(context).push(MaterialPageRoute<void>(
+                      builder: (_) => const AboutContactScreen(),
+                    ));
                   } else if (item.$2 == 'Settings') {
                     openSettings();
                   }
