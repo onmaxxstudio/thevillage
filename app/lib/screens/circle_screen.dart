@@ -75,6 +75,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
   final CircleService circleService = CircleService();
   final TextEditingController statusNoteController = TextEditingController();
+  final TextEditingController circleStatusController = TextEditingController();
   StreamSubscription<List<CircleRequest>>? requestSubscription;
   StreamSubscription<List<CirclePerson>>? memberSubscription;
   final Map<String, CircleRequest> requestByUid = {};
@@ -179,6 +180,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         statusExpiresAt = expiry?.toDate();
         statusPostedAt = (profile.data()?['statusUpdatedAt'] as Timestamp?)?.toDate();
         if (expiry != null && !expiry.toDate().isAfter(DateTime.now())) writtenStatus = '';
+        circleStatusController.text = writtenStatus;
       });
     } on Object {
       // Keep defaults until the member's profile can load.
@@ -382,6 +384,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     memberSubscription?.cancel();
     _statusClock?.cancel();
     statusNoteController.dispose();
+    circleStatusController.dispose();
     _orbitController.dispose();
     super.dispose();
   }
@@ -1554,73 +1557,58 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         const SizedBox(width: 4),
         const Text('Only my circle', style: TextStyle(fontSize: 11, color: sage)),
       ]),
-      if (writtenStatus.isNotEmpty &&
-          (statusExpiresAt == null || statusExpiresAt!.isAfter(DateTime.now()))) ...[
-        const SizedBox(height: 8),
-        Text(writtenStatus, style: const TextStyle(fontSize: 14)),
-        const SizedBox(height: 3),
-        Text('${_statusAge(statusPostedAt)} · ${_statusExpiry(statusExpiresAt)}',
-          style: const TextStyle(fontSize: 11, color: sage)),
-      ],
       const SizedBox(height: 10),
-      SizedBox(width: double.infinity, child: FilledButton.icon(
-        onPressed: _composeCircleCheckIn,
-        style: FilledButton.styleFrom(backgroundColor: sage),
-        icon: const Icon(Icons.edit_outlined),
-        label: const Text('Share with your Circle'),
-      )),
+      const Text('Your status', style: TextStyle(fontWeight: FontWeight.w700)),
+      const SizedBox(height: 5),
+      TextField(controller: circleStatusController, maxLength: 280, maxLines: 2,
+        minLines: 1, onChanged: (_) => setState(() {}),
+        decoration: InputDecoration(hintText: 'Write how you are feeling…',
+          filled: true, fillColor: cream, counterText: '', isDense: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+          suffixIcon: IconButton(tooltip: 'Save status',
+            onPressed: circleStatusController.text.trim() == writtenStatus ? null
+              : () => _saveStatusWithFeedback(circleStatusController.text.trim(), statusJustToday),
+            icon: const Icon(Icons.check_rounded)),
+        )),
+      if (writtenStatus.isNotEmpty &&
+          (statusExpiresAt == null || statusExpiresAt!.isAfter(DateTime.now())))
+        Padding(padding: const EdgeInsets.only(top: 4),
+          child: Text('${_statusAge(statusPostedAt)} · ${_statusExpiry(statusExpiresAt)}',
+            style: const TextStyle(fontSize: 11, color: sage))),
+      const SizedBox(height: 10),
+      const Text('What you need', style: TextStyle(fontWeight: FontWeight.w700)),
+      const SizedBox(height: 5),
+      LayoutBuilder(builder: (context, constraints) {
+        final dropdown = DropdownButtonFormField<String>(
+          initialValue: selectedNeed, isExpanded: true,
+          decoration: InputDecoration(filled: true, fillColor: cream,
+            isDense: true, border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14))),
+          hint: const Text('Choose what you need', overflow: TextOverflow.ellipsis),
+          items: [for (final choice in supportChoices)
+            DropdownMenuItem(value: choice.$2, child: Text(choice.$2,
+              overflow: TextOverflow.ellipsis))],
+          onChanged: (value) => setState(() => selectedNeed = value),
+        );
+        final share = FilledButton.icon(
+          onPressed: selectedNeed == null ? null : () async {
+            if (_visibleCircleMembers.isEmpty) {
+              await _findPeople();
+            } else {
+              await _openReachOut(audience: 'My whole Circle');
+            }
+          },
+          style: FilledButton.styleFrom(backgroundColor: sage),
+          icon: const Icon(Icons.people_outline_rounded),
+          label: const Text('Share to Circle'),
+        );
+        if (constraints.maxWidth >= 340) return Row(children: [
+          Expanded(child: dropdown), const SizedBox(width: 8), share]);
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          dropdown, const SizedBox(height: 8), share]);
+      }),
     ]),
   );
-
-  Future<void> _composeCircleCheckIn() async {
-    final currentStatus = writtenStatus;
-    final controller = TextEditingController(text: currentStatus);
-    var today = statusJustToday;
-    String? need;
-    final result = await showModalBottomSheet<(String, bool, String?)>(
-      context: context, isScrollControlled: true, backgroundColor: cream,
-      showDragHandle: true,
-      builder: (sheetContext) => StatefulBuilder(builder: (context, update) =>
-        SafeArea(child: SingleChildScrollView(child: Padding(
-          padding: EdgeInsets.fromLTRB(20, 8, 20,
-            MediaQuery.viewInsetsOf(sheetContext).bottom + 20),
-          child: Column(mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('What do you need today?', style: GoogleFonts.playfairDisplay(fontSize: 25)),
-            const SizedBox(height: 12),
-            TextField(controller: controller, maxLength: 280, minLines: 2, maxLines: 4,
-              decoration: const InputDecoration(labelText: 'How are you feeling? (optional)',
-                border: OutlineInputBorder())),
-            SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Just today'),
-              value: today, onChanged: (value) => update(() => today = value)),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(initialValue: need, isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Ask for support (optional)',
-                border: OutlineInputBorder()),
-              items: [for (final choice in supportChoices)
-                DropdownMenuItem(value: choice.$2, child: Text(choice.$2))],
-              onChanged: (value) => update(() => need = value)),
-            const SizedBox(height: 14),
-            SizedBox(width: double.infinity, child: FilledButton(
-              onPressed: () => Navigator.pop(sheetContext,
-                (controller.text.trim(), today, need)),
-              child: const Text('Continue'))),
-          ]))))),
-    );
-    controller.dispose();
-    if (result == null || !mounted) return;
-    if (result.$1 != currentStatus || result.$2 != statusJustToday) {
-      await _saveStatusWithFeedback(result.$1, result.$2);
-    }
-    if (result.$3 != null && mounted) {
-      setState(() => selectedNeed = result.$3);
-      if (_visibleCircleMembers.isEmpty) {
-        await _findPeople();
-      } else {
-        await _openReachOut(audience: 'My whole Circle');
-      }
-    }
-  }
 
   Widget _writtenStatusCard({bool embedded = false}) => Container(
     width: double.infinity, padding: embedded ? EdgeInsets.zero : const EdgeInsets.all(12),
