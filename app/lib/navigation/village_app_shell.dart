@@ -14,6 +14,7 @@ import '../screens/personalization_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/private_messages_screen.dart';
 import '../screens/settings_screen.dart';
+import '../screens/about_contact_screen.dart';
 import '../screens/my_space_screen.dart';
 import '../screens/my_space_tools_screen.dart';
 import '../screens/plan_my_week_screen.dart';
@@ -123,6 +124,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
     if (page is PrivateMessagesScreen) return 'messages';
     if (page is ProfileScreen) return 'profile';
     if (page is SettingsScreen) return 'settings';
+    if (page is AboutContactScreen) return 'about_contact';
     return null;
   }
 
@@ -137,6 +139,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
       'messages' => const PrivateMessagesScreen(),
       'profile' => const ProfileScreen(),
       'settings' => const SettingsScreen(),
+      'about_contact' => const AboutContactScreen(),
       _ => null,
     };
   }
@@ -254,6 +257,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
             _drawerItem(Icons.diversity_3_rounded, 'Community Hub', () => closeAndSelect(4)),
             const Divider(height: 30),
             _drawerItem(Icons.person_outline_rounded, 'Profile', () => closeAndPush(const ProfileScreen())),
+            _drawerItem(Icons.info_outline_rounded, 'About & Contact', () => closeAndPush(const AboutContactScreen())),
             _drawerItem(Icons.settings_outlined, 'Settings', () => closeAndPush(const SettingsScreen())),
           ],
         ),
