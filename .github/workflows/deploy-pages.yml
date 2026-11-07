@@ -61,6 +61,10 @@ jobs:
         working-directory: app
         run: flutter test test/cycle_estimate_test.dart
 
+      - name: Test About page layouts
+        working-directory: app
+        run: flutter test test/about_contact_layout_test.dart
+
       - name: Analyze Flutter app
         working-directory: app
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
