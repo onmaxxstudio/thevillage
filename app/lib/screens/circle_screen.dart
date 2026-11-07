@@ -1604,7 +1604,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             SizedBox(width: double.infinity, child: FilledButton(
               onPressed: () => Navigator.pop(sheetContext,
                 (controller.text.trim(), today, need)),
-              child: const Text('Continue')),
+              child: const Text('Continue'))),
           ]))))),
     );
     controller.dispose();
