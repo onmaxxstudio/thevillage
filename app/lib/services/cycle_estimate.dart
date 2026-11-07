@@ -58,10 +58,11 @@ class CycleEstimate {
     }
     DateTime? nextPeriod;
     if (anchor != null) {
-      nextPeriod = anchor.add(Duration(days: cycleDays));
-      while (nextPeriod.isBefore(today)) {
-        nextPeriod = nextPeriod.add(Duration(days: cycleDays));
+      var estimate = anchor.add(Duration(days: cycleDays));
+      while (estimate.isBefore(today)) {
+        estimate = estimate.add(Duration(days: cycleDays));
       }
+      nextPeriod = estimate;
     }
     return CycleEstimate(
       nextPeriod: nextPeriod,
