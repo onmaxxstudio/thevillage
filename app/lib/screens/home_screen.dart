@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/check_in_service.dart';
+import '../services/cycle_estimate.dart';
 import '../services/daily_encouragement.dart';
 import '../services/circle_service.dart';
 import '../services/notification_service.dart';
@@ -1540,36 +1541,22 @@ class _CheckInSheetState extends State<_CheckInSheet> {
   String _dateLabel(DateTime value) =>
       '${monthShort[value.month - 1]} ${value.day}';
 
-  List<DateTime> _periodStarts() {
-    final values = widget.history
-        .where((entry) => entry.periodStarted)
-        .map((entry) => DateTime(
-              entry.createdAt.year,
-              entry.createdAt.month,
-              entry.createdAt.day,
-            ))
-        .toList();
-    if (periodStarted) {
-      final now = DateTime.now();
-      values.add(DateTime(now.year, now.month, now.day));
-    }
-    values.sort();
-    final unique = <DateTime>[];
-    for (final value in values) {
-      if (unique.isEmpty || unique.last != value) unique.add(value);
-    }
-    return unique;
-  }
-
-  DateTime? _nextPeriodEstimate(List<DateTime> starts, int cycleLength) {
-    if (starts.isEmpty) return null;
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
-    var estimate = starts.last.add(Duration(days: cycleLength));
-    while (estimate.isBefore(todayOnly)) {
-      estimate = estimate.add(Duration(days: cycleLength));
-    }
-    return estimate;
+  List<MoodCheckIn> _cycleHistory() {
+    final now = DateTime.now();
+    return [
+      ...widget.history.where((entry) =>
+          entry.createdAt.year != now.year ||
+          entry.createdAt.month != now.month ||
+          entry.createdAt.day != now.day),
+      MoodCheckIn(
+        mood: selectedMood ?? 'Okay',
+        createdAt: now,
+        periodStarted: periodStarted,
+        periodEnded: periodEnded,
+        spotting: spotting,
+        flowLevel: flowLevel,
+      ),
+    ];
   }
 
   Future<void> _addFeeling() async {
@@ -1700,18 +1687,10 @@ class _CheckInSheetState extends State<_CheckInSheet> {
   }
 
   Widget _buildCycleSection() {
-    final starts = _periodStarts();
-    final intervals = <int>[];
-    for (var index = 1; index < starts.length; index++) {
-      final days = starts[index].difference(starts[index - 1]).inDays;
-      if (days >= 21 && days <= 45) intervals.add(days);
-    }
-    final cycleLength = intervals.isEmpty
-        ? 28
-        : (intervals.reduce((a, b) => a + b) / intervals.length)
-            .round()
-            .clamp(21, 45);
-    final nextPeriod = _nextPeriodEstimate(starts, cycleLength);
+    final cycleHistory = _cycleHistory();
+    final prediction = CycleEstimate.fromHistory(cycleHistory);
+    final cycleLength = prediction.cycleDays;
+    final nextPeriod = prediction.nextPeriod;
     final ovulation = nextPeriod?.subtract(const Duration(days: 14));
     final today = DateTime.now();
     final todayOnly = DateTime(today.year, today.month, today.day);
@@ -1946,20 +1925,24 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                     icon: Icons.autorenew_rounded,
                     title: 'Cycle Length',
                     date: '${cycleLength} days',
-                    sub: intervals.isEmpty ? '(typical estimate)' : '(avg)',
+                    sub: prediction.hasCycleHistory ? '(avg)' : '(typical estimate)',
                     color: const Color(0xFFF6F0E5),
                     iconColor: _HomeScreenState.sage,
                   ),
                 ),
               ],
             ),
+            if (prediction.inferredStart) ...[
+              const SizedBox(height: 6),
+              Text(prediction.detail, style: const TextStyle(fontSize: 11)),
+            ],
             const SizedBox(height: 6),
             const Text(
               'Predictions are estimates and can vary. They are not reliable contraception guidance.',
               style: TextStyle(fontSize: 11, height: 1.3),
             ),
             const SizedBox(height: 8),
-            _CycleCalendar(history: widget.history),
+            _CycleCalendar(history: cycleHistory),
           ],
         ],
       ),
@@ -2655,30 +2638,8 @@ class _CycleCalendarState extends State<_CycleCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    final starts = widget.history
-        .where((entry) => entry.periodStarted)
-        .map((entry) => DateTime(entry.createdAt.year, entry.createdAt.month, entry.createdAt.day))
-        .toList()
-      ..sort();
-    final intervals = <int>[];
-    for (var i = 1; i < starts.length; i++) {
-      final days = starts[i].difference(starts[i - 1]).inDays;
-      if (days >= 21 && days <= 45) intervals.add(days);
-    }
-    final cycleLength = intervals.isEmpty
-        ? 28
-        : (intervals.reduce((a, b) => a + b) / intervals.length).round().clamp(21, 45);
-    DateTime? nextPeriod;
-    DateTime? ovulation;
-    if (starts.isNotEmpty) {
-      nextPeriod = starts.last.add(Duration(days: cycleLength));
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      while (nextPeriod!.isBefore(today)) {
-        nextPeriod = nextPeriod.add(Duration(days: cycleLength));
-      }
-      ovulation = nextPeriod.subtract(const Duration(days: 14));
-    }
+    final prediction = CycleEstimate.fromHistory(widget.history);
+    final ovulation = prediction.nextPeriod?.subtract(const Duration(days: 14));
     final startOffset = DateTime(month.year, month.month, 1).weekday % 7;
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -2764,51 +2725,17 @@ class _PeriodPredictionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final starts = history
-        .where((entry) => entry.periodStarted)
-        .map(
-          (entry) => DateTime(
-            entry.createdAt.year,
-            entry.createdAt.month,
-            entry.createdAt.day,
-          ),
-        )
-        .toList()
-      ..sort();
-
-    if (starts.isEmpty) {
+    final prediction = CycleEstimate.fromHistory(history);
+    final estimate = prediction.nextPeriod;
+    if (estimate == null) {
       return _predictionShell(
         title: 'Next Period Estimate',
-        message:
-            'Mark “My period started today” in a Daily Check-In to begin tracking.',
+        message: 'Log a period start or end date in a Daily Check-In to begin tracking.',
       );
     }
-
-    var cycleDays = 28;
-    if (starts.length > 1) {
-      final intervals = <int>[];
-      for (var index = 1; index < starts.length; index++) {
-        final days = starts[index].difference(starts[index - 1]).inDays;
-        if (days > 0) intervals.add(days);
-      }
-      if (intervals.isNotEmpty) {
-        cycleDays =
-            (intervals.reduce((a, b) => a + b) / intervals.length).round();
-      }
-    }
-
-    var estimate = starts.last.add(Duration(days: cycleDays));
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
-    while (estimate.isBefore(todayOnly)) {
-      estimate = estimate.add(Duration(days: cycleDays));
-    }
-
     final date =
         '${monthNames[estimate.month - 1]} ${estimate.day}, ${estimate.year}';
-    final detail = starts.length == 1
-        ? 'Early estimate using a 28-day cycle. It becomes more personal after more start dates.'
-        : 'Based on ${starts.length} saved period start dates and an average ${cycleDays}-day cycle.';
+    final detail = prediction.detail;
 
     return _predictionShell(
       title: 'Next Period Estimate',
