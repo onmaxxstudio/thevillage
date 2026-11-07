@@ -1724,27 +1724,57 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               final text = status.text;
               final need = status.need;
               if (text.isEmpty && (need == null || need.isEmpty)) return const SizedBox.shrink();
-              return Card(color: Colors.white.withValues(alpha: .75), elevation: 0,
-                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), child: Row(children: [
-                  VillageAvatar(uid: member.uid, radius: 21),
-                  const SizedBox(width: 10),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(need == null || need.isEmpty ? member.name
-                      : '${member.name} in need of $need',
-                      style: const TextStyle(fontWeight: FontWeight.w700)),
-                    if (text.isNotEmpty) Text(text, maxLines: 3, overflow: TextOverflow.ellipsis),
-                    Text(_statusAge((data?['statusUpdatedAt'] as Timestamp?)?.toDate()),
-                      style: const TextStyle(fontSize: 11, color: sage)),
-                  ])),
-                  SizedBox(width: 48, height: 48, child: IconButton(
-                    tooltip: 'Send support',
-                    icon: const Icon(Icons.favorite_border_rounded, color: sage),
-                    onPressed: () => _respondToStatus(member))),
-                ])));
+              return _peopleUpdateCard(
+                uid: member.uid, name: member.name,
+                time: _statusAge((data?['statusUpdatedAt'] as Timestamp?)?.toDate()),
+                label: need == null || need.isEmpty ? null
+                  : need == 'Encouragement' ? 'Needs encouragement' : 'In need of $need',
+                text: text, icon: Icons.favorite_border_rounded,
+                tooltip: 'Send support', onPressed: () => _respondToStatus(member));
             }),
       _sharedActivityPreview(showAll: showAll),
     ]);
   }
+
+  Widget _peopleUpdateCard({required String? uid, required String name,
+    required String time, required String? label, required String text,
+    required IconData icon, required String tooltip, required VoidCallback onPressed}) =>
+    Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .72),
+        border: Border.all(color: line),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        VillageAvatar(uid: uid, radius: 21),
+        const SizedBox(width: 11),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 6, runSpacing: 2,
+            children: [
+              Text(name, style: const TextStyle(color: ink, fontWeight: FontWeight.w700, fontSize: 14)),
+              Text('· $time', style: const TextStyle(color: sage, fontSize: 11)),
+            ]),
+          if (label != null) ...[
+            const SizedBox(height: 5),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+              decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(12)),
+              child: Text(label, style: const TextStyle(color: sage,
+                fontWeight: FontWeight.w600, fontSize: 11))),
+          ],
+          if (text.isNotEmpty) ...[
+            const SizedBox(height: 5),
+            Text(text, maxLines: 3, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: ink, fontSize: 15, height: 1.25)),
+          ],
+        ])),
+        const SizedBox(width: 5),
+        SizedBox(width: 44, height: 44, child: IconButton(
+          tooltip: tooltip, icon: Icon(icon, color: sage), onPressed: onPressed)),
+      ]),
+    );
 
   Future<void> _respondToStatus(_CircleMember member) async {
     final action = await showModalBottomSheet<String>(context: context,
@@ -1843,27 +1873,19 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       final updates = snapshot.data!.docs.where((item) => item.data()['kind'] != 'group');
       final items = showAll ? updates : updates.take(2);
       if (items.isEmpty) return const Text('When someone shares with you, it will appear here.');
-      return Column(children: [for (final item in items) Card(
-        color: Colors.white.withValues(alpha: .7), elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(children: [
-          VillageAvatar(uid: item.data()['authorUid'] as String?, radius: 20),
-          const SizedBox(width: 10),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('@${item.data()['authorName']} · ${item.data()['kind']}'),
-            Text(item.data()['text'] as String? ?? ''),
-          ])),
-          SizedBox(width: 48, height: 48, child: IconButton(tooltip: 'Respond privately',
-            icon: const Icon(Icons.chat_bubble_outline_rounded, color: sage),
-            onPressed: () {
-              final authorUid = item.data()['authorUid'] as String?;
-              for (final member in _visibleCircleMembers) {
-                if (member.uid == authorUid) { _messageMember(member); return; }
-              }
-            })),
-          ]),
-        ),
+      return Column(children: [for (final item in items) _peopleUpdateCard(
+        uid: item.data()['authorUid'] as String?,
+        name: '@${(item.data()['authorName'] as String? ?? 'Circle member').replaceFirst(RegExp(r'^@'), '')}',
+        time: _statusAge((item.data()['createdAt'] as Timestamp?)?.toDate()),
+        label: item.data()['kind'] == 'win' ? 'Win' : null,
+        text: item.data()['text'] as String? ?? '',
+        icon: Icons.chat_bubble_outline_rounded, tooltip: 'Respond privately',
+        onPressed: () {
+          final authorUid = item.data()['authorUid'] as String?;
+          for (final member in _visibleCircleMembers) {
+            if (member.uid == authorUid) { _messageMember(member); return; }
+          }
+        },
       )]);
     },
   );
