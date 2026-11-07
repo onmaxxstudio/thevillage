@@ -548,6 +548,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader() {
+    final tabletHeader = MediaQuery.sizeOf(context).width >= 700;
     return Builder(
       builder: (context) => Padding(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
@@ -559,14 +560,14 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: Column(
                 children: [
-                  Image.asset('assets/images/welcome_branch.png', height: 22),
+                  Image.asset('assets/images/welcome_branch.png', height: tabletHeader ? 28 : 22),
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
                       'Ask the Village',
                       style: GoogleFonts.playfairDisplay(
                         color: sage,
-                        fontSize: 31,
+                        fontSize: tabletHeader ? 42 : 31,
                         height: 1,
                         fontWeight: FontWeight.w600,
                       ),
@@ -574,7 +575,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Text(
                     'Real People. Real Support. Real Answers.',
-                    style: GoogleFonts.inter(fontSize: 10, color: ink),
+                    style: GoogleFonts.inter(fontSize: tabletHeader ? 12 : 10, color: ink),
                   ),
                 ],
               ),
