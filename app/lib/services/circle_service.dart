@@ -83,6 +83,7 @@ class CircleService {
   static const _needMarker = '[circle-need]';
 
   final Map<String, Stream<DocumentSnapshot<Map<String, dynamic>>>> _profileStreams = {};
+  final Map<String, Stream<DocumentSnapshot<Map<String, dynamic>>>> _heartStreams = {};
   Stream<QuerySnapshot<Map<String, dynamic>>>? _activityStream;
 
   static ({String text, String? need}) readWrittenStatus(String raw) {
@@ -147,7 +148,8 @@ class CircleService {
           .collection('post_interactions').doc(postId);
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> myHeart(String authorUid, String postId) =>
-      _postRef(authorUid, postId).collection('hearts').doc(_user.uid).snapshots();
+      _heartStreams.putIfAbsent('$authorUid/$postId/${_user.uid}', () =>
+        _postRef(authorUid, postId).collection('hearts').doc(_user.uid).snapshots());
 
   Future<void> toggleHeart(String authorUid, String postId) async {
     final ref = _postRef(authorUid, postId).collection('hearts').doc(_user.uid);
