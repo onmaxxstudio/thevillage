@@ -917,7 +917,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 circleMembers.isEmpty
                     ? 'No people added yet'
-                    : '${circleMembers.length} people in your Circle',
+                    : 'Your trusted people, close by.',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 10.5),
@@ -945,22 +945,54 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ] else ...[
-                  for (final member in circleMembers.take(4))
-                    Align(
-                      widthFactor: .76,
-                      child: VillageAvatar(uid: member.uid, radius: 15),
-                    ),
-                ],
-                const Spacer(),
-                if (circleMembers.isNotEmpty)
-                  Text(
-                    '${circleMembers.length}',
-                    style: const TextStyle(
-                      color: sage,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (final member in circleMembers.take(5))
+                              Align(
+                                widthFactor: .76,
+                                child: VillageAvatar(uid: member.uid, radius: 15),
+                              ),
+                            if (circleMembers.length > 5) ...[
+                              const SizedBox(width: 6),
+                              Semantics(
+                                label: '${circleMembers.length - 5} more people in your Circle',
+                                child: Container(
+                                  width: 30,
+                                  height: 30,
+                                  alignment: Alignment.center,
+                                  decoration: const BoxDecoration(
+                                    color: paleSage,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(3),
+                                      child: Text(
+                                        '+${circleMembers.length - 5}',
+                                        style: const TextStyle(
+                                          color: sage,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
+                ],
               ],
             ),
           ),
