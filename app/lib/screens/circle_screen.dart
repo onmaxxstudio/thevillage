@@ -1724,13 +1724,14 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               final text = status.text;
               final need = status.need;
               if (text.isEmpty && (need == null || need.isEmpty)) return const SizedBox.shrink();
+              final postedAt = (data?['statusUpdatedAt'] as Timestamp?)?.toDate();
+              if (postedAt == null) return const SizedBox.shrink();
               return _peopleUpdateCard(
                 uid: member.uid, name: member.name,
-                time: _statusAge((data?['statusUpdatedAt'] as Timestamp?)?.toDate()),
+                time: _statusAge(postedAt),
                 label: need == null || need.isEmpty ? null
                   : need == 'Encouragement' ? 'Needs encouragement' : 'In need of $need',
-                text: text, icon: Icons.favorite_border_rounded,
-                tooltip: 'Send support', onPressed: () => _respondToStatus(member));
+                text: text, postId: circleService.statusPostId(member.uid!, postedAt));
             }),
       _sharedActivityPreview(showAll: showAll),
     ]);
@@ -1738,7 +1739,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   Widget _peopleUpdateCard({required String? uid, required String name,
     required String time, required String? label, required String text,
-    required IconData icon, required String tooltip, required VoidCallback onPressed}) =>
+    required String postId}) =>
     Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 9),
@@ -1771,50 +1772,64 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           ],
         ])),
         const SizedBox(width: 5),
-        SizedBox(width: 44, height: 44, child: IconButton(
-          tooltip: tooltip, icon: Icon(icon, color: sage), onPressed: onPressed)),
+        if (uid != null) SizedBox(width: 48, child: Column(mainAxisSize: MainAxisSize.min, children: [
+          StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+            stream: circleService.myHeart(uid, postId),
+            builder: (context, snapshot) => IconButton(
+              tooltip: snapshot.data?.exists == true ? 'Remove heart' : 'Heart post',
+              icon: Icon(snapshot.data?.exists == true
+                ? Icons.favorite_rounded : Icons.favorite_border_rounded, color: sage),
+              onPressed: () async {
+                try { await circleService.toggleHeart(uid, postId); }
+                on Object { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Could not update your heart.'))); }
+              },
+            ),
+          ),
+          IconButton(tooltip: 'Comment on post',
+            icon: const Icon(Icons.chat_bubble_outline_rounded, color: sage),
+            onPressed: () => _showPostComments(uid, postId)),
+        ])),
       ]),
     );
 
-  Future<void> _respondToStatus(_CircleMember member) async {
-    final action = await showModalBottomSheet<String>(context: context,
+  Future<void> _showPostComments(String authorUid, String postId) async {
+    final controller = TextEditingController();
+    await showModalBottomSheet<void>(context: context, isScrollControlled: true,
       backgroundColor: cream, showDragHandle: true,
-      builder: (sheetContext) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Support ${member.name}', style: GoogleFonts.playfairDisplay(fontSize: 24)),
-          ListTile(leading: const Icon(Icons.favorite_outline), title: const Text('Send a kind word'),
-            onTap: () => Navigator.pop(sheetContext, 'kind')),
-          ListTile(leading: const Icon(Icons.chat_bubble_outline), title: const Text('Start a private chat'),
-            onTap: () => Navigator.pop(sheetContext, 'chat')),
-          ListTile(leading: const Icon(Icons.schedule), title: const Text('Check in later'),
-            onTap: () => Navigator.pop(sheetContext, 'later')),
-        ])));
-    if (!mounted || action == null) return;
-    if (action == 'later') {
-      if (member.uid != null) {
-        try {
-          await circleService.sendMessage(recipient: CirclePerson(uid: member.uid!,
-            username: member.name.replaceFirst('@', '')),
-            text: 'I saw your update. I’ll check in with you later today.');
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Your check-in note was sent.')));
-        } on Object {
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Could not send your note.')));
-        }
-      }
-      return;
-    }
-    if (action == 'chat') { _messageMember(member); return; }
-    final text = await _writeCircleText('Send a kind word', 'What would you like to say?');
-    if (text == null || member.uid == null || !mounted) return;
-    try {
-      await circleService.sendMessage(recipient: CirclePerson(uid: member.uid!,
-        username: member.name.replaceFirst('@', '')), text: text);
-    } on Object {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not send your message.')));
-    }
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.fromLTRB(18, 0, 18,
+          MediaQuery.viewInsetsOf(sheetContext).bottom + 18),
+        child: SafeArea(child: SizedBox(height: 420, child: Column(children: [
+          Text('Comments', style: GoogleFonts.playfairDisplay(fontSize: 24, color: ink)),
+          Expanded(child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: circleService.postComments(authorUid, postId),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) return const Center(child: Text('Could not load comments.'));
+              final comments = snapshot.data?.docs ?? [];
+              if (comments.isEmpty) return const Center(child: Text('Be the first to comment.'));
+              return ListView(children: [for (final comment in comments)
+                ListTile(title: Text('@${comment.data()['authorName']}'),
+                  subtitle: Text(comment.data()['text'] as String? ?? ''))]);
+            })),
+          Row(children: [
+            Expanded(child: TextField(controller: controller, maxLength: 500,
+              decoration: const InputDecoration(hintText: 'Write a comment…'))),
+            IconButton(icon: const Icon(Icons.send_rounded, color: sage),
+              tooltip: 'Post comment', onPressed: () async {
+                if (controller.text.trim().isEmpty) return;
+                try {
+                  await circleService.commentOnPost(authorUid, postId, controller.text);
+                  controller.clear();
+                } on Object {
+                  if (sheetContext.mounted) ScaffoldMessenger.of(sheetContext).showSnackBar(
+                    const SnackBar(content: Text('Could not post your comment.')));
+                }
+              }),
+          ]),
+        ])))),
+    );
+    controller.dispose();
   }
 
   Widget _actionRow(IconData icon, String title, String subtitle,
@@ -1873,19 +1888,16 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       final updates = snapshot.data!.docs.where((item) => item.data()['kind'] != 'group');
       final items = showAll ? updates : updates.take(2);
       if (items.isEmpty) return const Text('When someone shares with you, it will appear here.');
-      return Column(children: [for (final item in items) _peopleUpdateCard(
+      return Column(children: [for (final item in items)
+        if (item.data()['authorUid'] is String && item.data()['createdAt'] is Timestamp)
+        _peopleUpdateCard(
         uid: item.data()['authorUid'] as String?,
         name: '@${(item.data()['authorName'] as String? ?? 'Circle member').replaceFirst(RegExp(r'^@'), '')}',
         time: _statusAge((item.data()['createdAt'] as Timestamp?)?.toDate()),
         label: item.data()['kind'] == 'win' ? 'Win' : null,
         text: item.data()['text'] as String? ?? '',
-        icon: Icons.chat_bubble_outline_rounded, tooltip: 'Respond privately',
-        onPressed: () {
-          final authorUid = item.data()['authorUid'] as String?;
-          for (final member in _visibleCircleMembers) {
-            if (member.uid == authorUid) { _messageMember(member); return; }
-          }
-        },
+        postId: circleService.activityPostId(item.data()['authorUid'] as String,
+          (item.data()['createdAt'] as Timestamp).toDate()),
       )]);
     },
   );
