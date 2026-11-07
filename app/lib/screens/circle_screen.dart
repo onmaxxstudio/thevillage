@@ -1716,7 +1716,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               final expiry = data?['statusExpiresAt'] as Timestamp?;
               final valid = expiry == null || expiry.toDate().isAfter(DateTime.now());
               final text = valid ? (data?['statusText'] as String? ?? '') : '';
-              final need = valid ? data?['statusNeed'] as String? : null;
+              final need = valid ? (data?['statusNeed'] as String?) : null;
               if (text.isEmpty && (need == null || need.isEmpty)) return const SizedBox.shrink();
               return Card(color: Colors.white.withValues(alpha: .75), elevation: 0,
                 child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), child: Row(children: [
