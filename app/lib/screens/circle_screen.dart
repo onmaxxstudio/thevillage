@@ -175,8 +175,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         supportStyle = profile.data()?['supportStyle'] as String? ?? supportStyle;
         availability = profile.data()?['availability'] as String? ?? availability;
         muteRequests = profile.data()?['muteRequests'] as bool? ?? false;
-        writtenStatus = profile.data()?['statusText'] as String? ?? '';
-        publishedNeed = profile.data()?['statusNeed'] as String?;
+        final status = CircleService.readWrittenStatus(
+          profile.data()?['statusText'] as String? ?? '');
+        writtenStatus = status.text;
+        publishedNeed = status.need;
         selectedNeed = publishedNeed;
         final expiry = profile.data()?['statusExpiresAt'] as Timestamp?;
         statusJustToday = expiry != null;
@@ -1563,7 +1565,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       const SizedBox(height: 10),
       const Text('Your status', style: TextStyle(fontWeight: FontWeight.w700)),
       const SizedBox(height: 5),
-      TextField(controller: circleStatusController, maxLength: 280, maxLines: 2,
+      TextField(controller: circleStatusController, maxLength: selectedNeed == null ? 280 : 240, maxLines: 2,
         minLines: 1, onChanged: (_) => setState(() {}),
         decoration: InputDecoration(hintText: 'Write how you are feeling…',
           filled: true, fillColor: cream, counterText: '', isDense: true,
@@ -1715,8 +1717,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               final data = snapshot.data?.data();
               final expiry = data?['statusExpiresAt'] as Timestamp?;
               final valid = expiry == null || expiry.toDate().isAfter(DateTime.now());
-              final text = valid ? (data?['statusText'] as String? ?? '') : '';
-              final need = valid ? (data?['statusNeed'] as String?) : null;
+              final status = CircleService.readWrittenStatus(
+                valid ? (data?['statusText'] as String? ?? '') : '');
+              final text = status.text;
+              final need = status.need;
               if (text.isEmpty && (need == null || need.isEmpty)) return const SizedBox.shrink();
               return Card(color: Colors.white.withValues(alpha: .75), elevation: 0,
                 child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), child: Row(children: [
