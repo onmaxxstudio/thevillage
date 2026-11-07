@@ -1455,51 +1455,35 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   }
 
   Widget _activeCircleLayout() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _circleOrbit(),
-        const SizedBox(height: 8),
-        _writtenStatusCard(),
-        const SizedBox(height: 8),
-        _supportRequestPanel(title: 'Ask your Circle'),
-        const SizedBox(height: 8),
-        _incomingRequestsCard(),
-        const SizedBox(height: 12),
-        Row(children: [
-          Expanded(child: Text('From your people',
-            style: GoogleFonts.playfairDisplay(color: ink, fontSize: 25,
-              fontWeight: FontWeight.w700))),
-          if (_visibleCircleMembers.isNotEmpty)
-            SizedBox(
-              width: 88,
-              child: TextButton(
-                onPressed: _showPeopleUpdates,
-                child: const Text('See all'),
-              ),
-            ),
-        ]),
-        _peopleStatusFeed(),
-        const SizedBox(height: 8),
-        _messagesCard(),
-        const SizedBox(height: 8),
-        _actionRow(Icons.emoji_events_outlined, 'Share a win',
-          'Celebrate something good with your people.', _shareSomethingGood, blush),
-        const SizedBox(height: 8),
-        _actionRow(Icons.calendar_today_outlined, 'Shared plans',
-          'Make and share your weekly plan.', () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const PlanMyWeekScreen())), paleSage),
-        const SizedBox(height: 10),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _editSupportProfile,
-            icon: const Icon(Icons.tune_rounded),
-            label: const Text('Circle settings'),
-          ),
-        ),
-      ],
-    );
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      _circleOrbit(),
+      const SizedBox(height: 8),
+      _writtenStatusCard(),
+      const SizedBox(height: 10),
+      _supportRequestPanel(title: 'Ask your Circle'),
+      const SizedBox(height: 10),
+      _incomingRequestsCard(),
+      const SizedBox(height: 14),
+      _messagesCard(),
+      const SizedBox(height: 10),
+      _actionRow(Icons.emoji_events_outlined, 'Share a win',
+        'Celebrate something good with your people.', _shareSomethingGood, blush),
+      const SizedBox(height: 10),
+      _actionRow(Icons.calendar_today_outlined, 'Shared plans',
+        'Make and share your weekly plan.', () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const PlanMyWeekScreen())), paleSage),
+      const SizedBox(height: 10),
+      OutlinedButton.icon(onPressed: _editSupportProfile,
+        icon: const Icon(Icons.tune_rounded), label: const Text('Circle settings')),
+      const SizedBox(height: 22),
+      Row(children: [
+        Expanded(child: Text('From your people', style: GoogleFonts.playfairDisplay(
+          color: ink, fontSize: 25, fontWeight: FontWeight.w700))),
+        if (_visibleCircleMembers.isNotEmpty)
+          TextButton(onPressed: _showPeopleUpdates, child: const Text('See all')),
+      ]),
+      _peopleStatusFeed(),
+    ]);
   }
 
   Widget _tabletCircleLayout() {
