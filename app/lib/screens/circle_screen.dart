@@ -87,6 +87,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   String availability = 'Here to listen';
   bool muteRequests = false;
   String writtenStatus = '';
+  String? publishedNeed;
   bool statusJustToday = true;
   DateTime? statusPostedAt;
   DateTime? statusExpiresAt;
@@ -175,6 +176,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         availability = profile.data()?['availability'] as String? ?? availability;
         muteRequests = profile.data()?['muteRequests'] as bool? ?? false;
         writtenStatus = profile.data()?['statusText'] as String? ?? '';
+        publishedNeed = profile.data()?['statusNeed'] as String?;
+        selectedNeed = publishedNeed;
         final expiry = profile.data()?['statusExpiresAt'] as Timestamp?;
         statusJustToday = expiry != null;
         statusExpiresAt = expiry?.toDate();
@@ -1564,13 +1567,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         minLines: 1, onChanged: (_) => setState(() {}),
         decoration: InputDecoration(hintText: 'Write how you are feeling…',
           filled: true, fillColor: cream, counterText: '', isDense: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-          suffixIcon: IconButton(tooltip: 'Save status',
-            onPressed: circleStatusController.text.trim() == writtenStatus ? null
-              : () => _saveStatusWithFeedback(circleStatusController.text.trim(), statusJustToday),
-            icon: const Icon(Icons.check_rounded)),
-        )),
-      if (writtenStatus.isNotEmpty &&
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)))),
+      if ((writtenStatus.isNotEmpty || publishedNeed != null) &&
           (statusExpiresAt == null || statusExpiresAt!.isAfter(DateTime.now())))
         Padding(padding: const EdgeInsets.only(top: 4),
           child: Text('${_statusAge(statusPostedAt)} · ${_statusExpiry(statusExpiresAt)}',
@@ -1578,35 +1576,28 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       const SizedBox(height: 10),
       const Text('What you need', style: TextStyle(fontWeight: FontWeight.w700)),
       const SizedBox(height: 5),
-      LayoutBuilder(builder: (context, constraints) {
-        final dropdown = DropdownButtonFormField<String>(
-          initialValue: selectedNeed, isExpanded: true,
-          decoration: InputDecoration(filled: true, fillColor: cream,
-            isDense: true, border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14))),
-          hint: const Text('Choose what you need', overflow: TextOverflow.ellipsis),
-          items: [for (final choice in supportChoices)
+      DropdownButtonFormField<String>(
+        key: ValueKey(selectedNeed), initialValue: selectedNeed ?? '', isExpanded: true,
+        decoration: InputDecoration(filled: true, fillColor: cream,
+          isDense: true, border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14))),
+        items: [
+          const DropdownMenuItem(value: '', child: Text('No specific need')),
+          for (final choice in supportChoices)
             DropdownMenuItem(value: choice.$2, child: Text(choice.$2,
-              overflow: TextOverflow.ellipsis))],
-          onChanged: (value) => setState(() => selectedNeed = value),
-        );
-        final share = FilledButton.icon(
-          onPressed: selectedNeed == null ? null : () async {
-            if (_visibleCircleMembers.isEmpty) {
-              await _findPeople();
-            } else {
-              await _openReachOut(audience: 'My whole Circle');
-            }
-          },
-          style: FilledButton.styleFrom(backgroundColor: sage),
-          icon: const Icon(Icons.people_outline_rounded),
-          label: const Text('Share to Circle'),
-        );
-        if (constraints.maxWidth >= 340) return Row(children: [
-          Expanded(child: dropdown), const SizedBox(width: 8), share]);
-        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          dropdown, const SizedBox(height: 8), share]);
-      }),
+              overflow: TextOverflow.ellipsis)),
+        ],
+        onChanged: (value) => setState(() => selectedNeed = value == '' ? null : value),
+      ),
+      const SizedBox(height: 10),
+      SizedBox(width: double.infinity, child: FilledButton.icon(
+        onPressed: circleStatusController.text.trim().isEmpty && selectedNeed == null
+          ? null : () => _saveStatusWithFeedback(
+              circleStatusController.text.trim(), statusJustToday, need: selectedNeed),
+        style: FilledButton.styleFrom(backgroundColor: sage),
+        icon: const Icon(Icons.send_rounded),
+        label: const Text('Post to Circle'),
+      )),
     ]),
   );
 
@@ -1669,14 +1660,15 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     await _saveStatusWithFeedback(result.$1, result.$2);
   }
 
-  Future<void> _saveStatusWithFeedback(String text, bool today) async {
+  Future<void> _saveStatusWithFeedback(String text, bool today, {String? need}) async {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saving status…')));
     try {
-      await circleService.saveWrittenStatus(text, today);
+      await circleService.saveWrittenStatus(text, today, need: need);
       if (mounted) {
         setState(() {
           writtenStatus = text;
+          publishedNeed = need;
           statusJustToday = today;
           statusPostedAt = DateTime.now();
           statusExpiresAt = today ? DateTime.now().add(const Duration(days: 1)) : null;
@@ -1691,7 +1683,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Could not save your status.'),
-          action: SnackBarAction(label: 'Retry', onPressed: () => _saveStatusWithFeedback(text, today)),
+          action: SnackBarAction(label: 'Retry', onPressed: () => _saveStatusWithFeedback(text, today, need: need)),
         ));
       }
     }
@@ -1724,14 +1716,17 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               final expiry = data?['statusExpiresAt'] as Timestamp?;
               final valid = expiry == null || expiry.toDate().isAfter(DateTime.now());
               final text = valid ? (data?['statusText'] as String? ?? '') : '';
-              if (text.isEmpty) return const SizedBox.shrink();
+              final need = valid ? data?['statusNeed'] as String? : null;
+              if (text.isEmpty && (need == null || need.isEmpty)) return const SizedBox.shrink();
               return Card(color: Colors.white.withValues(alpha: .75), elevation: 0,
                 child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), child: Row(children: [
                   VillageAvatar(uid: member.uid, radius: 21),
                   const SizedBox(width: 10),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(member.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                    Text(text, maxLines: 3, overflow: TextOverflow.ellipsis),
+                    Text(need == null || need.isEmpty ? member.name
+                      : '${member.name} in need of $need',
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                    if (text.isNotEmpty) Text(text, maxLines: 3, overflow: TextOverflow.ellipsis),
                     Text(_statusAge((data?['statusUpdatedAt'] as Timestamp?)?.toDate()),
                       style: const TextStyle(fontSize: 11, color: sage)),
                   ])),
