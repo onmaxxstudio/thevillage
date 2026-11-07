@@ -1503,45 +1503,48 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   }
 
   Widget _tabletCircleLayout() {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _circleOrbit(),
-      Center(child: TextButton.icon(
-        onPressed: _findPeople,
-        icon: const Icon(Icons.person_add_alt_1_rounded),
-        label: const Text('Add someone to your Circle'),
-      )),
-      const SizedBox(height: 12),
-      _incomingRequestsCard(),
-      const SizedBox(height: 16),
-      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(child: _writtenStatusCard()),
-        const SizedBox(width: 16),
-        Expanded(child: _supportRequestPanel()),
-      ]),
-      const SizedBox(height: 20),
-      Row(children: [
-        Expanded(child: Text('From your people', style: GoogleFonts.playfairDisplay(
-          color: ink, fontSize: 27, fontWeight: FontWeight.w700))),
-        if (_visibleCircleMembers.isNotEmpty)
-          TextButton(onPressed: _showPeopleUpdates, child: const Text('See all updates')),
-      ]),
-      _peopleStatusFeed(),
-      const SizedBox(height: 16),
-      _messagesCard(),
-      const SizedBox(height: 12),
-      Row(children: [
-        Expanded(child: _actionRow(Icons.auto_awesome_rounded, 'Share an update',
-          'A moment, a small win, or how you feel.', _shareUpdate, blush)),
-        const SizedBox(width: 12),
-        Expanded(child: _actionRow(Icons.calendar_today_outlined, 'Shared plans',
-          'Make and share your weekly plan.', () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const PlanMyWeekScreen())), paleSage)),
-      ]),
-      const SizedBox(height: 12),
-      SizedBox(width: double.infinity, child: OutlinedButton.icon(
-        onPressed: _editSupportProfile,
-        icon: const Icon(Icons.tune_rounded), label: const Text('Circle settings'))),
-    ]);
+    return LayoutBuilder(builder: (context, constraints) {
+      final leftWidth = (constraints.maxWidth * .35).clamp(245.0, 315.0);
+      return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(width: leftWidth, child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            _writtenStatusCard(),
+            const SizedBox(height: 14),
+            _supportRequestPanel(title: 'Ask your Circle'),
+            const SizedBox(height: 14),
+            _incomingRequestsCard(),
+            const SizedBox(height: 14),
+            _messagesCard(),
+            const SizedBox(height: 14),
+            _actionRow(Icons.emoji_events_outlined, 'Share a win',
+              'Celebrate something good with your people.',
+              _shareSomethingGood, blush),
+            const SizedBox(height: 10),
+            _actionRow(Icons.calendar_today_outlined, 'Shared plans',
+              'Make and share your weekly plan.', () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const PlanMyWeekScreen())), paleSage),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(onPressed: _editSupportProfile,
+              icon: const Icon(Icons.tune_rounded), label: const Text('Circle settings')),
+          ])),
+        const SizedBox(width: 22),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _circleOrbit(),
+          Center(child: TextButton.icon(onPressed: _findPeople,
+            icon: const Icon(Icons.person_add_alt_1_rounded),
+            label: const Text('Add someone to your Circle'))),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(child: Text('From your people', style: GoogleFonts.playfairDisplay(
+              color: ink, fontSize: 25, fontWeight: FontWeight.w700))),
+            if (_visibleCircleMembers.isNotEmpty)
+              TextButton(onPressed: _showPeopleUpdates,
+                child: const Text('See all')),
+          ]),
+          _peopleStatusFeed(),
+        ])),
+      ]);
+    });
   }
 
   Future<void> _shareUpdate() async {
@@ -1979,12 +1982,12 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     await _openReachOut(audience: audience);
   }
 
-  Widget _supportRequestPanel() {
+  Widget _supportRequestPanel({String title = 'What do you need today?'}) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('What do you need today?',
+        Text(title,
           style: GoogleFonts.playfairDisplay(color: ink, fontSize: 19,
             fontWeight: FontWeight.w700)),
         const SizedBox(height: 7),
