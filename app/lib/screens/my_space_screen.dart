@@ -899,92 +899,65 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   Widget _heroBanner() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Preserve the phone composition while giving the hero image more
-        // presence on wider tablet and desktop layouts.
-        final isWide = constraints.maxWidth >= 600;
-        final imageWidth = isWide ? constraints.maxWidth * .42 : 205.0;
+        final wide = constraints.maxWidth >= 600;
         return ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: SizedBox(
-            height: isWide ? 210 : 190,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                const ColoredBox(color: Color(0xFFF5E7DA)),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: imageWidth,
-                  child: Image.asset(
-                    'assets/images/my_space_hero.jpg',
-                    fit: BoxFit.cover,
-                    alignment: isWide ? Alignment.center : Alignment.topCenter,
-                  ),
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/my_space_hero.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.centerRight,
                 ),
-                DecoratedBox(
+              ),
+              const Positioned.fill(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
-                      stops: isWide ? [.38, .66, 1] : [.45, .72, 1],
-                      colors: const [
-                        Color(0xFFF5E7DA),
-                        Color(0xCFF5E7DA),
-                        Color(0x00F5E7DA),
-                      ],
+                      colors: [Color(0xCC172019), Color(0x55172019)],
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 8, 14),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: SizedBox(
-                      width: isWide ? constraints.maxWidth * .54 : 235,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'A safe space\nto be you.',
-                            style: GoogleFonts.playfairDisplay(
-                              color: green,
-                              fontWeight: FontWeight.w500,
-                              height: .98,
-                              fontSize: isWide ? 34 : 30,
-                            ),
-                          ),
-                          SizedBox(height: isWide ? 10 : 8),
-                          Text(
-                            'Clearer thoughts. A calmer you.\nA brighter tomorrow.',
-                            style: TextStyle(fontSize: isWide ? 14 : 13, color: ink),
-                          ),
-                          const SizedBox(height: 6),
-                          const Row(
-                            children: [
-                              Icon(Icons.lock_rounded, size: 14, color: green),
-                              SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  'Your thoughts stay yours. Private by default.',
-                                  maxLines: 2,
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    height: 1.15,
-                                    color: ink,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+              ),
+              Padding(
+                padding: EdgeInsets.all(wide ? 24 : 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'A safe space to be you.',
+                      style: GoogleFonts.playfairDisplay(
+                        color: cream,
+                        fontSize: wide ? 32 : 25,
+                        height: 1.12,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Clearer thoughts. A calmer you. A brighter tomorrow.',
+                      style: TextStyle(color: cream, fontSize: 13, height: 1.4),
+                    ),
+                    const SizedBox(height: 16),
+                    const Row(
+                      children: [
+                        Icon(Icons.lock_outline_rounded, color: cream, size: 15),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Your thoughts stay yours. Private by default.',
+                            style: TextStyle(color: cream, fontSize: 11, height: 1.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -1103,13 +1076,13 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: features.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 7,
         mainAxisSpacing: 7,
-        childAspectRatio: .96,
+        childAspectRatio: MediaQuery.textScalerOf(context).scale(14) > 18 ? .78 : 1.05,
       ),
-      itemBuilder: (context, index) => _featureCard(features[index]),
+      itemBuilder: (context, index) => _featureCard(features[index], index),
     );
   }
 
@@ -1133,23 +1106,92 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     ));
   }
 
-  Widget _featureCard(_SpaceFeature feature) {
-    return Material(
-      color: feature.color,
-      borderRadius: BorderRadius.circular(17),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: feature.onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(feature.icon, color: feature.accent, size: 31),
-            const SizedBox(height: 8),
-            Text(feature.title, textAlign: TextAlign.center, maxLines: 2,
-              style: GoogleFonts.playfairDisplay(color: ink, fontSize: 12.5, height: 1.05, fontWeight: FontWeight.w700)),
-          ]),
-        ),
-      ),
+  Widget _featureCard(_SpaceFeature feature, int index) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
+        return Semantics(
+          button: true,
+          label: feature.title.replaceAll('\n', ' '),
+          onTap: feature.onTap,
+          excludeSemantics: true,
+          child: Material(
+            color: feature.color,
+            borderRadius: BorderRadius.circular(14),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // One bundled atlas keeps all nine photographs consistent and
+                // avoids nine network requests. Overflow reveals one exact cell.
+                ClipRect(
+                  child: OverflowBox(
+                    alignment: Alignment(
+                      (index % 3) - 1.0,
+                      (index ~/ 3) - 1.0,
+                    ),
+                    minWidth: constraints.maxWidth * 3,
+                    maxWidth: constraints.maxWidth * 3,
+                    minHeight: constraints.maxHeight * 3,
+                    maxHeight: constraints.maxHeight * 3,
+                    child: Image.asset(
+                      'assets/images/my_space_collection.webp',
+                      fit: BoxFit.fill,
+                      excludeFromSemantics: true,
+                      errorBuilder: (_, error, stack) => ColoredBox(
+                        color: feature.color,
+                        child: Center(
+                          child: Icon(feature.icon, color: feature.accent, size: 32),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0x00172019),
+                        Color(0x33172019),
+                        Color(0xED172019),
+                      ],
+                      stops: [0, .35, 1],
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(5, 8, 5, 10),
+                    child: Text(
+                      feature.title,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.playfairDisplay(
+                        color: cream,
+                        fontSize: constraints.maxWidth >= 170 ? 20 : 13,
+                        height: 1.15,
+                        fontWeight: FontWeight.w700,
+                        shadows: const [
+                          Shadow(color: Color(0x99000000), blurRadius: 4),
+                        ],
+                      ),
+                      maxLines: largeText ? 3 : 2,
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: InkWell(onTap: feature.onTap),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1251,38 +1293,69 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.menu_book_rounded, color: green, size: 30),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Material(
+              color: green,
+              child: InkWell(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => MyEntriesScreen(
+                    journal: PrivateJournalService(
+                      uid: FirebaseAuth.instance.currentUser!.uid,
+                    ),
+                  ),
+                )),
+                child: Stack(
                   children: [
-                    Text(
-                      'My Journal Library',
-                      style: GoogleFonts.playfairDisplay(
-                        color: ink,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                    Positioned.fill(
+                      child: Ink.image(
+                        image: const AssetImage('assets/images/my_space_books.jpg'),
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    const Text(
-                      'All your entries, letters and reflections in one place.',
-                      maxLines: 2,
-                      style: TextStyle(color: Color(0xFF5F625D), fontSize: 11.5),
+                    const Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0x66172019), Color(0xE6172019)],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.menu_book_rounded, color: cream, size: 26),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'My Journal Library',
+                                  style: GoogleFonts.playfairDisplay(
+                                    color: cream,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                const Text(
+                                  'All your entries, letters and reflections in one place.',
+                                  style: TextStyle(color: cream, fontSize: 11.5, height: 1.4),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, color: cream),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              TextButton(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                  builder: (_) => MyEntriesScreen(journal: PrivateJournalService(uid: FirebaseAuth.instance.currentUser!.uid)),
-                )),
-                style: TextButton.styleFrom(foregroundColor: ink, padding: const EdgeInsets.symmetric(horizontal: 5)),
-                child: const Text('My Journal  →', style: TextStyle(fontSize: 11.5)),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 11),
           Row(
