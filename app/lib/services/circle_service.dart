@@ -83,6 +83,7 @@ class CircleService {
   static const _needMarker = '[circle-need]';
 
   final Map<String, Stream<DocumentSnapshot<Map<String, dynamic>>>> _profileStreams = {};
+  final Map<String, Stream<DocumentSnapshot<Map<String, dynamic>>>> _heartStreams = {};
   Stream<QuerySnapshot<Map<String, dynamic>>>? _activityStream;
 
   static ({String text, String? need}) readWrittenStatus(String raw) {
@@ -135,6 +136,47 @@ class CircleService {
       'statusUpdatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
+
+  String statusPostId(String authorUid, DateTime postedAt) =>
+      'status_${authorUid}_${postedAt.microsecondsSinceEpoch}';
+
+  String activityPostId(String authorUid, DateTime postedAt) =>
+      'activity_${authorUid}_${postedAt.microsecondsSinceEpoch}';
+
+  DocumentReference<Map<String, dynamic>> _postRef(String authorUid, String postId) =>
+      _firestore.collection('circles').doc(authorUid)
+          .collection('post_interactions').doc(postId);
+
+  Stream<DocumentSnapshot<Map<String, dynamic>>> myHeart(String authorUid, String postId) =>
+      _heartStreams.putIfAbsent('$authorUid/$postId/${_user.uid}', () =>
+        _postRef(authorUid, postId).collection('hearts').doc(_user.uid).snapshots());
+
+  Future<void> toggleHeart(String authorUid, String postId) async {
+    final ref = _postRef(authorUid, postId).collection('hearts').doc(_user.uid);
+    final current = await ref.get();
+    if (current.exists) {
+      await ref.delete();
+    } else {
+      await ref.set({'createdAt': FieldValue.serverTimestamp()});
+    }
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> postComments(String authorUid, String postId) =>
+      _postRef(authorUid, postId).collection('comments')
+          .orderBy('createdAt').limit(100).snapshots();
+
+  Future<void> commentOnPost(String authorUid, String postId, String text) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || trimmed.length > 500) return;
+    final username = await ProfileService.currentUsername() ?? 'Circle member';
+    await _postRef(authorUid, postId).collection('comments').add({
+      'authorUid': _user.uid,
+      'authorName': username,
+      'text': trimmed,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
 
   Future<void> shareActivity({required String kind, required String text,
       required List<String> recipientUids, String groupId = ''}) async {
