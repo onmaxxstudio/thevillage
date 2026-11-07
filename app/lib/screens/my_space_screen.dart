@@ -10,7 +10,8 @@ import '../services/private_journal_service.dart';
 import 'my_space_tools_screen.dart';
 
 class MySpaceScreen extends StatefulWidget {
-  const MySpaceScreen({super.key});
+  const MySpaceScreen({super.key, this.initialDestination});
+  final String? initialDestination;
 
   @override
   State<MySpaceScreen> createState() => _MySpaceScreenState();
@@ -21,6 +22,29 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   static const green = Color(0xFF355C3B);
   static const ink = Color(0xFF172019);
   static const line = Color(0xFFE7DED1);
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialDestination != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final destination = widget.initialDestination!;
+        if (destination == 'library') {
+          final uid = FirebaseAuth.instance.currentUser?.uid;
+          if (uid != null) {
+            Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => MyEntriesScreen(journal: PrivateJournalService(uid: uid)),
+            ));
+          }
+        } else if (destination == 'write') {
+          openWriteFreely(continueExisting: true);
+        } else {
+          _openTool(destination);
+        }
+      });
+    }
+  }
 
   final text = TextEditingController();
   final search = TextEditingController();
