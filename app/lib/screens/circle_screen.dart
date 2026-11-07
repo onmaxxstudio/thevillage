@@ -13,7 +13,6 @@ import '../services/circle_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import '../widgets/village_avatar.dart';
 import 'avatar_builder_screen.dart';
-import 'plan_my_week_screen.dart';
 import 'private_messages_screen.dart';
 
 class CircleScreen extends StatefulWidget {
@@ -1478,10 +1477,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       _actionRow(Icons.emoji_events_outlined, 'Share a win',
         'Celebrate something good with your people.', _shareSomethingGood, blush),
       const SizedBox(height: 10),
-      _actionRow(Icons.calendar_today_outlined, 'Shared plans',
-        'Make and share your weekly plan.', () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const PlanMyWeekScreen())), paleSage),
-      const SizedBox(height: 10),
       OutlinedButton.icon(onPressed: _editSupportProfile,
         icon: const Icon(Icons.tune_rounded), label: const Text('Circle settings')),
       const SizedBox(height: 22),
@@ -2058,11 +2053,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     final features = <(IconData, String, String, Color, VoidCallback)>[
       (Icons.chat_bubble_outline_rounded, 'Private chats',
         'Safe, supportive conversations.', blush, _showCircleChats),
-      (Icons.calendar_today_outlined, 'Shared plans',
-        'Make and share your weekly plan.', paleSage, () {
-          Navigator.of(context).push(MaterialPageRoute<void>(
-            builder: (_) => const PlanMyWeekScreen()));
-        }),
       (Icons.emoji_events_outlined, 'Small wins',
         'Celebrate progress, big or small.', paleSage, _showCircleUpdates),
       (Icons.event_outlined, 'Important dates',
