@@ -80,6 +80,16 @@ class CircleMessage {
 }
 
 class CircleService {
+  static const _needMarker = '\u001fCIRCLE_NEED:';
+
+  static ({String text, String? need}) readWrittenStatus(String raw) {
+    if (!raw.startsWith(_needMarker)) return (text: raw, need: null);
+    final separator = raw.indexOf('\n', _needMarker.length);
+    if (separator < 0) return (text: raw, need: null);
+    return (text: raw.substring(separator + 1),
+      need: raw.substring(_needMarker.length, separator));
+  }
+
   FirebaseAuth get _auth => FirebaseAuth.instance;
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
@@ -104,10 +114,14 @@ class CircleService {
         'availability': availability, 'muteRequests': muteRequests}, SetOptions(merge: true));
 
   Future<void> saveWrittenStatus(String text, bool justToday, {String? need}) async {
+    final savedText = need == null || need.isEmpty
+        ? text : '$_needMarker$need\n$text';
+    if (savedText.length > 280) {
+      throw const CircleException('Shorten your status to include what you need.');
+    }
     await _firestore.collection('circles').doc(_user.uid).collection('settings')
         .doc('profile').set({
-      'statusText': text,
-      'statusNeed': need,
+      'statusText': savedText,
       'statusExpiresAt': justToday
           ? Timestamp.fromDate(DateTime.now().add(const Duration(days: 1)))
           : null,
