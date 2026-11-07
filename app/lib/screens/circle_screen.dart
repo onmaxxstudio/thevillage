@@ -1772,7 +1772,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           ],
         ])),
         const SizedBox(width: 5),
-        if (uid != null) SizedBox(width: 48, child: Column(mainAxisSize: MainAxisSize.min, children: [
+        if (uid != null) Row(mainAxisSize: MainAxisSize.min, children: [
           StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
             stream: circleService.myHeart(uid, postId),
             builder: (context, snapshot) => IconButton(
@@ -1789,7 +1789,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           IconButton(tooltip: 'Comment on post',
             icon: const Icon(Icons.chat_bubble_outline_rounded, color: sage),
             onPressed: () => _showPostComments(uid, postId)),
-        ])),
+        ]),
       ]),
     );
 
