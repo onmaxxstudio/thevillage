@@ -1143,7 +1143,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       label: 'Write Freely. A blank, judgment-free space for your thoughts.',
       onTap: () => openWriteFreely(),
       excludeSemantics: true,
-      child: ClipRRect(
+      child: SizedBox(
+        width: double.infinity,
+        child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
@@ -1198,6 +1200,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
