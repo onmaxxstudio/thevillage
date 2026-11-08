@@ -17,6 +17,31 @@ import 'guided_help_assistant.dart';
 
 part 'state_resource_catalog.dart';
 
+/// Use the same coverage labels for ordering, filters, and resource cards.
+String resourceServiceScope(HelpResource resource) {
+  if (resource.serviceScope.isNotEmpty) return resource.serviceScope;
+  if (resource.states.isEmpty) return 'Nationwide';
+  if (resource.serviceArea.toLowerCase().contains('statewide') ||
+      resource.id == 'fl-benefits' || resource.id == 'fl-homelessness') {
+    return 'Statewide';
+  }
+  // These food banks serve multiple counties rather than one local community.
+  if (resource.id.startsWith('fl-food-') || resource.states.length > 1) {
+    return 'Regional';
+  }
+  return 'Local';
+}
+
+List<HelpResource> orderResourcesByScope(List<HelpResource> resources) {
+  const scopes = ['Local', 'Statewide', 'Regional', 'Nationwide'];
+  // Preserve the existing order within each coverage group.
+  return [
+    for (final scope in scopes)
+      ...resources.where((resource) => resourceServiceScope(resource) == scope),
+    ...resources.where((resource) => !scopes.contains(resourceServiceScope(resource))),
+  ];
+}
+
 class _SelectedStatePainter extends CustomPainter {
   const _SelectedStatePainter(this.statePath, this.color);
   final Path statePath;
@@ -1287,10 +1312,10 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
       final stateSpecific = all.where((resource) => resource.states.contains(selectedState)).toList();
       final local = _applyNeed([...stateSpecific, ..._stateStartingPoints()]);
       final nationwide = _applyNeed(all.where((resource) => resource.states.isEmpty).toList());
-      return [...local, ...nationwide];
+      return orderResourcesByScope([...local, ...nationwide]);
     }
 
-    return _applyNeed(all);
+    return orderResourcesByScope(_applyNeed(all));
   }
 
   @override
@@ -1382,7 +1407,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
             else if (selectedState != null && view != 2) ...[
               Text('Help in ${stateNames[selectedState]}', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
               const SizedBox(height: 4),
-              const Text('Local and state-specific options come first.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
+              const Text('Local first, then statewide, then regional options.', style: TextStyle(fontSize: 12, color: Color(0xFF626A63))),
               const SizedBox(height: 10),
               _resourceGrid(localResults),
               if (nationwideResults.isNotEmpty) ...[
@@ -1898,13 +1923,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
     return '';
   }
 
-  String _serviceScope(HelpResource resource) {
-    if (resource.serviceScope.isNotEmpty) return resource.serviceScope;
-    if (resource.states.isEmpty) return 'Nationwide';
-    if (resource.serviceArea == 'Florida statewide' ||
-        resource.id == 'fl-benefits' || resource.id == 'fl-homelessness') return 'Statewide';
-    return 'Local';
-  }
+  String _serviceScope(HelpResource resource) => resourceServiceScope(resource);
 
   String _costType(HelpResource resource) {
     if (resource.costType.isNotEmpty) return resource.costType;
@@ -1968,7 +1987,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               choices('Who provides the help?',
                 ['Government','Nonprofit','Faith-based','Community','Business'],
                 provider, (value) => provider = value),
-              choices('Service area', ['Local','Statewide','Nationwide'],
+              choices('Service area', ['Local','Statewide','Regional','Nationwide'],
                 area, (value) => area = value),
               choices('Cost', ['Free','Reduced cost','Sliding scale'],
                 cost, (value) => cost = value),
@@ -2389,7 +2408,7 @@ class _FindHelpScreenState extends State<FindHelpScreen> {
               const SizedBox(width: 9),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('Browse help by state', style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w700, color: ink)),
-                const Text('State benefits and programs come first.', style: TextStyle(fontSize: 11.5, color: Color(0xFF626A63))),
+                const Text('Local, statewide, then regional support.', style: TextStyle(fontSize: 11.5, color: Color(0xFF626A63))),
               ])),
               TextButton(
                 onPressed: () => setState(() => showMap = !showMap),

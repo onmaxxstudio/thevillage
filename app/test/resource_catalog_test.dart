@@ -4,6 +4,23 @@ import '../lib/screens/find_help_screen.dart';
 void main() {
   const states = {'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'};
 
+  test('resources show local, statewide, regional, then nationwide', () {
+    HelpResource entry(String id, {String scope = '', List<String> states = const ['FL']}) =>
+        HelpResource(id: id, title: id, description: '', needs: const [],
+          url: '', label: '', verified: '', states: states, serviceScope: scope);
+    final resources = [
+      entry('national', states: const []),
+      entry('fl-food-ne'),
+      entry('state', scope: 'Statewide'),
+      entry('local-a'),
+      entry('regional', scope: 'Regional'),
+      entry('local-b'),
+    ];
+    expect(orderResourcesByScope(resources).map((resource) => resource.id),
+        ['local-a', 'local-b', 'state', 'fl-food-ne', 'regional', 'national']);
+    expect(resourceServiceScope(entry('fl-benefits')), 'Statewide');
+  });
+
   test('catalog covers all 50 states with unique stable resource IDs', () {
     final covered = allStateResourceCatalog.expand((resource) => resource.states).toSet();
     expect(covered, states);
