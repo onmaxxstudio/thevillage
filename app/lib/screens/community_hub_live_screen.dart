@@ -192,7 +192,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
           _topTab('Communities', 0),
           _topTab('Resources', 1),
           _topTab('Events', 2),
-          _topTab('Shop', 3),
+          _topTab('Village Marketplace', 3),
         ],
       );
 
@@ -1467,7 +1467,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
             padding: const EdgeInsets.fromLTRB(20, 14, 20, 32),
             children: [
               Text(
-                'The Village Shop',
+                'Village Marketplace',
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 27,
                   fontWeight: FontWeight.w700,
@@ -1516,7 +1516,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                     ),
                     const SizedBox(height: 10),
                     const Text(
-                      'Explore journals, workbooks, and practical guides here when the shop opens.',
+                      'Explore journals, workbooks, and practical guides here when the marketplace opens.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Color(0xFF626A63), height: 1.5),
                     ),
