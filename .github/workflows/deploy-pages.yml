@@ -65,6 +65,10 @@ jobs:
         working-directory: app
         run: flutter test test/about_contact_layout_test.dart
 
+      - name: Test Village Plus layouts and enrollment safety
+        working-directory: app
+        run: flutter test test/village_plus_layout_test.dart
+
       - name: Analyze Flutter app
         working-directory: app
         run: flutter analyze --no-fatal-warnings --no-fatal-infos

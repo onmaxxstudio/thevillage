@@ -40,6 +40,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: VillagePlusDisplay
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay.ttf
   assets:
     - assets/avatar/
     - assets/images/

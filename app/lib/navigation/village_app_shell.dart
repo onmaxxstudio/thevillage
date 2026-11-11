@@ -15,6 +15,7 @@ import '../screens/profile_screen.dart';
 import '../screens/private_messages_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/about_contact_screen.dart';
+import '../screens/village_plus_screen.dart';
 import '../screens/my_space_screen.dart';
 import '../screens/my_space_tools_screen.dart';
 import '../screens/plan_my_week_screen.dart';
@@ -124,6 +125,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
     if (page is PrivateMessagesScreen) return 'messages';
     if (page is ProfileScreen) return 'profile';
     if (page is SettingsScreen) return 'settings';
+    if (page is VillagePlusScreen) return 'village_plus';
     if (page is AboutContactScreen) return 'about_contact';
     return null;
   }
@@ -139,6 +141,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
       'messages' => const PrivateMessagesScreen(),
       'profile' => const ProfileScreen(),
       'settings' => const SettingsScreen(),
+      'village_plus' => const VillagePlusScreen(),
       'about_contact' => const AboutContactScreen(),
       _ => null,
     };
@@ -255,6 +258,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
             _drawerItem(Icons.forum_rounded, 'The Village', () => closeAndSelect(3)),
             _drawerItem(Icons.mark_unread_chat_alt_outlined, 'Messages', () => closeAndPush(const PrivateMessagesScreen())),
             _drawerItem(Icons.diversity_3_rounded, 'Community Hub', () => closeAndSelect(4)),
+            _drawerItem(Icons.eco_outlined, 'Village Plus', () => closeAndPush(const VillagePlusScreen())),
             const Divider(height: 30),
             _drawerItem(Icons.person_outline_rounded, 'Profile', () => closeAndPush(const ProfileScreen())),
             _drawerItem(Icons.info_outline_rounded, 'About & Contact', () => closeAndPush(const AboutContactScreen())),
