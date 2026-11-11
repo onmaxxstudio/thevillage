@@ -26,20 +26,14 @@ class GrowthStudioExperience extends StatelessWidget {
       final content = SizedBox(
         width: width,
         child: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFF9EC), Color(0xFFFAEDD7)],
-            ),
-          ),
+          decoration: const BoxDecoration(color: Color(0xFFFFFAF1)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Stack(
                 children: [
                   const GrowthReferenceArt(
-                    region: Rect.fromLTWH(0, 0, 1024, 143),
+                    region: Rect.fromLTWH(0, 0, 1024, 132),
                     label: 'Ask the Village. Growth Studio',
                   ),
                   Positioned(

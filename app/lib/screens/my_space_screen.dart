@@ -20,7 +20,7 @@ class MySpaceScreen extends StatefulWidget {
 }
 
 class _MySpaceScreenState extends State<MySpaceScreen> {
-  static const cream = Color(0xFFFFF7E8);
+  static const cream = Color(0xFFFFFAF1);
   static const green = Color(0xFF355C3B);
   static const ink = Color(0xFF172019);
   static const line = Color(0xFFE7DED1);
