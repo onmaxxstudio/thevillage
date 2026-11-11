@@ -20,6 +20,7 @@ import 'settings_screen.dart';
 import 'about_contact_screen.dart';
 import 'my_space_screen.dart';
 import 'plan_my_week_screen.dart';
+import 'village_plus_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -259,6 +260,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 14),
                             _tabletCardText(_buildFeatureGrid()),
                             const SizedBox(height: 14),
+                            _buildVillagePlusBanner(),
+                            const SizedBox(height: 14),
                             const DailyVillageCensusCard(),
                           ],
                         ),
@@ -283,6 +286,91 @@ class _HomeScreenState extends State<HomeScreen> {
         textScaler: TextScaler.linear(media.textScaler.scale(1) * 1.22),
       ),
       child: child,
+    );
+  }
+
+
+  Widget _buildVillagePlusBanner() {
+    const forest = Color(0xFF073C24);
+    const yellow = Color(0xFFF5CB62);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const VillagePlusScreen()),
+        ),
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 112),
+          decoration: BoxDecoration(
+            color: forest,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(color: Color(0x240D3020), blurRadius: 12, offset: Offset(0, 5)),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              const Positioned(
+                left: -14, bottom: -25,
+                child: Icon(Icons.spa_rounded, size: 105, color: Color(0xFF668D42)),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: yellow, borderRadius: BorderRadius.circular(12)),
+                                child: const Text('NEW',
+                                  style: TextStyle(color: forest, fontWeight: FontWeight.w800, fontSize: 10)),
+                              ),
+                              const SizedBox(width: 9),
+                              Flexible(child: Text('Village Plus',
+                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.playfairDisplay(
+                                  color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22))),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const Text('Deeper support. Exclusive tools.\nMonthly workshop. And more.',
+                            style: TextStyle(color: Colors.white, fontSize: 11, height: 1.35)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(width: 1, height: 56, color: yellow),
+                    const SizedBox(width: 9),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('\$4.99', style: TextStyle(
+                          color: yellow, fontSize: 20, fontWeight: FontWeight.w800)),
+                        const Text('/month', style: TextStyle(color: Colors.white, fontSize: 11)),
+                      ],
+                    ),
+                    const SizedBox(width: 8),
+                    const CircleAvatar(
+                      radius: 16, backgroundColor: Colors.white,
+                      child: Icon(Icons.chevron_right_rounded, color: forest, size: 22),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
