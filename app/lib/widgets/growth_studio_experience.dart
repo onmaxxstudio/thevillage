@@ -21,7 +21,8 @@ class GrowthStudioExperience extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final large = MediaQuery.textScalerOf(context).scale(14) > 19;
-      final width = large ? constraints.maxWidth : 1024.0;
+      final phone = constraints.maxWidth < 600;
+      final width = large ? constraints.maxWidth : (phone ? 720.0 : 1024.0);
       final content = SizedBox(
         width: width,
         child: DecoratedBox(
@@ -68,7 +69,7 @@ class GrowthStudioExperience extends StatelessWidget {
                 ],
               ),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: large ? 12 : 38),
+                padding: EdgeInsets.symmetric(horizontal: large ? 12 : (phone ? 20 : 38)),
                 child: GrowthStudioDashboard(
                   entries: entries,
                   onOpenTool: onOpenTool,
@@ -140,6 +141,7 @@ class GrowthStudioExperience extends StatelessWidget {
   Widget _tools(BuildContext context, bool large) => LayoutBuilder(
     builder: (context, constraints) {
       final columns = large ? 1 : 2;
+      final phone = MediaQuery.sizeOf(context).width < 600;
       final width = (constraints.maxWidth - (columns - 1) * 10) / columns;
       const tools = [
         (
@@ -253,7 +255,7 @@ class GrowthStudioExperience extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'VillagePlusDisplay',
                               color: const Color(0xFF112719),
-                              fontSize: large ? 18 : 22,
+                              fontSize: large ? 18 : (phone ? 26 : 22),
                               height: 1.1,
                             ),
                           ),
@@ -262,7 +264,7 @@ class GrowthStudioExperience extends StatelessWidget {
                             tools[i].$2,
                             style: TextStyle(
                               color: const Color(0xFF172019),
-                              fontSize: large ? 12 : 14,
+                              fontSize: large ? 12 : (phone ? 18 : 14),
                               height: 1.2,
                             ),
                           ),

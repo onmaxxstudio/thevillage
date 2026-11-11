@@ -26,6 +26,7 @@ class GrowthStudioDashboard extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final wide = constraints.maxWidth >= 600;
+      final phone = MediaQuery.sizeOf(context).width < 600;
       final large = MediaQuery.textScalerOf(context).scale(14) > 19;
       final moods = entries.where((e) => e['entryType'] == 'mood').toList();
       final milestones = entries
@@ -94,7 +95,7 @@ class GrowthStudioDashboard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: wide ? 115 : 0),
+                      padding: EdgeInsets.symmetric(horizontal: wide ? (phone ? 50 : 115) : 0),
                       child: Text.rich(
                         TextSpan(
                           children: [
@@ -116,7 +117,7 @@ class GrowthStudioDashboard extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: cream,
-                          fontSize: wide ? 15 : 10,
+                          fontSize: wide ? (phone ? 18 : 15) : 10,
                           height: 1.35,
                         ),
                       ),
@@ -207,12 +208,12 @@ class GrowthStudioDashboard extends StatelessWidget {
                 ),
               ],
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: wide ? 104 : 18),
+                padding: EdgeInsets.symmetric(horizontal: wide ? (phone ? 20 : 104) : 18),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     for (var i = 0; i < 3; i++) ...[
-                      if (i > 0) SizedBox(width: wide ? 30 : 12),
+                      if (i > 0) SizedBox(width: wide ? (phone ? 24 : 30) : 12),
                       Expanded(child: _book(context, i)),
                     ],
                   ],
@@ -371,12 +372,12 @@ class GrowthStudioDashboard extends StatelessWidget {
     ),
   );
 
-  Widget _cardTitle(IconData icon, String title, bool wide) => Row(
+  Widget _cardTitle(BuildContext context, IconData icon, String title, bool wide) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Icon(icon, color: gold, size: wide ? 20 : 14),
       const SizedBox(width: 5),
-      Expanded(child: Text(title, style: _heading(wide ? 17 : 11))),
+      Expanded(child: Text(title, style: _heading(wide ? (MediaQuery.sizeOf(context).width < 600 ? 20 : 17) : 11))),
     ],
   );
 
@@ -409,7 +410,7 @@ class GrowthStudioDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _cardTitle(Icons.trending_up, 'Mood history', wide),
+          _cardTitle(context, Icons.trending_up, 'Mood history', wide),
           const SizedBox(height: 7),
           if (shown.isNotEmpty)
             SizedBox(
@@ -424,7 +425,7 @@ class GrowthStudioDashboard extends StatelessWidget {
                 'Your check-ins appear here.',
                 style: TextStyle(
                   color: cream,
-                  fontSize: wide ? 12 : 9,
+                  fontSize: wide ? (MediaQuery.sizeOf(context).width < 600 ? 16 : 12) : 9,
                   height: 1.3,
                 ),
               ),
@@ -432,7 +433,7 @@ class GrowthStudioDashboard extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             '${moods.length} saved ${moods.length == 1 ? 'reflection' : 'reflections'}',
-            style: TextStyle(color: cream, fontSize: wide ? 11 : 9),
+            style: TextStyle(color: cream, fontSize: wide ? (MediaQuery.sizeOf(context).width < 600 ? 16 : 11) : 9),
           ),
         ],
       ),
@@ -448,7 +449,7 @@ class GrowthStudioDashboard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _cardTitle(Icons.emoji_events_outlined, 'Your milestones', wide),
+        _cardTitle(context, Icons.emoji_events_outlined, 'Your milestones', wide),
         const SizedBox(height: 8),
         for (final item in items.take(2))
           Padding(
@@ -465,7 +466,7 @@ class GrowthStudioDashboard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: cream,
-                      fontSize: wide ? 12 : 9,
+                      fontSize: wide ? (MediaQuery.sizeOf(context).width < 600 ? 16 : 12) : 9,
                       height: 1.2,
                     ),
                   ),
@@ -476,12 +477,12 @@ class GrowthStudioDashboard extends StatelessWidget {
         if (items.isEmpty)
           Text(
             'Celebrate your next small win.',
-            style: TextStyle(color: cream, fontSize: wide ? 12 : 9),
+            style: TextStyle(color: cream, fontSize: wide ? (MediaQuery.sizeOf(context).width < 600 ? 16 : 12) : 9),
           ),
         const SizedBox(height: 4),
         Text(
           '${items.length} saved ${items.length == 1 ? 'milestone' : 'milestones'}',
-          style: TextStyle(color: gold, fontSize: wide ? 10 : 8),
+          style: TextStyle(color: gold, fontSize: wide ? (MediaQuery.sizeOf(context).width < 600 ? 16 : 10) : 8),
         ),
       ],
     ),
@@ -504,6 +505,7 @@ class GrowthStudioDashboard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _cardTitle(
+            context,
             Icons.auto_stories_outlined,
             'Continue your journey',
             wide,
@@ -529,7 +531,7 @@ class GrowthStudioDashboard extends StatelessWidget {
                       : (entry['title'] as String? ?? 'Your saved journey'),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: _heading(wide ? 16 : 10),
+                  style: _heading(wide ? (MediaQuery.sizeOf(context).width < 600 ? 20 : 16) : 10),
                 ),
               ),
             ],
@@ -550,7 +552,7 @@ class GrowthStudioDashboard extends StatelessWidget {
               items.isEmpty
                   ? 'Explore at your own pace.'
                   : '${items.length} saved journey ${items.length == 1 ? 'entry' : 'entries'}',
-              style: TextStyle(color: cream, fontSize: wide ? 10 : 8),
+              style: TextStyle(color: cream, fontSize: wide ? (MediaQuery.sizeOf(context).width < 600 ? 16 : 10) : 8),
             ),
         ],
       ),
