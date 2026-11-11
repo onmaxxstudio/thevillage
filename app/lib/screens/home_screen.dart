@@ -480,8 +480,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildMySpaceCard() {
     return _buildSquareFeatureCard(
-      title: 'My Space',
-      description: 'A private place to write, reflect, and clear your mind.',
+      title: 'Growth Studio',
+      description: 'Your space to reflect, grow, and become.',
       icon: Icons.edit_note_rounded,
       glyphSize: 26,
       cardColor: const Color(0xFFF6F0E7),
