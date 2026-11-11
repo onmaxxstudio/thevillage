@@ -8,6 +8,8 @@ import 'settings_screen.dart';
 import 'write_freely_screen.dart';
 import '../services/private_journal_service.dart';
 import 'my_space_tools_screen.dart';
+import '../widgets/growth_studio_dashboard.dart';
+import 'village_plus_screen.dart';
 
 class MySpaceScreen extends StatefulWidget {
   const MySpaceScreen({super.key, this.initialDestination});
@@ -843,8 +845,21 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                             child: ListView(
                               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                               children: [
-                                _heroBanner(),
-                                const SizedBox(height: 12),
+                                GrowthStudioDashboard(
+                                  entries: docs.map((doc) => doc.data()).toList(),
+                                  onOpenTool: _openTool,
+                                  onMembership: () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(builder: (_) => const VillagePlusScreen()),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Text('Your everyday tools', textAlign: TextAlign.center,
+                                  style: GoogleFonts.playfairDisplay(color: green,
+                                    fontSize: 27, fontWeight: FontWeight.w700)),
+                                const SizedBox(height: 6),
+                                const Text('Still here. Always yours.', textAlign: TextAlign.center,
+                                  style: TextStyle(color: green)),
+                                const SizedBox(height: 16),
                                 _featureGrid(),
                                 const SizedBox(height: 14),
                                 _journalLibrary(docs),
@@ -1094,51 +1109,31 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       _SpaceFeature('Budget', Icons.account_balance_wallet_outlined, const Color(0xFFF9EBD7), () => _openTool('budget')),
     ];
     const descriptions = [
-      'Notice and honor the good in your life.',
-      'Check in and process your feelings.',
+      'A quiet space for your thoughts.',
+      'Explore at your own pace.',
+      'Find a fresh perspective.',
+      'Notice and honor the good.',
+      'Check in with your feelings.',
       'Celebrate progress along the way.',
-      'Dream, plan and take meaningful steps.',
+      'Plan your next small step.',
       'Write to yourself or someone else.',
-      'Plan, track and feel more in control.',
+      'Plan, track and feel in control.',
     ];
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Wrap lets the paired cards grow naturally with text size.
-        final columns = constraints.maxWidth < 320 ? 1 : 2;
-        final width = (constraints.maxWidth - (columns - 1) * 10) / columns;
-        final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
-        final compactHeight = (width < 190 ? 108.0 : 94.0) * scale;
-        return Column(
-          children: [
-            _featuredWritingCard(),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 10, runSpacing: 10,
-              children: [
-                for (var i = 1; i <= 2; i++)
-                  SizedBox(
-                    width: width,
-                    height: 168 * scale,
-                    child: _starterCard(features[i], guided: i == 1),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 10, runSpacing: 10,
-              children: [
-                for (var i = 3; i < features.length; i++)
-                  SizedBox(
-                    width: width,
-                    height: compactHeight,
-                    child: _featureCard(features[i], descriptions[i - 3]),
-                  ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final columns = constraints.maxWidth < 360 ? 1 : 2;
+      final width = (constraints.maxWidth - (columns - 1) * 10) / columns;
+      final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+      return Column(children: [
+        SizedBox(width: double.infinity, height: 100 * scale,
+          child: _featureCard(features.first, descriptions.first)),
+        const SizedBox(height: 10),
+        Wrap(spacing: 10, runSpacing: 10, children: [
+          for (var i = 1; i < features.length; i++)
+            SizedBox(width: width, height: 112 * scale,
+              child: _featureCard(features[i], descriptions[i])),
+        ]),
+      ]);
+    });
   }
 
   Future<void> _openTool(String mode) async {
@@ -1313,7 +1308,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
               child: Row(
                 children: [
                   ExcludeSemantics(
-                    child: Icon(feature.icon, color: feature.accent, size: 25),
+                    child: Icon(feature.icon, color: green, size: 25),
                   ),
                   const SizedBox(width: 9),
                   Expanded(
