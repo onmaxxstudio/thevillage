@@ -266,7 +266,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
     'favorites' => 'Saved Favorites',
     'insights' => 'Journal Insights',
     'journal' => 'My Journal',
-    _ => 'My Space',
+    _ => 'Growth Studio',
   };
 
   @override
@@ -279,7 +279,7 @@ class _MySpaceToolsScreenState extends State<MySpaceToolsScreen> {
         foregroundColor: _green,
         centerTitle: true,
         leading: IconButton(
-          tooltip: 'Back to My Space',
+          tooltip: 'Back to Growth Studio',
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
           onPressed: () => Navigator.maybePop(context),
         ),
