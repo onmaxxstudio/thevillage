@@ -39,7 +39,7 @@ class GrowthStudioDashboard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
@@ -59,12 +59,12 @@ class GrowthStudioDashboard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(child: _badge('YOUR GROWTH STUDIO')),
+              Center(child: _badge('VILLAGE PLUS')),
               const SizedBox(height: 16),
               Text(
                 'Your growth, unfolding',
                 textAlign: TextAlign.center,
-                style: _heading(30),
+                style: _heading(26),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -72,52 +72,71 @@ class GrowthStudioDashboard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(color: cream, height: 1.5),
               ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF294D33),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: gold.withValues(alpha: .35)),
-                ),
-                child: Row(
+              const SizedBox(height: 14),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Stack(
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'THIS WEEK’S INVITATION',
-                            style: TextStyle(
-                              color: gold,
-                              fontSize: 11,
-                              letterSpacing: 1.6,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text('Make room for yourself', style: _heading(23)),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'What is one small thing you need this week?',
-                            style: TextStyle(color: cream, height: 1.5),
-                          ),
-                          TextButton(
-                            onPressed: () => onOpenTool('goals'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: gold,
-                              padding: EdgeInsets.zero,
-                            ),
-                            child: const Text('Choose your focus →'),
-                          ),
-                        ],
+                    Positioned.fill(
+                      child: Image.asset(
+                        'assets/images/growth_focus.webp',
+                        fit: BoxFit.cover,
+                        excludeFromSemantics: true,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    ExcludeSemantics(
-                      child: Image.asset(
-                        'assets/images/welcome_branch.png',
-                        width: 58,
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              forest.withValues(alpha: .9),
+                              forest.withValues(alpha: .25),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: FractionallySizedBox(
+                        widthFactor: .83,
+                        alignment: Alignment.centerLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'WEEKLY FOCUS',
+                              style: TextStyle(
+                                color: gold,
+                                fontSize: 10,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 7),
+                            Text('Make room for yourself', style: _heading(22)),
+                            const SizedBox(height: 7),
+                            const Text(
+                              'A gentle reminder to give yourself time, space, and care this week.',
+                              style: TextStyle(
+                                color: cream,
+                                fontSize: 12,
+                                height: 1.4,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => onOpenTool('goals'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: gold,
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              child: const Text(
+                                'Choose your focus →',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -126,7 +145,11 @@ class GrowthStudioDashboard extends StatelessWidget {
               const SizedBox(height: 12),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final columns = constraints.maxWidth >= 560 ? 3 : 1;
+                  final largeText =
+                      MediaQuery.textScalerOf(context).scale(14) > 19;
+                  final columns = largeText
+                      ? 1
+                      : (constraints.maxWidth >= 560 ? 3 : 2);
                   final width =
                       (constraints.maxWidth - 10 * (columns - 1)) / columns;
                   return Wrap(
@@ -135,6 +158,7 @@ class GrowthStudioDashboard extends StatelessWidget {
                     children: [
                       SizedBox(
                         width: width,
+                        height: largeText ? null : (width < 150 ? 215 : 170),
                         child: _progressCard(
                           Icons.insights_outlined,
                           'Mood reflections',
@@ -146,6 +170,7 @@ class GrowthStudioDashboard extends StatelessWidget {
                       ),
                       SizedBox(
                         width: width,
+                        height: largeText ? null : (width < 150 ? 215 : 170),
                         child: _progressCard(
                           Icons.emoji_events_outlined,
                           'Your milestones',
@@ -156,7 +181,8 @@ class GrowthStudioDashboard extends StatelessWidget {
                         ),
                       ),
                       SizedBox(
-                        width: width,
+                        width: columns == 2 ? constraints.maxWidth : width,
+                        height: columns == 3 ? 170 : null,
                         child: _progressCard(
                           Icons.auto_stories_outlined,
                           journeys == 0 ? 'Begin a journey' : 'Your journeys',
@@ -195,33 +221,53 @@ class GrowthStudioDashboard extends StatelessWidget {
                 'Boundaries',
                 'Make space for what matters.',
                 Color(0xFF284632),
-                'my_space_growth.jpg',
+                'growth_boundaries.webp',
               ),
               (
                 'Starting Over',
                 'Begin your next chapter.',
                 Color(0xFF985735),
-                'my_space_journey.jpg',
+                'growth_starting.webp',
               ),
               (
                 'Finding Myself Again',
                 'Reconnect with who you are.',
                 Color(0xFF967129),
-                'my_space_reflection.jpg',
+                'growth_finding.webp',
               ),
             ];
-            final columns = constraints.maxWidth < 480 ? 1 : 3;
-            final width = (constraints.maxWidth - 14 * (columns - 1)) / columns;
-            return Wrap(
-              spacing: 14,
-              runSpacing: 14,
-              children: [
-                for (final book in books)
-                  SizedBox(
-                    width: width,
-                    child: _book(context, book.$1, book.$2, book.$3, book.$4),
-                  ),
-              ],
+            final largeText = MediaQuery.textScalerOf(context).scale(14) > 19;
+            final width = constraints.maxWidth >= 560
+                ? (constraints.maxWidth - 28) / 3
+                : (constraints.maxWidth * .48).clamp(170.0, 220.0);
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < books.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        right: i == books.length - 1 ? 0 : 14,
+                      ),
+                      child: SizedBox(
+                        width: largeText ? 270 : width,
+                        height: largeText ? 400 : 290,
+                        child: _book(
+                          context,
+                          books[i].$1,
+                          books[i].$2,
+                          books[i].$3,
+                          [
+                            'growth_boundaries.webp',
+                            'growth_starting.webp',
+                            'growth_finding.webp',
+                          ][i],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             );
           },
         ),
@@ -268,24 +314,63 @@ class GrowthStudioDashboard extends StatelessWidget {
     String mode,
   ) => Material(
     color: const Color(0xFF214530),
-    borderRadius: BorderRadius.circular(15),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(15),
+      side: BorderSide(color: gold.withValues(alpha: .3)),
+    ),
     clipBehavior: Clip.antiAlias,
     child: InkWell(
       onTap: () => onOpenTool(mode),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: gold, size: 24),
-            const SizedBox(height: 10),
-            Text(title, style: _heading(19)),
-            const SizedBox(height: 8),
-            Text(detail, style: const TextStyle(color: cream, height: 1.4)),
-            const SizedBox(height: 12),
-            const Icon(Icons.arrow_forward_rounded, color: gold, size: 18),
-          ],
-        ),
+        padding: const EdgeInsets.all(12),
+        child: mode == 'guided'
+            ? Row(
+                children: [
+                  const Icon(Icons.auto_stories_outlined, color: gold),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: _heading(17)),
+                        const SizedBox(height: 5),
+                        Text(
+                          detail,
+                          style: const TextStyle(
+                            color: cream,
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: gold),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(icon, color: gold, size: 24),
+                  const SizedBox(height: 10),
+                  Text(title, style: _heading(17)),
+                  const SizedBox(height: 8),
+                  Text(
+                    detail,
+                    style: const TextStyle(
+                      color: cream,
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: gold,
+                    size: 18,
+                  ),
+                ],
+              ),
       ),
     ),
   );
@@ -315,7 +400,7 @@ class GrowthStudioDashboard extends StatelessWidget {
           children: [
             Positioned.fill(
               child: Opacity(
-                opacity: .2,
+                opacity: 1,
                 child: Image.asset(
                   'assets/images/$asset',
                   fit: BoxFit.cover,
@@ -324,12 +409,11 @@ class GrowthStudioDashboard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(12, 24, 12, 12),
               child: Column(
                 children: [
-                  const Icon(Icons.eco_outlined, color: gold),
-                  const SizedBox(height: 18),
-                  Text(title, textAlign: TextAlign.center, style: _heading(25)),
+                  const SizedBox(height: 6),
+                  Text(title, textAlign: TextAlign.center, style: _heading(22)),
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 14),
                     child: SizedBox(width: 38, child: Divider(color: gold)),
@@ -337,11 +421,15 @@ class GrowthStudioDashboard extends StatelessWidget {
                   Text(
                     subtitle,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: cream, height: 1.5),
+                    style: const TextStyle(
+                      color: cream,
+                      fontSize: 11,
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'VIEW PREVIEW',
+                    'PREVIEW',
                     style: TextStyle(
                       color: gold,
                       fontSize: 10,

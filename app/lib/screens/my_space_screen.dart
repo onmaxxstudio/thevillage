@@ -1124,12 +1124,12 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       final width = (constraints.maxWidth - (columns - 1) * 10) / columns;
       final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
       return Column(children: [
-        SizedBox(width: double.infinity, height: 100 * scale,
+        SizedBox(width: double.infinity, height: 76 * scale,
           child: _featureCard(features.first, descriptions.first)),
         const SizedBox(height: 10),
         Wrap(spacing: 10, runSpacing: 10, children: [
           for (var i = 1; i < features.length; i++)
-            SizedBox(width: width, height: 112 * scale,
+            SizedBox(width: width, height: 82 * scale,
               child: _featureCard(features[i], descriptions[i])),
         ]),
       ]);
