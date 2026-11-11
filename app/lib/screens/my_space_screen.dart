@@ -215,7 +215,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         Navigator.of(context).pop();
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Saved privately to My Space.')),
+        const SnackBar(content: Text('Saved privately to Growth Studio.')),
       );
     } catch (_) {
       if (mounted) {
@@ -883,7 +883,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
               ),
               Expanded(
                 child: Text(
-                  'My Space',
+                  'Growth Studio',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 24,
