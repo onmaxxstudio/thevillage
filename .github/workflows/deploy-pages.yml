@@ -69,6 +69,10 @@ jobs:
         working-directory: app
         run: flutter test test/village_plus_layout_test.dart
 
+      - name: Test Growth Studio layouts and navigation
+        working-directory: app
+        run: flutter test test/growth_studio_dashboard_test.dart
+
       - name: Analyze Flutter app
         working-directory: app
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
