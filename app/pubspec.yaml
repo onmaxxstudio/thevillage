@@ -44,6 +44,7 @@ flutter:
     - family: VillagePlusDisplay
       fonts:
         - asset: assets/fonts/PlayfairDisplay.ttf
+          weight: 700
   assets:
     - assets/avatar/
     - assets/images/
