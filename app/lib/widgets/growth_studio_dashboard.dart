@@ -14,7 +14,7 @@ class GrowthStudioDashboard extends StatelessWidget {
   final VoidCallback onMembership;
   static const forest = Color(0xFF103A23);
   static const gold = Color(0xFFE6C579);
-  static const cream = Color(0xFFFFF7E8);
+  static const cream = Color(0xFFFFFAF1);
   TextStyle _heading(double size, [Color color = cream]) => TextStyle(
     fontFamily: 'VillagePlusDisplay',
     fontSize: size,
@@ -76,7 +76,7 @@ class GrowthStudioDashboard extends StatelessWidget {
                             endIndent: 12,
                           ),
                         ),
-                        Flexible(
+                        Expanded(
                           flex: 4,
                           child: Text(
                             'Your growth, unfolding',
@@ -151,26 +151,6 @@ class GrowthStudioDashboard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (wide) ...[
-                Positioned(
-                  left: 10,
-                  top: 37,
-                  width: 130,
-                  height: 105,
-                  child: IgnorePointer(
-                    child: _cornerArt(const Rect.fromLTWH(48, 178, 130, 105)),
-                  ),
-                ),
-                Positioned(
-                  right: 10,
-                  top: 45,
-                  width: 106,
-                  height: 100,
-                  child: IgnorePointer(
-                    child: _cornerArt(const Rect.fromLTWH(870, 188, 106, 100)),
-                  ),
-                ),
-              ],
               _badge('VILLAGE PLUS', wide: wide),
             ],
           ),
@@ -242,10 +222,11 @@ class GrowthStudioDashboard extends StatelessWidget {
                     size: wide ? 23 : 17,
                   ),
                   const SizedBox(width: 6),
-                  Flexible(
+                  Expanded(
                     flex: 3,
                     child: Text(
                       r'Village Plus · $4.99/month',
+                      key: const ValueKey('growth-membership-price'),
                       textAlign: TextAlign.center,
                       style: _heading(wide ? 20 : 14, forest),
                     ),
@@ -315,10 +296,11 @@ class GrowthStudioDashboard extends StatelessWidget {
           endIndent: 12,
         ),
       ),
-      Flexible(
+      Expanded(
         flex: 3,
         child: Text(
           title,
+          key: const ValueKey('growth-next-chapter'),
           textAlign: TextAlign.center,
           style: _heading(wide ? 34 : 23, forest),
         ),

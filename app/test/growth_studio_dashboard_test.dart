@@ -42,6 +42,10 @@ void main() {
           );
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
+          for (final key in ['growth-next-chapter', 'growth-membership-price']) {
+            expect(tester.getRect(find.byKey(ValueKey(key))).center.dx, closeTo(width / 2, 1));
+          }
+
           if (scale == 1) {
             final covers = [
               for (var i = 0; i < 3; i++)
