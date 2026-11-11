@@ -8,7 +8,7 @@ import 'settings_screen.dart';
 import 'write_freely_screen.dart';
 import '../services/private_journal_service.dart';
 import 'my_space_tools_screen.dart';
-import '../widgets/growth_studio_dashboard.dart';
+import '../widgets/growth_studio_experience.dart';
 import 'village_plus_screen.dart';
 
 class MySpaceScreen extends StatefulWidget {
@@ -20,7 +20,7 @@ class MySpaceScreen extends StatefulWidget {
 }
 
 class _MySpaceScreenState extends State<MySpaceScreen> {
-  static const cream = Color(0xFFFFFAF1);
+  static const cream = Color(0xFFFFF7E8);
   static const green = Color(0xFF355C3B);
   static const ink = Color(0xFF172019);
   static const line = Color(0xFFE7DED1);
@@ -823,7 +823,6 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _spaceHeader(),
             Expanded(
               child: collection == null
                   ? const Center(child: Text('Sign in to open your private journal.'))
@@ -843,24 +842,18 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 760),
                             child: ListView(
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                              padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
                               children: [
-                                GrowthStudioDashboard(
+                                GrowthStudioExperience(
                                   entries: docs.map((doc) => doc.data()).toList(),
                                   onOpenTool: _openTool,
+                                  onWrite: () => openWriteFreely(),
+                                  onBack: () => Navigator.maybePop(context),
+                                  onSettings: () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(builder: (_) => const SettingsScreen())),
                                   onMembership: () => Navigator.of(context).push(
-                                    MaterialPageRoute<void>(builder: (_) => const VillagePlusScreen()),
-                                  ),
+                                    MaterialPageRoute<void>(builder: (_) => const VillagePlusScreen())),
                                 ),
-                                const SizedBox(height: 24),
-                                Text('Your everyday tools', textAlign: TextAlign.center,
-                                  style: GoogleFonts.playfairDisplay(color: green,
-                                    fontSize: 27, fontWeight: FontWeight.w700)),
-                                const SizedBox(height: 6),
-                                const Text('Still here. Always yours.', textAlign: TextAlign.center,
-                                  style: TextStyle(color: green)),
-                                const SizedBox(height: 16),
-                                _featureGrid(),
                                 const SizedBox(height: 14),
                                 _journalLibrary(docs),
                                 const SizedBox(height: 12),

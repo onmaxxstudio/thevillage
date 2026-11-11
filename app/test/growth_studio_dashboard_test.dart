@@ -42,13 +42,25 @@ void main() {
           );
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
+          if (scale == 1) {
+            final covers = [
+              for (var i = 0; i < 3; i++)
+                find.byKey(ValueKey('growth-book-$i')),
+            ];
+            final bounds = covers.map(tester.getRect).toList();
+            expect(bounds.last.right, lessThanOrEqualTo(width + 1));
+            expect(bounds[0].width, closeTo(bounds[1].width, .1));
+            expect(bounds[1].width, closeTo(bounds[2].width, .1));
+          }
           expect(find.text('1 saved milestone'), findsOneWidget);
           expect(find.text('1 saved reflection'), findsOneWidget);
-          await tester.ensureVisible(find.text('Mood reflections'));
-          await tester.tap(find.text('Mood reflections'));
+          await tester.ensureVisible(find.text('Mood history'));
+          await tester.tap(find.text('Mood history'));
           expect(destination, 'mood');
-          await tester.ensureVisible(find.text('Boundaries'));
-          await tester.tap(find.text('Boundaries'));
+          await tester.ensureVisible(
+            find.byKey(const ValueKey('growth-book-0')),
+          );
+          await tester.tap(find.byKey(const ValueKey('growth-book-0')));
           await tester.pumpAndSettle();
           expect(
             find.textContaining(
@@ -59,10 +71,8 @@ void main() {
           await tester.tap(find.text('Explore current guided journals'));
           await tester.pumpAndSettle();
           expect(destination, 'guided');
-          await tester.ensureVisible(
-            find.text('Explore Village Plus · \$4.99/month'),
-          );
-          await tester.tap(find.text('Explore Village Plus · \$4.99/month'));
+          await tester.ensureVisible(find.text('Village Plus · \$4.99/month'));
+          await tester.tap(find.text('Village Plus · \$4.99/month'));
           expect(membershipOpened, isTrue);
           expect(tester.takeException(), isNull);
         },

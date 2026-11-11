@@ -71,7 +71,7 @@ jobs:
 
       - name: Test Growth Studio layouts and navigation
         working-directory: app
-        run: flutter test test/growth_studio_dashboard_test.dart
+        run: flutter test test/growth_studio_dashboard_test.dart test/growth_studio_experience_test.dart
 
       - name: Analyze Flutter app
         working-directory: app
