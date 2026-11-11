@@ -63,7 +63,7 @@ class VillagePlusBanner extends StatelessWidget {
                     description,
                     const Padding(padding: EdgeInsets.symmetric(vertical: 12),
                       child: Divider(color: gold, height: 1)),
-                    Row(children: [price, const Spacer(), arrow]),
+                    Row(children: [Expanded(child: price), const SizedBox(width: 12), arrow]),
                   ]);
                 }
                 return Row(children: [
