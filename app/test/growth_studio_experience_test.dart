@@ -50,7 +50,14 @@ void main() {
           );
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
-          for (final mode in [
+          final pairedModes = ['prompts','guided','gratitude','mood','milestones','goals','letters','budget'];
+        final budget = tester.getSize(find.byKey(const ValueKey('growth-tool-budget')));
+        for(final mode in pairedModes) {
+          final size = tester.getSize(find.byKey(ValueKey('growth-tool-$mode')));
+          expect(size.width,closeTo(budget.width,.1));
+          expect(size.height,closeTo(budget.height,.1));
+        }
+        for (final mode in [
             'write',
             'prompts',
             'guided',
