@@ -61,7 +61,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
           gradient:const LinearGradient(colors:[Color(0xFFFFE88A),Color(0xFFF2C649)])),
         child:const Row(mainAxisSize:MainAxisSize.min,children:[
           Icon(Icons.workspace_premium_outlined,color:Color(0xFF092E1D),size:24),SizedBox(width:7),
-          Text('VILLAGE PLUS',style:TextStyle(color:Color(0xFF092E1D),fontSize:17,fontWeight:FontWeight.w800)),
+          Flexible(child:Text('VILLAGE PLUS',textAlign:TextAlign.center,style:TextStyle(color:Color(0xFF092E1D),fontSize:17,fontWeight:FontWeight.w800))),
         ])),
     ]);
   });
