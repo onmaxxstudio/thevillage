@@ -50,6 +50,12 @@ void main() {
           );
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
+          if (scale == 1) {
+            final actions = ['monthly-event','member-check-in','growth-journey'];
+            final bottoms = actions.map((key) => tester.getRect(find.byKey(ValueKey('plus-$key'))).bottom).toList();
+            expect(bottoms[1],closeTo(bottoms[0],1));
+            expect(bottoms[2],closeTo(bottoms[0],1));
+          }
           final pairedModes = ['prompts','guided','gratitude','mood','milestones','goals','letters','budget'];
         final budget = tester.getSize(find.byKey(const ValueKey('growth-tool-budget')));
         for(final mode in pairedModes) {
@@ -86,8 +92,9 @@ void main() {
           await tester.ensureVisible(find.text(r'Village Plus · $4.99/month'));
           await tester.tap(find.text(r'Village Plus · $4.99/month'));
           expect(membership, 1);
-          expect(find.text('My existing journey'), findsOneWidget);
-          expect(find.text('A real saved win'), findsOneWidget);
+          expect(find.text('My Growth Journey'), findsOneWidget);
+          expect(find.text('Monthly Event'), findsOneWidget);
+          expect(find.text('You’re Not Alone'), findsOneWidget);
           expect(tester.takeException(), isNull);
         },
       );
