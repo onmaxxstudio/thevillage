@@ -50,6 +50,12 @@ void main() {
           );
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
+          if (scale == 1) {
+            final actions = ['monthly-event','member-check-in','growth-journey'];
+            final bottoms = actions.map((key) => tester.getRect(find.byKey(ValueKey('plus-$key'))).bottom).toList();
+            expect(bottoms[1],closeTo(bottoms[0],1));
+            expect(bottoms[2],closeTo(bottoms[0],1));
+          }
           final pairedModes = ['prompts','guided','gratitude','mood','milestones','goals','letters','budget'];
         final budget = tester.getSize(find.byKey(const ValueKey('growth-tool-budget')));
         for(final mode in pairedModes) {

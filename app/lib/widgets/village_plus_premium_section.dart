@@ -96,7 +96,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
           child:IgnorePointer(child:_PremiumArtwork(region:Rect.fromLTWH(135,553,90,100)))),
         if(index==2)const Positioned(right:0,bottom:0,width:60,height:85,
           child:IgnorePointer(child:_PremiumArtwork(region:Rect.fromLTWH(1334,550,68,107)))),
-        Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+        Padding(padding:const EdgeInsets.all(14),child:Column(mainAxisAlignment:MainAxisAlignment.spaceBetween,crossAxisAlignment:CrossAxisAlignment.stretch,children:[
           Row(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(icon,color:gold,size:wide?32:28),
             const SizedBox(width:10),Expanded(child:Text(title,style:_title(wide?23:22)))]),
           const SizedBox(height:9),Text(description,style:TextStyle(color:cream,fontSize:wide?17:13,height:1.3)),
