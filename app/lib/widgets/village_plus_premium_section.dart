@@ -27,7 +27,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
         'Exclusive 21-Day programs, deeper journaling, and progress tracking.','Explore Journeys'),
     ];
     return Stack(clipBehavior:Clip.none,alignment:Alignment.topCenter,children:[
-      Container(key:const ValueKey('village-plus-premium-section'),margin:const EdgeInsets.only(top:12),
+      Container(key:const ValueKey('village-plus-premium-section'),margin:EdgeInsets.only(top:large?MediaQuery.textScalerOf(context).scale(44):12),
         padding:EdgeInsets.fromLTRB(padding,30,padding,padding),
         decoration:BoxDecoration(borderRadius:BorderRadius.circular(26),
           gradient:const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,
