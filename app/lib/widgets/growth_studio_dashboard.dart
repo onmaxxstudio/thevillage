@@ -167,26 +167,6 @@ class GrowthStudioDashboard extends StatelessWidget {
           SizedBox(height: wide ? 18 : 12),
           Stack(
             children: [
-              if (wide) ...[
-                Positioned(
-                  left: 0,
-                  top: -65,
-                  bottom: 0,
-                  width: 105,
-                  child: IgnorePointer(
-                    child: _cornerArt(const Rect.fromLTWH(0, 650, 120, 320)),
-                  ),
-                ),
-                Positioned(
-                  right: 0,
-                  top: -65,
-                  bottom: 0,
-                  width: 105,
-                  child: IgnorePointer(
-                    child: _cornerArt(const Rect.fromLTWH(904, 650, 120, 320)),
-                  ),
-                ),
-              ],
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: wide ? (phone ? 20 : 104) : 18),
                 child: Row(
@@ -216,11 +196,7 @@ class GrowthStudioDashboard extends StatelessWidget {
                       endIndent: 10,
                     ),
                   ),
-                  Icon(
-                    Icons.eco_outlined,
-                    color: const Color(0xFF92934C),
-                    size: wide ? 23 : 17,
-                  ),
+                  const GrowthLeafSprig(),
                   const SizedBox(width: 6),
                   Expanded(
                     flex: 3,
@@ -232,11 +208,7 @@ class GrowthStudioDashboard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Icon(
-                    Icons.eco_outlined,
-                    color: const Color(0xFF92934C),
-                    size: wide ? 23 : 17,
-                  ),
+                  const GrowthLeafSprig(mirrored: true),
                   Expanded(
                     child: Divider(
                       color: gold,
@@ -251,16 +223,6 @@ class GrowthStudioDashboard extends StatelessWidget {
         ],
       );
     },
-  );
-
-  Widget _cornerArt(Rect region) => ShaderMask(
-    blendMode: BlendMode.dstIn,
-    shaderCallback: (bounds) => const RadialGradient(
-      radius: .5,
-      colors: [Colors.white, Colors.white, Colors.transparent],
-      stops: [0, .4, 1],
-    ).createShader(bounds),
-    child: GrowthReferenceArt(region: region),
   );
 
   Widget _badge(String text, {required bool wide, bool sentence = false}) =>
