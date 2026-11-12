@@ -6,7 +6,7 @@ void main() {
   for (final width in [320.0, 390.0, 768.0]) {
     for (final scale in [1.0, 1.5]) {
       testWidgets(
-        'Growth dashboard fits $width at $scale text scale and real counts',
+        'Growth dashboard fits $width at $scale text scale and premium previews',
         (tester) async {
           tester.view.physicalSize = Size(width, 1000);
           tester.view.devicePixelRatio = 1;
@@ -56,11 +56,15 @@ void main() {
             expect(bounds[0].width, closeTo(bounds[1].width, .1));
             expect(bounds[1].width, closeTo(bounds[2].width, .1));
           }
-          expect(find.text('1 saved milestone'), findsOneWidget);
-          expect(find.text('1 saved reflection'), findsOneWidget);
-          await tester.ensureVisible(find.text('Mood history'));
-          await tester.tap(find.text('Mood history'));
-          expect(destination, 'mood');
+          expect(find.text('Mood history'), findsNothing);
+          expect(find.text('Your milestones'), findsNothing);
+          for (final action in ['rsvp','monthly-event','member-check-in','growth-journey']) {
+            final button = find.byKey(ValueKey('plus-$action'));
+            await tester.ensureVisible(button);await tester.tap(button);await tester.pumpAndSettle();
+            expect(find.text('VILLAGE PLUS · COMING SOON'),findsOneWidget);
+            await tester.tap(find.text('Back to Growth Studio'));await tester.pumpAndSettle();
+          }
+          expect(destination,isNull);
           await tester.ensureVisible(
             find.byKey(const ValueKey('growth-book-0')),
           );

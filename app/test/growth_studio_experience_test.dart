@@ -86,8 +86,9 @@ void main() {
           await tester.ensureVisible(find.text(r'Village Plus · $4.99/month'));
           await tester.tap(find.text(r'Village Plus · $4.99/month'));
           expect(membership, 1);
-          expect(find.text('My existing journey'), findsOneWidget);
-          expect(find.text('A real saved win'), findsOneWidget);
+          expect(find.text('My Growth Journey'), findsOneWidget);
+          expect(find.text('Monthly Event'), findsOneWidget);
+          expect(find.text('You’re Not Alone'), findsOneWidget);
           expect(tester.takeException(), isNull);
         },
       );
