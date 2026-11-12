@@ -185,7 +185,7 @@ class GrowthStudioExperience extends StatelessWidget {
         ),
         (
           'Budget',
-          'A simple space to plan, track, and feel more in control.',
+          'Plan, track, and feel more in control.',
           Icons.account_balance_outlined,
           'budget',
         ),
