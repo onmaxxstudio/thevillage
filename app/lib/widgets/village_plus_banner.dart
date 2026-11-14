@@ -193,7 +193,7 @@ class _BannerArtwork extends StatelessWidget {
                         Row(
                           children: [
                             const Spacer(),
-                            Flexible(flex: 2, child: price),
+                            SizedBox(width: 90, child: price),
                             const SizedBox(width: 16),
                             arrow,
                           ],
