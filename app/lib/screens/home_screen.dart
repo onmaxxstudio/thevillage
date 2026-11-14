@@ -95,6 +95,7 @@ class _HomeScreenState extends State<HomeScreen>
   ];
 
   String get breathingLesson => DailyEncouragement.forDate(DateTime.now())
+      .replaceFirst('Asking for help takes courage, too.', 'Asking for help takes courage too.')
       .replaceFirst(' Let this be your reminder today.', '\nLet this be your reminder today.');
 
   MoodCheckIn? get today {
@@ -715,6 +716,8 @@ class _HomeScreenState extends State<HomeScreen>
                     child: LayoutBuilder(
                       builder: (context, textConstraints) {
                         final textWidth = textConstraints.maxWidth * .54;
+                        final twoLineReminder = breathingLesson ==
+                            'Asking for help takes courage too.\nLet this be your reminder today.';
                         final messageFontSize = tabletText ? 14.0 : textWidth < 155 ? 9.5 : 10.5;
                         final messageStyle = GoogleFonts.inter(
                           fontSize: messageFontSize,
@@ -793,12 +796,23 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                               const SizedBox(height: 1),
                               SizedBox(
-                                width: messageWidth,
-                                child: Text(
-                                  breathingLesson,
-                                  softWrap: true,
-                                  style: messageStyle,
-                                ),
+                                width: twoLineReminder ? textWidth : messageWidth,
+                                child: twoLineReminder
+                                    ? FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          breathingLesson,
+                                          maxLines: 2,
+                                          softWrap: false,
+                                          style: messageStyle,
+                                        ),
+                                      )
+                                    : Text(
+                                        breathingLesson,
+                                        softWrap: true,
+                                        style: messageStyle,
+                                      ),
                               ),
                             ],
                           ),
