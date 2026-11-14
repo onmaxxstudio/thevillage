@@ -67,7 +67,7 @@ jobs:
 
       - name: Test Village Plus layouts and enrollment safety
         working-directory: app
-        run: flutter test test/village_plus_layout_test.dart
+        run: flutter test test/village_plus_layout_test.dart test/village_plus_banner_geometry_test.dart
 
       - name: Test Growth Studio layouts and navigation
         working-directory: app
