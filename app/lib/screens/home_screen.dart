@@ -94,7 +94,8 @@ class _HomeScreenState extends State<HomeScreen>
     (Icons.sentiment_very_dissatisfied_outlined, 'Not good'),
   ];
 
-  String get breathingLesson => DailyEncouragement.forDate(DateTime.now());
+  String get breathingLesson => DailyEncouragement.forDate(DateTime.now())
+      .replaceFirst(' Let this be your reminder today.', '\nLet this be your reminder today.');
 
   MoodCheckIn? get today {
     final now = DateTime.now();
