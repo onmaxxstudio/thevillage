@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 29298)
-Total output lines: 3231
-
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,6 +22,7 @@ import 'my_space_screen.dart';
 import 'plan_my_week_screen.dart';
 import 'village_plus_screen.dart';
 import '../widgets/village_plus_banner.dart';
+import '../widgets/home_overview_layout.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -270,53 +268,30 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Preserve the existing phone layout; let tablets use their available width.
-    final tabletLayout = MediaQuery.sizeOf(context).width >= 700;
-    final homeMaxWidth = tabletLayout ? 1100.0 : 620.0;
     return Scaffold(
       backgroundColor: cream,
       drawer: _buildDrawer(),
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: homeMaxWidth),
-                child: _buildHeader(),
-              ),
-            ),
-            Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: homeMaxWidth),
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
-                        sliver: SliverList.list(
-                          children: [
-                            _buildWelcomeHero(),
-                            const SizedBox(height: 14),
-                            _tabletCardText(_buildDashboardRow()),
-                            const SizedBox(height: 14),
-                            _buildAskCard(),
-                            const SizedBox(height: 14),
-                            _tabletCardText(_buildFeatureGrid()),
-                            if (_isVillagePlusMember == false) ...[
-                              const SizedBox(height: 14),
-                              _buildVillagePlusBanner(),
-                            ],
-                            const SizedBox(height: 14),
-                            const DailyVillageCensusCard(),
-                          ],
-                        ),
-                      ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                    ],
+        child: HomeOverviewLayout(
+          header: _buildHeader(),
+          sections: [
+            _buildWelcomeHero(),
+            _tabletCardText(_buildDashboardRow()),
+            _buildAskCard(),
+            // Keep the final visible card next to navigation even when the
+            // member promotion or today's census is not shown.
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _tabletCardText(_buildFeatureGrid()),
+                if (_isVillagePlusMember == false)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: _buildVillagePlusBanner(),
                   ),
-                ),
-              ),
+                const DailyVillageCensusCard(),
+              ],
             ),
           ],
         ),
@@ -1409,7 +1384,538 @@ class _DashboardCardHeader extends StatelessWidget {
                       color: _HomeScreenState.sage,
                       size: 20,
                     ),
-         …4298 tokens truncated…symptom in [...symptomsOptions, ...symptoms.difference(symptomsOptions.toSet())])
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DashboardCard extends StatelessWidget {
+  const _DashboardCard({
+    required this.color,
+    required this.child,
+    required this.onTap,
+  });
+
+  final Color color;
+  final Widget child;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 124,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
+          decoration: BoxDecoration(
+            color: color,
+            border: Border.all(color: _HomeScreenState.line),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _RoundIcon extends StatelessWidget {
+  const _RoundIcon({
+    required this.icon,
+    this.gold = false,
+    this.radius = 24,
+  });
+
+  final IconData icon;
+  final bool gold;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor:
+          gold ? const Color(0xFFFFEBD0) : _HomeScreenState.blush,
+      child: Icon(
+        icon,
+        color: gold ? _HomeScreenState.gold : _HomeScreenState.sage,
+      ),
+    );
+  }
+}
+
+class _CheckInResult {
+  const _CheckInResult({
+    required this.mood,
+    required this.details,
+    required this.feelingTags,
+    required this.periodStarted,
+    required this.healthNotes,
+    required this.periodEnded,
+    required this.spotting,
+    required this.flowLevel,
+    required this.symptoms,
+  });
+
+  final String mood;
+  final String details;
+  final List<String> feelingTags;
+  final bool periodStarted;
+  final String healthNotes;
+  final bool periodEnded;
+  final bool spotting;
+  final String flowLevel;
+  final List<String> symptoms;
+}
+
+class _CheckInSheet extends StatefulWidget {
+  const _CheckInSheet({
+    this.existing,
+    this.initialMood,
+    required this.showPeriodTracking,
+    required this.history,
+    required this.onPeriodTrackingChanged,
+    required this.onHistory,
+  });
+
+  final MoodCheckIn? existing;
+  final String? initialMood;
+  final bool showPeriodTracking;
+  final List<MoodCheckIn> history;
+  final Future<void> Function(bool enabled) onPeriodTrackingChanged;
+  final VoidCallback onHistory;
+
+  @override
+  State<_CheckInSheet> createState() => _CheckInSheetState();
+}
+
+class _CheckInSheetState extends State<_CheckInSheet> {
+  static const feelings = <String>[
+    'Calm', 'Happy', 'Anxious', 'Stressed', 'Tired',
+    'Motivated', 'Overwhelmed', 'Irritable',
+  ];
+  static const symptomsOptions = <String>[
+    'Cramps', 'Bloating', 'Headache', 'Mood changes', 'Back pain', 'Fatigue',
+  ];
+  static const monthShort = <String>[
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  String? selectedMood;
+  final Set<String> selectedFeelings = {};
+  bool periodStarted = false;
+  bool periodEnded = false;
+  bool spotting = false;
+  String flowLevel = '';
+  final Set<String> symptoms = {};
+  bool healthExpanded = true;
+  bool cycleExpanded = false;
+  late bool cycleEnabled;
+  late final TextEditingController detailsController;
+  late final TextEditingController healthNotesController;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedMood = widget.initialMood ?? widget.existing?.mood;
+    selectedFeelings.addAll(widget.existing?.feelingTags ?? const []);
+    periodStarted = widget.existing?.periodStarted ?? false;
+    periodEnded = widget.existing?.periodEnded ?? false;
+    spotting = widget.existing?.spotting ?? false;
+    flowLevel = widget.existing?.flowLevel ?? '';
+    symptoms.addAll(widget.existing?.symptoms ?? const []);
+    cycleEnabled = widget.showPeriodTracking;
+    cycleExpanded = cycleEnabled;
+    detailsController = TextEditingController(
+      text: widget.existing?.details ?? '',
+    );
+    healthNotesController = TextEditingController(
+      text: widget.existing?.healthNotes ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    detailsController.dispose();
+    healthNotesController.dispose();
+    super.dispose();
+  }
+
+  void save() {
+    if (selectedMood == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Choose how you’re feeling first.')),
+      );
+      return;
+    }
+    Navigator.pop(
+      context,
+      _CheckInResult(
+        mood: selectedMood!,
+        details: detailsController.text,
+        feelingTags: selectedFeelings.toList(),
+        periodStarted: cycleEnabled
+            ? periodStarted
+            : widget.existing?.periodStarted ?? false,
+        healthNotes: healthNotesController.text,
+        periodEnded: cycleEnabled
+            ? periodEnded
+            : widget.existing?.periodEnded ?? false,
+        spotting: cycleEnabled ? spotting : widget.existing?.spotting ?? false,
+        flowLevel:
+            cycleEnabled ? flowLevel : widget.existing?.flowLevel ?? '',
+        symptoms:
+            cycleEnabled ? symptoms.toList() : widget.existing?.symptoms ?? const [],
+      ),
+    );
+  }
+
+  String _dateLabel(DateTime value) =>
+      '${monthShort[value.month - 1]} ${value.day}';
+
+  List<MoodCheckIn> _cycleHistory() {
+    final now = DateTime.now();
+    return [
+      ...widget.history.where((entry) =>
+          entry.createdAt.year != now.year ||
+          entry.createdAt.month != now.month ||
+          entry.createdAt.day != now.day),
+      MoodCheckIn(
+        mood: selectedMood ?? 'Okay',
+        createdAt: now,
+        periodStarted: periodStarted,
+        periodEnded: periodEnded,
+        spotting: spotting,
+        flowLevel: flowLevel,
+      ),
+    ];
+  }
+
+  Future<void> _addFeeling() async {
+    final controller = TextEditingController();
+    final value = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: _HomeScreenState.cream,
+        title: const Text('Add a feeling'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 24,
+          decoration: const InputDecoration(hintText: 'Type a feeling'),
+          onSubmitted: (text) => Navigator.pop(dialogContext, text.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    final tag = value?.trim();
+    if (tag == null || tag.isEmpty) return;
+    setState(() {
+      if (selectedFeelings.contains(tag)) {
+        selectedFeelings.remove(tag);
+      } else {
+        selectedFeelings.add(tag);
+      }
+    });
+  }
+
+  Future<void> _addSymptom() async {
+    final controller = TextEditingController();
+    final value = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: _HomeScreenState.cream,
+        title: const Text('Add a symptom'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 32,
+          decoration: const InputDecoration(hintText: 'Type a symptom'),
+          onSubmitted: (text) => Navigator.pop(dialogContext, text.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    final symptom = value?.trim();
+    if (symptom == null || symptom.isEmpty) return;
+    setState(() {
+      if (symptoms.contains(symptom)) {
+        symptoms.remove(symptom);
+      } else {
+        symptoms.add(symptom);
+      }
+    });
+  }
+
+  Widget _tag({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+    IconData? icon,
+    Color? selectedColor,
+    Color? selectedTextColor,
+  }) {
+    final fill = selectedColor ?? _HomeScreenState.sage;
+    return ChoiceChip(
+      avatar: icon == null
+          ? null
+          : Icon(icon, size: 17, color: selected ? (selectedTextColor ?? Colors.white) : _HomeScreenState.sage),
+      label: Text(label),
+      selected: selected,
+      showCheckmark: false,
+      onSelected: (_) => onTap(),
+      selectedColor: fill,
+      backgroundColor: Colors.white.withValues(alpha: .62),
+      side: BorderSide(
+        color: selected ? fill : _HomeScreenState.line,
+      ),
+      labelStyle: TextStyle(
+        color: selected ? (selectedTextColor ?? Colors.white) : _HomeScreenState.ink,
+        fontSize: 13,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      shape: const StadiumBorder(),
+    );
+  }
+
+  Widget _sectionCard({
+    required Widget child,
+    Color? color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color ?? Colors.white.withValues(alpha: .48),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: _HomeScreenState.line.withValues(alpha: .8)),
+        boxShadow: const [
+          BoxShadow(color: Color(0x08000000), blurRadius: 12, offset: Offset(0, 3)),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildCycleSection() {
+    final cycleHistory = _cycleHistory();
+    final prediction = CycleEstimate.fromHistory(cycleHistory);
+    final cycleLength = prediction.cycleDays;
+    final nextPeriod = prediction.nextPeriod;
+    final ovulation = nextPeriod?.subtract(const Duration(days: 14));
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    String relative(DateTime? date) {
+      if (date == null) return 'Log a start date';
+      final days = date.difference(todayOnly).inDays;
+      return days == 0 ? 'around today' : days > 0 ? 'in $days days' : '${days.abs()} days ago';
+    }
+
+    return _sectionCard(
+      color: const Color(0xFFFFF9F1),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF9E5E3),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.water_drop_rounded,
+                    color: Color(0xFFD8505B), size: 30),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: InkWell(
+                  onTap: () => setState(() => cycleExpanded = !cycleExpanded),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'My Cycle ',
+                              style: GoogleFonts.playfairDisplay(
+                                color: _HomeScreenState.ink,
+                                fontSize: 23,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const TextSpan(
+                              text: '(optional)',
+                              style: TextStyle(fontSize: 13, color: _HomeScreenState.sage),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        cycleEnabled
+                            ? 'Track your period, symptoms, and view estimated ovulation.'
+                            : 'Turn on to track dates, symptoms, and calendar estimates.',
+                        style: const TextStyle(fontSize: 13, height: 1.25),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Switch.adaptive(
+                value: cycleEnabled,
+                activeColor: _HomeScreenState.sage,
+                onChanged: (value) async {
+                  setState(() {
+                    cycleEnabled = value;
+                    if (!value) cycleExpanded = false;
+                  });
+                  await widget.onPeriodTrackingChanged(value);
+                },
+              ),
+              IconButton(
+                tooltip: cycleExpanded ? 'Collapse My Cycle' : 'Expand My Cycle',
+                onPressed: () => setState(() => cycleExpanded = !cycleExpanded),
+                icon: Icon(cycleExpanded ? Icons.expand_less : Icons.expand_more),
+              ),
+            ],
+          ),
+          if (cycleEnabled && cycleExpanded) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 7,
+              runSpacing: 4,
+              children: [
+                _tag(
+                  label: 'Period started',
+                  selected: periodStarted,
+                  icon: Icons.water_drop_rounded,
+                  selectedColor: _HomeScreenState.sage,
+                  onTap: () => setState(() {
+                    periodStarted = !periodStarted;
+                    if (periodStarted) {
+                      periodEnded = false;
+                      spotting = false;
+                    }
+                  }),
+                ),
+                _tag(
+                  label: 'Period ended',
+                  selected: periodEnded,
+                  icon: Icons.water_drop_outlined,
+                  onTap: () => setState(() {
+                    periodEnded = !periodEnded;
+                    if (periodEnded) {
+                      periodStarted = false;
+                      spotting = false;
+                    }
+                  }),
+                ),
+                _tag(
+                  label: 'Spotting',
+                  selected: spotting,
+                  icon: Icons.water_drop_outlined,
+                  selectedColor: const Color(0xFFF6DADB),
+                  selectedTextColor: const Color(0xFF5F2930),
+                  onTap: () => setState(() {
+                    spotting = !spotting;
+                    if (spotting) {
+                      periodStarted = false;
+                      periodEnded = false;
+                    }
+                  }),
+                ),
+                _tag(
+                  label: 'None',
+                  selected: !periodStarted && !periodEnded && !spotting,
+                  icon: Icons.block_outlined,
+                  onTap: () => setState(() {
+                    periodStarted = false;
+                    periodEnded = false;
+                    spotting = false;
+                  }),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text.rich(
+                  TextSpan(children: [
+                    TextSpan(text: 'Flow level '),
+                    TextSpan(text: '(optional)', style: TextStyle(color: _HomeScreenState.sage, fontSize: 12)),
+                  ]),
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 5),
+                Wrap(
+                  spacing: 5,
+                  runSpacing: 3,
+                  children: [
+                    for (final level in ['Light', 'Medium', 'Heavy'])
+                      _tag(
+                        label: level,
+                        selected: flowLevel == level,
+                        icon: Icons.water_drop_rounded,
+                        selectedColor: level == 'Medium'
+                            ? const Color(0xFFF5DDDC)
+                            : _HomeScreenState.paleSage,
+                        selectedTextColor: _HomeScreenState.ink,
+                        onTap: () => setState(() => flowLevel = flowLevel == level ? '' : level),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text.rich(
+                    TextSpan(children: [
+                      TextSpan(text: 'Symptoms '),
+                      TextSpan(text: '(optional)', style: TextStyle(color: _HomeScreenState.sage, fontSize: 12)),
+                    ]),
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                for (final symptom in [...symptomsOptions, ...symptoms.difference(symptomsOptions.toSet())])
                   _tag(
                     label: symptom,
                     selected: symptoms.contains(symptom),

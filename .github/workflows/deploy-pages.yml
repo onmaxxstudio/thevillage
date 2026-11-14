@@ -73,6 +73,10 @@ jobs:
         working-directory: app
         run: flutter test test/growth_studio_dashboard_test.dart test/growth_studio_experience_test.dart
 
+      - name: Test compact homepage layout
+        working-directory: app
+        run: flutter test test/home_overview_layout_test.dart
+
       - name: Analyze Flutter app
         working-directory: app
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
