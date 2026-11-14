@@ -361,33 +361,9 @@ class _HomeScreenState extends State<HomeScreen>
         final iconRadius = 27.0 * scale;
         final cardWidth = 92.0 * scale;
         final cardHeight = 96.0 * scale;
-        final titleStyle = GoogleFonts.playfairDisplay(
-          color: ink,
-          height: 1.05,
-          fontWeight: FontWeight.w700,
-        );
-        final titleMaxWidth = constraints.maxWidth -
-            (26 * scale) -
-            (24 * scale) -
-            (13 * scale * 2);
-        var titleFontSize = 19.0 * scale;
-        final longestTitlePainter = TextPainter(
-          text: TextSpan(
-            text: 'Community Hub',
-            style: titleStyle.copyWith(fontSize: titleFontSize),
-          ),
-          maxLines: 1,
-          textDirection: Directionality.of(context),
-        )..layout();
-        while (longestTitlePainter.width > titleMaxWidth &&
-            titleFontSize > 10 * scale) {
-          titleFontSize -= .25 * scale;
-          longestTitlePainter.text = TextSpan(
-            text: 'Community Hub',
-            style: titleStyle.copyWith(fontSize: titleFontSize),
-          );
-          longestTitlePainter.layout();
-        }
+        final typography = _HomeCardTypography(context, constraints.maxWidth);
+        final titleStyle = typography.title;
+        final titleFontSize = titleStyle.fontSize!;
 
         return Material(
           color: cardColor,
@@ -477,11 +453,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     description,
                                     maxLines: 4,
                                     overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.inter(
-                                      color: ink,
-                                      fontSize: 13.0 * scale,
-                                      height: 1.18,
-                                    ),
+                                    style: typography.subtitle,
                                   ),
                                 ),
                               ],
@@ -784,7 +756,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 16),
                               Text(
                                 'TODAY’S ENCOURAGEMENT',
                                 style: TextStyle(
@@ -831,17 +803,26 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildDashboardRow() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: _buildCheckInCard()),
-        const SizedBox(width: 10),
-        Expanded(child: _buildCircleCard()),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Match the two-column feature grid, including its existing gutter.
+        final featureWidth = constraints.maxWidth < 320
+            ? constraints.maxWidth
+            : (constraints.maxWidth - 12) / 2;
+        final typography = _HomeCardTypography(context, featureWidth);
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _buildCheckInCard(typography)),
+            const SizedBox(width: 10),
+            Expanded(child: _buildCircleCard(typography)),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildCheckInCard() {
+  Widget _buildCheckInCard(_HomeCardTypography typography) {
     final entry = today;
     return _DashboardCard(
       color: const Color(0xFFF1F4E9),
@@ -849,8 +830,9 @@ class _HomeScreenState extends State<HomeScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _DashboardCardHeader(
+          _DashboardCardHeader(
             title: 'Daily Check-In',
+            titleStyle: typography.title,
             icon: Icons.wb_sunny_outlined,
             gold: true,
           ),
@@ -870,7 +852,7 @@ class _HomeScreenState extends State<HomeScreen>
                           entry == null ? 'How are you today?' : 'Today: ${entry.mood}',
                           maxLines: 1,
                           softWrap: false,
-                          style: const TextStyle(fontSize: 10.5),
+                          style: typography.subtitle,
                         ),
                       ),
                     ),
@@ -952,15 +934,16 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildCircleCard() {
+  Widget _buildCircleCard(_HomeCardTypography typography) {
     return _DashboardCard(
       color: const Color(0xFFFFF7ED),
       onTap: openCircle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _DashboardCardHeader(
+          _DashboardCardHeader(
             title: 'My Circle',
+            titleStyle: typography.title,
             icon: Icons.groups_2_outlined,
             trailingIcon: Icons.chevron_right_rounded,
           ),
@@ -975,7 +958,7 @@ class _HomeScreenState extends State<HomeScreen>
                     : 'Your trusted people, close by.',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 10.5),
+                style: typography.subtitle,
               ),
             ),
           ),
@@ -1333,15 +1316,53 @@ class _FeatureCardLeafPainter extends CustomPainter {
   }
 }
 
+// Shared sizing keeps the overview cards in step with Growth Studio.
+class _HomeCardTypography {
+  _HomeCardTypography(BuildContext context, double width) {
+    final scale = (width / 300).clamp(.78, 1.0);
+    final base = GoogleFonts.playfairDisplay(
+      color: _HomeScreenState.ink,
+      height: 1.05,
+      fontWeight: FontWeight.w700,
+    );
+    final maxWidth = width - (26 * scale) - (24 * scale) - (13 * scale * 2);
+    var size = 19.0 * scale;
+    final painter = TextPainter(
+      text: TextSpan(text: 'Community Hub', style: base.copyWith(fontSize: size)),
+      maxLines: 1,
+      textDirection: Directionality.of(context),
+    )..layout();
+    while (painter.width > maxWidth && size > 10 * scale) {
+      size -= .25 * scale;
+      painter.text = TextSpan(
+        text: 'Community Hub', style: base.copyWith(fontSize: size),
+      );
+      painter.layout();
+    }
+    title = base.copyWith(fontSize: size);
+    subtitle = GoogleFonts.inter(
+      color: _HomeScreenState.ink,
+      fontSize: 13.0 * scale,
+      height: 1.18,
+    );
+    painter.dispose();
+  }
+
+  late final TextStyle title;
+  late final TextStyle subtitle;
+}
+
 class _DashboardCardHeader extends StatelessWidget {
   const _DashboardCardHeader({
     required this.title,
+    required this.titleStyle,
     required this.icon,
     this.gold = false,
     this.trailingIcon,
   });
 
   final String title;
+  final TextStyle titleStyle;
   final IconData icon;
   final bool gold;
   final IconData? trailingIcon;
@@ -1350,29 +1371,6 @@ class _DashboardCardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Reserve a little extra width for device rounding and inherited text scaling.
-        final titleWidth = (constraints.maxWidth - 65).clamp(0.0, constraints.maxWidth);
-        final textScaler = MediaQuery.textScalerOf(context);
-        var titleFontSize = 18.0;
-        final titleStyle = GoogleFonts.playfairDisplay(
-          color: _HomeScreenState.ink,
-          fontSize: titleFontSize,
-          fontWeight: FontWeight.w600,
-        );
-        final titlePainter = TextPainter(
-          text: TextSpan(text: 'Daily Check-In', style: titleStyle),
-          textScaler: textScaler,
-          maxLines: 1,
-          textDirection: Directionality.of(context),
-        )..layout();
-        while (titlePainter.width > titleWidth && titleFontSize > 10) {
-          titleFontSize -= .25;
-          titlePainter.text = TextSpan(
-            text: 'Daily Check-In',
-            style: titleStyle.copyWith(fontSize: titleFontSize),
-          );
-          titlePainter.layout();
-        }
 
         return Row(
           children: [
@@ -1386,7 +1384,7 @@ class _DashboardCardHeader extends StatelessWidget {
                   title,
                   maxLines: 1,
                   softWrap: false,
-                  style: titleStyle.copyWith(fontSize: titleFontSize),
+                  style: titleStyle,
                 ),
               ),
             ),
