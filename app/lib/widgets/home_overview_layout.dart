@@ -24,7 +24,10 @@ class HomeOverviewLayout extends StatelessWidget {
             : viewport.maxWidth.clamp(0.0, 1100.0);
         final scale = compactOverview ? viewport.maxWidth / width : 1.0;
         final content = MediaQuery(
-          data: media.copyWith(size: Size(width, media.size.height / scale)),
+          data: media.copyWith(
+            size: Size(width, media.size.height / scale),
+            textScaler: TextScaler.linear(media.textScaler.scale(1) * 1.12),
+          ),
           child: SizedBox(
             width: width,
             child: ConstrainedBox(
