@@ -345,7 +345,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
             labelTextStyle: selectedIndex == 0 &&
                     MediaQuery.sizeOf(context).width < 600 &&
                     MediaQuery.textScalerOf(context).scale(1) <= 1.3
-                ? const WidgetStatePropertyAll(TextStyle(fontSize: 12))
+                ? const WidgetStatePropertyAll(TextStyle(fontSize: 13))
                 : MediaQuery.sizeOf(context).width >= 700
                     ? const WidgetStatePropertyAll(TextStyle(fontSize: 14))
                     : null,

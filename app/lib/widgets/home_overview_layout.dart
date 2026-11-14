@@ -26,7 +26,7 @@ class HomeOverviewLayout extends StatelessWidget {
         final content = MediaQuery(
           data: media.copyWith(
             size: Size(width, media.size.height / scale),
-            textScaler: TextScaler.linear(media.textScaler.scale(1) * 1.12),
+            textScaler: TextScaler.linear(media.textScaler.scale(1) * 1.22),
           ),
           child: SizedBox(
             width: width,
