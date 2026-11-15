@@ -854,8 +854,13 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                                   onMembership: () => Navigator.of(context).push(
                                     MaterialPageRoute<void>(builder: (_) => const VillagePlusScreen())),
                                 ),
-                                const SizedBox(height: 14),
-                                _journalLibrary(docs),
+                                const SizedBox(height: 8),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: MediaQuery.sizeOf(context).width < 600 ? 19 : 26,
+                                  ),
+                                  child: _journalLibrary(docs),
+                                ),
                                 const SizedBox(height: 12),
                                 _closingQuote(),
                                 const SizedBox(height: 12),
@@ -1445,14 +1450,14 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                 ),
               )),
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(10),
                 child: Row(
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Image.asset(
                         'assets/images/my_space_books.jpg',
-                        width: 58, height: 64, fit: BoxFit.cover,
+                        width: 58, height: 44, fit: BoxFit.cover,
                         excludeFromSemantics: true,
                       ),
                     ),
@@ -1464,13 +1469,13 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                           Text(
                             'My Journal Library',
                             style: GoogleFonts.playfairDisplay(
-                              color: green, fontSize: 21,
+                              color: green, fontSize: 18,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 5),
                           const Text(
-                            'All your journal entries in one place.',
+                            'All your entries in one place.',
                             style: TextStyle(color: ink, fontSize: 11.5, height: 1.4),
                           ),
                         ],
@@ -1593,7 +1598,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       onTap: () => startWriting(data['prompt'] as String? ?? '', entry: doc),
       borderRadius: BorderRadius.circular(15),
       child: Container(
-        width: 147,
+        width: ((MediaQuery.sizeOf(context).width.clamp(0, 760) -
+            (MediaQuery.sizeOf(context).width < 600 ? 38 : 52) - 9) / 2)
+            .clamp(147, 320).toDouble(),
         padding: const EdgeInsets.fromLTRB(9, 7, 7, 7),
         decoration: BoxDecoration(
           color: kind == 'letter' ? const Color(0xFFFFEFEB) : const Color(0xFFFFF8ED),
