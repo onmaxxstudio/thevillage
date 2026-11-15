@@ -418,6 +418,14 @@ class CircleService {
             snapshot.docs.map(CircleMessage.fromDocument).toList());
   }
 
+  Stream<int> unreadMessageCount(String otherUid) {
+    final uid = _user.uid;
+    return _firestore.collection('conversations').doc(conversationId(otherUid))
+        .collection('messages').where('recipientUid', isEqualTo: uid)
+        .where('readAt', isNull: true).snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
   Future<void> sendMessage({
     required CirclePerson recipient,
     required String text,

@@ -764,7 +764,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                 children: [
                   Icon(Icons.lock_outline_rounded, color: sage, size: 16),
                   SizedBox(width: 6),
-                  Text('Private to this Circle member.'),
+                  Expanded(child: Text('Private to this Circle member.')),
                 ],
               ),
             ],
@@ -2277,12 +2277,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               subtitle: Text(member.status.isEmpty ? 'Open private conversation' : member.status),
               trailing: member.uid == null || _isTestMember(member)
                   ? const Icon(Icons.chat_bubble_outline_rounded, color: sage)
-                  : StreamBuilder<List<CircleMessage>>(
-                      stream: circleService.messages(member.uid!),
+                  : StreamBuilder<int>(
+                      stream: circleService.unreadMessageCount(member.uid!),
                       builder: (context, snapshot) {
-                        final unread = snapshot.data?.any((message) =>
-                            message.recipientUid == FirebaseAuth.instance.currentUser?.uid &&
-                            message.readAt == null) ?? false;
+                        final unread = (snapshot.data ?? 0) > 0;
                         return Semantics(label: unread ? 'Unread messages' : 'Open chat',
                           child: Icon(unread ? Icons.mark_chat_unread_rounded :
                             Icons.chat_bubble_outline_rounded, color: sage));
