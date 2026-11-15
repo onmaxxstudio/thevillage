@@ -57,12 +57,16 @@ class CircleMessage {
     required this.senderUid,
     required this.text,
     required this.createdAt,
+    this.recipientUid = '',
+    this.readAt,
   });
 
   final String id;
   final String senderUid;
   final String text;
   final DateTime createdAt;
+  final String recipientUid;
+  final DateTime? readAt;
 
   factory CircleMessage.fromDocument(
     QueryDocumentSnapshot<Map<String, dynamic>> document,
@@ -71,6 +75,8 @@ class CircleMessage {
     final rawCreatedAt = data['createdAt'];
     return CircleMessage(
       id: document.id,
+      recipientUid: data['recipientUid'] as String? ?? '',
+      readAt: data['readAt'] is Timestamp ? (data['readAt'] as Timestamp).toDate() : null,
       senderUid: data['senderUid'] as String? ?? '',
       text: data['text'] as String? ?? '',
       createdAt:
@@ -400,7 +406,6 @@ class CircleService {
         .doc(conversationId(otherUid))
         .collection('messages')
         .orderBy('createdAt', descending: true)
-        .limit(100)
         .snapshots()
         .map((snapshot) =>
             snapshot.docs.map(CircleMessage.fromDocument).toList());
@@ -437,6 +442,9 @@ class CircleService {
     });
     await batch.commit();
 
+    // Notification delivery is secondary: a saved message must not be retried
+    // merely because the recipient's notification could not be written.
+    try {
     final username =
         await ProfileService.currentUsername() ?? 'A Circle member';
     await _createNotification(
@@ -446,6 +454,9 @@ class CircleService {
       message: '@$username sent you a message.',
       destinationIndex: 1,
     );
+    } on Object {
+      // The message batch has already committed successfully.
+    }
   }
 
   Future<void> markMessagesRead(String otherUid) async {

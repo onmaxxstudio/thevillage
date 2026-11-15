@@ -587,12 +587,14 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   Future<void> _messageMember(_CircleMember member) async {
     final controller = TextEditingController();
+    var submitted = false;
     final sentMessage = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cream,
       showDragHandle: true,
-      builder: (sheetContext) => Padding(
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setComposerState) => Padding(
         padding: EdgeInsets.fromLTRB(
           22,
           4,
@@ -645,7 +647,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () {
+                  onPressed: submitted ? null : () async {
+                    if (submitted) return;
                     final message = controller.text.trim();
                     if (message.isEmpty) {
                       ScaffoldMessenger.of(sheetContext).showSnackBar(
@@ -653,19 +656,35 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       );
                       return;
                     }
-                    Navigator.pop(sheetContext, message);
+                    setComposerState(() => submitted = true);
+                    try {
+                      if (member.uid != null && !_isTestMember(member)) {
+                        await circleService.sendMessage(
+                          recipient: CirclePerson(uid: member.uid!,
+                            username: member.name.replaceFirst('@', '')),
+                          text: message,
+                        );
+                      }
+                      if (sheetContext.mounted) Navigator.pop(sheetContext, message);
+                    } on Object {
+                      if (!sheetContext.mounted) return;
+                      setComposerState(() => submitted = false);
+                      ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(
+                        content: Text('Message was not sent. Check your connection and sign-in, then try again.')));
+                    }
                   },
                   style: FilledButton.styleFrom(
                     backgroundColor: sage,
                     padding: const EdgeInsets.all(15),
                   ),
                   icon: const Icon(Icons.send_rounded),
-                  label: const Text('Send Private Message'),
+                  label: Text(submitted ? 'Sending…' : 'Send Private Message'),
                 ),
               ),
             ],
           ),
         ),
+      ),
       ),
     );
     controller.dispose();
@@ -682,25 +701,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         );
       });
       await _saveCircleMessages();
-      if (member.uid != null && !_isTestMember(member)) {
-        try {
-          await circleService.sendMessage(
-            recipient: CirclePerson(
-              uid: member.uid!,
-              username: member.name.replaceFirst('@', ''),
-            ),
-            text: sentMessage,
-          );
-        } on Object {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Message saved, but it could not send. Try again.'),
-            ),
-          );
-          return;
-        }
-      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Private message sent to ${member.name}.')),
@@ -709,6 +709,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   }
 
   Future<void> _quickCheckIn(_CircleMember member) async {
+    var submitted = false;
     final checkIn = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: cream,
@@ -749,7 +750,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     trailing: const Icon(Icons.send_rounded, size: 18),
-                    onTap: () => Navigator.pop(sheetContext, option.$1),
+                    onTap: () {
+                      if (submitted) return;
+                      submitted = true;
+                      Navigator.pop(sheetContext, option.$1);
+                    },
                   ),
                 ),
               const SizedBox(height: 6),
@@ -767,18 +772,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     );
 
     if (checkIn != null && mounted) {
-      setState(() {
-        circleMessages.insert(
-          0,
-          _CircleMessage(
-            memberName: member.name,
-            text: checkIn,
-            createdAt: DateTime.now(),
-            isQuickCheckIn: true,
-          ),
-        );
-      });
-      await _saveCircleMessages();
       if (member.uid != null && !_isTestMember(member)) {
         try {
           await circleService.sendMessage(
@@ -792,12 +785,25 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Check-in saved, but it could not send. Try again.'),
+              content: Text('Check-in was not sent. Check your connection and try again.'),
             ),
           );
           return;
         }
       }
+      if (!mounted) return;
+      setState(() {
+        circleMessages.insert(
+          0,
+          _CircleMessage(
+            memberName: member.name,
+            text: checkIn,
+            createdAt: DateTime.now(),
+            isQuickCheckIn: true,
+          ),
+        );
+      });
+      await _saveCircleMessages();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -825,36 +831,39 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   }
 
   Future<void> _openMemberProfile(_CircleMember member) async {
-    var messages = circleMessages
-        .where((item) => item.memberName == member.name)
-        .toList();
-    if (member.uid != null && !_isTestMember(member)) {
-      try {
-        final remote = await circleService.messages(member.uid!).first;
-        messages = remote
-            .map(
-              (message) => _CircleMessage(
-                memberName: member.name,
-                text: message.text,
-                createdAt: message.createdAt,
-                isMine:
-                    message.senderUid == FirebaseAuth.instance.currentUser?.uid,
-              ),
-            )
-            .toList();
-        await circleService.markMessagesRead(member.uid!);
-      } on Object {
-        // Continue with this account's cached conversation while offline.
-      }
-    }
+    final cachedMessages = circleMessages
+        .where((item) => item.memberName == member.name).toList();
+    final messageStream = member.uid != null && !_isTestMember(member)
+        ? circleService.messages(member.uid!) : null;
     const posts = <String>[];
+    var readErrorShown = false;
 
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cream,
       showDragHandle: true,
-      builder: (sheetContext) => DraggableScrollableSheet(
+      builder: (sheetContext) => StreamBuilder<List<CircleMessage>>(
+        stream: messageStream,
+        builder: (streamContext, snapshot) {
+          final messages = snapshot.hasData
+              ? snapshot.data!.map((message) => _CircleMessage(
+                  memberName: member.name, text: message.text,
+                  createdAt: message.createdAt,
+                  isMine: message.senderUid == FirebaseAuth.instance.currentUser?.uid,
+                )).toList()
+              : cachedMessages;
+          if (snapshot.hasData && member.uid != null && snapshot.data!.any((message) =>
+              message.recipientUid == FirebaseAuth.instance.currentUser?.uid && message.readAt == null)) {
+            unawaited(circleService.markMessagesRead(member.uid!).catchError((Object error) {
+              if (!readErrorShown && sheetContext.mounted) {
+                readErrorShown = true;
+                ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(
+                  content: Text('Messages loaded, but unread status could not update. Reopen the chat to retry.')));
+              }
+            }));
+          }
+          return DraggableScrollableSheet(
         expand: false,
         initialChildSize: .82,
         minChildSize: .55,
@@ -965,6 +974,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               style: TextStyle(color: Color(0xFF687067), fontSize: 12),
             ),
             const SizedBox(height: 10),
+            if (snapshot.hasError)
+              const Text('Could not load messages. Check your connection and reopen this chat.'),
+            if (messageStream != null && !snapshot.hasData && !snapshot.hasError)
+              const Center(child: CircularProgressIndicator()),
             if (messages.isEmpty)
               Container(
                 padding: const EdgeInsets.all(16),
@@ -978,7 +991,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                 ),
               )
             else
-              for (final message in messages.take(5))
+              for (final message in messages)
                 Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(13),
@@ -1053,6 +1066,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                 ),
           ],
         ),
+      );
+        },
       ),
     );
   }
@@ -2245,7 +2260,19 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               leading: VillageAvatar(uid: member.uid, radius: 22),
               title: Text(member.name),
               subtitle: Text(member.status.isEmpty ? 'Open private conversation' : member.status),
-              trailing: const Icon(Icons.chat_bubble_outline_rounded, color: sage),
+              trailing: member.uid == null || _isTestMember(member)
+                  ? const Icon(Icons.chat_bubble_outline_rounded, color: sage)
+                  : StreamBuilder<List<CircleMessage>>(
+                      stream: circleService.messages(member.uid!),
+                      builder: (context, snapshot) {
+                        final unread = snapshot.data?.any((message) =>
+                            message.recipientUid == FirebaseAuth.instance.currentUser?.uid &&
+                            message.readAt == null) ?? false;
+                        return Semantics(label: unread ? 'Unread messages' : 'Open chat',
+                          child: Icon(unread ? Icons.mark_chat_unread_rounded :
+                            Icons.chat_bubble_outline_rounded, color: sage));
+                      },
+                    ),
               onTap: () => _openMemberProfile(member),
             ),
         ]),

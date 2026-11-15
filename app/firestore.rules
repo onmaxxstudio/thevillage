@@ -595,6 +595,7 @@ service cloud.firestore {
         request.resource.data.keys().hasOnly(['members', 'updatedAt']) &&
         request.resource.data.members is list &&
         request.resource.data.members.size() == 2 &&
+        request.resource.data.members[0] != request.resource.data.members[1] &&
         request.auth.uid in request.resource.data.members &&
         (
           (
@@ -630,8 +631,12 @@ service cloud.firestore {
             'readAt'
           ]) &&
           request.resource.data.senderUid == request.auth.uid &&
+          request.auth.uid in getAfter(/databases/$(database)/documents/conversations/$(conversationId)).data.members &&
+          request.resource.data.recipientUid != request.auth.uid &&
+          request.resource.data.createdAt == request.time &&
+          request.resource.data.readAt == null &&
           request.resource.data.recipientUid in
-            get(/databases/$(database)/documents/conversations/$(conversationId))
+            getAfter(/databases/$(database)/documents/conversations/$(conversationId))
               .data.members &&
           request.resource.data.text is string &&
           request.resource.data.text.size() > 0 &&
@@ -639,6 +644,8 @@ service cloud.firestore {
 
         allow update: if signedIn() &&
           request.auth.uid == resource.data.recipientUid &&
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.members &&
+          request.resource.data.readAt == request.time &&
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['readAt']);
 
