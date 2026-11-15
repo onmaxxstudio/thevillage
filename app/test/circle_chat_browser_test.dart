@@ -148,9 +148,20 @@ void main() {
 
       Future<void> tapText(String value) async {
         debugPrint('Chat test action: $value');
-        final finder = find.text(value).hitTestable();
+        final finder = find.text(value);
         await visible(finder);
-        await tester.tap(finder.first);
+        for (
+          var i = 0;
+          i < 160 && finder.hitTestable().evaluate().isEmpty;
+          i++
+        ) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 40)),
+          );
+          await tester.pump(const Duration(milliseconds: 40));
+        }
+        expect(finder.hitTestable(), findsWidgets);
+        await tester.tap(finder.hitTestable().first);
         await tester.pump(const Duration(milliseconds: 400));
       }
 
@@ -191,6 +202,8 @@ void main() {
         await tester.pumpWidget(const MaterialApp(home: CircleScreen()));
         await tester.pump(const Duration(milliseconds: 400));
         await tapText('Circle chats');
+        await peerSend('Unread ${size.width}');
+        await visible(find.byIcon(Icons.mark_chat_unread_rounded));
         await tapText('@ChatBob');
         await visible(find.text('Messages between you'));
         await tester.runAsync(
