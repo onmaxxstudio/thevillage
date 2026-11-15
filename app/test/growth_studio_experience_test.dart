@@ -54,7 +54,7 @@ void main() {
             final actions = [
               'monthly-event',
               'monthly-focus',
-              'guided-pathways',
+              'monthly-challenge',
             ];
             final bottoms = actions
                 .map(
@@ -112,7 +112,7 @@ void main() {
           expect(back, 1);
           expect(settings, 1);
           expect(membership, 0);
-          expect(find.text('Guided Pathways'), findsOneWidget);
+          expect(find.text('Monthly Challenge'), findsOneWidget);
           expect(find.text('Monthly Event'), findsOneWidget);
           expect(find.text('Monthly Focus'), findsOneWidget);
           expect(find.text('You’re Not Alone'), findsNothing);
