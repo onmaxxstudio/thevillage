@@ -28,7 +28,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
           0,
           Icons.groups_outlined,
           'Monthly Event',
-          'Live sessions + replays.',
+          'Finding Your Balance\nNov 25 • Live + replay',
           'View Event',
         ),
         _experience(
