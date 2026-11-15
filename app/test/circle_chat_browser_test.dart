@@ -3,6 +3,7 @@ library;
 
 import 'dart:async';
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'package:ask_the_village/screens/circle_screen.dart';
 import 'package:ask_the_village/services/circle_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -46,6 +47,7 @@ void main() {
       );
       const password = 'local-emulator-test-password';
       await tester.runAsync(() async {
+        globalContext['flutterfire_web_sdk_version'] = '12.19.0'.toJS;
         await loadSdk();
         FirebaseCoreWeb.registerWith(webPluginRegistrar);
         FirebaseAuthWeb.registerWith(webPluginRegistrar);
@@ -179,7 +181,23 @@ void main() {
         await tester.pump(const Duration(milliseconds: 400));
         await tapText('Circle chats');
         await tapText('@ChatBob');
-        await visible(find.text('History 104'));
+        await visible(find.text('Messages between you'));
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 300)),
+        );
+        await tester.pump();
+        await tester.scrollUntilVisible(
+          find.text('History 104'),
+          240,
+          scrollable: find.byType(Scrollable).last,
+          maxScrolls: 100,
+        );
+        await tester.scrollUntilVisible(
+          find.text('Message'),
+          -240,
+          scrollable: find.byType(Scrollable).last,
+          maxScrolls: 100,
+        );
         await tapText('Message');
         await tapText('Send Private Message');
         await visible(find.text('Write a message first.'));
