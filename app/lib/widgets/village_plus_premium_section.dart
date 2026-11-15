@@ -149,42 +149,38 @@ class VillagePlusPremiumSection extends StatelessWidget {
       border: Border.all(color: gold, width: 1),
     ),
     clipBehavior: Clip.antiAlias,
-    child: Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(icon, color: gold, size: wide ? 32 : 28),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(title, style: _title(wide ? 23 : 22))),
-                ],
-              ),
-              const SizedBox(height: 9),
-              Text(
-                description,
-                style: TextStyle(
-                  color: cream,
-                  fontSize: wide ? 17 : 13,
-                  height: 1.3,
-                ),
-              ),
-              const SizedBox(height: 14),
-              _button(
-                context,
-                ['monthly-event', 'monthly-focus', 'guided-pathways'][index],
-                action,
-                index + 1,
-              ),
+              Icon(icon, color: gold, size: wide ? 32 : 28),
+              const SizedBox(width: 10),
+              Expanded(child: Text(title, style: _title(wide ? 23 : 22))),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 9),
+          Text(
+            description,
+            style: TextStyle(
+              color: cream,
+              fontSize: wide ? 17 : 13,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 14),
+          _button(
+            context,
+            ['monthly-event', 'monthly-focus', 'guided-pathways'][index],
+            action,
+            index + 1,
+          ),
+        ],
+      ),
     ),
   );
 
