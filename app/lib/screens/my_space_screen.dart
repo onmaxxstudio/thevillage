@@ -844,6 +844,13 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                             child: ListView(
                               padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
                               children: [
+                                LayoutBuilder(builder: (context, constraints) {
+                                  final large = MediaQuery.textScalerOf(context).scale(14) > 19;
+                                  final page = SizedBox(
+                                    width: large ? constraints.maxWidth : 768,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
                                 GrowthStudioExperience(
                                   entries: docs.map((doc) => doc.data()).toList(),
                                   onOpenTool: _openTool,
@@ -857,13 +864,22 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                                 const SizedBox(height: 8),
                                 Padding(
                                   padding: EdgeInsets.symmetric(
-                                    horizontal: MediaQuery.sizeOf(context).width < 600 ? 19 : 26,
+                                    horizontal: large ? 16 : 44,
                                   ),
                                   child: _journalLibrary(docs),
                                 ),
                                 const SizedBox(height: 12),
                                 _closingQuote(),
                                 const SizedBox(height: 12),
+                              ],
+                                    ),
+                                  );
+                                  return large ? page : FittedBox(
+                                    fit: BoxFit.fitWidth,
+                                    alignment: Alignment.topCenter,
+                                    child: page,
+                                  );
+                                }),
                               ],
                             ),
                           ),
@@ -1457,7 +1473,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                       borderRadius: BorderRadius.circular(8),
                       child: Image.asset(
                         'assets/images/my_space_books.jpg',
-                        width: 58, height: 44, fit: BoxFit.cover,
+                        width: 116, height: 58, fit: BoxFit.cover,
                         excludeFromSemantics: true,
                       ),
                     ),
@@ -1469,14 +1485,14 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                           Text(
                             'My Journal Library',
                             style: GoogleFonts.playfairDisplay(
-                              color: green, fontSize: 18,
+                              color: green, fontSize: 24,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 5),
                           const Text(
                             'All your entries in one place.',
-                            style: TextStyle(color: ink, fontSize: 11.5, height: 1.4),
+                            style: TextStyle(color: ink, fontSize: 16, height: 1.4),
                           ),
                         ],
                       ),
@@ -1497,7 +1513,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.search_rounded, size: 20),
                     hintText: 'Search your reflections…',
-                    hintStyle: const TextStyle(fontSize: 13),
+                    hintStyle: const TextStyle(fontSize: 16),
                     contentPadding: const EdgeInsets.symmetric(vertical: 8),
                     filled: true,
                     fillColor: cream,
@@ -1528,7 +1544,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: ChoiceChip(
-                    label: Text(label, style: TextStyle(fontSize: 11, color: selected ? Colors.white : ink)),
+                    label: Text(label, style: TextStyle(fontSize: 14, color: selected ? Colors.white : ink)),
                     selected: selected,
                     showCheckmark: false,
                     onSelected: (_) => setState(() => selectedFilter = label),
@@ -1545,7 +1561,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Text('Recent Entries', style: GoogleFonts.playfairDisplay(fontSize: 17, fontWeight: FontWeight.w700)),
+              Text('Recent Entries', style: GoogleFonts.playfairDisplay(fontSize: 24, fontWeight: FontWeight.w700)),
               const Spacer(),
               TextButton(
                 onPressed: () => _openTool('insights'),
@@ -1598,9 +1614,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       onTap: () => startWriting(data['prompt'] as String? ?? '', entry: doc),
       borderRadius: BorderRadius.circular(15),
       child: Container(
-        width: ((MediaQuery.sizeOf(context).width.clamp(0, 760) -
-            (MediaQuery.sizeOf(context).width < 600 ? 38 : 52) - 9) / 2)
-            .clamp(147, 320).toDouble(),
+        width: 335,
         padding: const EdgeInsets.fromLTRB(9, 7, 7, 7),
         decoration: BoxDecoration(
           color: kind == 'letter' ? const Color(0xFFFFEFEB) : const Color(0xFFFFF8ED),
@@ -1644,15 +1658,15 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                       ],
                     ),
                   ),
-                  Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.playfairDisplay(fontSize: 11, height: 1.05, fontWeight: FontWeight.w700)),
+                  Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.playfairDisplay(fontSize: 16, height: 1.05, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 3),
                   Expanded(
-                    child: Text(data['body'] as String? ?? '', maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, height: 1.12, color: Color(0xFF53564F))),
+                    child: Text(data['body'] as String? ?? '', maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, height: 1.12, color: Color(0xFF53564F))),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(color: tagColor.withValues(alpha: .12), borderRadius: BorderRadius.circular(12)),
-                    child: Text(tag, style: TextStyle(fontSize: 9, color: tagColor, fontWeight: FontWeight.w600)),
+                    child: Text(tag, style: TextStyle(fontSize: 12, color: tagColor, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
