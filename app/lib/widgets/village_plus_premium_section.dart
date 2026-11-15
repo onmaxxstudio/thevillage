@@ -37,7 +37,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
           1,
           Icons.spa_outlined,
           'Monthly Focus',
-          'Monthly topic + weekly reflections.',
+          'Building boundaries + weekly reflections.',
           'Explore Focus',
         ),
         _experience(
