@@ -241,7 +241,7 @@ class _FeatureStrip extends StatelessWidget {
       (Icons.spa_outlined, 'Growth\nTools'),
       (Icons.calendar_month_outlined, 'Monthly\nEvents'),
       (Icons.people_alt_outlined, 'Deeper\nJourneys'),
-      (Icons.trending_up_rounded, 'Track\nYour\nProgress'),
+      (Icons.trending_up_rounded, 'Track\nProgress'),
     ];
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
