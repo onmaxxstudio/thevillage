@@ -1440,15 +1440,15 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   Widget _activeCircleLayout() {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       _circleOrbit(),
-      const SizedBox(height: 8),
+      const SizedBox(height: 22),
       if (_compactPhone) _compactStatusLauncher() else _combinedCheckInCard(),
-      SizedBox(height: _compactPhone ? 6 : 10),
+      SizedBox(height: _compactPhone ? 20 : 14),
       if (incomingRequests.isNotEmpty || _requestLoadFailed) ...[
         _incomingRequestsCard(),
         const SizedBox(height: 14),
       ],
       _messagesCard(),
-      SizedBox(height: _compactPhone ? 6 : 10),
+      SizedBox(height: _compactPhone ? 20 : 14),
       if (_compactPhone)
         Row(children: [
           Expanded(child: OutlinedButton.icon(
@@ -1457,7 +1457,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             icon: const Icon(Icons.emoji_events_outlined, size: 18),
             label: const Text('Share a win'),
           )),
-          const SizedBox(width: 8),
+          const SizedBox(width: 18),
           Expanded(child: OutlinedButton.icon(
             onPressed: _editSupportProfile,
             style: OutlinedButton.styleFrom(minimumSize: const Size(0, 76)),
@@ -1468,17 +1468,18 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       else ...[
       _actionRow(Icons.emoji_events_outlined, 'Share a win',
         'Celebrate something good with your people.', _shareSomethingGood, blush),
-      SizedBox(height: _compactPhone ? 6 : 10),
+      SizedBox(height: _compactPhone ? 20 : 14),
       OutlinedButton.icon(onPressed: _editSupportProfile,
         icon: const Icon(Icons.tune_rounded), label: const Text('Circle settings')),
       ],
-      SizedBox(height: _compactPhone ? 10 : 22),
+      SizedBox(height: _compactPhone ? 30 : 24),
       Row(children: [
         Expanded(child: Text('From your people', style: GoogleFonts.playfairDisplay(
           color: ink, fontSize: 19, fontWeight: FontWeight.w700))),
         if (_visibleCircleMembers.isNotEmpty)
           TextButton(onPressed: _showPeopleUpdates, child: const Text('See all')),
       ]),
+      const SizedBox(height: 16),
       _peopleStatusFeed(),
     ]);
   }
@@ -1544,9 +1545,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   Widget _compactStatusLauncher() => Material(
     color: paleSage,
-    borderRadius: BorderRadius.circular(16),
+    borderRadius: BorderRadius.circular(28),
     child: InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(28),
       onTap: () => showModalBottomSheet<void>(
         context: context,
         useRootNavigator: true,
@@ -1569,14 +1570,15 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
         child: Row(children: [
           const Icon(Icons.edit_note_rounded, color: sage, size: 24),
-          const SizedBox(width: 10),
+          const SizedBox(width: 16),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Post a status', style: GoogleFonts.playfairDisplay(
                 fontSize: 19, height: 1.05, fontWeight: FontWeight.w700, color: ink)),
+              const SizedBox(height: 6),
               Text(writtenStatus.isEmpty ? 'Share how you feel or what you need'
                   : writtenStatus,
                 maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -1895,16 +1897,16 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       ]))));
 
   Widget _messagesCard() => Container(
-    padding: const EdgeInsets.all(11),
-    decoration: BoxDecoration(color: blush, borderRadius: BorderRadius.circular(18)),
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(color: blush, borderRadius: BorderRadius.circular(28)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('Messages', style: GoogleFonts.playfairDisplay(fontSize: 19,
         fontWeight: FontWeight.w700)),
-      const SizedBox(height: 6),
+      const SizedBox(height: 16),
       Row(children: [
         Expanded(child: _messageShortcut(Icons.groups_outlined, 'Circle chats',
           'Your people', _showCircleChats)),
-        const SizedBox(width: 8),
+        const SizedBox(width: 18),
         Expanded(child: _messageShortcut(Icons.chat_bubble_outline, 'Village chats',
           'Conversations', () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const PrivateMessagesScreen())))),
@@ -1914,14 +1916,15 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   Widget _messageShortcut(IconData icon, String title, String subtitle,
       VoidCallback action) => Material(
-    color: cream, borderRadius: BorderRadius.circular(15),
-    child: InkWell(onTap: action, borderRadius: BorderRadius.circular(15),
-      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+    color: cream, borderRadius: BorderRadius.circular(24),
+    child: InkWell(onTap: action, borderRadius: BorderRadius.circular(24),
+      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
         child: Row(children: [
-          Icon(icon, color: sage, size: 19), const SizedBox(width: 7),
+          Icon(icon, color: sage, size: 19), const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
               style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
             Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
               style: GoogleFonts.inter(fontSize: 13, height: 1.18)),
           ])),
