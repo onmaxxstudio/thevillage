@@ -17,7 +17,7 @@ void main() {
   setUpAll(() async {
     await Firebase.initializeApp();
   });
-  for (final width in [320.0, 390.0, 768.0, 1440.0]) {
+  for (final width in [320.0, 390.0, 550.0, 768.0, 1440.0]) {
     testWidgets('Composer fits and selections work at $width', (tester) async {
       tester.view.physicalSize = Size(width, 900);
       tester.view.devicePixelRatio = 1;
@@ -26,7 +26,15 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: AskVillageScreen()));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      final heading = tester.widget<Text>(find.text('What’s on your mind?'));
+      final headingFinder = find.text('What’s on your mind?');
+      // Check the rendered size, rather than just the unscaled font property.
+      final visualHeading = tester.getRect(headingFinder);
+      final layoutHeading = tester.getSize(headingFinder);
+      expect(
+        visualHeading.height / layoutHeading.height,
+        closeTo(width < 600 ? .85 : 1, .001),
+      );
+      final heading = tester.widget<Text>(headingFinder);
       expect(heading.style?.fontSize, width < 600 ? 16 : 24);
       final field = find.byType(TextField).first;
       final composer = tester.widget<TextField>(field);
