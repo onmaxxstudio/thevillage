@@ -223,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen>
       backgroundColor: cream,
       showDragHandle: true,
       builder: (sheetContext) => FractionallySizedBox(
-        heightFactor: .92,
+        heightFactor: .98,
         child: _CheckInSheet(
           existing: today,
           initialMood: initialMood,
@@ -1533,7 +1533,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
   bool spotting = false;
   String flowLevel = '';
   final Set<String> symptoms = {};
-  bool healthExpanded = true;
+  bool healthExpanded = false;
   bool cycleExpanded = false;
   late bool cycleEnabled;
   late final TextEditingController detailsController;
@@ -1550,7 +1550,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     flowLevel = widget.existing?.flowLevel ?? '';
     symptoms.addAll(widget.existing?.symptoms ?? const []);
     cycleEnabled = widget.showPeriodTracking;
-    cycleExpanded = cycleEnabled;
+    cycleExpanded = false;
     detailsController = TextEditingController(
       text: widget.existing?.details ?? '',
     );
@@ -1720,7 +1720,9 @@ class _CheckInSheetState extends State<_CheckInSheet> {
         color: selected ? (selectedTextColor ?? Colors.white) : _HomeScreenState.ink,
         fontSize: 13,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
       shape: const StadiumBorder(),
     );
   }
@@ -1730,7 +1732,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     Color? color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: color ?? Colors.white.withValues(alpha: .48),
         borderRadius: BorderRadius.circular(22),
@@ -1765,14 +1767,14 @@ class _CheckInSheetState extends State<_CheckInSheet> {
           Row(
             children: [
               Container(
-                width: 54,
-                height: 54,
+                width: 32,
+                height: 32,
                 decoration: const BoxDecoration(
                   color: Color(0xFFF9E5E3),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.water_drop_rounded,
-                    color: Color(0xFFD8505B), size: 30),
+                    color: Color(0xFFD8505B), size: 21),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1788,7 +1790,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                               text: 'My Cycle ',
                               style: GoogleFonts.playfairDisplay(
                                 color: _HomeScreenState.ink,
-                                fontSize: 23,
+                                fontSize: 17,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -1801,8 +1803,8 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                       ),
                       Text(
                         cycleEnabled
-                            ? 'Track your period, symptoms, and view estimated ovulation.'
-                            : 'Turn on to track dates, symptoms, and calendar estimates.',
+                            ? 'Dates, symptoms, and estimates.'
+                            : 'Turn on period tracking.',
                         style: const TextStyle(fontSize: 13, height: 1.25),
                       ),
                     ],
@@ -1884,7 +1886,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1952,7 +1954,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
@@ -2047,10 +2049,10 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     final date = '${weekdays[now.weekday - 1]}, ${monthShort[now.month - 1]} ${now.day}';
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        20,
+        14,
         0,
-        20,
-        MediaQuery.viewInsetsOf(context).bottom + 22,
+        14,
+        MediaQuery.viewInsetsOf(context).bottom + 10,
       ),
       child: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -2064,20 +2066,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
                 ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Image.asset('assets/images/welcome_branch.png', height: 18),
-                      Text('Ask the Village',
-                          maxLines: 1,
-                          style: GoogleFonts.playfairDisplay(
-                            color: _HomeScreenState.sage,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          )),
-                    ],
-                  ),
-                ),
+                const Spacer(),
                 TextButton.icon(
                   onPressed: widget.onHistory,
                   icon: const Icon(Icons.calendar_month_outlined, size: 18),
@@ -2094,7 +2083,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
               'Daily Check-In',
               style: GoogleFonts.playfairDisplay(
                 color: _HomeScreenState.ink,
-                fontSize: 27,
+                fontSize: 23,
                 height: 1.15,
                 fontWeight: FontWeight.w700,
               ),
@@ -2113,7 +2102,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 )),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 10),
             Row(
               children: [
                 for (var index = 0; index < _HomeScreenState.moods.length; index++)
@@ -2122,7 +2111,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             _sectionCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2132,7 +2121,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                       TextSpan(
                         text: 'What are you feeling today? ',
                         style: GoogleFonts.playfairDisplay(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: _HomeScreenState.ink,
                         ),
@@ -2175,7 +2164,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _sectionCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2185,14 +2174,14 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                     child: Row(
                       children: [
                         Container(
-                          width: 54,
-                          height: 54,
+                          width: 32,
+                          height: 32,
                           decoration: const BoxDecoration(
                             color: Color(0xFFF6E8D5),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.edit_note_rounded,
-                              color: _HomeScreenState.sage, size: 30),
+                              color: _HomeScreenState.sage, size: 21),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -2204,7 +2193,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                                   TextSpan(
                                     text: 'Health Notes ',
                                     style: GoogleFonts.playfairDisplay(
-                                      fontSize: 21,
+                                      fontSize: 17,
                                       fontWeight: FontWeight.w700,
                                       color: _HomeScreenState.ink,
                                     ),
@@ -2216,7 +2205,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                                 ]),
                               ),
                               const Text(
-                                'Write anything you want to remember about your health, energy, sleep, medication, or symptoms.',
+                                'Energy, sleep, symptoms, or a quick note.',
                                 style: TextStyle(fontSize: 12, height: 1.25),
                               ),
                             ],
@@ -2227,7 +2216,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                     ),
                   ),
                   if (healthExpanded) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     TextField(
                       controller: healthNotesController,
                       minLines: 2,
@@ -2251,9 +2240,9 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildCycleSection(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Row(
               children: [
                 const Icon(Icons.lock_outline_rounded, color: _HomeScreenState.sage, size: 17),
@@ -2268,14 +2257,14 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
                 onPressed: save,
                 style: FilledButton.styleFrom(
                   backgroundColor: _HomeScreenState.sage,
-                  padding: const EdgeInsets.symmetric(vertical: 17),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: const StadiumBorder(),
                 ),
                 child: const Text('Save Check-In', style: TextStyle(fontSize: 16)),
@@ -2305,8 +2294,8 @@ class _CheckInSheetState extends State<_CheckInSheet> {
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 140),
-            width: 62,
-            height: 62,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
               color: moodColors[index],
               shape: BoxShape.circle,
@@ -2315,7 +2304,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                 width: isSelected ? 3 : 0,
               ),
             ),
-            child: Icon(mood.$1, color: iconColor, size: 31),
+            child: Icon(mood.$1, color: iconColor, size: 24),
           ),
           const SizedBox(height: 4),
           Text(label, maxLines: 1, style: const TextStyle(fontSize: 11)),
