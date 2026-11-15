@@ -512,60 +512,65 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
 
   PreferredSizeWidget _plannerHeader() {
     const forest = Color(0xFF103A23);
+    final large = MediaQuery.textScalerOf(context).scale(14) > 19;
+    // Use the same 768-wide canvas and fit as Growth Studio. The enclosing
+    // PlannerViewport scale is accounted for so the visible sizes match.
+    final media = MediaQuery.of(context);
+    final viewportScale = media.size.width < 600 &&
+        media.textScaler.scale(1) <= 1.3 ? .85 : 1.0;
+    final scale = media.size.width / viewportScale / 768;
     return AppBar(
       backgroundColor: cream,
       foregroundColor: forest,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: 110,
+      toolbarHeight: large ? 100 : 100 * scale,
       automaticallyImplyLeading: false,
       titleSpacing: 0,
-      title: Stack(
-        alignment: Alignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const GrowthLeafSprig(),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text('Ask the Village',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
+      title: FittedBox(
+        fit: BoxFit.fitWidth,
+        child: SizedBox(
+          width: 768,
+          height: 100,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const GrowthLeafSprig(),
+                      const SizedBox(width: 12),
+                      Text('Ask the Village',
+                        style: TextStyle(
                           fontFamily: 'VillagePlusDisplay',
-                          color: forest, fontSize: 20)),
-                    ),
-                    const SizedBox(width: 8),
-                    const GrowthLeafSprig(mirrored: true),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text('Plan My Week',
+                          color: forest, fontSize: large ? 20 : 26)),
+                      const SizedBox(width: 12),
+                      const GrowthLeafSprig(mirrored: true),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text('Plan My Week',
                     style: TextStyle(
                       fontFamily: 'VillagePlusDisplay',
-                      color: forest, fontSize: 36, height: 1.05)),
+                      color: forest, fontSize: large ? 29 : 44, height: 1.05)),
+                ],
+              ),
+              Positioned(
+                left: 14,
+                bottom: 8,
+                child: IconButton(
+                  tooltip: 'Back',
+                  onPressed: () => Navigator.maybePop(context),
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          Positioned(
-            left: 4,
-            bottom: 4,
-            child: IconButton(
-              tooltip: 'Back',
-              onPressed: () => Navigator.maybePop(context),
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
