@@ -44,10 +44,10 @@ class VillagePlusPremiumSection extends StatelessWidget {
           context,
           wide,
           2,
-          Icons.auto_stories_outlined,
-          'Guided Pathways',
-          'Self-paced programs.',
-          'Explore',
+          Icons.flag_outlined,
+          'Monthly Challenge',
+          'One small action.\nMeaningful progress.',
+          'View Challenge',
         ),
       ];
       return Padding(
@@ -178,7 +178,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
           const SizedBox(height: 14),
           _button(
             context,
-            ['monthly-event', 'monthly-focus', 'guided-pathways'][index],
+            ['monthly-event', 'monthly-focus', 'monthly-challenge'][index],
             action,
             index + 1,
           ),
@@ -222,13 +222,13 @@ class VillagePlusPremiumSection extends StatelessWidget {
       'Making Room for Yourself',
       'Monthly Event',
       'Monthly Focus',
-      'Guided Pathways',
+      'Monthly Challenge',
     ];
     const details = [
       'A live gathering, guided reflection, and practical tools to help you reset and refocus. Dates and RSVP details will appear here when this experience opens.',
       'Member workshops, replays, a monthly challenge, and resources around one meaningful theme. This month’s schedule will appear here when membership opens.',
       'A monthly topic with weekly reflections and practical activities. The first topic and its resources will appear here when available.',
-      'Exclusive 21-day programs with deeper journaling and progress tracking. Explore a meaningful focus over three weeks when this member experience opens.',
+      'One practical activity each month to help you put your reflections into action. The first challenge and its steps will appear here when this member experience opens.',
     ];
     showModalBottomSheet<void>(
       context: context,
