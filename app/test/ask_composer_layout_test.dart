@@ -26,7 +26,12 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: AskVillageScreen()));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+      final heading = tester.widget<Text>(find.text('What’s on your mind?'));
+      expect(heading.style?.fontSize, width < 600 ? 16 : 24);
       final field = find.byType(TextField).first;
+      final composer = tester.widget<TextField>(field);
+      expect(composer.style?.fontSize, width < 600 ? 12 : 16);
+      expect(composer.maxLength, 1500);
       await tester.enterText(field, 'How can I build better boundaries?');
       await tester.pump();
       expect(
