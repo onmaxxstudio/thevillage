@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../navigation/village_navigation_scope.dart';
+import '../widgets/home_overview_layout.dart';
 import '../services/profile_service.dart';
 import '../services/anonymous_identity_service.dart';
 import 'post_preview_screen.dart';
@@ -86,26 +87,27 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   ];
 
   static String? _normalizedCategory(String? value) => switch (value) {
-        'Relationship & dating' ||
-        'Relationships' ||
-        'Relationships & Dating' =>
-          'Relationships & Dating',
-        'Men' => 'Men',
-        'Women' => 'Women',
-        'Family & parenting' || 'Parenting' || 'Family & Parenting' =>
-          'Family & Parenting',
-        'Mental wellbeing' || 'Mental Health' || 'Mental Wellness' =>
-          'Mental Wellness',
-        'Friendship & social life' || 'Friendship' => 'Friendship',
-        'Work & money' || 'Work & School' || 'Work & Money' => 'Work & Money',
-        'Life changes' || 'Life & Growth' || 'Life Changes & Growth' =>
-          'Life Changes & Growth',
-        'Health & self-care' || 'Health & Self-Care' =>
-          'Health & Self-Care',
-        'Faith' => 'Faith',
-        'Something else' || 'Other' => 'Other',
-        _ => null,
-      };
+    'Relationship & dating' ||
+    'Relationships' ||
+    'Relationships & Dating' => 'Relationships & Dating',
+    'Men' => 'Men',
+    'Women' => 'Women',
+    'Family & parenting' ||
+    'Parenting' ||
+    'Family & Parenting' => 'Family & Parenting',
+    'Mental wellbeing' ||
+    'Mental Health' ||
+    'Mental Wellness' => 'Mental Wellness',
+    'Friendship & social life' || 'Friendship' => 'Friendship',
+    'Work & money' || 'Work & School' || 'Work & Money' => 'Work & Money',
+    'Life changes' ||
+    'Life & Growth' ||
+    'Life Changes & Growth' => 'Life Changes & Growth',
+    'Health & self-care' || 'Health & Self-Care' => 'Health & Self-Care',
+    'Faith' => 'Faith',
+    'Something else' || 'Other' => 'Other',
+    _ => null,
+  };
 
   @override
   void initState() {
@@ -131,13 +133,14 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     if (supportIntents.any((item) => item.$1 == widget.initialSupportIntent)) {
       supportIntent = widget.initialSupportIntent!;
     }
-    currentUsername =
-        ProfileService.usernameNotifier.value ?? 'VillageMember';
+    currentUsername = ProfileService.usernameNotifier.value ?? 'VillageMember';
     ProfileService.usernameNotifier.addListener(_usernameChanged);
     ProfileService.currentUsername();
-    AnonymousIdentityService.currentName().then((name) {
-      if (mounted) setState(() => anonymousName = name);
-    }).catchError((Object _) {});
+    AnonymousIdentityService.currentName()
+        .then((name) {
+          if (mounted) setState(() => anonymousName = name);
+        })
+        .catchError((Object _) {});
   }
 
   void _usernameChanged() {
@@ -161,14 +164,25 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       setState(() => anonymous = value);
       return;
     }
-    final showName = await showDialog<bool>(context: context, builder: (dialogContext) => AlertDialog(
-      title: const Text('Share using your username?'),
-      content: const Text('This post will show your Village username instead of Anonymous. Your original My Space entry will remain private.'),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Stay anonymous')),
-        FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Show my username')),
-      ],
-    ));
+    final showName = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Share using your username?'),
+        content: const Text(
+          'This post will show your Village username instead of Anonymous. Your original My Space entry will remain private.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Stay anonymous'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Show my username'),
+          ),
+        ],
+      ),
+    );
     if (mounted && showName == true) setState(() => anonymous = false);
   }
 
@@ -176,20 +190,27 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     final question = questionController.text.trim();
     if (question.length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please write a little more before previewing.')),
+        const SnackBar(
+          content: Text('Please write a little more before previewing.'),
+        ),
       );
       return;
     }
     if (!categories.contains(category)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please choose a topic before previewing.')),
+        const SnackBar(
+          content: Text('Please choose a topic before previewing.'),
+        ),
       );
       return;
     }
     if ((category == 'Other' && otherTopicController.text.trim().isEmpty) ||
-        (supportIntent == 'Other' && otherSupportController.text.trim().isEmpty)) {
+        (supportIntent == 'Other' &&
+            otherSupportController.text.trim().isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please describe your Other choice before previewing.')),
+        const SnackBar(
+          content: Text('Please describe your Other choice before previewing.'),
+        ),
       );
       return;
     }
@@ -229,19 +250,24 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         builder: (_) => PostPreviewScreen(
           post: VillagePostDraft(
             question: question,
-            category: category == 'Other' ? otherTopicController.text.trim() : category,
+            category: category == 'Other'
+                ? otherTopicController.text.trim()
+                : category,
             audience: 'The Village',
             anonymous: anonymous,
             needsSupport: needsSupport,
-            supportIntent: supportIntent == 'Other' ? otherSupportController.text.trim() : supportIntent,
+            supportIntent: supportIntent == 'Other'
+                ? otherSupportController.text.trim()
+                : supportIntent,
             username: currentUsername,
             welcomesPrayer: false,
             communityId: widget.initialCommunityId,
             communityName: widget.initialCommunityName,
           ),
           suggestionId: widget.suggestionId,
-          suggestedQuestionText:
-              widget.suggestionId == null ? null : widget.initialQuestion,
+          suggestedQuestionText: widget.suggestionId == null
+              ? null
+              : widget.initialQuestion,
           onSuggestedQuestionPosted: widget.onSuggestedQuestionPosted,
         ),
       ),
@@ -253,70 +279,79 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     if (widget.firstQuestionFlow) return _firstQuestionScreen();
     return Scaffold(
       backgroundColor: cream,
-      appBar: AppBar(
-        backgroundColor: cream,
-        toolbarHeight: 92,
-        leadingWidth: 60,
-        leading: const SizedBox(width: 60),
-        title: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset('assets/images/welcome_branch.png', height: 18),
-              const SizedBox(height: 3),
-              Text(
-                'Ask the Village',
-                style: GoogleFonts.playfairDisplay(
-                  color: sage,
-                  fontSize: 42,
-                  fontWeight: FontWeight.w600,
-                ),
+      body: SafeArea(
+        child: HomeOverviewLayout(
+          distributeSections: false,
+          header: AppBar(
+            backgroundColor: cream,
+            toolbarHeight: 76,
+            leadingWidth: 60,
+            leading: const SizedBox(width: 60),
+            title: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset('assets/images/welcome_branch.png', height: 18),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Ask the Village',
+                    style: GoogleFonts.playfairDisplay(
+                      color: sage,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                tooltip: 'Restore draft',
+                onPressed: _restoreDraft,
+                icon: const Icon(Icons.note_alt_outlined),
               ),
             ],
           ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: 'Restore draft',
-            onPressed: _restoreDraft,
-            icon: const Icon(Icons.note_alt_outlined),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
+          sections: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (widget.initialCommunityName?.trim().isNotEmpty ?? false) ...[
+                if (widget.initialCommunityName?.trim().isNotEmpty ??
+                    false) ...[
                   _communityDestinationBanner(),
                   const SizedBox(height: 10),
                   SwitchListTile.adaptive(
                     value: anonymous,
                     onChanged: setAnonymousForJournalShare,
-                    secondary: const Icon(Icons.visibility_off_outlined, color: sage),
-                    title: const Text('Post anonymously', style: TextStyle(fontWeight: FontWeight.w800)),
+                    secondary: const Icon(
+                      Icons.visibility_off_outlined,
+                      color: sage,
+                    ),
+                    title: const Text(
+                      'Post anonymously',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
                     subtitle: const Text('Your name will not be shown.'),
                   ),
                   const SizedBox(height: 10),
                 ],
                 _section(
                   title: 'What’s on your mind?',
-                  subtitle: 'There’s no perfect way to ask. Just start where you are.',
+                  subtitle:
+                      'There’s no perfect way to ask. Just start where you are.',
                   child: Column(
                     children: [
                       TextField(
                         controller: questionController,
                         maxLength: 1500,
-                        minLines: 6,
+                        minLines: 4,
                         maxLines: 10,
                         onChanged: (_) => setState(() {}),
                         decoration: InputDecoration(
-                          hintText: 'Write your question or share what’s going on…',
+                          hintText:
+                              'Write your question or share what’s going on…',
                           filled: true,
                           fillColor: cream,
                           border: OutlineInputBorder(
@@ -325,7 +360,10 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: sage, width: 1.5),
+                            borderSide: const BorderSide(
+                              color: sage,
+                              width: 1.5,
+                            ),
                           ),
                         ),
                       ),
@@ -352,7 +390,8 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                     ],
                   ),
                 ),
-                if (!(widget.initialCommunityName?.trim().isNotEmpty ?? false)) ...[
+                if (!(widget.initialCommunityName?.trim().isNotEmpty ??
+                    false)) ...[
                   const SizedBox(height: 14),
                   _section(
                     title: 'How would you like to ask?',
@@ -374,7 +413,9 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                             selected: anonymous,
                             icon: Icons.visibility_off_outlined,
                             title: 'Post anonymously',
-                            subtitle: anonymousName == 'Loading…' ? anonymousName : '@$anonymousName',
+                            subtitle: anonymousName == 'Loading…'
+                                ? anonymousName
+                                : '@$anonymousName',
                             onTap: () => setState(() => anonymous = true),
                           ),
                         ),
@@ -391,12 +432,16 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                 const SizedBox(height: 14),
                 _section(
                   title: 'What would help most right now?',
-                  subtitle: 'Choose the kind of response that would feel helpful.',
+                  subtitle:
+                      'Choose the kind of response that would feel helpful.',
                   child: _supportChoices(),
                 ),
                 const SizedBox(height: 14),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF1DE),
                     borderRadius: BorderRadius.circular(15),
@@ -417,8 +462,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                     ),
                     activeThumbColor: sage,
                     value: needsSupport,
-                    onChanged: (value) =>
-                        setState(() => needsSupport = value),
+                    onChanged: (value) => setState(() => needsSupport = value),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -432,7 +476,11 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                     children: [
                       Icon(Icons.privacy_tip_outlined, color: sage),
                       SizedBox(width: 10),
-                      Expanded(child: Text('Your privacy matters. Never share private identifying information.')),
+                      Expanded(
+                        child: Text(
+                          'Your privacy matters. Never share private identifying information.',
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -451,7 +499,10 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                       flex: 2,
                       child: FilledButton.icon(
                         onPressed: preview,
-                        style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.all(16)),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: sage,
+                          padding: const EdgeInsets.all(16),
+                        ),
                         iconAlignment: IconAlignment.end,
                         icon: const Icon(Icons.arrow_forward_rounded),
                         label: const Text('Preview Post'),
@@ -461,7 +512,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -475,7 +526,13 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         onPressed: () => VillageNavigationScope.of(context).onSelect(4),
         icon: const Icon(Icons.arrow_back_rounded),
       ),
-      title: Text('Ask your community', style: GoogleFonts.playfairDisplay(color: sage, fontWeight: FontWeight.w700)),
+      title: Text(
+        'Ask your community',
+        style: GoogleFonts.playfairDisplay(
+          color: sage,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
       centerTitle: true,
     ),
     body: SafeArea(
@@ -490,14 +547,21 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
               SwitchListTile.adaptive(
                 value: anonymous,
                 onChanged: (value) => setState(() => anonymous = value),
-                secondary: const Icon(Icons.visibility_off_outlined, color: sage),
-                title: const Text('Post anonymously', style: TextStyle(fontWeight: FontWeight.w800)),
+                secondary: const Icon(
+                  Icons.visibility_off_outlined,
+                  color: sage,
+                ),
+                title: const Text(
+                  'Post anonymously',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
                 subtitle: const Text('Your name will not be shown.'),
               ),
               const SizedBox(height: 8),
               _section(
                 title: 'What’s been on your mind lately?',
-                subtitle: 'You do not need the perfect words. Start where you are.',
+                subtitle:
+                    'You do not need the perfect words. Start where you are.',
                 child: TextField(
                   controller: questionController,
                   autofocus: true,
@@ -508,7 +572,10 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                     hintText: 'Share your question or what is going on…',
                     filled: true,
                     fillColor: cream,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: line)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: line),
+                    ),
                   ),
                 ),
               ),
@@ -526,8 +593,11 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                         label: Text(option.$1),
                         selected: supportIntent == option.$1,
                         selectedColor: const Color(0xFFE8EBDD),
-                        side: BorderSide(color: supportIntent == option.$1 ? sage : line),
-                        onSelected: (_) => setState(() => supportIntent = option.$1),
+                        side: BorderSide(
+                          color: supportIntent == option.$1 ? sage : line,
+                        ),
+                        onSelected: (_) =>
+                            setState(() => supportIntent = option.$1),
                       ),
                   ],
                 ),
@@ -536,14 +606,25 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
               SwitchListTile.adaptive(
                 value: needsSupport,
                 onChanged: (value) => setState(() => needsSupport = value),
-                secondary: const Icon(Icons.volunteer_activism_outlined, color: gold),
-                title: const Text('I need extra support today', style: TextStyle(fontWeight: FontWeight.w800)),
-                subtitle: const Text('Let neighbors know this feels especially important.'),
+                secondary: const Icon(
+                  Icons.volunteer_activism_outlined,
+                  color: gold,
+                ),
+                title: const Text(
+                  'I need extra support today',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+                subtitle: const Text(
+                  'Let neighbors know this feels especially important.',
+                ),
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
                 onPressed: preview,
-                style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.all(16)),
+                style: FilledButton.styleFrom(
+                  backgroundColor: sage,
+                  padding: const EdgeInsets.all(16),
+                ),
                 icon: const Icon(Icons.arrow_forward_rounded),
                 label: const Text('Preview my question'),
               ),
@@ -594,7 +675,11 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     );
   }
 
-  Widget _section({required String title, required String subtitle, required Widget child}) {
+  Widget _section({
+    required String title,
+    required String subtitle,
+    required Widget child,
+  }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -605,9 +690,16 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: ink)),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: ink,
+            ),
+          ),
           const SizedBox(height: 3),
-          Text(subtitle, style: const TextStyle(fontSize: 12.5)),
+          Text(subtitle, style: const TextStyle(fontSize: 15, height: 1.3)),
           const SizedBox(height: 10),
           child,
         ],
@@ -619,37 +711,40 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     return Column(
       children: [
         DropdownButtonFormField<String>(
-      // Rebuild when a saved draft changes the selected topic.
-      key: ValueKey(category),
-      initialValue: categories.contains(category) ? category : null,
-      isExpanded: true,
-      menuMaxHeight: 320,
-      dropdownColor: cream,
-      hint: const Text('Choose a topic'),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: cream,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: line),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: line),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: sage, width: 1.5),
-        ),
-      ),
-      items: [
-        for (final item in categories)
-          DropdownMenuItem(value: item, child: Text(item)),
-      ],
-      onChanged: (value) {
-        if (value != null) setState(() => category = value);
-      },
+          // Rebuild when a saved draft changes the selected topic.
+          key: ValueKey(category),
+          initialValue: categories.contains(category) ? category : null,
+          isExpanded: true,
+          menuMaxHeight: 320,
+          dropdownColor: cream,
+          hint: const Text('Choose a topic'),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: cream,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: line),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: line),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: sage, width: 1.5),
+            ),
+          ),
+          items: [
+            for (final item in categories)
+              DropdownMenuItem(value: item, child: Text(item)),
+          ],
+          onChanged: (value) {
+            if (value != null) setState(() => category = value);
+          },
         ),
         if (category == 'Other') ...[
           const SizedBox(height: 10),
@@ -684,7 +779,8 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         DropdownButtonFormField<String>(
           key: ValueKey(supportIntent),
           initialValue: supportIntents.any((item) => item.$1 == supportIntent)
-              ? supportIntent : null,
+              ? supportIntent
+              : null,
           isExpanded: true,
           menuMaxHeight: 320,
           dropdownColor: cream,
@@ -706,22 +802,34 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         ),
         if (supportIntent == 'Other') ...[
           const SizedBox(height: 10),
-          _otherField(otherSupportController, 'What kind of support do you need?'),
+          _otherField(
+            otherSupportController,
+            'What kind of support do you need?',
+          ),
         ],
       ],
     );
   }
 
-  Widget _choiceCard({required bool selected, required IconData icon, required String title, required String subtitle, required VoidCallback onTap}) {
+  Widget _choiceCard({
+    required bool selected,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(17),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 128),
+        constraints: const BoxConstraints(minHeight: 112),
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFF1F3E9) : cream,
-          border: Border.all(color: selected ? sage : line, width: selected ? 1.5 : 1),
+          border: Border.all(
+            color: selected ? sage : line,
+            width: selected ? 1.5 : 1,
+          ),
           borderRadius: BorderRadius.circular(17),
         ),
         child: Stack(
@@ -730,15 +838,36 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircleAvatar(backgroundColor: const Color(0xFFE5E7D9), child: Icon(icon, color: sage)),
+                  CircleAvatar(
+                    backgroundColor: const Color(0xFFE5E7D9),
+                    child: Icon(icon, color: sage),
+                  ),
                   const SizedBox(height: 9),
-                  Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 3),
-                  Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14),
+                  ),
                 ],
               ),
             ),
-            if (selected) const Positioned(right: 0, top: 0, child: Icon(Icons.check_circle, color: sage)),
+            if (selected)
+              const Positioned(
+                right: 0,
+                top: 0,
+                child: Icon(Icons.check_circle, color: sage),
+              ),
           ],
         ),
       ),
@@ -751,7 +880,16 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(5),
-          child: Column(children: [Icon(icon, color: gold, size: 21), Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10))]),
+          child: Column(
+            children: [
+              Icon(icon, color: gold, size: 21),
+              Text(
+                text,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -791,14 +929,15 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         questionController.text = draft['question'] as String? ?? '';
         otherTopicController.text = draft['otherTopic'] as String? ?? '';
         otherSupportController.text = draft['otherSupport'] as String? ?? '';
-        category = _normalizedCategory(draft['category'] as String?) ?? category;
+        category =
+            _normalizedCategory(draft['category'] as String?) ?? category;
         anonymous = draft['anonymous'] as bool? ?? anonymous;
         needsSupport = draft['needsSupport'] as bool? ?? needsSupport;
         supportIntent = draft['supportIntent'] as String? ?? supportIntent;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Your draft was restored.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Your draft was restored.')));
     } on Object {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('That draft could not be opened.')),
