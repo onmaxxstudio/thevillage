@@ -1352,7 +1352,16 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final media = MediaQuery.of(context);
+    // Home renders a 768px canvas at 1.22 text scale on phone screens.
+    // Match its visible type size without scaling Circle's cards or orbit.
+    final typeScale = _compactPhone && media.textScaler.scale(1) <= 1.3
+        ? media.size.width / 768 * 1.22
+        : 1.0;
+    return MediaQuery(
+      data: media.copyWith(textScaler: TextScaler.linear(
+        media.textScaler.scale(1) * typeScale)),
+      child: Scaffold(
       backgroundColor: cream,
       body: SafeArea(
         child: Center(
@@ -1375,7 +1384,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                         textAlign: TextAlign.center,
                         style: GoogleFonts.playfairDisplay(
                           color: sage,
-                          fontSize: _compactPhone ? 26 : 42,
+                          fontSize: _compactPhone ? 31 : 42,
                           height: .95,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1403,6 +1412,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -1946,7 +1956,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           Icon(icon, color: sage, size: 19), const SizedBox(width: 7),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.playfairDisplay(fontSize: 16, fontWeight: FontWeight.w700)),
+              style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w700)),
             Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
               style: GoogleFonts.inter(fontSize: 13, height: 1.18)),
           ])),
@@ -2398,7 +2408,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         ? 14
         : math.max(0, _visibleCircleMembers.length - people.length);
 
-    return AnimatedBuilder(
+    return MediaQuery(
+      data: MediaQuery.of(context),
+      child: AnimatedBuilder(
       animation: _orbitController,
       builder: (context, _) {
         final turn = _orbitController.value * 2 * math.pi;
@@ -2534,6 +2546,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           },
         );
       },
+      ),
     );
   }
 
