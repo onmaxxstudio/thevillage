@@ -150,7 +150,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
     ),
     clipBehavior: Clip.antiAlias,
     child: Padding(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -158,9 +158,9 @@ class VillagePlusPremiumSection extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: gold, size: wide ? 32 : 28),
+              Icon(icon, color: gold, size: wide ? 28 : 28),
               const SizedBox(width: 10),
-              Expanded(child: Text(title, style: _title(wide ? 23 : 22))),
+              Expanded(child: Text(title, style: _title(wide ? 21 : 22))),
             ],
           ),
           const SizedBox(height: 9),
@@ -168,7 +168,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
             description,
             style: TextStyle(
               color: cream,
-              fontSize: wide ? 17 : 13,
+              fontSize: wide ? 16 : 13,
               height: 1.3,
             ),
           ),
