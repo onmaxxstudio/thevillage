@@ -25,6 +25,7 @@ import '../services/private_journal_service.dart';
 import '../services/personalization_service.dart';
 import '../screens/village_feed_screen.dart';
 import 'village_navigation_scope.dart';
+import '../widgets/planner_viewport.dart';
 
 class VillageAppShell extends StatefulWidget {
   const VillageAppShell({super.key});
@@ -161,7 +162,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
     const HomeScreen(),
     const CircleScreen(),
     AskVillageScreen(initialCommunityId: firstCommunityId, initialCommunityName: firstCommunityName, firstQuestionFlow: firstCommunityId != null),
-    const VillageFeedScreen(),
+    const PlannerViewport(scale: .75, child: VillageFeedScreen()),
     const CommunityHubManagedScreen(),
   ];
 
@@ -337,12 +338,12 @@ class _VillageAppShellState extends State<VillageAppShell> {
             ],
           ),
           bottomNavigationBar: NavigationBar(
-            height: (selectedIndex == 0 || selectedIndex == 1 || selectedIndex == 4) &&
+            height: (selectedIndex == 0 || selectedIndex == 1 || selectedIndex == 3 || selectedIndex == 4) &&
                     MediaQuery.sizeOf(context).width < 600 &&
                     MediaQuery.textScalerOf(context).scale(1) <= 1.3
                 ? 64
                 : null,
-            labelTextStyle: (selectedIndex == 0 || selectedIndex == 1 || selectedIndex == 4) &&
+            labelTextStyle: (selectedIndex == 0 || selectedIndex == 1 || selectedIndex == 3 || selectedIndex == 4) &&
                     MediaQuery.sizeOf(context).width < 600 &&
                     MediaQuery.textScalerOf(context).scale(1) <= 1.3
                 ? const WidgetStatePropertyAll(TextStyle(fontSize: 13))
