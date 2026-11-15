@@ -416,7 +416,7 @@ class _PortraitPainter extends CustomPainter {
         0 => .84, // Afro
         1 => .98, // Locs
         2 => .97, // Twists
-        4 => .82, // Bantu knots
+        4 => .80, // Bantu knots
         5 => .94, // Curls
         6 => .75, // Waves
         7 => .84, // Short crop

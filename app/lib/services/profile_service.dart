@@ -548,7 +548,7 @@ class ProfileService {
     if (mode == 'avatar' && !avatarKeys.contains(key)) {
       throw const ProfileValidationException('Choose one of the available avatars.');
     }
-    if (skin < 0 || skin > 13 || hair < 0 || hair > 16 || hairColor < 0 || hairColor > 9 || eyeColor < 0 || eyeColor > 5 ||
+    if (skin < 0 || skin > 13 || hair < 0 || hair > 16 || hairColor < 0 || hairColor > 10 || eyeColor < 0 || eyeColor > 5 ||
         [face, eyes, smile, presentation, nose, brows, glasses, freckles]
             .any((value) => value < 0 || value > 2) ||
         [facialHair, mole].any((value) => value < 0 || value > 4)) {

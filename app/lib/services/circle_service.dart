@@ -57,12 +57,16 @@ class CircleMessage {
     required this.senderUid,
     required this.text,
     required this.createdAt,
+    this.recipientUid = '',
+    this.readAt,
   });
 
   final String id;
   final String senderUid;
   final String text;
   final DateTime createdAt;
+  final String recipientUid;
+  final DateTime? readAt;
 
   factory CircleMessage.fromDocument(
     QueryDocumentSnapshot<Map<String, dynamic>> document,
@@ -71,6 +75,8 @@ class CircleMessage {
     final rawCreatedAt = data['createdAt'];
     return CircleMessage(
       id: document.id,
+      recipientUid: data['recipientUid'] as String? ?? '',
+      readAt: data['readAt'] is Timestamp ? (data['readAt'] as Timestamp).toDate() : null,
       senderUid: data['senderUid'] as String? ?? '',
       text: data['text'] as String? ?? '',
       createdAt:
@@ -301,7 +307,14 @@ class CircleService {
                 }))
               .toList();
           return Future.wait(people.map((person) async {
-            final latest = await ProfileService.publicUsername(person.uid);
+            String? latest;
+            try {
+              latest = await ProfileService.publicUsername(person.uid)
+                  .timeout(const Duration(seconds: 3));
+            } on Object {
+              // A directory lookup must not prevent existing Circle members
+              // and their private chat buttons from becoming available.
+            }
             return CirclePerson(
               uid: person.uid,
               username: latest ?? person.username,
@@ -400,10 +413,17 @@ class CircleService {
         .doc(conversationId(otherUid))
         .collection('messages')
         .orderBy('createdAt', descending: true)
-        .limit(100)
         .snapshots()
         .map((snapshot) =>
             snapshot.docs.map(CircleMessage.fromDocument).toList());
+  }
+
+  Stream<int> unreadMessageCount(String otherUid) {
+    final uid = _user.uid;
+    return _firestore.collection('conversations').doc(conversationId(otherUid))
+        .collection('messages').where('recipientUid', isEqualTo: uid)
+        .where('readAt', isNull: true).snapshots()
+        .map((snapshot) => snapshot.docs.length);
   }
 
   Future<void> sendMessage({
@@ -437,6 +457,9 @@ class CircleService {
     });
     await batch.commit();
 
+    // Notification delivery is secondary: a saved message must not be retried
+    // merely because the recipient's notification could not be written.
+    try {
     final username =
         await ProfileService.currentUsername() ?? 'A Circle member';
     await _createNotification(
@@ -446,6 +469,9 @@ class CircleService {
       message: '@$username sent you a message.',
       destinationIndex: 1,
     );
+    } on Object {
+      // The message batch has already committed successfully.
+    }
   }
 
   Future<void> markMessagesRead(String otherUid) async {

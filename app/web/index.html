@@ -63,6 +63,9 @@
     <button id="startup-retry" type="button" hidden onclick="location.reload()">Try again</button>
   </div>
   <script>
+    // Keep listener race fixes available to FlutterFire without changing Dart APIs.
+    // Firebase 12.13+ fixes the ca9/b815 assertion seen during private chat tests.
+    window.flutterfire_web_sdk_version = '12.19.0';
     (() => {
       const status = document.getElementById('startup-status');
       const help = document.getElementById('startup-help');

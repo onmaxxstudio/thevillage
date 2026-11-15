@@ -79,14 +79,14 @@ class _AuthGate extends StatelessWidget {
       builder: (context, snapshot) {
         final user = snapshot.data;
         if (user == null) return const WelcomeScreen();
-        return _SignedInDestination(auth: auth);
+        return _SignedInDestination(key: ValueKey(user.uid), auth: auth);
       },
     );
   }
 }
 
 class _SignedInDestination extends StatefulWidget {
-  const _SignedInDestination({required this.auth});
+  const _SignedInDestination({super.key, required this.auth});
 
   final AuthService auth;
 
