@@ -32,28 +32,56 @@ class GrowthStudioExperience extends StatelessWidget {
             children: [
               Stack(
                 children: [
-                  SizedBox(height: large ? null : 132, width: double.infinity,
-                    child: ColoredBox(key: const ValueKey('growth-header-background'),
+                  SizedBox(
+                    height: large ? null : 132,
+                    width: double.infinity,
+                    child: ColoredBox(
+                      key: const ValueKey('growth-header-background'),
                       color: const Color(0xFFFFFAF1),
-                      child: Stack(children: [
-                        Positioned(left: 0,top: 0,bottom: 0,width: large ? 80 : 220,
-                          child: _headerCorner(const Rect.fromLTWH(0,0,240,132))),
-                        Positioned(right: 0,top: 0,bottom: 0,width: large ? 80 : 220,
-                          child: _headerCorner(const Rect.fromLTWH(784,0,240,132))),
-                        Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                            if (!large) const GrowthLeafSprig(),
-                            const SizedBox(width: 12),
-                            Flexible(child: Text('Ask the Village',textAlign: TextAlign.center, style: TextStyle(fontFamily: 'VillagePlusDisplay',
-                              color: GrowthStudioDashboard.forest,fontSize: large ? 20 : 31))),
-                            const SizedBox(width: 12),
-                            if (!large) const GrowthLeafSprig(mirrored: true),
-                          ]),
-                          const SizedBox(height: 12),
-                          Text('Growth Studio',style: TextStyle(fontFamily: 'VillagePlusDisplay',
-                            color: GrowthStudioDashboard.forest,fontSize: large ? 29 : 54,height: 1.05)),
-                        ])),
-                      ]))),
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (!large) const GrowthLeafSprig(),
+                                    const SizedBox(width: 12),
+                                    Flexible(
+                                      child: Text(
+                                        'Ask the Village',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontFamily: 'VillagePlusDisplay',
+                                          color: GrowthStudioDashboard.forest,
+                                          fontSize: large ? 20 : 31,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    if (!large)
+                                      const GrowthLeafSprig(mirrored: true),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Growth Studio',
+                                  style: TextStyle(
+                                    fontFamily: 'VillagePlusDisplay',
+                                    color: GrowthStudioDashboard.forest,
+                                    fontSize: large ? 29 : 54,
+                                    height: 1.05,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   Positioned(
                     left: 14,
                     bottom: 8,
@@ -81,7 +109,9 @@ class GrowthStudioExperience extends StatelessWidget {
                 ],
               ),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: large ? 12 : (phone ? 20 : 38)),
+                padding: EdgeInsets.symmetric(
+                  horizontal: large ? 12 : (phone ? 20 : 38),
+                ),
                 child: GrowthStudioDashboard(
                   entries: entries,
                   onOpenTool: onOpenTool,
@@ -89,9 +119,18 @@ class GrowthStudioExperience extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 7),
-              Center(child: Text('Your everyday tools',textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'VillagePlusDisplay',color: GrowthStudioDashboard.forest,
-                  fontSize: large ? 25 : 40,height: 1.1))),
+              Center(
+                child: Text(
+                  'Your everyday tools',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'VillagePlusDisplay',
+                    color: GrowthStudioDashboard.forest,
+                    fontSize: large ? 25 : 40,
+                    height: 1.1,
+                  ),
+                ),
+              ),
               const SizedBox(height: 8),
               Text(
                 'Still here. Always yours.',
@@ -123,11 +162,6 @@ class GrowthStudioExperience extends StatelessWidget {
       );
     },
   );
-
-  Widget _headerCorner(Rect region) => ShaderMask(blendMode: BlendMode.dstIn,
-    shaderCallback: (bounds) => const RadialGradient(radius: .65,
-      colors: [Colors.white,Colors.white,Colors.transparent],stops: [0,.35,1]).createShader(bounds),
-    child: GrowthReferenceArt(region: region));
 
   Widget _tools(BuildContext context, bool large) => LayoutBuilder(
     builder: (context, constraints) {
@@ -190,20 +224,40 @@ class GrowthStudioExperience extends StatelessWidget {
           'budget',
         ),
       ];
-      final titleStyle = TextStyle(fontFamily: 'VillagePlusDisplay',fontSize: large ? 18 : (phone ? 26 : 22),height: 1.1);
-      final detailStyle = TextStyle(fontSize: large ? 12 : (phone ? 18 : 14),height: 1.2);
+      final titleStyle = TextStyle(
+        fontFamily: 'VillagePlusDisplay',
+        fontSize: large ? 18 : (phone ? 26 : 22),
+        height: 1.1,
+      );
+      final detailStyle = TextStyle(
+        fontSize: large ? 12 : (phone ? 18 : 14),
+        height: 1.2,
+      );
       final textWidth = width - (large ? 24 : 40) - (large ? 25 : 42) - 18;
       double measure(String value, TextStyle style) {
-        final painter = TextPainter(text: TextSpan(text: value,style: DefaultTextStyle.of(context).style.merge(style)),
-          textDirection: Directionality.of(context),textScaler: MediaQuery.textScalerOf(context))
-          ..layout(maxWidth: textWidth > 1 ? textWidth : 1);
-        final height = painter.height;painter.dispose();return height;
+        final painter = TextPainter(
+          text: TextSpan(
+            text: value,
+            style: DefaultTextStyle.of(context).style.merge(style),
+          ),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout(maxWidth: textWidth > 1 ? textWidth : 1);
+        final height = painter.height;
+        painter.dispose();
+        return height;
       }
+
       var standardHeight = 0.0;
-      for(final tool in tools.skip(1)) {
-        final textHeight = measure(tool.$1,titleStyle) + 5 + measure(tool.$2,detailStyle);
-        final candidate = (textHeight > (large ? 25 : 42) ? textHeight : (large ? 25.0 : 42.0)) + 26;
-        if(candidate > standardHeight) standardHeight = candidate;
+      for (final tool in tools.skip(1)) {
+        final textHeight =
+            measure(tool.$1, titleStyle) + 5 + measure(tool.$2, detailStyle);
+        final candidate =
+            (textHeight > (large ? 25 : 42)
+                ? textHeight
+                : (large ? 25.0 : 42.0)) +
+            26;
+        if (candidate > standardHeight) standardHeight = candidate;
       }
       Widget card(int i) => Material(
         color: const Color(0xFFFFF4DF),
