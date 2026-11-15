@@ -1091,8 +1091,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
         child: LayoutBuilder(builder: (context, constraints) {
           final bubblesWidth = 60.0 * categoryGroups.length +
               12.0 * (categoryGroups.length - 1);
-          final centered = MediaQuery.sizeOf(context).width >= 700 &&
-              constraints.maxWidth >= bubblesWidth + 38;
+          final centered = constraints.maxWidth >= bubblesWidth + 38;
           final horizontalPadding = centered
               ? (constraints.maxWidth - bubblesWidth) / 2
               : 19.0;
@@ -1109,8 +1108,9 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
               child: SizedBox(
                 width: 60,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
+                    Center(child: Container(
                       width: 46,
                       height: 46,
                       alignment: Alignment.center,
@@ -1123,7 +1123,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
                         color: sage,
                         size: 22,
                       ),
-                    ),
+                    )),
                     const SizedBox(height: 4),
                     Text(
                       group.name,
