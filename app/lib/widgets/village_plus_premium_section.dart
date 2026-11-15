@@ -50,7 +50,9 @@ class VillagePlusPremiumSection extends StatelessWidget {
           'Explore',
         ),
       ];
-      return Stack(
+      return Padding(
+        padding: const EdgeInsets.only(top: 16),
+        child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
         children: [
@@ -59,7 +61,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
             margin: EdgeInsets.only(
               top: large ? MediaQuery.textScalerOf(context).scale(44) : 12,
             ),
-            padding: EdgeInsets.fromLTRB(padding, 30, padding, padding),
+            padding: EdgeInsets.fromLTRB(padding, 44, padding, padding),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(26),
               gradient: const LinearGradient(
@@ -99,7 +101,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 9),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
               gradient: const LinearGradient(
@@ -114,7 +116,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
                   color: Color(0xFF092E1D),
                   size: 24,
                 ),
-                SizedBox(width: 7),
+                SizedBox(width: 10),
                 Flexible(
                   child: Text(
                     'VILLAGE PLUS',
@@ -130,6 +132,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
             ),
           ),
         ],
+        ),
       );
     },
   );
