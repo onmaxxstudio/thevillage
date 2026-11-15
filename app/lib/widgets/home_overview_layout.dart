@@ -23,13 +23,16 @@ class HomeOverviewLayout extends StatelessWidget {
         final compactOverview =
             (browserWidth ?? viewport.maxWidth) < 600 &&
             media.textScaler.scale(1) <= 1.3;
+        // Reduce the logical canvas when browser zoom narrows the viewport.
+        // Text and cards then reflow vertically instead of adding horizontal
+        // scrolling. At 100% the original 768px canvas is unchanged.
+        final zoom = browserWidth == null
+            ? 1.0
+            : browserWidth / viewport.maxWidth;
         final width = compactOverview
-            ? 768.0
+            ? (768.0 / zoom).clamp(viewport.maxWidth, 1100.0)
             : viewport.maxWidth.clamp(0.0, 1100.0);
-        // Keep the approved 100% proportions as the browser zooms. Fitting to
-        // the shrinking viewport would otherwise cancel the user's zoom.
-        final displayWidth = browserWidth ?? viewport.maxWidth;
-        final scale = compactOverview ? displayWidth / width : 1.0;
+        final scale = compactOverview ? viewport.maxWidth / width : 1.0;
         final content = MediaQuery(
           data: media.copyWith(
             size: Size(width, media.size.height / scale),
@@ -59,7 +62,7 @@ class HomeOverviewLayout extends StatelessWidget {
           ),
         );
         final fitted = SizedBox(
-          width: displayWidth,
+          width: viewport.maxWidth,
           child: FittedBox(
             fit: BoxFit.fitWidth,
             alignment: Alignment.topCenter,
@@ -70,14 +73,7 @@ class HomeOverviewLayout extends StatelessWidget {
           key: const PageStorageKey('home-overview-scroll'),
           child: Align(
             alignment: Alignment.topCenter,
-            child: compactOverview
-                ? displayWidth > viewport.maxWidth
-                      ? SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: fitted,
-                        )
-                      : fitted
-                : content,
+            child: compactOverview ? fitted : content,
           ),
         );
       },
