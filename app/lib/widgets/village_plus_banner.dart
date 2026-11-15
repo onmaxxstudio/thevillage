@@ -254,21 +254,18 @@ class _FeatureStrip extends StatelessWidget {
               children: [
                 Icon(items[i].$1, color: _gold, size: desktop ? 28 : 24),
                 const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.topCenter,
-                    child: Text(
-                      items[i].$2,
-                      textAlign: TextAlign.center,
-                      softWrap: false,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: desktop ? 12 : 10.5,
-                        height: 1.25,
-                        fontWeight: FontWeight.w500,
-                      ),
+                Transform.translate(
+                  // The final gold divider has a leading margin outside this
+                  // strip. Include that space when centering the final label.
+                  offset: Offset(i == items.length - 1 ? (desktop ? 9 : 6) : 0, 0),
+                  child: Text(
+                    items[i].$2,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: desktop ? 12 : 10.5,
+                      height: 1.25,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
