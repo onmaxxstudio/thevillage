@@ -40,7 +40,7 @@ class GrowthStudioDashboard extends StatelessWidget {
           const SizedBox(height: 7),
           Center(
             child: _badge(
-              'Included with Village Plus',
+              'Included in Village Plus',
               wide: wide,
               sentence: true,
             ),
