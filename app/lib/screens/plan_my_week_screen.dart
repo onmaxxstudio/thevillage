@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../services/circle_service.dart';
+import '../widgets/planner_viewport.dart';
 
 class _MealRecipe {
   const _MealRecipe({required this.title, required this.description,
@@ -513,7 +514,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
           setState(() => section = 'Overview');
         }
       },
-      child: Scaffold(
+      child: PlannerViewport(child: Scaffold(
         backgroundColor: cream,
         appBar: AppBar(backgroundColor: cream, foregroundColor: ink, elevation: 0,
           leading: section == 'Overview' ? null : IconButton(
@@ -579,15 +580,18 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
             ] else _section(),
           ]),
       )),
-      ),
+      )),
     );
   }
 
   Widget _weekBar() => Row(children: [
     IconButton(onPressed: () => _moveWeek(-1), icon: const Icon(Icons.chevron_left)),
-    Expanded(child: Center(child: Text(
+    Expanded(child: Center(child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
       '${_month(weekStart.month)} ${weekStart.day} – ${_month(weekStart.add(const Duration(days: 6)).month)} ${weekStart.add(const Duration(days: 6)).day}',
-      style: GoogleFonts.playfairDisplay(fontSize: 17, fontWeight: FontWeight.w600)))),
+      style: GoogleFonts.playfairDisplay(fontSize: 17, fontWeight: FontWeight.w600),
+      maxLines: 1, softWrap: false)))),
     IconButton(onPressed: () => _moveWeek(1), icon: const Icon(Icons.chevron_right)),
     TextButton(onPressed: () {
       final now = DateTime.now();
