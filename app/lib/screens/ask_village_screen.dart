@@ -7,7 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../navigation/village_navigation_scope.dart';
-import '../widgets/home_overview_layout.dart';
+import '../widgets/ask_page_layout.dart';
 import '../services/profile_service.dart';
 import '../services/anonymous_identity_service.dart';
 import 'post_preview_screen.dart';
@@ -280,8 +280,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     return Scaffold(
       backgroundColor: cream,
       body: SafeArea(
-        child: HomeOverviewLayout(
-          distributeSections: false,
+        child: AskPageLayout(
           header: SizedBox(
             height: 76,
             child: AppBar(
@@ -300,7 +299,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                       'Ask the Village',
                       style: GoogleFonts.playfairDisplay(
                         color: sage,
-                        fontSize: 36,
+                        fontSize: 28,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -348,6 +347,12 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                     children: [
                       TextField(
                         controller: questionController,
+                        style: TextStyle(
+                          fontSize: MediaQuery.sizeOf(context).width >= 600
+                              ? 16
+                              : 14,
+                          height: 1.3,
+                        ),
                         maxLength: 1500,
                         minLines: 4,
                         maxLines: 10,
@@ -395,7 +400,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                 ),
                 if (!(widget.initialCommunityName?.trim().isNotEmpty ??
                     false)) ...[
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 9),
                   _section(
                     title: 'How would you like to ask?',
                     subtitle: 'You’re in control. Choose how you show up.',
@@ -410,7 +415,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                             onTap: () => setState(() => anonymous = false),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: _choiceCard(
                             selected: anonymous,
@@ -426,20 +431,20 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 14),
+                const SizedBox(height: 9),
                 _section(
                   title: 'What’s this about?',
                   subtitle: 'Choose the topic that fits best.',
                   child: _topicChoices(),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 9),
                 _section(
                   title: 'What would help most right now?',
                   subtitle:
                       'Choose the kind of response that would feel helpful.',
                   child: _supportChoices(),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 9),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -468,7 +473,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                     onChanged: (value) => setState(() => needsSupport = value),
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 9),
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
@@ -684,7 +689,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
     required Widget child,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(MediaQuery.sizeOf(context).width >= 600 ? 16 : 8),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: .38),
         border: Border.all(color: line),
@@ -695,16 +700,23 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 20,
+            style: TextStyle(
+              fontSize: MediaQuery.sizeOf(context).width >= 600 ? 24 : 17,
+              height: 1.2,
               fontWeight: FontWeight.w700,
               color: ink,
             ),
           ),
           const SizedBox(height: 3),
-          Text(subtitle, style: const TextStyle(fontSize: 15, height: 1.3)),
-          const SizedBox(height: 10),
-          child,
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: MediaQuery.sizeOf(context).width >= 600 ? 16 : 12,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(width: double.infinity, child: child),
         ],
       ),
     );
@@ -718,6 +730,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
           key: ValueKey(category),
           initialValue: categories.contains(category) ? category : null,
           isExpanded: true,
+          style: const TextStyle(fontSize: 16, color: ink),
           menuMaxHeight: 320,
           dropdownColor: cream,
           hint: const Text('Choose a topic'),
@@ -743,7 +756,10 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
           ),
           items: [
             for (final item in categories)
-              DropdownMenuItem(value: item, child: Text(item)),
+              DropdownMenuItem(
+                value: item,
+                child: Text(item, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
           ],
           onChanged: (value) {
             if (value != null) setState(() => category = value);
@@ -785,11 +801,16 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
               ? supportIntent
               : null,
           isExpanded: true,
+          style: const TextStyle(fontSize: 16, color: ink),
           menuMaxHeight: 320,
           dropdownColor: cream,
           decoration: InputDecoration(
             filled: true,
             fillColor: cream,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: line),
@@ -797,7 +818,14 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
           ),
           items: [
             for (final item in supportIntents)
-              DropdownMenuItem(value: item.$1, child: Text(item.$1)),
+              DropdownMenuItem(
+                value: item.$1,
+                child: Text(
+                  item.$1,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
           ],
           onChanged: (value) {
             if (value != null) setState(() => supportIntent = value);
@@ -825,7 +853,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(17),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 112),
+        constraints: const BoxConstraints(minHeight: 80),
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFF1F3E9) : cream,
@@ -842,15 +870,18 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   CircleAvatar(
+                    radius: 15,
                     backgroundColor: const Color(0xFFE5E7D9),
-                    child: Icon(icon, color: sage),
+                    child: Icon(icon, color: sage, size: 20),
                   ),
                   const SizedBox(height: 9),
                   Text(
                     title,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 15,
+                    style: TextStyle(
+                      fontSize: MediaQuery.sizeOf(context).width >= 600
+                          ? 16
+                          : 12,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -860,7 +891,11 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14),
+                    style: TextStyle(
+                      fontSize: MediaQuery.sizeOf(context).width >= 600
+                          ? 14
+                          : 12,
+                    ),
                   ),
                 ],
               ),
@@ -889,7 +924,9 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
               Text(
                 text,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13),
+                style: TextStyle(
+                  fontSize: MediaQuery.sizeOf(context).width >= 600 ? 13 : 11,
+                ),
               ),
             ],
           ),

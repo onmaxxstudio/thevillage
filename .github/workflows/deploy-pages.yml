@@ -77,6 +77,10 @@ jobs:
         working-directory: app
         run: flutter test test/home_overview_layout_test.dart
 
+      - name: Test responsive Ask composer
+        working-directory: app
+        run: flutter test test/ask_page_layout_test.dart test/ask_composer_layout_test.dart
+
       - name: Analyze Flutter app
         working-directory: app
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
