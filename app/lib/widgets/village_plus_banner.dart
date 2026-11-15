@@ -4,6 +4,7 @@ import '../screens/village_plus_screen.dart';
 
 const _forest = Color(0xFF073C24);
 const _gold = Color(0xFFE8C575);
+const _featureDividerHeight = 62.0;
 
 class VillagePlusBanner extends StatelessWidget {
   const VillagePlusBanner({super.key});
@@ -212,7 +213,7 @@ class _BannerArtwork extends StatelessWidget {
                         ],
                         Container(
                           width: 1,
-                          height: 72,
+                          height: features ? _featureDividerHeight : 72,
                           margin: EdgeInsets.symmetric(
                             horizontal: desktop ? 18 : 12,
                           ),
@@ -243,16 +244,19 @@ class _FeatureStrip extends StatelessWidget {
       (Icons.trending_up_rounded, 'Track\nYour\nProgress'),
     ];
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         for (var i = 0; i < items.length; i++) ...[
-          Container(width: 1, height: 62, color: _gold.withValues(alpha: .6)),
+          Container(width: 1, height: _featureDividerHeight, color: _gold.withValues(alpha: .6)),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(items[i].$1, color: _gold, size: desktop ? 28 : 24),
+                Transform.translate(
+                  offset: Offset(i == items.length - 1 ? (desktop ? 9 : 6) : 0, 0),
+                  child: Icon(items[i].$1, color: _gold, size: desktop ? 28 : 24),
+                ),
                 const SizedBox(height: 6),
                 Transform.translate(
                   // The final gold divider has a leading margin outside this
