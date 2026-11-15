@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:shared_preferences_web/shared_preferences_web.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web/web.dart' as web;
 
 Future<void> loadSdk() async {
@@ -125,6 +126,14 @@ void main() {
         expect((await service.messages(bobUid).first).length, 105);
       });
 
+      const legacyKey = r'ask_the_village_circle_messages_$uid';
+      const legacyCache = [
+        '{"memberName":"@OtherMember","text":"Unassigned legacy history","createdAt":"2026-01-01T00:00:00Z"}',
+      ];
+      await tester.runAsync(
+        () => SharedPreferencesAsync().setStringList(legacyKey, legacyCache),
+      );
+
       Future<void> visible(Finder finder) async {
         for (var i = 0; i < 160 && finder.evaluate().isEmpty; i++) {
           await tester.runAsync(
@@ -138,7 +147,8 @@ void main() {
       }
 
       Future<void> tapText(String value) async {
-        final finder = find.text(value);
+        debugPrint('Chat test action: $value');
+        final finder = find.text(value).hitTestable();
         await visible(finder);
         await tester.tap(finder.first);
         await tester.pump(const Duration(milliseconds: 400));
@@ -175,6 +185,7 @@ void main() {
         const Size(768, 1024),
         const Size(1440, 1000),
       ]) {
+        debugPrint('Chat test viewport: $size');
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
         await tester.pumpWidget(const MaterialApp(home: CircleScreen()));
@@ -211,6 +222,17 @@ void main() {
               .firstWhere((items) => items.any((m) => m.text == sent))
               .timeout(const Duration(seconds: 10));
         });
+        for (
+          var i = 0;
+          i < 160 && find.text('Message @ChatBob').evaluate().isNotEmpty;
+          i++
+        ) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 40)),
+          );
+          await tester.pump(const Duration(milliseconds: 40));
+        }
+        expect(find.text('Message @ChatBob'), findsNothing);
         await tester.pump(const Duration(milliseconds: 500));
         await tapText('@ChatBob');
         await visible(find.text(sent));
@@ -242,6 +264,20 @@ void main() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
       await tester.runAsync(() async {
+        final cache = SharedPreferencesAsync();
+        final aliceCache = await cache.getStringList(
+          'ask_the_village_circle_messages_$aliceUid',
+        );
+        expect(aliceCache, isNotNull);
+        expect(
+          aliceCache!.where((item) => item.contains('UI message ')).length,
+          3,
+        );
+        expect(
+          await cache.getStringList('ask_the_village_circle_messages_$bobUid'),
+          isNull,
+        );
+        expect(await cache.getStringList(legacyKey), legacyCache);
         await auth.signOut();
         await auth.signInWithEmailAndPassword(
           email: 'circle-alice@example.test',
