@@ -146,7 +146,7 @@ class GrowthStudioExperience extends StatelessWidget {
                   large ? 12 : 35,
                   0,
                   large ? 12 : 35,
-                  28,
+                  12,
                 ),
                 child: _tools(context, large),
               ),
@@ -226,11 +226,11 @@ class GrowthStudioExperience extends StatelessWidget {
       ];
       final titleStyle = TextStyle(
         fontFamily: 'VillagePlusDisplay',
-        fontSize: large ? 18 : (phone ? 26 : 22),
+        fontSize: large ? 18 : (phone ? 24 : 22),
         height: 1.1,
       );
       final detailStyle = TextStyle(
-        fontSize: large ? 12 : (phone ? 18 : 14),
+        fontSize: large ? 12 : (phone ? 16 : 14),
         height: 1.2,
       );
       final textWidth = width - (large ? 24 : 40) - (large ? 25 : 42) - 18;
@@ -305,7 +305,7 @@ class GrowthStudioExperience extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'VillagePlusDisplay',
                               color: const Color(0xFF112719),
-                              fontSize: large ? 18 : (phone ? 26 : 22),
+                              fontSize: large ? 18 : (phone ? 24 : 22),
                               height: 1.1,
                             ),
                           ),
@@ -314,7 +314,7 @@ class GrowthStudioExperience extends StatelessWidget {
                             tools[i].$2,
                             style: TextStyle(
                               color: const Color(0xFF172019),
-                              fontSize: large ? 12 : (phone ? 18 : 14),
+                              fontSize: large ? 12 : (phone ? 16 : 14),
                               height: 1.2,
                             ),
                           ),
