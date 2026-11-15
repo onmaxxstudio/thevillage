@@ -1791,33 +1791,34 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     required String postId}) =>
     Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 9),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: .72),
         border: Border.all(color: line),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
       ),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         VillageAvatar(uid: uid, radius: 21),
-        const SizedBox(width: 11),
+        const SizedBox(width: 16),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 6, runSpacing: 2,
+          Column(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(name, style: const TextStyle(color: ink, fontWeight: FontWeight.w700, fontSize: 14)),
-              Text('· $time', style: const TextStyle(color: sage, fontSize: 11)),
+              const SizedBox(height: 4),
+              Text(time, style: const TextStyle(color: sage, fontSize: 11)),
             ]),
           if (label != null) ...[
-            const SizedBox(height: 5),
+            const SizedBox(height: 8),
             Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
               decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(12)),
               child: Text(label, style: const TextStyle(color: sage,
                 fontWeight: FontWeight.w600, fontSize: 11))),
           ],
           if (text.isNotEmpty) ...[
-            const SizedBox(height: 5),
+            const SizedBox(height: 8),
             Text(text, maxLines: 3, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: ink, fontSize: 15, height: 1.25)),
+              style: const TextStyle(color: ink, fontSize: 15, height: 1.4)),
           ],
         ])),
         const SizedBox(width: 5),
