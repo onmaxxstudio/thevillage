@@ -1360,6 +1360,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       body: SafeArea(
         child: HomeOverviewLayout(
           distributeSections: false,
+          textScaleMultiplier: 1.45,
           header: Padding(
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 8),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -1452,12 +1453,14 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         Row(children: [
           Expanded(child: OutlinedButton.icon(
             onPressed: _shareSomethingGood,
+            style: OutlinedButton.styleFrom(minimumSize: const Size(0, 76)),
             icon: const Icon(Icons.emoji_events_outlined, size: 18),
             label: const Text('Share a win'),
           )),
           const SizedBox(width: 8),
           Expanded(child: OutlinedButton.icon(
             onPressed: _editSupportProfile,
+            style: OutlinedButton.styleFrom(minimumSize: const Size(0, 76)),
             icon: const Icon(Icons.tune_rounded, size: 18),
             label: const Text('Settings'),
           )),
@@ -1913,7 +1916,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       VoidCallback action) => Material(
     color: cream, borderRadius: BorderRadius.circular(15),
     child: InkWell(onTap: action, borderRadius: BorderRadius.circular(15),
-      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
+      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
         child: Row(children: [
           Icon(icon, color: sage, size: 19), const SizedBox(width: 7),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -2370,7 +2373,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         ? 14
         : math.max(0, _visibleCircleMembers.length - people.length);
 
-    return AnimatedBuilder(
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(
+        MediaQuery.textScalerOf(context).scale(1) * 1.22)),
+      child: AnimatedBuilder(
       animation: _orbitController,
       builder: (context, _) {
         final turn = _orbitController.value * 2 * math.pi;
@@ -2510,6 +2516,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           },
         );
       },
+      ),
     );
   }
 

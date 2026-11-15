@@ -94,16 +94,17 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
-  testWidgets('Circle and Home share visible text scale on phones', (tester) async {
+  testWidgets('Shared overview supports readable text without scaling geometry', (tester) async {
     tester.view.physicalSize = const Size(393, 700);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    Future<double> visibleTextHeight(bool distribute) async {
+    Future<double> visibleTextHeight(bool distribute, {double multiplier = 1}) async {
       await tester.pumpWidget(MaterialApp(home: Scaffold(
         body: HomeOverviewLayout(
           distributeSections: distribute,
+          textScaleMultiplier: multiplier,
           header: const SizedBox(height: 30),
           sections: const [Text('Matching heading',
             key: ValueKey('heading'), style: TextStyle(fontSize: 19))],
@@ -118,6 +119,8 @@ void main() {
     final homeHeight = await visibleTextHeight(true);
     final circleHeight = await visibleTextHeight(false);
     expect(circleHeight, closeTo(homeHeight, .01));
+    final readableHeight = await visibleTextHeight(false, multiplier: 1.45);
+    expect(readableHeight, greaterThan(homeHeight * 1.3));
     expect(tester.takeException(), isNull);
   });
 

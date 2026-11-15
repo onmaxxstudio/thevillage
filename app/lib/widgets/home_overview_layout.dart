@@ -10,11 +10,13 @@ class HomeOverviewLayout extends StatelessWidget {
     required this.header,
     required this.sections,
     this.distributeSections = true,
+    this.textScaleMultiplier = 1,
   });
 
   final Widget header;
   final List<Widget> sections;
   final bool distributeSections;
+  final double textScaleMultiplier;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +40,7 @@ class HomeOverviewLayout extends StatelessWidget {
         final content = MediaQuery(
           data: media.copyWith(
             size: Size(width, media.size.height / scale),
-            textScaler: TextScaler.linear(media.textScaler.scale(1) * 1.22),
+            textScaler: TextScaler.linear(media.textScaler.scale(1) * 1.22 * textScaleMultiplier),
           ),
           child: SizedBox(
             width: width,
