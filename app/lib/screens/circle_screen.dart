@@ -109,7 +109,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   String _key(String base) {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? 'signed_out';
-    return '${base}_\$uid';
+    // Legacy keys used a literal '$uid' and were shared across accounts. Leave
+    // those records untouched; never attribute another account's cache to this user.
+    return '${base}_$uid';
   }
 
   bool get _isTestCircle => Uri.base.queryParameters['testCircle'] == '1';
@@ -2236,11 +2238,20 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   }
 
   Future<void> _showCircleChats() {
+    final membersStream = _isTestCircle ? null : circleService.members();
     return Navigator.of(context).push<void>(MaterialPageRoute<void>(
       builder: (pageContext) => Scaffold(
         backgroundColor: cream,
         appBar: AppBar(backgroundColor: cream, title: const Text('Private chats')),
-        body: ListView(padding: const EdgeInsets.all(18), children: [
+        body: StreamBuilder<List<CirclePerson>>(
+          stream: membersStream,
+          builder: (context, snapshot) {
+            final members = snapshot.data?.map((person) => _CircleMember(
+              '@${person.username}', person.username.isEmpty ? '?' : person.username[0].toUpperCase(),
+              paleSage, person.status.isEmpty ? 'Connected' : person.status,
+              true, person.uid, person.photoUrl,
+            )).toList() ?? _visibleCircleMembers;
+            return ListView(padding: const EdgeInsets.all(18), children: [
           ListTile(
             leading: const Icon(Icons.groups_outlined, color: sage),
             title: const Text('Circle conversation'),
@@ -2251,11 +2262,15 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           const Divider(),
           const Text('Choose someone from your Circle to read or send a private message.'),
           const SizedBox(height: 14),
-          if (_visibleCircleMembers.isEmpty)
+          if (snapshot.hasError)
+            const Text('Could not refresh your Circle. Check your connection and reopen this page.'),
+          if (membersStream != null && !snapshot.hasData && members.isEmpty && !snapshot.hasError)
+            const Center(child: CircularProgressIndicator()),
+          if (members.isEmpty)
             OutlinedButton.icon(onPressed: _findPeople,
               icon: const Icon(Icons.person_add_alt_1_rounded),
               label: const Text('Invite your first person')),
-          for (final member in _visibleCircleMembers)
+          for (final member in members)
             ListTile(
               leading: VillageAvatar(uid: member.uid, radius: 22),
               title: Text(member.name),
@@ -2275,7 +2290,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                     ),
               onTap: () => _openMemberProfile(member),
             ),
-        ]),
+        ]);
+          },
+        ),
       ),
     )).then((_) {});
   }

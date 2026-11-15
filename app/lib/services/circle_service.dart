@@ -307,7 +307,14 @@ class CircleService {
                 }))
               .toList();
           return Future.wait(people.map((person) async {
-            final latest = await ProfileService.publicUsername(person.uid);
+            String? latest;
+            try {
+              latest = await ProfileService.publicUsername(person.uid)
+                  .timeout(const Duration(seconds: 3));
+            } on Object {
+              // A directory lookup must not prevent existing Circle members
+              // and their private chat buttons from becoming available.
+            }
             return CirclePerson(
               uid: person.uid,
               username: latest ?? person.username,

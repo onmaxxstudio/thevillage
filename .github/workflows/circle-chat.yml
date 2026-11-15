@@ -1,0 +1,40 @@
+name: Circle private chat
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+jobs:
+  chat:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.7
+          channel: stable
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: flutter pub get
+      - name: Verify two-member chat and all three screen sizes
+        run: |
+          sdk_dir=$(mktemp -d)
+          cp test/avatar_firebase_sdk.js "$sdk_dir/sdk.js"
+          npm install --prefix "$sdk_dir" --no-save firebase@12.19.0 esbuild firebase-tools
+          "$sdk_dir/node_modules/.bin/esbuild" "$sdk_dir/sdk.js" --bundle --outfile="$sdk_dir/avatar-firebase-sdk.js"
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory "$sdk_dir" &
+          sdk_pid=$!
+          trap 'kill "$sdk_pid"' EXIT
+          curl --fail --silent --retry 5 --retry-connrefused --output /dev/null http://127.0.0.1:8765/avatar-firebase-sdk.js
+          "$sdk_dir/node_modules/.bin/firebase" emulators:exec \
+            --only auth,firestore --project demo-village --config firebase.json \
+            "flutter test --platform chrome test/circle_chat_browser_test.dart"
