@@ -64,7 +64,7 @@ void main() {
           for (final action in [
             'monthly-event',
             'monthly-focus',
-            'guided-pathways',
+            'monthly-challenge',
           ]) {
             final button = find.byKey(ValueKey('plus-$action'));
             await tester.ensureVisible(button);
