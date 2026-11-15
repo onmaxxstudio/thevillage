@@ -1454,14 +1454,14 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           Expanded(child: OutlinedButton.icon(
             onPressed: _shareSomethingGood,
             style: OutlinedButton.styleFrom(minimumSize: const Size(0, 76)),
-            icon: const Icon(Icons.emoji_events_outlined, size: 18),
+            icon: const Icon(Icons.emoji_events_outlined, size: 40),
             label: const Text('Share a win'),
           )),
           const SizedBox(width: 18),
           Expanded(child: OutlinedButton.icon(
             onPressed: _editSupportProfile,
             style: OutlinedButton.styleFrom(minimumSize: const Size(0, 76)),
-            icon: const Icon(Icons.tune_rounded, size: 18),
+            icon: const Icon(Icons.tune_rounded, size: 40),
             label: const Text('Settings'),
           )),
         ])
@@ -1572,7 +1572,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
         child: Row(children: [
-          const Icon(Icons.edit_note_rounded, color: sage, size: 24),
+          const Icon(Icons.edit_note_rounded, color: sage, size: 46),
           const SizedBox(width: 16),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1585,7 +1585,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                 style: GoogleFonts.inter(fontSize: 13, height: 1.18, color: ink)),
             ],
           )),
-          const Icon(Icons.chevron_right_rounded, color: sage),
+          const Icon(Icons.chevron_right_rounded, color: sage, size: 30),
         ]),
       ),
     ),
@@ -1756,9 +1756,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   }
 
   Widget _peopleStatusFeed({bool showAll = false}) {
-    if (_visibleCircleMembers.isEmpty) return _actionRow(
-      Icons.person_add_alt_1_rounded, 'Your circle is waiting',
-      'Add your first person to see their updates.', _findPeople, paleSage);
+    if (_visibleCircleMembers.isEmpty) return _circleFeedMessage(
+      'Your circle’s updates will appear here.');
     return Column(children: [
       for (final member in _visibleCircleMembers)
         if (member.uid != null && !_isTestMember(member))
@@ -1921,7 +1920,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     child: InkWell(onTap: action, borderRadius: BorderRadius.circular(24),
       child: Padding(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
         child: Row(children: [
-          Icon(icon, color: sage, size: 19), const SizedBox(width: 12),
+          Icon(icon, color: sage, size: 44), const SizedBox(width: 18),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
               style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w700)),
@@ -1931,14 +1930,20 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           ])),
         ]))));
 
+  Widget _circleFeedMessage(String message) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+    child: Text(message, textAlign: TextAlign.center,
+      style: GoogleFonts.inter(fontSize: 13, color: sage, height: 1.4)),
+  );
+
   Widget _sharedActivityPreview({required bool showAll}) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
     stream: circleService.activity(),
     builder: (context, snapshot) {
       if (snapshot.hasError) return const Text('Circle updates are unavailable right now.');
-      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+      if (!snapshot.hasData) return _circleFeedMessage('Loading your circle’s updates…');
       final updates = snapshot.data!.docs.where((item) => item.data()['kind'] != 'group');
       final items = showAll ? updates : updates.take(2);
-      if (items.isEmpty) return const Text('When someone shares with you, it will appear here.');
+      if (items.isEmpty) return _circleFeedMessage('Your circle’s updates will appear here.');
       return Column(children: [for (final item in items)
         if (item.data()['authorUid'] is String && item.data()['createdAt'] is Timestamp)
         _peopleUpdateCard(
@@ -2468,48 +2473,34 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                     // Keep the full center group optically balanced inside the orbit.
                     Positioned(
                       left: centerX - 62,
-                      top: centerY - 78,
+                      top: centerY - 86,
                       child: GestureDetector(
                         onTap: _startAskMyCircle,
                         child: _orbitYou(),
                       ),
                     ),
                     Positioned(
-                      left: centerX - 62,
-                      top: 220,
+                      left: centerX - 88,
+                      top: 222,
                       child: SizedBox(
-                        width: 124,
-                        child: Column(
-                          children: [
-                            Text(
-                              name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                        width: 176,
+                        child: Column(children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(name, maxLines: 1, softWrap: false,
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.playfairDisplay(
-                                color: sage,
-                                fontSize: _compactPhone
-                                    ? 19 * 366 / (220 / (MediaQuery.sizeOf(this.context).width / 768))
-                                    : 21,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            const Text(
-                              'AT THE CENTER\nTOGETHER IS BETTER',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 8.5,
-                                color: gold,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.15,
-                                height: 1.3,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            const Icon(Icons.wb_sunny_outlined, size: 14, color: gold),
-                          ],
-                        ),
+                              style: GoogleFonts.playfairDisplay(color: sage,
+                                fontSize: 21, height: 1,
+                                fontWeight: FontWeight.w700)),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text('Together is\nbetter',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12.5, color: gold,
+                              fontWeight: FontWeight.w600, height: 1.1)),
+                          const SizedBox(height: 2),
+                          const Icon(Icons.wb_sunny_outlined, size: 10, color: gold),
+                        ]),
                       ),
                     ),
                   ],
