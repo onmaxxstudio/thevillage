@@ -217,28 +217,34 @@ class _HomeScreenState extends State<HomeScreen>
     final result = await showModalBottomSheet<_CheckInResult>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
+      useSafeArea: true,
+      constraints: const BoxConstraints(maxWidth: 620),
       backgroundColor: cream,
       showDragHandle: true,
-      builder: (sheetContext) => _CheckInSheet(
-        existing: today,
-        initialMood: initialMood,
-        showPeriodTracking: showPeriodTracking,
-        history: history,
-        onPeriodTrackingChanged: (enabled) async {
-          final value = await PersonalizationService().load();
-          await PersonalizationService().save(VillagePersonalization(
-            identity: value.identity,
-            interests: value.interests,
-            periodTracking: enabled,
-            completed: value.completed,
-          ));
-        },
-        onHistory: () {
-          Navigator.of(sheetContext).pop();
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) openHistory();
-          });
-        },
+      builder: (sheetContext) => FractionallySizedBox(
+        heightFactor: .92,
+        child: _CheckInSheet(
+          existing: today,
+          initialMood: initialMood,
+          showPeriodTracking: showPeriodTracking,
+          history: history,
+          onPeriodTrackingChanged: (enabled) async {
+            final value = await PersonalizationService().load();
+            await PersonalizationService().save(VillagePersonalization(
+              identity: value.identity,
+              interests: value.interests,
+              periodTracking: enabled,
+              completed: value.completed,
+            ));
+          },
+          onHistory: () {
+            Navigator.of(sheetContext).pop();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) openHistory();
+            });
+          },
+        ),
       ),
     );
     if (result == null) return;
@@ -2047,6 +2053,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
         MediaQuery.viewInsetsOf(context).bottom + 22,
       ),
       child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2083,41 +2090,27 @@ class _CheckInSheetState extends State<_CheckInSheet> {
               ],
             ),
             const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            Text(
+              'Daily Check-In',
+              style: GoogleFonts.playfairDisplay(
+                color: _HomeScreenState.ink,
+                fontSize: 27,
+                height: 1.15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 12,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Daily Check-In',
-                        style: GoogleFonts.playfairDisplay(
-                          color: _HomeScreenState.ink,
-                          fontSize: 35,
-                          height: 1,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text('How are you today?', style: TextStyle(fontSize: 16)),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF4EDE2),
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.calendar_month_outlined, size: 16, color: _HomeScreenState.sage),
-                      const SizedBox(width: 5),
-                      Text(date, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                ),
+                const Text('How are you today?', style: TextStyle(fontSize: 15)),
+                Text(date, style: const TextStyle(
+                  fontSize: 12,
+                  color: _HomeScreenState.sage,
+                  fontWeight: FontWeight.w600,
+                )),
               ],
             ),
             const SizedBox(height: 18),
