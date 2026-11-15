@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'browser_layout_width.dart';
+
 /// Keeps the phone overview in the horizontal arrangement used on tablets.
 /// Only this dashboard is scaled; routes opened from it use normal device size.
 class HomeOverviewLayout extends StatelessWidget {
@@ -17,12 +19,17 @@ class HomeOverviewLayout extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, viewport) {
         final media = MediaQuery.of(context);
+        final browserWidth = phoneBrowserWidth();
         final compactOverview =
-            viewport.maxWidth < 600 && media.textScaler.scale(1) <= 1.3;
+            (browserWidth ?? viewport.maxWidth) < 600 &&
+            media.textScaler.scale(1) <= 1.3;
         final width = compactOverview
             ? 768.0
             : viewport.maxWidth.clamp(0.0, 1100.0);
-        final scale = compactOverview ? viewport.maxWidth / width : 1.0;
+        // Keep the approved 100% proportions as the browser zooms. Fitting to
+        // the shrinking viewport would otherwise cancel the user's zoom.
+        final displayWidth = browserWidth ?? viewport.maxWidth;
+        final scale = compactOverview ? displayWidth / width : 1.0;
         final content = MediaQuery(
           data: media.copyWith(
             size: Size(width, media.size.height / scale),
@@ -51,19 +58,25 @@ class HomeOverviewLayout extends StatelessWidget {
             ),
           ),
         );
+        final fitted = SizedBox(
+          width: displayWidth,
+          child: FittedBox(
+            fit: BoxFit.fitWidth,
+            alignment: Alignment.topCenter,
+            child: content,
+          ),
+        );
         return SingleChildScrollView(
           key: const PageStorageKey('home-overview-scroll'),
           child: Align(
             alignment: Alignment.topCenter,
             child: compactOverview
-                ? SizedBox(
-                    width: viewport.maxWidth,
-                    child: FittedBox(
-                      fit: BoxFit.fitWidth,
-                      alignment: Alignment.topCenter,
-                      child: content,
-                    ),
-                  )
+                ? displayWidth > viewport.maxWidth
+                      ? SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: fitted,
+                        )
+                      : fitted
                 : content,
           ),
         );
