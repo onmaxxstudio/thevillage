@@ -21,8 +21,7 @@ class GrowthStudioExperience extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final large = MediaQuery.textScalerOf(context).scale(14) > 19;
-      final phone = constraints.maxWidth < 600;
-      final width = large ? constraints.maxWidth : (phone ? 720.0 : 1024.0);
+      final width = large ? constraints.maxWidth : 768.0;
       final content = SizedBox(
         width: width,
         child: DecoratedBox(
@@ -33,7 +32,7 @@ class GrowthStudioExperience extends StatelessWidget {
               Stack(
                 children: [
                   SizedBox(
-                    height: large ? null : 132,
+                    height: large ? null : 100,
                     width: double.infinity,
                     child: ColoredBox(
                       key: const ValueKey('growth-header-background'),
@@ -56,7 +55,7 @@ class GrowthStudioExperience extends StatelessWidget {
                                         style: TextStyle(
                                           fontFamily: 'VillagePlusDisplay',
                                           color: GrowthStudioDashboard.forest,
-                                          fontSize: large ? 20 : 31,
+                                          fontSize: large ? 20 : 26,
                                         ),
                                       ),
                                     ),
@@ -71,7 +70,7 @@ class GrowthStudioExperience extends StatelessWidget {
                                   style: TextStyle(
                                     fontFamily: 'VillagePlusDisplay',
                                     color: GrowthStudioDashboard.forest,
-                                    fontSize: large ? 29 : 54,
+                                    fontSize: large ? 29 : 44,
                                     height: 1.05,
                                   ),
                                 ),
@@ -109,9 +108,7 @@ class GrowthStudioExperience extends StatelessWidget {
                 ],
               ),
               Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: large ? 12 : (phone ? 20 : 38),
-                ),
+                padding: EdgeInsets.symmetric(horizontal: large ? 12 : 44),
                 child: GrowthStudioDashboard(
                   entries: entries,
                   onOpenTool: onOpenTool,
@@ -126,7 +123,7 @@ class GrowthStudioExperience extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'VillagePlusDisplay',
                     color: GrowthStudioDashboard.forest,
-                    fontSize: large ? 25 : 40,
+                    fontSize: large ? 25 : 36,
                     height: 1.1,
                   ),
                 ),
@@ -137,15 +134,15 @@ class GrowthStudioExperience extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: const Color(0xFF576440),
-                  fontSize: large ? 14 : 19,
+                  fontSize: large ? 14 : 18,
                 ),
               ),
               const SizedBox(height: 16),
               Padding(
                 padding: EdgeInsets.fromLTRB(
-                  large ? 12 : 35,
+                  large ? 12 : 44,
                   0,
-                  large ? 12 : 35,
+                  large ? 12 : 44,
                   12,
                 ),
                 child: _tools(context, large),
@@ -166,7 +163,6 @@ class GrowthStudioExperience extends StatelessWidget {
   Widget _tools(BuildContext context, bool large) => LayoutBuilder(
     builder: (context, constraints) {
       final columns = large ? 1 : 2;
-      final phone = MediaQuery.sizeOf(context).width < 600;
       final width = (constraints.maxWidth - (columns - 1) * 10) / columns;
       const tools = [
         (
@@ -226,13 +222,10 @@ class GrowthStudioExperience extends StatelessWidget {
       ];
       final titleStyle = TextStyle(
         fontFamily: 'VillagePlusDisplay',
-        fontSize: large ? 18 : (phone ? 24 : 22),
+        fontSize: large ? 18 : 24,
         height: 1.1,
       );
-      final detailStyle = TextStyle(
-        fontSize: large ? 12 : (phone ? 16 : 14),
-        height: 1.2,
-      );
+      final detailStyle = TextStyle(fontSize: large ? 12 : 16, height: 1.2);
       final textWidth = width - (large ? 24 : 40) - (large ? 25 : 42) - 18;
       double measure(String value, TextStyle style) {
         final painter = TextPainter(
@@ -305,7 +298,7 @@ class GrowthStudioExperience extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'VillagePlusDisplay',
                               color: const Color(0xFF112719),
-                              fontSize: large ? 18 : (phone ? 24 : 22),
+                              fontSize: large ? 18 : 24,
                               height: 1.1,
                             ),
                           ),
@@ -314,7 +307,7 @@ class GrowthStudioExperience extends StatelessWidget {
                             tools[i].$2,
                             style: TextStyle(
                               color: const Color(0xFF172019),
-                              fontSize: large ? 12 : (phone ? 16 : 14),
+                              fontSize: large ? 12 : 16,
                               height: 1.2,
                             ),
                           ),
