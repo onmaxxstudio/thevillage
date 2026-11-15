@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -103,6 +104,8 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
   late DateTime weekStart, selectedDay;
   bool daySelected = false, loading = true;
   String section = 'Overview', review = '';
+  String? _loadError;
+  int _loadRequest = 0;
   String _recipeFilter = 'Vegan';
   final TextEditingController _taskDraft = TextEditingController();
   final TextEditingController _reviewDraft = TextEditingController();
@@ -143,11 +146,18 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       : <Map<String, dynamic>>[];
 
   Future<void> _load() async {
-    setState(() => loading = true);
+    final request = ++_loadRequest;
+    final document = _doc;
+    setState(() { loading = true; _loadError = null; });
     if (_uid.isEmpty) { setState(() => loading = false); return; }
     try {
-      final d = (await _doc.get()).data() ?? {};
-      if (!mounted) return;
+      // Use an existing cached plan immediately. An absent cached document
+      // is not evidence of an empty week: wait for the server in that case.
+      final snapshot = await document.snapshots(includeMetadataChanges: true)
+          .firstWhere((snapshot) => snapshot.exists || !snapshot.metadata.isFromCache)
+          .timeout(const Duration(seconds: 12));
+      final d = snapshot.data() ?? {};
+      if (!mounted || request != _loadRequest) return;
       setState(() {
         goals = _list(d['goals']); tasks = _list(d['tasks']);
         groceries = _list(d['groceries']);
@@ -160,10 +170,14 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
         shareToken = sharing['token'] as String?;
         review = d['review'] as String? ?? ''; loading = false;
       });
-    } on FirebaseException catch (e) {
-      if (!mounted) return;
-      setState(() => loading = false);
-      _msg('Could not load this week: ${e.message ?? e.code}');
+    } catch (error) {
+      if (!mounted || request != _loadRequest) return;
+      setState(() {
+        loading = false;
+        _loadError = error is TimeoutException
+            ? 'Your week is taking longer to load. Check your connection and try again.'
+            : 'Your week could not be loaded. Please try again.';
+      });
     }
   }
 
@@ -531,6 +545,15 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       body: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 620),
         child: loading ? const Center(child: CircularProgressIndicator(color: sage))
+          : _loadError != null
+            ? Center(child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Text(_loadError!, textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(onPressed: _load,
+                    icon: const Icon(Icons.refresh), label: const Text('Try again')),
+                ])))
           : ListView(padding: const EdgeInsets.fromLTRB(18, 8, 18, 16), children: [
             _weekBar(),
             if (section == 'Overview') ...[
