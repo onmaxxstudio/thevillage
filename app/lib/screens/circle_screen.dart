@@ -1500,7 +1500,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       SizedBox(height: _compactPhone ? 10 : 22),
       Row(children: [
         Expanded(child: Text('From your people', style: GoogleFonts.playfairDisplay(
-          color: ink, fontSize: 25, fontWeight: FontWeight.w700))),
+          color: ink, fontSize: 19, fontWeight: FontWeight.w700))),
         if (_visibleCircleMembers.isNotEmpty)
           TextButton(onPressed: _showPeopleUpdates, child: const Text('See all')),
       ]),
@@ -1600,12 +1600,12 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Post a status', style: TextStyle(
-                fontSize: 15, fontWeight: FontWeight.w700, color: ink)),
+              Text('Post a status', style: GoogleFonts.playfairDisplay(
+                fontSize: 19, height: 1.05, fontWeight: FontWeight.w700, color: ink)),
               Text(writtenStatus.isEmpty ? 'Share how you feel or what you need'
                   : writtenStatus,
                 maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 12, color: sage)),
+                style: GoogleFonts.inter(fontSize: 13, height: 1.18, color: ink)),
             ],
           )),
           const Icon(Icons.chevron_right_rounded, color: sage),
@@ -1946,9 +1946,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           Icon(icon, color: sage, size: 19), const SizedBox(width: 7),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.playfairDisplay(fontSize: 14, fontWeight: FontWeight.w700)),
+              style: GoogleFonts.playfairDisplay(fontSize: 16, fontWeight: FontWeight.w700)),
             Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 10)),
+              style: GoogleFonts.inter(fontSize: 13, height: 1.18)),
           ])),
         ]))));
 
@@ -2429,7 +2429,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
             return SizedBox(
               width: double.infinity,
-              height: _compactPhone ? 150 : 244,
+              height: _compactPhone ? 220 : 244,
               child: FittedBox(
                 fit: BoxFit.contain,
                 child: SizedBox(
@@ -2504,7 +2504,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                               textAlign: TextAlign.center,
                               style: GoogleFonts.playfairDisplay(
                                 color: sage,
-                                fontSize: 18,
+                                fontSize: 21,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -2513,7 +2513,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                               'AT THE CENTER\nTOGETHER IS BETTER',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 7.2,
+                                fontSize: 8.5,
                                 color: gold,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 1.15,
