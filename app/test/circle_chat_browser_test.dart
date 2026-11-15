@@ -40,6 +40,12 @@ void main() {
   testWidgets(
     'Circle chat works between members at phone, tablet and desktop sizes',
     (tester) async {
+      final previousErrorHandler = FlutterError.onError;
+      FlutterError.onError = (details) {
+        FlutterError.dumpErrorToConsole(details, forceReport: true);
+        previousErrorHandler?.call(details);
+      };
+      addTearDown(() => FlutterError.onError = previousErrorHandler);
       const options = FirebaseOptions(
         apiKey: 'emulator-key',
         appId: '1:123:web:chat',
