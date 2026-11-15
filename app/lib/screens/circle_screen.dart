@@ -1375,7 +1375,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                         textAlign: TextAlign.center,
                         style: GoogleFonts.playfairDisplay(
                           color: sage,
-                          fontSize: _compactPhone ? 30 : 42,
+                          fontSize: _compactPhone ? 26 : 42,
                           height: .95,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1468,7 +1468,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       _circleOrbit(),
       const SizedBox(height: 8),
-      _combinedCheckInCard(),
+      if (_compactPhone) _compactStatusLauncher() else _combinedCheckInCard(),
       SizedBox(height: _compactPhone ? 6 : 10),
       if (incomingRequests.isNotEmpty || _requestLoadFailed) ...[
         _incomingRequestsCard(),
@@ -1567,7 +1567,54 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     return 'Expires in ${remaining.inMinutes + 1}m';
   }
 
-  Widget _combinedCheckInCard() => Container(
+  Widget _compactStatusLauncher() => Material(
+    color: paleSage,
+    borderRadius: BorderRadius.circular(16),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => showModalBottomSheet<void>(
+        context: context,
+        useRootNavigator: true,
+        useSafeArea: true,
+        isScrollControlled: true,
+        backgroundColor: cream,
+        showDragHandle: true,
+        builder: (sheetContext) => StatefulBuilder(
+          builder: (context, updateSheet) => Padding(
+            padding: EdgeInsets.fromLTRB(12, 0, 12,
+              MediaQuery.viewInsetsOf(context).bottom + 16),
+            child: SingleChildScrollView(
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                _combinedCheckInCard(onChanged: () => updateSheet(() {})),
+                TextButton(onPressed: () => Navigator.pop(sheetContext),
+                  child: const Text('Done')),
+              ]),
+            ),
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(children: [
+          const Icon(Icons.edit_note_rounded, color: sage, size: 24),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Post a status', style: TextStyle(
+                fontSize: 15, fontWeight: FontWeight.w700, color: ink)),
+              Text(writtenStatus.isEmpty ? 'Share how you feel or what you need'
+                  : writtenStatus,
+                maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12, color: sage)),
+            ],
+          )),
+          const Icon(Icons.chevron_right_rounded, color: sage),
+        ]),
+      ),
+    ),
+  );
+
+  Widget _combinedCheckInCard({VoidCallback? onChanged}) => Container(
     width: double.infinity,
     padding: EdgeInsets.all(_compactPhone ? 9 : 12),
     decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
@@ -1585,7 +1632,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         const SizedBox(height: 5),
       ],
       TextField(controller: circleStatusController, maxLength: selectedNeed == null ? 280 : 240, maxLines: 2,
-        minLines: 1, onChanged: (_) => setState(() {}),
+        minLines: 1, onChanged: (_) { setState(() {}); onChanged?.call(); },
         decoration: InputDecoration(hintText: 'Write how you are feeling…',
           filled: true, fillColor: cream, counterText: '', isDense: true,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)))),
@@ -1610,7 +1657,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             DropdownMenuItem(value: choice.$2, child: Text(choice.$2,
               overflow: TextOverflow.ellipsis)),
         ],
-        onChanged: (value) => setState(() => selectedNeed = value == '' ? null : value),
+        onChanged: (value) {
+          setState(() => selectedNeed = value == '' ? null : value);
+          onChanged?.call();
+        },
       ),
       SizedBox(height: _compactPhone ? 6 : 10),
       SizedBox(width: double.infinity, child: FilledButton.icon(
@@ -2379,7 +2429,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
             return SizedBox(
               width: double.infinity,
-              height: _compactPhone ? 185 : 244,
+              height: _compactPhone ? 150 : 244,
               child: FittedBox(
                 fit: BoxFit.contain,
                 child: SizedBox(
