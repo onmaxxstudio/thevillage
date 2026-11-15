@@ -42,8 +42,11 @@ void main() {
           );
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
-          for (final key in ['growth-next-chapter', 'growth-membership-price']) {
-            expect(tester.getRect(find.byKey(ValueKey(key))).center.dx, closeTo(width / 2, 1));
+          for (final key in ['growth-next-chapter']) {
+            expect(
+              tester.getRect(find.byKey(ValueKey(key))).center.dx,
+              closeTo(width / 2, 1),
+            );
           }
 
           if (scale == 1) {
@@ -58,13 +61,20 @@ void main() {
           }
           expect(find.text('Mood history'), findsNothing);
           expect(find.text('Your milestones'), findsNothing);
-          for (final action in ['rsvp','monthly-event','member-check-in','growth-journey']) {
+          for (final action in [
+            'monthly-event',
+            'monthly-focus',
+            'guided-pathways',
+          ]) {
             final button = find.byKey(ValueKey('plus-$action'));
-            await tester.ensureVisible(button);await tester.tap(button);await tester.pumpAndSettle();
-            expect(find.text('VILLAGE PLUS · COMING SOON'),findsOneWidget);
-            await tester.tap(find.text('Back to Growth Studio'));await tester.pumpAndSettle();
+            await tester.ensureVisible(button);
+            await tester.tap(button);
+            await tester.pumpAndSettle();
+            expect(find.text('VILLAGE PLUS · COMING SOON'), findsOneWidget);
+            await tester.tap(find.text('Back to Growth Studio'));
+            await tester.pumpAndSettle();
           }
-          expect(destination,isNull);
+          expect(destination, isNull);
           await tester.ensureVisible(
             find.byKey(const ValueKey('growth-book-0')),
           );
@@ -79,9 +89,11 @@ void main() {
           await tester.tap(find.text('Explore current guided journals'));
           await tester.pumpAndSettle();
           expect(destination, 'guided');
-          await tester.ensureVisible(find.text('Village Plus · \$4.99/month'));
-          await tester.tap(find.text('Village Plus · \$4.99/month'));
-          expect(membershipOpened, isTrue);
+          expect(
+            find.byKey(const ValueKey('growth-membership-price')),
+            findsNothing,
+          );
+          expect(membershipOpened, isFalse);
           expect(tester.takeException(), isNull);
         },
       );

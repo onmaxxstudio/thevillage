@@ -31,6 +31,10 @@ class GrowthStudioDashboard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           VillagePlusPremiumSection(onMembership: onMembership),
+          if (_unfinishedJourney != null) ...[
+            const SizedBox(height: 16),
+            _continueJourney(wide),
+          ],
           SizedBox(height: wide ? 20 : 14),
           _ornamentTitle('Your next chapter', wide),
           const SizedBox(height: 7),
@@ -45,7 +49,9 @@ class GrowthStudioDashboard extends StatelessWidget {
           Stack(
             children: [
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: wide ? (phone ? 20 : 104) : 18),
+                padding: EdgeInsets.symmetric(
+                  horizontal: wide ? (phone ? 20 : 104) : 18,
+                ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -59,48 +65,78 @@ class GrowthStudioDashboard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          InkWell(
-            onTap: onMembership,
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Divider(
-                      color: gold,
-                      indent: wide ? 90 : 30,
-                      endIndent: 10,
-                    ),
-                  ),
-                  const GrowthLeafSprig(),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      r'Village Plus · $4.99/month',
-                      key: const ValueKey('growth-membership-price'),
-                      textAlign: TextAlign.center,
-                      style: _heading(wide ? 20 : 14, forest),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  const GrowthLeafSprig(mirrored: true),
-                  Expanded(
-                    child: Divider(
-                      color: gold,
-                      indent: 10,
-                      endIndent: wide ? 90 : 30,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       );
     },
   );
+
+  Map<String, dynamic>? get _unfinishedJourney {
+    for (final entry in entries) {
+      if (entry['entryType'] != 'guided' ||
+          entry['guidedJourneyId'] is! String ||
+          entry['guidedJourneyCompleted'] == true)
+        continue;
+      final answers = entry['guidedJourneyAnswers'];
+      if (answers is List &&
+          answers.any((a) => a is String && a.trim().isNotEmpty) &&
+          answers.any((a) => a is! String || a.trim().isEmpty))
+        return entry;
+    }
+    return null;
+  }
+
+  Widget _continueJourney(bool wide) {
+    final entry = _unfinishedJourney!;
+    final answers = entry['guidedJourneyAnswers'] as List;
+    final completed = answers
+        .where((a) => a is String && a.trim().isNotEmpty)
+        .length;
+    return Material(
+      color: cream,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: gold),
+      ),
+      child: InkWell(
+        key: const ValueKey('growth-continue'),
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => onOpenTool('guided'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Icon(Icons.auto_stories_outlined, color: forest),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Continue where you left off',
+                      style: _heading(wide ? 23 : 18, forest),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${entry['title'] ?? 'Your guided journal'} · $completed of ${answers.length} reflections saved',
+                      style: TextStyle(color: forest, fontSize: wide ? 16 : 12),
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: completed / answers.length,
+                      color: const Color(0xFF80934E),
+                      backgroundColor: const Color(0xFFE8DFC9),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Icon(Icons.chevron_right, color: forest),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _badge(String text, {required bool wide, bool sentence = false}) =>
       Container(
@@ -224,4 +260,3 @@ class GrowthStudioDashboard extends StatelessWidget {
     ),
   );
 }
-

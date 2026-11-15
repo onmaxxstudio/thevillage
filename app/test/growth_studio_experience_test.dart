@@ -51,19 +51,41 @@ void main() {
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
           if (scale == 1) {
-            final actions = ['monthly-event','member-check-in','growth-journey'];
-            final bottoms = actions.map((key) => tester.getRect(find.byKey(ValueKey('plus-$key'))).bottom).toList();
-            expect(bottoms[1],closeTo(bottoms[0],1));
-            expect(bottoms[2],closeTo(bottoms[0],1));
+            final actions = [
+              'monthly-event',
+              'monthly-focus',
+              'guided-pathways',
+            ];
+            final bottoms = actions
+                .map(
+                  (key) =>
+                      tester.getRect(find.byKey(ValueKey('plus-$key'))).bottom,
+                )
+                .toList();
+            expect(bottoms[1], closeTo(bottoms[0], 1));
+            expect(bottoms[2], closeTo(bottoms[0], 1));
           }
-          final pairedModes = ['prompts','guided','gratitude','mood','milestones','goals','letters','budget'];
-        final budget = tester.getSize(find.byKey(const ValueKey('growth-tool-budget')));
-        for(final mode in pairedModes) {
-          final size = tester.getSize(find.byKey(ValueKey('growth-tool-$mode')));
-          expect(size.width,closeTo(budget.width,.1));
-          expect(size.height,closeTo(budget.height,.1));
-        }
-        for (final mode in [
+          final pairedModes = [
+            'prompts',
+            'guided',
+            'gratitude',
+            'mood',
+            'milestones',
+            'goals',
+            'letters',
+            'budget',
+          ];
+          final budget = tester.getSize(
+            find.byKey(const ValueKey('growth-tool-budget')),
+          );
+          for (final mode in pairedModes) {
+            final size = tester.getSize(
+              find.byKey(ValueKey('growth-tool-$mode')),
+            );
+            expect(size.width, closeTo(budget.width, .1));
+            expect(size.height, closeTo(budget.height, .1));
+          }
+          for (final mode in [
             'write',
             'prompts',
             'guided',
@@ -89,12 +111,15 @@ void main() {
           await tester.tap(find.byTooltip('Settings'));
           expect(back, 1);
           expect(settings, 1);
-          await tester.ensureVisible(find.text(r'Village Plus · $4.99/month'));
-          await tester.tap(find.text(r'Village Plus · $4.99/month'));
-          expect(membership, 1);
-          expect(find.text('My Growth Journey'), findsOneWidget);
+          expect(membership, 0);
+          expect(find.text('Guided Pathways'), findsOneWidget);
           expect(find.text('Monthly Event'), findsOneWidget);
-          expect(find.text('You’re Not Alone'), findsOneWidget);
+          expect(find.text('Monthly Focus'), findsOneWidget);
+          expect(find.text('You’re Not Alone'), findsNothing);
+          final continueButton = find.byKey(const ValueKey('growth-continue'));
+          await tester.ensureVisible(continueButton);
+          await tester.tap(continueButton);
+          expect(destination, 'guided');
           expect(tester.takeException(), isNull);
         },
       );
