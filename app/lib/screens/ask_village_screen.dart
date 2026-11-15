@@ -282,37 +282,40 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
       body: SafeArea(
         child: HomeOverviewLayout(
           distributeSections: false,
-          header: AppBar(
-            backgroundColor: cream,
-            toolbarHeight: 76,
-            leadingWidth: 60,
-            leading: const SizedBox(width: 60),
-            title: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset('assets/images/welcome_branch.png', height: 18),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Ask the Village',
-                    style: GoogleFonts.playfairDisplay(
-                      color: sage,
-                      fontSize: 36,
-                      fontWeight: FontWeight.w600,
+          header: SizedBox(
+            height: 76,
+            child: AppBar(
+              backgroundColor: cream,
+              toolbarHeight: 76,
+              leadingWidth: 60,
+              leading: const SizedBox(width: 60),
+              title: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset('assets/images/welcome_branch.png', height: 18),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Ask the Village',
+                      style: GoogleFonts.playfairDisplay(
+                        color: sage,
+                        fontSize: 36,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  tooltip: 'Restore draft',
+                  onPressed: _restoreDraft,
+                  icon: const Icon(Icons.note_alt_outlined),
+                ),
+              ],
             ),
-            centerTitle: true,
-            actions: [
-              IconButton(
-                tooltip: 'Restore draft',
-                onPressed: _restoreDraft,
-                icon: const Icon(Icons.note_alt_outlined),
-              ),
-            ],
           ),
           sections: [
             Column(
