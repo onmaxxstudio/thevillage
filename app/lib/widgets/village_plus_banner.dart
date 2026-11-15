@@ -240,15 +240,17 @@ class _FeatureStrip extends StatelessWidget {
       (Icons.spa_outlined, 'Growth\nTools'),
       (Icons.calendar_month_outlined, 'Monthly\nEvents'),
       (Icons.people_alt_outlined, 'Deeper\nJourneys'),
-      (Icons.trending_up_rounded, 'Track Your\nProgress'),
+      (Icons.trending_up_rounded, 'Track\nYour\nProgress'),
     ];
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (var i = 0; i < items.length; i++) ...[
           Container(width: 1, height: 62, color: _gold.withValues(alpha: .6)),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Icon(items[i].$1, color: _gold, size: desktop ? 28 : 24),
                 const SizedBox(height: 6),
