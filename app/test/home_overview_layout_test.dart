@@ -94,4 +94,31 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+  testWidgets('Circle and Home share visible text scale on phones', (tester) async {
+    tester.view.physicalSize = const Size(393, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    Future<double> visibleTextHeight(bool distribute) async {
+      await tester.pumpWidget(MaterialApp(home: Scaffold(
+        body: HomeOverviewLayout(
+          distributeSections: distribute,
+          header: const SizedBox(height: 30),
+          sections: const [Text('Matching heading',
+            key: ValueKey('heading'), style: TextStyle(fontSize: 19))],
+        ),
+      )));
+      await tester.pump();
+      final heading = find.byKey(const ValueKey('heading'));
+      final paragraph = tester.renderObject(heading);
+      return paragraph.paintBounds.height * paragraph.getTransformTo(null).storage[5];
+    }
+
+    final homeHeight = await visibleTextHeight(true);
+    final circleHeight = await visibleTextHeight(false);
+    expect(circleHeight, closeTo(homeHeight, .01));
+    expect(tester.takeException(), isNull);
+  });
+
 }

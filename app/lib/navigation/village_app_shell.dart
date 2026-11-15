@@ -337,12 +337,12 @@ class _VillageAppShellState extends State<VillageAppShell> {
             ],
           ),
           bottomNavigationBar: NavigationBar(
-            height: selectedIndex == 0 &&
+            height: (selectedIndex == 0 || selectedIndex == 1) &&
                     MediaQuery.sizeOf(context).width < 600 &&
                     MediaQuery.textScalerOf(context).scale(1) <= 1.3
                 ? 64
                 : null,
-            labelTextStyle: selectedIndex == 0 &&
+            labelTextStyle: (selectedIndex == 0 || selectedIndex == 1) &&
                     MediaQuery.sizeOf(context).width < 600 &&
                     MediaQuery.textScalerOf(context).scale(1) <= 1.3
                 ? const WidgetStatePropertyAll(TextStyle(fontSize: 13))

@@ -12,6 +12,8 @@ import '../services/profile_service.dart';
 import '../services/circle_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import '../widgets/village_avatar.dart';
+import '../widgets/home_overview_layout.dart';
+import '../widgets/browser_layout_width.dart';
 import 'avatar_builder_screen.dart';
 import 'private_messages_screen.dart';
 
@@ -1348,71 +1350,31 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     await _requestSupport(need);
   }
 
-  bool get _compactPhone => MediaQuery.sizeOf(context).width < 600;
+  bool get _compactPhone =>
+      (phoneBrowserWidth() ?? MediaQuery.sizeOf(context).width) < 600;
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    // Home renders a 768px canvas at 1.22 text scale on phone screens.
-    // Match its visible type size without scaling Circle's cards or orbit.
-    final typeScale = _compactPhone && media.textScaler.scale(1) <= 1.3
-        ? media.size.width / 768 * 1.22
-        : 1.0;
-    return MediaQuery(
-      data: media.copyWith(textScaler: TextScaler.linear(
-        media.textScaler.scale(1) * typeScale)),
-      child: Scaffold(
+    return Scaffold(
       backgroundColor: cream,
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 620),
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16, _compactPhone ? 6 : 16, 16, _compactPhone ? 8 : 18),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'assets/images/welcome_branch.png',
-                        height: _compactPhone ? 12 : 18,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        'My Circle',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.playfairDisplay(
-                          color: sage,
-                          fontSize: _compactPhone ? 31 : 42,
-                          height: .95,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: _compactPhone ? 5 : 12),
-                      const Text(
-                        'Your people. Your safe place.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: sage,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(18, 0, 18, 28),
-                    children: [_activeCircleLayout()],
-                  ),
-                ),
-              ],
-            ),
+        child: HomeOverviewLayout(
+          distributeSections: false,
+          header: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 8),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Image.asset('assets/images/welcome_branch.png', height: 18),
+              const SizedBox(height: 5),
+              Text('My Circle', textAlign: TextAlign.center,
+                style: GoogleFonts.playfairDisplay(color: sage,
+                  fontSize: 31, height: .95, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              Text('Your people. Your safe place.', textAlign: TextAlign.center,
+                style: GoogleFonts.inter(color: sage, fontSize: 13, height: 1.18)),
+            ]),
           ),
+          sections: [_activeCircleLayout()],
         ),
-      ),
       ),
     );
   }
@@ -2408,9 +2370,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         ? 14
         : math.max(0, _visibleCircleMembers.length - people.length);
 
-    return MediaQuery(
-      data: MediaQuery.of(context),
-      child: AnimatedBuilder(
+    return AnimatedBuilder(
       animation: _orbitController,
       builder: (context, _) {
         final turn = _orbitController.value * 2 * math.pi;
@@ -2441,7 +2401,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
             return SizedBox(
               width: double.infinity,
-              height: _compactPhone ? 220 : 244,
+              height: _compactPhone
+                  ? 220 / (MediaQuery.sizeOf(this.context).width / 768)
+                  : 244,
               child: FittedBox(
                 fit: BoxFit.contain,
                 child: SizedBox(
@@ -2516,7 +2478,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                               textAlign: TextAlign.center,
                               style: GoogleFonts.playfairDisplay(
                                 color: sage,
-                                fontSize: 21,
+                                fontSize: _compactPhone
+                                    ? 19 * 366 / (220 / (MediaQuery.sizeOf(this.context).width / 768))
+                                    : 21,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -2546,7 +2510,6 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           },
         );
       },
-      ),
     );
   }
 

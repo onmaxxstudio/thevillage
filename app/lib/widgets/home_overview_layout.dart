@@ -9,10 +9,12 @@ class HomeOverviewLayout extends StatelessWidget {
     super.key,
     required this.header,
     required this.sections,
+    this.distributeSections = true,
   });
 
   final Widget header;
   final List<Widget> sections;
+  final bool distributeSections;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +49,9 @@ class HomeOverviewLayout extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: distributeSections
+                      ? MainAxisAlignment.spaceBetween
+                      : MainAxisAlignment.start,
                   children: [
                     header,
                     for (final section in sections)
