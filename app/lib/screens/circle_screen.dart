@@ -1348,6 +1348,8 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     await _requestSupport(need);
   }
 
+  bool get _compactPhone => MediaQuery.sizeOf(context).width < 600;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1359,13 +1361,13 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                  padding: EdgeInsets.fromLTRB(16, _compactPhone ? 6 : 16, 16, _compactPhone ? 8 : 18),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Image.asset(
                         'assets/images/welcome_branch.png',
-                        height: 18,
+                        height: _compactPhone ? 12 : 18,
                       ),
                       const SizedBox(height: 5),
                       Text(
@@ -1373,18 +1375,18 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
                         textAlign: TextAlign.center,
                         style: GoogleFonts.playfairDisplay(
                           color: sage,
-                          fontSize: 42,
+                          fontSize: _compactPhone ? 30 : 42,
                           height: .95,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: _compactPhone ? 5 : 12),
                       const Text(
                         'Your people. Your safe place.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: sage,
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1467,19 +1469,35 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       _circleOrbit(),
       const SizedBox(height: 8),
       _combinedCheckInCard(),
-      const SizedBox(height: 10),
+      SizedBox(height: _compactPhone ? 6 : 10),
       if (incomingRequests.isNotEmpty || _requestLoadFailed) ...[
         _incomingRequestsCard(),
         const SizedBox(height: 14),
       ],
       _messagesCard(),
-      const SizedBox(height: 10),
+      SizedBox(height: _compactPhone ? 6 : 10),
+      if (_compactPhone)
+        Row(children: [
+          Expanded(child: OutlinedButton.icon(
+            onPressed: _shareSomethingGood,
+            icon: const Icon(Icons.emoji_events_outlined, size: 18),
+            label: const Text('Share a win'),
+          )),
+          const SizedBox(width: 8),
+          Expanded(child: OutlinedButton.icon(
+            onPressed: _editSupportProfile,
+            icon: const Icon(Icons.tune_rounded, size: 18),
+            label: const Text('Settings'),
+          )),
+        ])
+      else ...[
       _actionRow(Icons.emoji_events_outlined, 'Share a win',
         'Celebrate something good with your people.', _shareSomethingGood, blush),
-      const SizedBox(height: 10),
+      SizedBox(height: _compactPhone ? 6 : 10),
       OutlinedButton.icon(onPressed: _editSupportProfile,
         icon: const Icon(Icons.tune_rounded), label: const Text('Circle settings')),
-      const SizedBox(height: 22),
+      ],
+      SizedBox(height: _compactPhone ? 10 : 22),
       Row(children: [
         Expanded(child: Text('From your people', style: GoogleFonts.playfairDisplay(
           color: ink, fontSize: 25, fontWeight: FontWeight.w700))),
@@ -1551,19 +1569,21 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
   Widget _combinedCheckInCard() => Container(
     width: double.infinity,
-    padding: const EdgeInsets.all(12),
+    padding: EdgeInsets.all(_compactPhone ? 9 : 12),
     decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(20)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Expanded(child: Text('What do you need today?', style: GoogleFonts.playfairDisplay(
-          color: ink, fontSize: 21, fontWeight: FontWeight.w700))),
+          color: ink, fontSize: _compactPhone ? 18 : 21, fontWeight: FontWeight.w700))),
         const Icon(Icons.lock_outline_rounded, size: 15, color: sage),
         const SizedBox(width: 4),
         const Text('Only my circle', style: TextStyle(fontSize: 11, color: sage)),
       ]),
-      const SizedBox(height: 10),
-      const Text('Your status', style: TextStyle(fontWeight: FontWeight.w700)),
-      const SizedBox(height: 5),
+      SizedBox(height: _compactPhone ? 6 : 10),
+      if (!_compactPhone) ...[
+        const Text('Your status', style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 5),
+      ],
       TextField(controller: circleStatusController, maxLength: selectedNeed == null ? 280 : 240, maxLines: 2,
         minLines: 1, onChanged: (_) => setState(() {}),
         decoration: InputDecoration(hintText: 'Write how you are feeling…',
@@ -1574,9 +1594,11 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         Padding(padding: const EdgeInsets.only(top: 4),
           child: Text('${_statusAge(statusPostedAt)} · ${_statusExpiry(statusExpiresAt)}',
             style: const TextStyle(fontSize: 11, color: sage))),
-      const SizedBox(height: 10),
-      const Text('What you need', style: TextStyle(fontWeight: FontWeight.w700)),
-      const SizedBox(height: 5),
+      SizedBox(height: _compactPhone ? 6 : 10),
+      if (!_compactPhone) ...[
+        const Text('What you need', style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 5),
+      ],
       DropdownButtonFormField<String>(
         key: ValueKey(selectedNeed), initialValue: selectedNeed ?? '', isExpanded: true,
         decoration: InputDecoration(filled: true, fillColor: cream,
@@ -1590,7 +1612,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         ],
         onChanged: (value) => setState(() => selectedNeed = value == '' ? null : value),
       ),
-      const SizedBox(height: 10),
+      SizedBox(height: _compactPhone ? 6 : 10),
       SizedBox(width: double.infinity, child: FilledButton.icon(
         onPressed: circleStatusController.text.trim().isEmpty && selectedNeed == null
           ? null : () => _saveStatusWithFeedback(
@@ -2357,7 +2379,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
 
             return SizedBox(
               width: double.infinity,
-              height: 244,
+              height: _compactPhone ? 185 : 244,
               child: FittedBox(
                 fit: BoxFit.contain,
                 child: SizedBox(
