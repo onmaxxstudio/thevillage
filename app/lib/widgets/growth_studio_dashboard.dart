@@ -26,7 +26,6 @@ class GrowthStudioDashboard extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final wide = constraints.maxWidth >= 600;
-      final phone = MediaQuery.sizeOf(context).width < 600;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -49,14 +48,12 @@ class GrowthStudioDashboard extends StatelessWidget {
           Stack(
             children: [
               Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: wide ? (phone ? 20 : 104) : 18,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: wide ? 68 : 18),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     for (var i = 0; i < 3; i++) ...[
-                      if (i > 0) SizedBox(width: wide ? (phone ? 24 : 30) : 12),
+                      if (i > 0) SizedBox(width: wide ? 26 : 12),
                       Expanded(child: _book(context, i)),
                     ],
                   ],
@@ -167,7 +164,7 @@ class GrowthStudioDashboard extends StatelessWidget {
       Expanded(
         child: Divider(
           color: const Color(0xFFC3A05A),
-          indent: wide ? 110 : 25,
+          indent: wide ? 128 : 25,
           endIndent: 12,
         ),
       ),
@@ -184,7 +181,7 @@ class GrowthStudioDashboard extends StatelessWidget {
         child: Divider(
           color: const Color(0xFFC3A05A),
           indent: 12,
-          endIndent: wide ? 110 : 25,
+          endIndent: wide ? 128 : 25,
         ),
       ),
     ],
