@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../services/circle_service.dart';
 import '../widgets/planner_viewport.dart';
+import '../widgets/growth_reference_art.dart';
 
 class _MealRecipe {
   const _MealRecipe({required this.title, required this.description,
@@ -509,6 +510,66 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
     _load();
   }
 
+  PreferredSizeWidget _plannerHeader() {
+    const forest = Color(0xFF103A23);
+    return AppBar(
+      backgroundColor: cream,
+      foregroundColor: forest,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      toolbarHeight: 110,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      title: Stack(
+        alignment: Alignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const GrowthLeafSprig(),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text('Ask the Village',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'VillagePlusDisplay',
+                          color: forest, fontSize: 20)),
+                    ),
+                    const SizedBox(width: 8),
+                    const GrowthLeafSprig(mirrored: true),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('Plan My Week',
+                    style: TextStyle(
+                      fontFamily: 'VillagePlusDisplay',
+                      color: forest, fontSize: 36, height: 1.05)),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            left: 4,
+            bottom: 4,
+            child: IconButton(
+              tooltip: 'Back',
+              onPressed: () => Navigator.maybePop(context),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final start = weekStart;
@@ -530,7 +591,7 @@ class _PlanMyWeekScreenState extends State<PlanMyWeekScreen> {
       },
       child: PlannerViewport(child: Scaffold(
         backgroundColor: cream,
-        appBar: AppBar(backgroundColor: cream, foregroundColor: ink, elevation: 0,
+        appBar: section == 'Overview' ? _plannerHeader() : AppBar(backgroundColor: cream, foregroundColor: ink, elevation: 0,
           leading: section == 'Overview' ? null : IconButton(
             tooltip: 'Back to Plan My Week',
             onPressed: () => setState(() => section = 'Overview'),
