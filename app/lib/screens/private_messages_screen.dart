@@ -125,7 +125,9 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Wrap(spacing: 0, runSpacing: 4, children: [
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(children: [
                   _scopeChip('All messages', null),
                   _scopeChip('Village feed', 'village'),
                   Padding(
@@ -134,7 +136,7 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
                       avatar: openingAnonymousActivity
                           ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
                           : const Icon(Icons.visibility_off_outlined, size: 16, color: sage),
-                      label: const Text('My Anonymous Activity'),
+                      label: const Text('My Anonymous Activity', maxLines: 1, softWrap: false),
                       labelStyle: const TextStyle(color: ink, fontSize: 11, fontWeight: FontWeight.w700),
                       backgroundColor: Colors.white,
                       side: const BorderSide(color: line),
@@ -143,7 +145,8 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
                   ),
                   for (final entry in communityNames.entries)
                     _scopeChip(entry.value.isEmpty ? 'Community' : entry.value, entry.key),
-                ]),
+                  ]),
+                ),
               ),
               const SizedBox(height: 6),
               Expanded(
@@ -177,7 +180,7 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
   Widget _scopeChip(String label, String? value) => Padding(
         padding: const EdgeInsets.only(right: 7),
         child: ChoiceChip(
-          label: Text(label, overflow: TextOverflow.ellipsis),
+          label: Text(label, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
           selected: scope == value,
           onSelected: (_) => setState(() => scope = value),
           selectedColor: sage,
