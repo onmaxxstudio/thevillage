@@ -125,29 +125,28 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(children: [
-                  _scopeChip('All messages', null),
-                  _scopeChip('Village feed', 'village'),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 7),
-                    child: ActionChip(
-                      avatar: openingAnonymousActivity
-                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.visibility_off_outlined, size: 16, color: sage),
-                      label: const Text('My Anonymous Activity', maxLines: 1, softWrap: false),
-                      labelStyle: const TextStyle(color: ink, fontSize: 11, fontWeight: FontWeight.w700),
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: line),
-                      onPressed: openingAnonymousActivity ? null : _openAnonymousActivity,
-                    ),
-                  ),
-                  for (final entry in communityNames.entries)
-                    _scopeChip(entry.value.isEmpty ? 'Community' : entry.value, entry.key),
+                child: Row(children: [
+                  Expanded(flex: 27, child: _navigationTab(
+                    'All messages', selected: scope == null,
+                    onPressed: () => setState(() => scope = null))),
+                  const SizedBox(width: 6),
+                  Expanded(flex: 25, child: _navigationTab(
+                    'Village feed', selected: scope == 'village',
+                    onPressed: () => setState(() => scope = 'village'))),
+                  const SizedBox(width: 6),
+                  Expanded(flex: 48, child: _navigationTab(
+                    'My Anonymous Activity',
+                    onPressed: openingAnonymousActivity ? null : _openAnonymousActivity)),
+                ]),
+              ),
+              if (communityNames.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Wrap(children: [
+                    for (final entry in communityNames.entries)
+                      _scopeChip(entry.value.isEmpty ? 'Community' : entry.value, entry.key),
                   ]),
                 ),
-              ),
               const SizedBox(height: 6),
               Expanded(
                 child: visible.isEmpty
@@ -176,6 +175,31 @@ class _PrivateMessagesScreenState extends State<PrivateMessagesScreen> {
       ),
     );
   }
+
+  // Give every primary tab a bounded share of the screen. Scale only its
+  // label when needed, keeping the full wording and a 48px tap target.
+  Widget _navigationTab(String label, {
+    bool selected = false,
+    required VoidCallback? onPressed,
+  }) => SizedBox(
+        height: 48,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            minimumSize: Size.zero,
+            backgroundColor: selected ? sage : Colors.white,
+            foregroundColor: selected ? Colors.white : ink,
+            side: BorderSide(color: selected ? sage : line),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(label, maxLines: 1, softWrap: false,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+          ),
+        ),
+      );
 
   Widget _scopeChip(String label, String? value) => Padding(
         padding: const EdgeInsets.only(right: 7),
