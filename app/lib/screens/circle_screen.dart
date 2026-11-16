@@ -1385,10 +1385,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
               const SizedBox(height: 5),
               Text('My Circle', textAlign: TextAlign.center,
                 style: GoogleFonts.playfairDisplay(color: sage,
-                  fontSize: 31, height: .95, fontWeight: FontWeight.w600)),
+                  fontSize: 27, height: .95, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
               Text('Your people. Your safe place.', textAlign: TextAlign.center,
-                style: GoogleFonts.inter(color: sage, fontSize: 13, height: 1.18)),
+                style: GoogleFonts.inter(color: sage, fontSize: 11.5, height: 1.18)),
             ]),
           ),
           sections: [_activeCircleLayout()],
@@ -1472,14 +1472,14 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
             onPressed: _shareSomethingGood,
             style: OutlinedButton.styleFrom(minimumSize: const Size(0, 76)),
             icon: const Icon(Icons.emoji_events_outlined, size: 40),
-            label: const Text('Share a win'),
+            label: const Text('Share a win', style: TextStyle(fontSize: 12)),
           )),
           const SizedBox(width: 18),
           Expanded(child: OutlinedButton.icon(
             onPressed: _editSupportProfile,
             style: OutlinedButton.styleFrom(minimumSize: const Size(0, 76)),
             icon: const Icon(Icons.tune_rounded, size: 40),
-            label: const Text('Settings'),
+            label: const Text('Settings', style: TextStyle(fontSize: 12)),
           )),
         ])
       else ...[
@@ -1492,9 +1492,9 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       SizedBox(height: _compactPhone ? 30 : 24),
       Row(children: [
         Expanded(child: Text('From your people', style: GoogleFonts.playfairDisplay(
-          color: ink, fontSize: 19, fontWeight: FontWeight.w700))),
+          color: ink, fontSize: 16.5, fontWeight: FontWeight.w700))),
         if (_visibleCircleMembers.isNotEmpty)
-          TextButton(onPressed: _showPeopleUpdates, child: const Text('See all')),
+          TextButton(onPressed: _showPeopleUpdates, child: const Text('See all', style: TextStyle(fontSize: 12))),
       ]),
       const SizedBox(height: 16),
       _peopleStatusFeed(),
@@ -1594,12 +1594,12 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Post a status', style: GoogleFonts.playfairDisplay(
-                fontSize: 19, height: 1.05, fontWeight: FontWeight.w700, color: ink)),
+                fontSize: 16.5, height: 1.05, fontWeight: FontWeight.w700, color: ink)),
               const SizedBox(height: 6),
               Text(writtenStatus.isEmpty ? 'Share how you feel or what you need'
                   : writtenStatus,
                 maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(fontSize: 13, height: 1.18, color: ink)),
+                style: GoogleFonts.inter(fontSize: 11.5, height: 1.18, color: ink)),
             ],
           )),
           const Icon(Icons.chevron_right_rounded, color: sage, size: 30),
@@ -1820,21 +1820,21 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Column(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name, style: const TextStyle(color: ink, fontWeight: FontWeight.w700, fontSize: 14)),
+              Text(name, style: const TextStyle(color: ink, fontWeight: FontWeight.w700, fontSize: 12.5)),
               const SizedBox(height: 4),
-              Text(time, style: const TextStyle(color: sage, fontSize: 11)),
+              Text(time, style: const TextStyle(color: sage, fontSize: 9.5)),
             ]),
           if (label != null) ...[
             const SizedBox(height: 8),
             Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
               decoration: BoxDecoration(color: paleSage, borderRadius: BorderRadius.circular(12)),
               child: Text(label, style: const TextStyle(color: sage,
-                fontWeight: FontWeight.w600, fontSize: 11))),
+                fontWeight: FontWeight.w600, fontSize: 9.5))),
           ],
           if (text.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(text, maxLines: 3, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: ink, fontSize: 15, height: 1.4)),
+              style: const TextStyle(color: ink, fontSize: 12, height: 1.4)),
           ],
         ])),
         const SizedBox(width: 5),
@@ -1917,7 +1917,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(color: blush, borderRadius: BorderRadius.circular(28)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Messages', style: GoogleFonts.playfairDisplay(fontSize: 19,
+      Text('Messages', style: GoogleFonts.playfairDisplay(fontSize: 16.5,
         fontWeight: FontWeight.w700)),
       const SizedBox(height: 16),
       Row(children: [
@@ -1940,10 +1940,10 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
           Icon(icon, color: sage, size: 44), const SizedBox(width: 18),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.playfairDisplay(fontSize: 19, fontWeight: FontWeight.w700)),
+              style: GoogleFonts.playfairDisplay(fontSize: 16.5, fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
             Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(fontSize: 13, height: 1.18)),
+              style: GoogleFonts.inter(fontSize: 11.5, height: 1.18)),
           ])),
         ]))));
 
