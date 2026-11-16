@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../navigation/village_navigation_scope.dart';
 import '../widgets/ask_page_layout.dart';
+import '../widgets/planner_viewport.dart';
 import '../services/profile_service.dart';
 import '../services/anonymous_identity_service.dart';
 import 'post_preview_screen.dart';
@@ -277,7 +278,7 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
   @override
   Widget build(BuildContext context) {
     if (widget.firstQuestionFlow) return _firstQuestionScreen();
-    return Scaffold(
+    final composer = Scaffold(
       backgroundColor: cream,
       body: SafeArea(
         child: AskPageLayout(
@@ -530,6 +531,9 @@ class _AskVillageScreenState extends State<AskVillageScreen> {
         ),
       ),
     );
+    // Match the approved mobile overview at normal browser zoom. The viewport
+    // keeps the full available width and leaves larger accessibility text alone.
+    return PlannerViewport(scale: .85, child: composer);
   }
 
   Widget _firstQuestionScreen() => Scaffold(

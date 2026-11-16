@@ -297,6 +297,9 @@ class _VillageAppShellState extends State<VillageAppShell> {
       }),
       );
     }
+    final compactAsk = selectedIndex == 2 &&
+        MediaQuery.sizeOf(context).width < 600 &&
+        MediaQuery.textScalerOf(context).scale(1) <= 1.3;
     return VillageNavigationScope(
       selectedIndex: selectedIndex,
       onSelect: selectTab,
@@ -327,25 +330,34 @@ class _VillageAppShellState extends State<VillageAppShell> {
                   left: 0,
                   child: SafeArea(
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 12, top: 8),
-                      child: VillageMenuButton(
+                      padding: EdgeInsets.only(left: compactAsk ? 8 : 12, top: compactAsk ? 3 : 8),
+                      child: Transform.scale(
+                        scale: compactAsk ? .85 : 1,
+                        child: VillageMenuButton(
                         onPressed: () => _shellScaffoldKey.currentState
                             ?.openDrawer(),
+                        ),
                       ),
                     ),
                   ),
                 ),
             ],
           ),
-          bottomNavigationBar: NavigationBar(
-            height: (selectedIndex == 0 || selectedIndex == 1 || selectedIndex == 3 || selectedIndex == 4) &&
+          bottomNavigationBar: NavigationBarTheme(
+            data: NavigationBarTheme.of(context).copyWith(
+              iconTheme: compactAsk
+                  ? const WidgetStatePropertyAll(IconThemeData(size: 20.4))
+                  : null,
+            ),
+            child: NavigationBar(
+            height: (selectedIndex == 0 || selectedIndex == 1 || selectedIndex == 2 || selectedIndex == 3 || selectedIndex == 4) &&
                     MediaQuery.sizeOf(context).width < 600 &&
                     MediaQuery.textScalerOf(context).scale(1) <= 1.3
                 ? 64
                 : null,
             labelTextStyle: selectedIndex == 2
                 ? WidgetStatePropertyAll(TextStyle(
-                    fontSize: MediaQuery.sizeOf(context).width < 360 ? 10 : 12,
+                    fontSize: compactAsk ? 10.2 : (MediaQuery.sizeOf(context).width < 360 ? 10 : 12),
                     height: 1.2,
                   ))
                 : (selectedIndex == 0 || selectedIndex == 1 || selectedIndex == 3 || selectedIndex == 4) &&
@@ -367,6 +379,7 @@ class _VillageAppShellState extends State<VillageAppShell> {
               NavigationDestination(icon: Icon(Icons.forum_outlined, color: ink), selectedIcon: Icon(Icons.forum_rounded, color: sage), label: 'Village'),
               NavigationDestination(icon: Icon(Icons.diversity_3_outlined, color: ink), selectedIcon: Icon(Icons.diversity_3_rounded, color: sage), label: 'Community'),
             ],
+            ),
           ),
         ),
       ),
