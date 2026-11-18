@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/daily_village_question_service.dart';
+import '../widgets/village_perspective_card.dart';
+import 'village_question_history_screen.dart';
 
 /// Dedicated page opened from the homepage, within the existing app shell.
 class DailyVillageQuestionScreen extends StatefulWidget {
@@ -103,6 +105,10 @@ class _DailyVillageQuestionScreenState
                 ),
               ),
             ),
+            Wrap(spacing: 8, children: [
+              TextButton.icon(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const VillageQuestionHistoryScreen(saved: false))), icon: const Icon(Icons.history), label: const Text('Past Village Questions')),
+              TextButton.icon(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const VillageQuestionHistoryScreen(saved: true))), icon: const Icon(Icons.bookmark_outline), label: const Text('Saved Perspectives')),
+            ]),
             const SizedBox(height: 16),
             TextField(
               controller: composer,
@@ -142,11 +148,10 @@ class _DailyVillageQuestionScreenState
                 return Column(
                   children: [
                     for (final doc in responses.data!.docs)
-                      Card(
-                        child: ListTile(
-                          title: const Text('Village Member'),
-                          subtitle: Text(doc.data()['body'] as String? ?? ''),
-                        ),
+                      VillagePerspectiveCard(
+                        date: widget.dateKey,
+                        responseId: doc.id,
+                        body: doc.data()['body'] as String? ?? '',
                       ),
                   ],
                 );
