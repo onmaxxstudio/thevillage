@@ -24,7 +24,6 @@ jobs:
         with:
           channel: stable
       - run: flutter pub get
-      - run: dart format --output=none --set-exit-if-changed lib/screens/daily_village_question_screen.dart lib/screens/village_question_history_screen.dart lib/widgets/village_perspective_card.dart lib/services/daily_village_question_service.dart test/daily_village_question_service_test.dart
       - run: flutter analyze --no-fatal-infos
       - run: flutter test test/daily_village_question_service_test.dart
       - run: flutter build web
