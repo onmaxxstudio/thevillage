@@ -1,0 +1,138 @@
+import 'package:flutter/material.dart';
+import '../services/daily_village_question_service.dart';
+
+/// Dedicated page opened from the homepage, within the existing app shell.
+class DailyVillageQuestionScreen extends StatefulWidget {
+  const DailyVillageQuestionScreen({super.key, required this.dateKey});
+  final String dateKey;
+
+  @override
+  State<DailyVillageQuestionScreen> createState() =>
+      _DailyVillageQuestionScreenState();
+}
+
+class _DailyVillageQuestionScreenState
+    extends State<DailyVillageQuestionScreen> {
+  static const cream = Color(0xFFFFFAF1);
+  static const sage = Color(0xFF355C3B);
+  final service = DailyVillageQuestionService();
+  final composer = TextEditingController();
+  bool sending = false;
+  String? error;
+
+  @override
+  void dispose() {
+    composer.dispose();
+    super.dispose();
+  }
+
+  Future<void> submit() async {
+    if (sending) return;
+    setState(() { sending = true; error = null; });
+    try {
+      await service.postResponse(widget.dateKey, composer.text);
+      composer.clear();
+    } catch (e) {
+      if (mounted) setState(() => error = e.toString());
+    } finally {
+      if (mounted) setState(() => sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: cream,
+    appBar: AppBar(
+      backgroundColor: cream,
+      foregroundColor: sage,
+      title: const Text('Daily Village Question'),
+    ),
+    body: StreamBuilder(
+      stream: service.watchQuestion(widget.dateKey),
+      builder: (context, question) {
+        if (question.hasError) {
+          return const Center(child: Text('Unable to load today’s question.'));
+        }
+        if (!question.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final data = question.data!.data();
+        if (data == null || data['status'] != 'published') {
+          return const Center(child: Text('Today’s question is coming soon.'));
+        }
+        return ListView(
+          padding: const EdgeInsets.all(18),
+          children: [
+            Card(
+              color: const Color(0xFFE8EBDD),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('TODAY’S VILLAGE QUESTION',
+                        style: TextStyle(color: sage, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    Text(data['question'] as String? ?? '',
+                        style: Theme.of(context).textTheme.titleLarge),
+                    const SizedBox(height: 12),
+                    const Text('One question. Many perspectives. One village.'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: composer,
+              maxLines: 4,
+              maxLength: 2000,
+              decoration: const InputDecoration(
+                labelText: 'Share your perspective',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            if (error != null) Text(error!, style: const TextStyle(color: Colors.red)),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton(
+                onPressed: sending ? null : submit,
+                child: const Text('Post response'),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Village Conversations',
+                style: Theme.of(context).textTheme.titleMedium),
+            StreamBuilder(
+              stream: service.watchResponses(widget.dateKey),
+              builder: (context, responses) {
+                if (responses.hasError) {
+                  return const Text('Unable to load conversations.');
+                }
+                if (!responses.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (responses.data!.docs.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Text('Be the first to share your perspective.'),
+                  );
+                }
+                return Column(
+                  children: [
+                    for (final doc in responses.data!.docs)
+                      Card(
+                        child: ListTile(
+                          title: const Text('Village Member'),
+                          subtitle: Text(doc.data()['body'] as String? ?? ''),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
