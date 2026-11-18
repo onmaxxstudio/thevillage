@@ -29,7 +29,8 @@ class DailyVillageQuestionService {
   Stream<QuerySnapshot<Map<String, dynamic>>> watchArchive() =>
       _db.collection('village_daily_questions')
           .where('status', isEqualTo: 'published')
-          .orderBy('date', descending: true).limit(60).snapshots();
+          .where('publishAt', isLessThanOrEqualTo: Timestamp.now())
+          .orderBy('publishAt', descending: true).limit(60).snapshots();
 
   String get _uid {
     final uid = _auth.currentUser?.uid;
