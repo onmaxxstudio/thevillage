@@ -72,7 +72,10 @@ class _DailyVillageQuestionScreenState
                   children: [
                     const Text('TODAY’S VILLAGE QUESTION',
                         style: TextStyle(color: sage, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
+                    const Text('Come with a question. Leave with a perspective.',
+                        style: TextStyle(color: sage, fontStyle: FontStyle.italic)),
+                    const SizedBox(height: 16),
                     Text(data['question'] as String? ?? '',
                         style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 12),
