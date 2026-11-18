@@ -1083,6 +1083,37 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
     }
 
+    // Approved question bank and date-keyed daily schedule.
+    match /village_question_bank/{questionId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /village_daily_questions/{dateId} {
+      allow get, list: if signedIn() &&
+        (resource.data.status == 'published' || isAdmin());
+      allow create, update, delete: if isAdmin();
+
+      match /responses/{responseId} {
+        allow get, list: if signedIn() &&
+          get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.status == 'published';
+        allow create: if signedIn() &&
+          get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.status == 'published' &&
+          request.resource.data.keys().hasOnly([
+            'authorUid', 'body', 'createdAt', 'supportCount'
+          ]) &&
+          request.resource.data.authorUid == request.auth.uid &&
+          request.resource.data.body is string &&
+          request.resource.data.body.size() >= 1 &&
+          request.resource.data.body.size() <= 2000 &&
+          request.resource.data.createdAt == request.time &&
+          request.resource.data.supportCount == 0;
+        allow update: if false;
+        allow delete: if isAdmin() ||
+          (signedIn() && resource.data.authorUid == request.auth.uid);
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
