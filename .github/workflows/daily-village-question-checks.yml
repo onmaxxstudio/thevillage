@@ -1,0 +1,35 @@
+name: Daily Village Question checks
+on:
+  push:
+    branches:
+      - feature/daily-village-question
+  pull_request:
+    paths:
+      - 'app/lib/screens/daily_village_question_screen.dart'
+      - 'app/lib/screens/village_question_history_screen.dart'
+      - 'app/lib/widgets/village_perspective_card.dart'
+      - 'app/lib/services/daily_village_question_service.dart'
+      - 'app/test/daily_village_question_service_test.dart'
+      - 'app/firestore.rules'
+      - 'scripts/import_daily_village_questions.cjs'
+jobs:
+  flutter-checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib/screens/daily_village_question_screen.dart lib/screens/village_question_history_screen.dart lib/widgets/village_perspective_card.dart lib/services/daily_village_question_service.dart test/daily_village_question_service_test.dart
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test test/daily_village_question_service_test.dart
+      - run: flutter build web
+  import-script-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node --check scripts/import_daily_village_questions.cjs
