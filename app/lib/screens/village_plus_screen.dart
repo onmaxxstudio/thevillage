@@ -1,7 +1,29 @@
+import '../services/village_plus_billing.dart';
 import 'package:flutter/material.dart';
 
-class VillagePlusScreen extends StatelessWidget {
+class VillagePlusScreen extends StatefulWidget {
   const VillagePlusScreen({super.key});
+
+  @override
+  State<VillagePlusScreen> createState() => _VillagePlusScreenState();
+}
+
+class _VillagePlusScreenState extends State<VillagePlusScreen> {
+  bool openingBilling = false;
+
+  Future<void> _openBilling(bool member) async {
+    if (openingBilling) return;
+    setState(() => openingBilling = true);
+    try {
+      if (member) { await VillagePlusBilling.manage(); }
+      else { await VillagePlusBilling.join(); }
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Billing is not available yet. Please try again later.')));
+    } finally {
+      if (mounted) setState(() => openingBilling = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,18 +108,25 @@ class VillagePlusScreen extends StatelessWidget {
               const Center(child: Text('\$4.99/month',
                 style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: green))),
               const SizedBox(height: 18),
-              // Enrollment stays disabled until server-verified subscriptions exist.
-              FilledButton(
-                key: const ValueKey('join-village-plus'),
-                onPressed: null,
-                style: FilledButton.styleFrom(
-                  disabledBackgroundColor: const Color(0xFFD9DCCF),
-                  disabledForegroundColor: green,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18)),
-                child: const Text('Join Village Plus'),
+              StreamBuilder<bool>(
+                stream: VillagePlusBilling.active,
+                builder: (context, snapshot) {
+                  final member = snapshot.data == true;
+                  return FilledButton(
+                    key: const ValueKey('join-village-plus'),
+                    onPressed: openingBilling ? null : () => _openBilling(member),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18)),
+                    child: Text(openingBilling
+                        ? 'Opening secure billing…'
+                        : member ? 'Manage Village Plus' : 'Join Village Plus'),
+                  );
+                },
               ),
               const SizedBox(height: 12),
-              const Text('Membership enrollment is coming soon. Payments are not yet available.',
+              const Text('Secure checkout powered by Stripe. Membership renews monthly until cancelled.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: green, height: 1.5)),
             ],

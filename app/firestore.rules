@@ -1083,6 +1083,16 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
     }
 
+    // Stripe entitlements are written only by trusted Firebase Admin SDK.
+    match /villagePlusEntitlements/{uid} {
+      allow get: if isSelf(uid);
+      allow list, create, update, delete: if false;
+    }
+
+    match /stripeCustomers/{uid} {
+      allow read, write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

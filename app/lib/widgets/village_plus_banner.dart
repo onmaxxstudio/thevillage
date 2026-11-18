@@ -1,3 +1,4 @@
+import '../services/village_plus_billing.dart';
 import 'package:flutter/material.dart';
 import 'village_plus_photo.dart';
 import '../screens/village_plus_screen.dart';
@@ -11,7 +12,11 @@ class VillagePlusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return StreamBuilder<bool>(
+      stream: VillagePlusBilling.active,
+      builder: (context, snapshot) {
+        if (snapshot.data == true) return const SizedBox.shrink();
+        return Material(
       color: _forest,
       borderRadius: BorderRadius.circular(22),
       clipBehavior: Clip.antiAlias,
@@ -34,6 +39,8 @@ class VillagePlusBanner extends StatelessWidget {
           ],
         ),
       ),
+        );
+      },
     );
   }
 }
