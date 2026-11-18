@@ -28,6 +28,7 @@ class DailyVillageQuestionService {
 
   Stream<QuerySnapshot<Map<String, dynamic>>> watchArchive() =>
       _db.collection('village_daily_questions')
+          .where('status', isEqualTo: 'published')
           .orderBy('date', descending: true).limit(60).snapshots();
 
   Future<void> postResponse(String date, String text) async {
