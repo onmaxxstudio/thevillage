@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/daily_village_question_service.dart';
 
 /// Dedicated page opened from the homepage, within the existing app shell.
@@ -47,11 +48,29 @@ class _DailyVillageQuestionScreenState
       foregroundColor: sage,
       title: const Text('Daily Village Question'),
     ),
-    body: StreamBuilder(
+    body: FirebaseAuth.instance.currentUser == null
+      ? Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, color: sage, size: 32),
+                const SizedBox(height: 12),
+                const Text('Daily Village Question is free for all registered members.',
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 8),
+                const Text('Please sign in to read and share perspectives.',
+                    textAlign: TextAlign.center),
+              ],
+            ),
+          ),
+        )
+      : StreamBuilder(
       stream: service.watchQuestion(widget.dateKey),
       builder: (context, question) {
         if (question.hasError) {
-          return const Center(child: Text('Unable to load today’s question.'));
+          return const Center(child: Text('Today’s question is unavailable. Please try again later.'));
         }
         if (!question.hasData) {
           return const Center(child: CircularProgressIndicator());
