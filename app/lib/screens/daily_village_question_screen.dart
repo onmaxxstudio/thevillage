@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/daily_village_question_service.dart';
 import '../widgets/village_perspective_card.dart';
 import 'village_question_history_screen.dart';
@@ -78,7 +79,9 @@ class _DailyVillageQuestionScreenState
           return const Center(child: CircularProgressIndicator());
         }
         final data = question.data!.data();
-        if (data == null || data['status'] != 'published') {
+        if (data == null || data['status'] != 'published' ||
+            data['publishAt'] is! Timestamp ||
+            (data['publishAt'] as Timestamp).toDate().isAfter(DateTime.now())) {
           return const Center(child: Text('Today’s question is coming soon.'));
         }
         return ListView(
