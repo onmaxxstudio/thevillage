@@ -141,14 +141,48 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
         ),
       if (!widget.isPlusMember)
         Positioned(
-          right: 6,
-          top: 0,
-          bottom: 0,
-          child: Center(child: IconButton.filledTonal(
-            tooltip: 'Switch between Village Plus and today’s question',
-            onPressed: _switch,
-            icon: const Icon(Icons.swap_horiz, size: 18),
-          )),
+          left: 0,
+          right: 0,
+          bottom: 5,
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final isQuestionDot in [false, true])
+                  Semantics(
+                    button: true,
+                    label: isQuestionDot
+                        ? 'Show today’s Village Question'
+                        : 'Show Village Plus',
+                    selected: showQuestion == isQuestionDot,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        if (showQuestion != isQuestionDot) _switch();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 8),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: showQuestion == isQuestionDot
+                                ? gold : Colors.white.withValues(alpha: .5),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: .75),
+                              width: .7,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
     ]);
   }
