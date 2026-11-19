@@ -1,0 +1,766 @@
+{
+  "schemaVersion": 1,
+  "status": "draft_for_review",
+  "timezone": "America/New_York",
+  "purpose": "community conversation plus optional consent-based aggregated research",
+  "researchPolicy": {
+    "defaultOptIn": false,
+    "consentRequired": true,
+    "commercialUse": "Only separately consented structured poll responses may contribute to aggregated reports",
+    "freeTextCommercialUse": false,
+    "minimumReportingGroupSize": 20,
+    "notes": "No personal-level sales; suppress sensitive or identifying segments. Consent revocable prospectively where feasible. Validate with legal/privacy counsel before launch."
+  },
+  "questions": [
+    {
+      "id": "village-q-001",
+      "day": 1,
+      "category": "relationships",
+      "status": "draft",
+      "pulse": {
+        "question": "What makes maintaining a healthy relationship hardest?",
+        "type": "single_choice",
+        "options": [
+          "Communication",
+          "Trust",
+          "Financial stress",
+          "Quality time",
+          "Different expectations"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What do people misunderstand most about maintaining a healthy relationship?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-002",
+      "day": 2,
+      "category": "workplace_safety",
+      "status": "draft",
+      "pulse": {
+        "question": "What most often prevents people from reporting a workplace hazard?",
+        "type": "single_choice",
+        "options": [
+          "Fear of consequences",
+          "Not knowing how",
+          "Belief nothing will change",
+          "Time pressure",
+          "I feel comfortable reporting"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What would make reporting a safety concern easier?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-003",
+      "day": 3,
+      "category": "wellness",
+      "status": "draft",
+      "pulse": {
+        "question": "What is your biggest obstacle to getting enough rest?",
+        "type": "single_choice",
+        "options": [
+          "Work schedule",
+          "Caregiving",
+          "Stress",
+          "Screen time",
+          "Sleep environment"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What helps you unwind after a demanding day?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-004",
+      "day": 4,
+      "category": "family",
+      "status": "draft",
+      "pulse": {
+        "question": "What kind of support would make family life easier?",
+        "type": "single_choice",
+        "options": [
+          "Affordable childcare",
+          "Flexible work",
+          "Emotional support",
+          "Financial assistance",
+          "Help with daily tasks"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What support do families need that rarely gets discussed?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-005",
+      "day": 5,
+      "category": "finances",
+      "status": "draft",
+      "pulse": {
+        "question": "What most often keeps you from saving money?",
+        "type": "single_choice",
+        "options": [
+          "Housing costs",
+          "Food costs",
+          "Debt payments",
+          "Unpredictable income",
+          "Other priorities"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What would make financial planning feel more achievable?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-006",
+      "day": 6,
+      "category": "relationships",
+      "status": "draft",
+      "pulse": {
+        "question": "When disagreements happen, what is the hardest part?",
+        "type": "single_choice",
+        "options": [
+          "Feeling heard",
+          "Staying calm",
+          "Finding a compromise",
+          "Knowing when to pause",
+          "Rebuilding connection"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What helps turn a disagreement into a productive conversation?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-007",
+      "day": 7,
+      "category": "consumer",
+      "status": "draft",
+      "pulse": {
+        "question": "What most influences whether you trust a new brand?",
+        "type": "single_choice",
+        "options": [
+          "Customer reviews",
+          "Clear pricing",
+          "Recommendations",
+          "Customer service",
+          "Company values"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What has a company done that earned or lost your trust?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-008",
+      "day": 8,
+      "category": "workplace",
+      "status": "draft",
+      "pulse": {
+        "question": "What would improve your experience at work the most?",
+        "type": "single_choice",
+        "options": [
+          "Fair pay",
+          "Flexible scheduling",
+          "Better management",
+          "Career growth",
+          "Safer conditions"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What is one change that would make your workday better?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-009",
+      "day": 9,
+      "category": "wellness",
+      "status": "draft",
+      "pulse": {
+        "question": "What makes healthy eating difficult in everyday life?",
+        "type": "single_choice",
+        "options": [
+          "Cost",
+          "Time to prepare meals",
+          "Access to options",
+          "Family preferences",
+          "Knowing what to choose"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What realistic change has helped you eat the way you want?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-010",
+      "day": 10,
+      "category": "relationships",
+      "status": "draft",
+      "pulse": {
+        "question": "What helps you feel most appreciated by someone close to you?",
+        "type": "single_choice",
+        "options": [
+          "Words of encouragement",
+          "Quality time",
+          "Practical help",
+          "Affection",
+          "Thoughtful gestures"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "How do you show appreciation in a way that feels genuine?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-011",
+      "day": 11,
+      "category": "community",
+      "status": "draft",
+      "pulse": {
+        "question": "What makes it difficult to ask for help?",
+        "type": "single_choice",
+        "options": [
+          "Fear of judgment",
+          "Not knowing whom to ask",
+          "Past experiences",
+          "Wanting independence",
+          "I find asking easy"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What would make a community feel safer to ask for support?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-012",
+      "day": 12,
+      "category": "workplace_safety",
+      "status": "draft",
+      "pulse": {
+        "question": "Which workplace safety resource would help you most?",
+        "type": "single_choice",
+        "options": [
+          "Short training videos",
+          "Clear reporting tools",
+          "Hands-on practice",
+          "Better equipment",
+          "Supervisor support"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What does useful safety training look like to you?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-013",
+      "day": 13,
+      "category": "family",
+      "status": "draft",
+      "pulse": {
+        "question": "What is the biggest challenge in balancing parenting and personal time?",
+        "type": "single_choice",
+        "options": [
+          "Lack of childcare",
+          "Work demands",
+          "Guilt",
+          "Household workload",
+          "Limited support"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What would give caregivers more breathing room?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-014",
+      "day": 14,
+      "category": "finances",
+      "status": "draft",
+      "pulse": {
+        "question": "Which everyday expense feels hardest to manage?",
+        "type": "single_choice",
+        "options": [
+          "Housing",
+          "Groceries",
+          "Transportation",
+          "Healthcare",
+          "Childcare"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What changes would help you feel more financially secure?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-015",
+      "day": 15,
+      "category": "relationships",
+      "status": "draft",
+      "pulse": {
+        "question": "What do you value most when building trust?",
+        "type": "single_choice",
+        "options": [
+          "Consistency",
+          "Honesty",
+          "Respect for boundaries",
+          "Reliability",
+          "Open communication"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What small action helps you feel you can trust someone?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-016",
+      "day": 16,
+      "category": "consumer",
+      "status": "draft",
+      "pulse": {
+        "question": "What most often makes you abandon an online purchase?",
+        "type": "single_choice",
+        "options": [
+          "Unexpected fees",
+          "High shipping cost",
+          "Complicated checkout",
+          "Unclear returns",
+          "Not enough product information"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What makes online shopping feel easy and trustworthy?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-017",
+      "day": 17,
+      "category": "wellness",
+      "status": "draft",
+      "pulse": {
+        "question": "What most motivates you to stay physically active?",
+        "type": "single_choice",
+        "options": [
+          "Feeling better",
+          "Stress relief",
+          "Health goals",
+          "Social connection",
+          "Enjoyment"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What makes movement easier to fit into your routine?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-018",
+      "day": 18,
+      "category": "workplace",
+      "status": "draft",
+      "pulse": {
+        "question": "What kind of flexibility would help you most at work?",
+        "type": "single_choice",
+        "options": [
+          "Flexible start times",
+          "Remote options",
+          "Predictable schedules",
+          "Time for appointments",
+          "More control over breaks"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "How would flexibility change your day-to-day life?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-019",
+      "day": 19,
+      "category": "relationships",
+      "status": "draft",
+      "pulse": {
+        "question": "What makes quality time feel meaningful?",
+        "type": "single_choice",
+        "options": [
+          "Undistracted conversation",
+          "Shared activities",
+          "Quiet time together",
+          "Trying new things",
+          "Regular routines"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What is a simple way people can reconnect?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-020",
+      "day": 20,
+      "category": "community",
+      "status": "draft",
+      "pulse": {
+        "question": "Where do you most often look for trustworthy local resources?",
+        "type": "single_choice",
+        "options": [
+          "Friends and family",
+          "Search engines",
+          "Social media",
+          "Community organizations",
+          "Local government websites"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What makes a resource recommendation feel credible?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-021",
+      "day": 21,
+      "category": "workplace_safety",
+      "status": "draft",
+      "pulse": {
+        "question": "When learning a new safety procedure, what helps you remember it?",
+        "type": "single_choice",
+        "options": [
+          "Live demonstration",
+          "Short videos",
+          "Written checklist",
+          "Practice with feedback",
+          "Peer coaching"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What makes safety instructions clear rather than overwhelming?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-022",
+      "day": 22,
+      "category": "family",
+      "status": "draft",
+      "pulse": {
+        "question": "What household responsibility creates the most stress?",
+        "type": "single_choice",
+        "options": [
+          "Meal planning",
+          "Cleaning",
+          "Scheduling",
+          "Caregiving",
+          "Managing expenses"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What would make sharing responsibilities feel fairer?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-023",
+      "day": 23,
+      "category": "finances",
+      "status": "draft",
+      "pulse": {
+        "question": "Which financial tool would you actually use regularly?",
+        "type": "single_choice",
+        "options": [
+          "Simple budget tracker",
+          "Bill reminders",
+          "Savings goals",
+          "Spending summaries",
+          "Debt payoff planner"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What would make a money-management tool worth returning to?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-024",
+      "day": 24,
+      "category": "wellness",
+      "status": "draft",
+      "pulse": {
+        "question": "What type of emotional support is easiest for you to access?",
+        "type": "single_choice",
+        "options": [
+          "Friends or family",
+          "Peer communities",
+          "Professional support",
+          "Self-guided resources",
+          "I have limited access"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What would make supportive resources more approachable?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-025",
+      "day": 25,
+      "category": "relationships",
+      "status": "draft",
+      "pulse": {
+        "question": "What makes it hardest to set healthy boundaries?",
+        "type": "single_choice",
+        "options": [
+          "Fear of conflict",
+          "Feeling guilty",
+          "Unclear expectations",
+          "Pressure from others",
+          "Not knowing what to say"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What is a respectful way to communicate a boundary?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-026",
+      "day": 26,
+      "category": "consumer",
+      "status": "draft",
+      "pulse": {
+        "question": "What matters most when choosing a subscription service?",
+        "type": "single_choice",
+        "options": [
+          "Price",
+          "Useful features",
+          "Ease of cancellation",
+          "Trust and privacy",
+          "Consistent value"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What makes a subscription feel worth keeping?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-027",
+      "day": 27,
+      "category": "workplace",
+      "status": "draft",
+      "pulse": {
+        "question": "What would make workplace feedback more useful?",
+        "type": "single_choice",
+        "options": [
+          "Specific examples",
+          "Private conversations",
+          "Clear next steps",
+          "More frequent check-ins",
+          "Recognition of strengths"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What is the best way a manager has helped you improve?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-028",
+      "day": 28,
+      "category": "community",
+      "status": "draft",
+      "pulse": {
+        "question": "What makes you want to return to an online community?",
+        "type": "single_choice",
+        "options": [
+          "Helpful conversations",
+          "Feeling respected",
+          "Practical resources",
+          "Shared experiences",
+          "Positive moderation"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What makes an online space feel like a real community?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": false
+    },
+    {
+      "id": "village-q-029",
+      "day": 29,
+      "category": "wellness",
+      "status": "draft",
+      "pulse": {
+        "question": "What gets in the way of taking a break when you need one?",
+        "type": "single_choice",
+        "options": [
+          "Too many responsibilities",
+          "Work expectations",
+          "Feeling guilty",
+          "Not noticing stress",
+          "Lack of support"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What does a realistic moment of rest look like for you?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    },
+    {
+      "id": "village-q-030",
+      "day": 30,
+      "category": "relationships",
+      "status": "draft",
+      "pulse": {
+        "question": "What kind of relationship resource would you use most?",
+        "type": "single_choice",
+        "options": [
+          "Communication exercises",
+          "Conflict-repair guides",
+          "Conversation prompts",
+          "Boundary-setting tools",
+          "Shared goal planners"
+        ],
+        "optional": true,
+        "allowSkip": true
+      },
+      "conversation": {
+        "prompt": "What kind of relationship guidance feels practical rather than generic?",
+        "optional": true
+      },
+      "researchEligible": true,
+      "sensitiveReviewRequired": true
+    }
+  ]
+}
