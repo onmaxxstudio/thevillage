@@ -121,9 +121,31 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                         painter: _QuestionGoldWave(),
                       )),
                     ),
+                    Positioned(
+                      left: compact ? 54 : 126,
+                      bottom: 20,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF8E9),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Row(mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Share Your Perspective',
+                              style: TextStyle(color: forest,
+                                fontSize: compact ? 10 : 13,
+                                fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 5),
+                            const Icon(Icons.arrow_forward,
+                              color: forest, size: 14),
+                          ]),
+                      ),
+                    ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        compact ? 54 : 126, 10, compact ? 12 : 20, 20),
+                        compact ? 54 : 126, 7, compact ? 12 : 20, 46),
                       child: Row(children: [
                         Expanded(
                           flex: 7,
@@ -170,28 +192,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   );
                                 },
                               ),
-                              const SizedBox(height: 6),
-                              Flexible(child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF8E9),
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Row(mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text('Share Your Perspective',
-                                        style: TextStyle(color: forest,
-                                          fontSize: compact ? 11 : 13,
-                                          fontWeight: FontWeight.bold)),
-                                      const SizedBox(width: 5),
-                                      const Icon(Icons.arrow_forward,
-                                        color: forest, size: 15),
-                                    ]),
-                                ),
-                              )),
+
                             ],
                           ),
                         ),
