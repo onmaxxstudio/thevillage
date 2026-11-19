@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/daily_village_question_service.dart';
 import '../screens/daily_village_question_screen.dart';
 import 'village_plus_banner.dart';
+import 'village_plus_photo.dart';
 
 /// Keeps the existing Village Plus banner untouched and uses its exact
 /// intrinsic footprint for the alternative daily question.
@@ -91,50 +92,136 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                 onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
                   builder: (_) => DailyVillageQuestionScreen(dateKey: date),
                 )),
-                child: Stack(children: [
-                  const Positioned.fill(child: DecoratedBox(
-                    decoration: BoxDecoration(gradient: LinearGradient(
-                      colors: [Color(0xFF214A30), forest, Color(0xFF062B1C)],
-                    )),
-                  )),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 12, 48, 12),
-                    child: Row(children: [
-                      const Icon(Icons.local_cafe_outlined, color: gold, size: 36),
-                      const SizedBox(width: 12),
-                      Expanded(child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('TODAY’S VILLAGE QUESTION',
-                            style: TextStyle(color: gold, fontSize: 11,
-                              fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 5),
-                          StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                            stream: DailyVillageQuestionService().watchQuestion(date),
-                            builder: (context, snapshot) {
-                              final data = snapshot.data?.data();
-                              final text = (data?['question'] ?? data?['text'] ?? data?['prompt']) as String?;
-                              final published = data?['status'] == 'published';
-                              return Text(
-                                published && text != null && text.trim().isNotEmpty
-                                    ? text : 'Come with a question. Leave with a perspective.',
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.white,
-                                  fontSize: 15, fontWeight: FontWeight.w600),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 5),
-                          const Text('Share Your Perspective →',
-                            style: TextStyle(color: gold, fontSize: 12,
-                              fontWeight: FontWeight.w700)),
-                        ],
+                child: LayoutBuilder(builder: (context, bounds) {
+                  final compact = bounds.maxWidth < 470;
+                  return Stack(children: [
+                    const Positioned.fill(child: DecoratedBox(
+                      decoration: BoxDecoration(gradient: LinearGradient(
+                        colors: [Color(0xFF214A30), forest, Color(0xFF062B1C)],
                       )),
-                    ]),
-                  ),
-                ]),
+                    )),
+                    Positioned(
+                      left: 0, top: 0, bottom: 0,
+                      width: compact ? bounds.maxWidth * .22 : 150,
+                      child: const VillagePlusPhoto(),
+                    ),
+                    Positioned(
+                      left: 0, top: 0, bottom: 0,
+                      width: compact ? bounds.maxWidth * .30 : 190,
+                      child: const DecoratedBox(decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [
+                          Color(0x0007351F), Color(0xFF103B25),
+                        ]),
+                      )),
+                    ),
+                    Positioned(
+                      right: 0, bottom: 0, left: 0,
+                      child: IgnorePointer(child: CustomPaint(
+                        size: const Size(double.infinity, 18),
+                        painter: _QuestionGoldWave(),
+                      )),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        compact ? 54 : 126, 10, compact ? 12 : 20, 20),
+                      child: Row(children: [
+                        Expanded(
+                          flex: 7,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: gold,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Text('TODAY’S',
+                                  style: TextStyle(color: forest, fontSize: 10,
+                                    fontWeight: FontWeight.w800)),
+                              ),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text('Village Question',
+                                  style: TextStyle(
+                                    fontFamily: 'VillagePlusDisplay',
+                                    color: Colors.white,
+                                    fontSize: compact ? 27 : 34,
+                                    fontWeight: FontWeight.bold)),
+                              ),
+                              const SizedBox(height: 3),
+                              StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                                stream: DailyVillageQuestionService().watchQuestion(date),
+                                builder: (context, snapshot) {
+                                  final data = snapshot.data?.data();
+                                  final question = (data?['question'] ??
+                                      data?['text'] ?? data?['prompt']) as String?;
+                                  final published = data?['status'] == 'published';
+                                  return Text(
+                                    published && question != null && question.trim().isNotEmpty
+                                        ? question : 'Come with a question. Leave with a perspective.',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(color: Colors.white,
+                                      fontSize: compact ? 12 : 16, height: 1.15),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 6),
+                              Flexible(child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF8E9),
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text('Share Your Perspective',
+                                        style: TextStyle(color: forest,
+                                          fontSize: compact ? 11 : 13,
+                                          fontWeight: FontWeight.bold)),
+                                      const SizedBox(width: 5),
+                                      const Icon(Icons.arrow_forward,
+                                        color: forest, size: 15),
+                                    ]),
+                                ),
+                              )),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: 1, height: bounds.maxHeight * .55,
+                          margin: EdgeInsets.symmetric(
+                            horizontal: compact ? 9 : 20),
+                          color: gold.withValues(alpha: .8),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.groups_rounded,
+                                color: gold, size: 34),
+                              const SizedBox(height: 7),
+                              Text('Come with a question. Leave with a perspective.',
+                                textAlign: TextAlign.center,
+                                maxLines: 4,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: Colors.white,
+                                  fontSize: compact ? 10 : 14, height: 1.25)),
+                            ],
+                          ),
+                        ),
+                      ]),
+                    ),
+                  ]);
+                }),
               ),
             ),
           ),
@@ -186,4 +273,21 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
         ),
     ]);
   }
+}
+
+class _QuestionGoldWave extends CustomPainter {
+  const _QuestionGoldWave();
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..moveTo(size.width * .38, size.height)
+      ..quadraticBezierTo(size.width * .67, -8,
+          size.width, size.height * .65);
+    canvas.drawPath(path, Paint()
+      ..color = const Color(0xFFE8C575)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3);
+  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
