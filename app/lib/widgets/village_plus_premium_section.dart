@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'monthly_focus_screen.dart';
 
 /// Premium-only experiences are distinct from the free tools below this panel.
 /// Buttons show previews until enrollment and the event schedule are available.
@@ -194,7 +195,11 @@ class VillagePlusPremiumSection extends StatelessWidget {
     int experience,
   ) => FilledButton(
     key: ValueKey('plus-$key'),
-    onPressed: () => _preview(context, experience),
+    onPressed: () => experience == 2
+        ? Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => const MonthlyFocusScreen(),
+          ))
+        : _preview(context, experience),
     style: FilledButton.styleFrom(
       backgroundColor: gold,
       foregroundColor: const Color(0xFF082A1A),
