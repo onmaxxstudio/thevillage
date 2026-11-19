@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'village_plus_photo.dart';
 import '../screens/village_plus_screen.dart';
 
 const _forest = Color(0xFF073C24);
@@ -46,9 +45,6 @@ class _BannerArtwork extends StatelessWidget {
           box.maxWidth < 396 || MediaQuery.textScalerOf(context).scale(1) > 1.3;
       final features = box.maxWidth >= 700 && !compact;
       final desktop = box.maxWidth >= 950;
-      final photoWidth = compact
-          ? 115.0
-          : (features ? (desktop ? 135.0 : 88.0) : 85.0);
       final title = Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,34 +137,12 @@ class _BannerArtwork extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned(
-              left: 0,
-              bottom: 0,
-              top: compact ? null : 0,
-              width: photoWidth,
-              height: compact ? 115 : null,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Let the photograph dissolve into the banner's own
-                  // gradient, including at the right edge on narrow screens.
-                  ShaderMask(
-                    blendMode: BlendMode.dstIn,
-                    shaderCallback: (rect) => const LinearGradient(
-                      colors: [Colors.white, Colors.white, Colors.transparent],
-                      stops: [0, .35, 1],
-                    ).createShader(rect),
-                    child: const VillagePlusPhoto(),
-                  ),
-                ],
-              ),
-            ),
             const Positioned.fill(
               child: IgnorePointer(child: CustomPaint(painter: _GoldAccent())),
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(
-                compact ? 18 : photoWidth + 6,
+                18,
                 12,
                 16,
                 14,
