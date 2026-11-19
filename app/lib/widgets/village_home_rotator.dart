@@ -116,7 +116,8 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                   builder: (_) => DailyVillageQuestionScreen(dateKey: date),
                 )),
                 child: LayoutBuilder(builder: (context, bounds) {
-                  final compact = bounds.maxWidth < 470;
+                  final compact = bounds.maxWidth < 800;
+                  final narrow = bounds.maxWidth < 470;
                   return Stack(children: [
                     const Positioned.fill(child: DecoratedBox(
                       decoration: BoxDecoration(gradient: LinearGradient(
@@ -125,12 +126,12 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     )),
                     Positioned(
                       left: 0, top: 0, bottom: 0,
-                      width: compact ? bounds.maxWidth * .22 : 150,
+                      width: compact ? bounds.maxWidth * .16 : 150,
                       child: const VillagePlusPhoto(),
                     ),
                     Positioned(
                       left: 0, top: 0, bottom: 0,
-                      width: compact ? bounds.maxWidth * .30 : 190,
+                      width: compact ? bounds.maxWidth * .24 : 190,
                       child: const DecoratedBox(decoration: BoxDecoration(
                         gradient: LinearGradient(colors: [
                           Color(0x0007351F), Color(0xFF103B25),
@@ -146,7 +147,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        compact ? 54 : 126, compact ? 8 : 12,
+                        compact ? bounds.maxWidth * .18 : 126, compact ? 8 : 12,
                         compact ? 12 : 20, compact ? 20 : 26),
                       child: Row(children: [
                         Expanded(
@@ -173,7 +174,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   style: TextStyle(
                                     fontFamily: 'VillagePlusDisplay',
                                     color: Colors.white,
-                                    fontSize: compact ? 20 : 34,
+                                    fontSize: compact ? (narrow ? 20 : 28) : 34,
                                     fontWeight: FontWeight.bold)),
                               ),
                               const SizedBox(height: 2),
@@ -187,10 +188,10 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   return Text(
                                     published && question != null && question.trim().isNotEmpty
                                         ? question : 'Come with a question. Leave with a perspective.',
-                                    maxLines: compact ? 4 : 4,
+                                    maxLines: compact ? (narrow ? 4 : 3) : 4,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(color: Colors.white,
-                                      fontSize: compact ? 12 : 16, height: 1.2),
+                                      fontSize: compact ? (narrow ? 12 : 14) : 16, height: 1.2),
                                   );
                                 },
                               ),
@@ -208,7 +209,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                     children: [
                                       Text('Share Your Perspective',
                                         style: TextStyle(color: forest,
-                                          fontSize: compact ? 10 : 13,
+                                          fontSize: compact ? (narrow ? 10 : 12) : 13,
                                           fontWeight: FontWeight.bold)),
                                       const SizedBox(width: 5),
                                       const Icon(Icons.arrow_forward,
