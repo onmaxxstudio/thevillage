@@ -23,7 +23,7 @@ import 'about_contact_screen.dart';
 import 'my_space_screen.dart';
 import 'plan_my_week_screen.dart';
 import 'village_plus_screen.dart';
-import '../widgets/village_plus_banner.dart';
+import '../widgets/village_home_rotator.dart';
 import '../widgets/home_overview_layout.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -288,7 +288,6 @@ class _HomeScreenState extends State<HomeScreen>
           sections: [
             _buildWelcomeHero(),
             _tabletCardText(_buildDashboardRow()),
-            _buildDailyVillageQuestionCard(),
             _buildAskCard(),
             // Keep the final visible card next to navigation even when the
             // member promotion or today's census is not shown.
@@ -296,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 _tabletCardText(_buildFeatureGrid()),
-                if (_isVillagePlusMember == false)
+                if (_isVillagePlusMember != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 14),
                     child: _buildVillagePlusBanner(),
@@ -373,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
 
-  Widget _buildVillagePlusBanner() => const VillagePlusBanner();
+  Widget _buildVillagePlusBanner() => VillageHomeRotator(isPlusMember: _isVillagePlusMember!);
 
   Widget _buildFeatureGrid() {
     return LayoutBuilder(
