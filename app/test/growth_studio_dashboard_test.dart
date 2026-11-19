@@ -84,7 +84,7 @@ void main() {
               await tester.pumpAndSettle();
               await tester.tap(find.byKey(const ValueKey('monthly-focus-week-1')));
               await tester.pumpAndSettle();
-              expect(find.text('Journal with this'), findsOneWidget);
+              expect(find.text('JOURNAL WITH THIS'), findsOneWidget);
               await tester.pageBack();
             } else {
               expect(find.text('VILLAGE PLUS · COMING SOON'), findsOneWidget);
