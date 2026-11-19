@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -14,6 +15,8 @@ import '../services/personalization_service.dart';
 import '../navigation/village_navigation_scope.dart';
 import '../widgets/village_avatar.dart';
 import '../widgets/daily_village_census_card.dart';
+import 'daily_village_question_screen.dart';
+import '../services/daily_village_question_service.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
@@ -286,6 +289,7 @@ class _HomeScreenState extends State<HomeScreen>
           sections: [
             _buildWelcomeHero(),
             _tabletCardText(_buildDashboardRow()),
+            _buildDailyVillageQuestionCard(),
             _buildAskCard(),
             // Keep the final visible card next to navigation even when the
             // member promotion or today's census is not shown.
@@ -305,6 +309,68 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
     );
+  }
+
+  Widget _buildDailyVillageQuestionCard() {
+    final utc = DateTime.now().toUtc();
+    final eastern = utc.subtract(Duration(hours: _easternUtcOffsetHours(utc)));
+    final date = DailyVillageQuestionService.dateKey(eastern);
+    return Card(
+      color: paleSage,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () {
+          Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => DailyVillageQuestionScreen(dateKey: date),
+          ));
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          child: Row(children: [
+            const Icon(Icons.forum_outlined, color: sage),
+            const SizedBox(width: 12),
+            const Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Today’s Village Question',
+                    style: TextStyle(color: sage, fontWeight: FontWeight.w700)),
+                SizedBox(height: 4),
+                StreamBuilder(
+                  stream: DailyVillageQuestionService().watchQuestion(date),
+                  builder: (context, snapshot) {
+                    final data = snapshot.data?.data();
+                    final published = data?['status'] == 'published' &&
+                        data?['publishAt'] is Timestamp &&
+                        !(data!['publishAt'] as Timestamp)
+                            .toDate().isAfter(DateTime.now());
+                    return Text(
+                      published ? (data?['question'] as String? ?? '') :
+                          'One question. Many perspectives. One village.',
+                      style: const TextStyle(color: ink, fontSize: 12),
+                      maxLines: 3, overflow: TextOverflow.ellipsis,
+                    );
+                  },
+                ),
+              ],
+            )),
+            const Icon(Icons.chevron_right, color: sage),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // Eastern daylight saving time: second Sunday in March through first
+  // Sunday in November, with transitions at 07:00 and 06:00 UTC.
+  int _easternUtcOffsetHours(DateTime utc) {
+    int sunday(int year, int month, int nth) {
+      final first = DateTime.utc(year, month, 1);
+      return 1 + (7 - first.weekday) % 7 + (nth - 1) * 7;
+    }
+    final start = DateTime.utc(utc.year, 3, sunday(utc.year, 3, 2), 7);
+    final end = DateTime.utc(utc.year, 11, sunday(utc.year, 11, 1), 6);
+    return !utc.isBefore(start) && utc.isBefore(end) ? 4 : 5;
   }
 
   Widget _tabletCardText(Widget child) {

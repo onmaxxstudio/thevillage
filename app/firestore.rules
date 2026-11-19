@@ -1083,6 +1083,86 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
     }
 
+    // Date-keyed questions and member conversations.
+    match /village_question_bank/{questionId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /users/{uid}/saved_village_perspectives/{savedId} {
+      allow get, list, delete: if isSelf(uid);
+      allow create: if isSelf(uid) &&
+        request.resource.data.keys().hasOnly(['date', 'responseId', 'body', 'savedAt']) &&
+        request.resource.data.date is string &&
+        request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+        request.resource.data.responseId is string &&
+        request.resource.data.responseId.size() <= 128 &&
+        savedId == request.resource.data.date + '_' + request.resource.data.responseId &&
+        request.resource.data.body is string &&
+        request.resource.data.body.size() <= 2000 &&
+        request.resource.data.savedAt == request.time &&
+        exists(/databases/$(database)/documents/village_daily_questions/$(request.resource.data.date)/responses/$(request.resource.data.responseId));
+      allow update: if false;
+    }
+
+    match /village_daily_questions/{dateId} {
+      allow get, list: if signedIn() &&
+        ((resource.data.status == 'published' &&
+          resource.data.publishAt is timestamp &&
+          resource.data.publishAt <= request.time) || isAdmin());
+      allow create, update, delete: if isAdmin();
+
+      match /responses/{responseId} {
+        allow get, list: if signedIn() &&
+          get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.status == 'published' &&
+          get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.publishAt <= request.time;
+        allow create: if signedIn() &&
+          get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.status == 'published' &&
+          get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.publishAt <= request.time &&
+          request.resource.data.keys().hasOnly(['authorUid', 'body', 'createdAt', 'supportCount']) &&
+          request.resource.data.authorUid == request.auth.uid &&
+          request.resource.data.body is string &&
+          request.resource.data.body.size() >= 1 &&
+          request.resource.data.body.size() <= 2000 &&
+          request.resource.data.createdAt == request.time &&
+          request.resource.data.supportCount == 0;
+        allow update: if false;
+        allow delete: if isAdmin() ||
+          (signedIn() && resource.data.authorUid == request.auth.uid);
+
+        match /replies/{replyId} {
+          allow get, list: if signedIn() &&
+            get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.status == 'published' &&
+            get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.publishAt <= request.time;
+          allow create: if signedIn() &&
+            get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.status == 'published' &&
+            get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.publishAt <= request.time &&
+            exists(/databases/$(database)/documents/village_daily_questions/$(dateId)/responses/$(responseId)) &&
+            request.resource.data.keys().hasOnly(['authorUid', 'body', 'createdAt']) &&
+            request.resource.data.authorUid == request.auth.uid &&
+            request.resource.data.body is string &&
+            request.resource.data.body.size() >= 1 &&
+            request.resource.data.body.size() <= 1000 &&
+            request.resource.data.createdAt == request.time;
+          allow update: if false;
+          allow delete: if isAdmin() ||
+            (signedIn() && resource.data.authorUid == request.auth.uid);
+        }
+
+        match /helpful/{uid} {
+          allow get: if isSelf(uid);
+          allow list: if false;
+          allow create: if isSelf(uid) &&
+            get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.status == 'published' &&
+            get(/databases/$(database)/documents/village_daily_questions/$(dateId)).data.publishAt <= request.time &&
+            exists(/databases/$(database)/documents/village_daily_questions/$(dateId)/responses/$(responseId)) &&
+            request.resource.data.keys().hasOnly(['uid', 'createdAt']) &&
+            request.resource.data.uid == uid &&
+            request.resource.data.createdAt == request.time;
+          allow update, delete: if false;
+        }
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
