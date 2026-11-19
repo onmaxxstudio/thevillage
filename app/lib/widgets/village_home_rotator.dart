@@ -126,7 +126,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     )),
                     Positioned(
                       left: 0, top: 0, bottom: 0,
-                      width: phoneWidth ? bounds.maxWidth * .36 : 260,
+                      width: phoneWidth ? bounds.maxWidth * .30 : 215,
                       child: ShaderMask(
                         blendMode: BlendMode.dstIn,
                         shaderCallback: (rect) => const LinearGradient(
