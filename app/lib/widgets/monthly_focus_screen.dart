@@ -79,6 +79,42 @@ class MonthlyFocusScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            Card(
+              color: const Color(0xFFFFF4DF),
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(color: Color(0xFFD9C5A2)),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Understand the topic',
+                        style: TextStyle(fontFamily: 'VillagePlusDisplay', color: green, fontSize: 26)),
+                    SizedBox(height: 10),
+                    Text('A boundary is a clear limit around what you can do, accept, or share. It tells you how you will care for yourself in a situation. It can concern your time, energy, body, privacy, money, or relationships.',
+                        style: TextStyle(color: green, fontSize: 15, height: 1.5)),
+                    SizedBox(height: 14),
+                    Text('What it can sound like',
+                        style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 16)),
+                    SizedBox(height: 6),
+                    Text('“I can talk after work, but I cannot answer during my shift.”\n“I need some time to think before I commit.”',
+                        style: TextStyle(color: green, fontSize: 15, height: 1.5)),
+                    SizedBox(height: 14),
+                    Text('Why it matters',
+                        style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 16)),
+                    SizedBox(height: 6),
+                    Text('Clear limits can make expectations easier to understand and help you make choices that match your capacity. They may feel uncomfortable at first, especially if you are used to putting others first.',
+                        style: TextStyle(color: green, fontSize: 15, height: 1.5)),
+                    SizedBox(height: 14),
+                    Text('Remember: you can ask for what you need and still listen to someone else’s needs. A boundary describes your own choices; it does not control another person’s response.',
+                        style: TextStyle(color: green, fontSize: 15, height: 1.5)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             for (var i = 0; i < weeks.length; i++)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
