@@ -121,36 +121,14 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                         painter: _QuestionGoldWave(),
                       )),
                     ),
-                    Positioned(
-                      left: compact ? 54 : 126,
-                      bottom: 20,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF8E9),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Row(mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('Share Your Perspective',
-                              style: TextStyle(color: forest,
-                                fontSize: compact ? 10 : 13,
-                                fontWeight: FontWeight.bold)),
-                            const SizedBox(width: 5),
-                            const Icon(Icons.arrow_forward,
-                              color: forest, size: 14),
-                          ]),
-                      ),
-                    ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        compact ? 54 : 126, 7, compact ? 12 : 20, 46),
+                        compact ? 54 : 126, 7, compact ? 12 : 20, 20),
                       child: Row(children: [
                         Expanded(
                           flex: 7,
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
@@ -171,11 +149,11 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   style: TextStyle(
                                     fontFamily: 'VillagePlusDisplay',
                                     color: Colors.white,
-                                    fontSize: compact ? 27 : 34,
+                                    fontSize: compact ? 25 : 34,
                                     fontWeight: FontWeight.bold)),
                               ),
                               const SizedBox(height: 3),
-                              StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                              Flexible(child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                                 stream: DailyVillageQuestionService().watchQuestion(date),
                                 builder: (context, snapshot) {
                                   final data = snapshot.data?.data();
@@ -188,9 +166,31 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(color: Colors.white,
-                                      fontSize: compact ? 12 : 16, height: 1.15),
+                                      fontSize: compact ? 11.5 : 16, height: 1.12),
                                   );
                                 },
+                              )),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF8E9),
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text('Share Your Perspective',
+                                        style: TextStyle(color: forest,
+                                          fontSize: compact ? 10 : 13,
+                                          fontWeight: FontWeight.bold)),
+                                      const SizedBox(width: 5),
+                                      const Icon(Icons.arrow_forward,
+                                        color: forest, size: 14),
+                                    ]),
+                                ),
                               ),
 
                             ],
