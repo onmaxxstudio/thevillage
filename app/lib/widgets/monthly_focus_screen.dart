@@ -10,6 +10,8 @@ class MonthlyFocusScreen extends StatefulWidget {
 }
 
 class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
+  // Add each published month here with its own immutable lessons before release.
+  static const publishedMonth = '2026-11';
   static const green = Color(0xFF003B23);
   static const cream = Color(0xFFFFFAF1);
   static const gold = Color(0xFFE6C579);
@@ -56,12 +58,11 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
   final _saving = <int>{};
   int _selectedWeek = 0;
   bool _loading = true;
+  bool _authorized = false;
+  bool _checkingAccess = true;
   String? _error;
 
-  String get _monthKey {
-    final now = DateTime.now();
-    return '${now.year}-${now.month.toString().padLeft(2, '0')}';
-  }
+  String _monthKey = publishedMonth;
 
   DocumentReference<Map<String, dynamic>>? get _record {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -73,7 +74,20 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _checkAccess();
+  }
+
+  Future<void> _checkAccess() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdTokenResult(true);
+      if (!mounted) return;
+      final authorized = token?.claims?['villagePlus'] == true;
+      setState(() { _authorized = authorized; _checkingAccess = false; });
+      if (authorized) await _load();
+    } catch (_) {
+      if (mounted) setState(() { _checkingAccess = false; _error = 'Membership could not be verified. Please retry.'; });
+    }
   }
 
   Future<void> _load() async {
@@ -148,6 +162,17 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_checkingAccess) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (!_authorized) return Scaffold(
+      backgroundColor: cream,
+      appBar: AppBar(title: const Text('Monthly Focus'), backgroundColor: cream),
+      body: Center(child: Padding(padding: const EdgeInsets.all(24),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('Monthly Focus is available to Village Plus members.'),
+          if (_error != null) Text(_error!),
+          TextButton(onPressed: () { setState(() => _checkingAccess = true); _checkAccess(); },
+            child: const Text('Check membership again')),
+        ]))));
     final current = weeks[_selectedWeek];
     final progress = _completed.length / 4;
     return Scaffold(
@@ -270,8 +295,14 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
           _panel(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             _heading('Past Monthly Focus Topics'),
             const SizedBox(height: 8),
-            const Text('Your past journeys will appear here as new monthly topics are released. Your saved reflections stay attached to each month.',
-              style: TextStyle(color: green, height: 1.5)),
+            if (DateTime.now().isBefore(DateTime(2026, 12)))
+              const Text('Past topics will appear here after a new monthly topic is published.',
+                style: TextStyle(color: green, height: 1.5))
+            else ListTile(
+              title: const Text('November 2026 · Building Boundaries'),
+              subtitle: Text('${_completed.length} of 4 weeks complete'),
+              onTap: () => setState(() => _monthKey = publishedMonth),
+            ),
           ])),
           const SizedBox(height: 18),
           const Text('Take these at your own pace. You can revisit any week whenever you need it.',
