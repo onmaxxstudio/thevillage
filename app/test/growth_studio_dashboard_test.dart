@@ -6,7 +6,7 @@ void main() {
   for (final width in [320.0, 390.0, 768.0]) {
     for (final scale in [1.0, 1.5]) {
       testWidgets(
-        'Growth dashboard fits $width at $scale text scale and premium previews',
+        'Growth dashboard fits $width at $scale text scale and premium navigation',
         (tester) async {
           tester.view.physicalSize = Size(width, 1000);
           tester.view.devicePixelRatio = 1;
@@ -70,8 +70,26 @@ void main() {
             await tester.ensureVisible(button);
             await tester.tap(button);
             await tester.pumpAndSettle();
-            expect(find.text('VILLAGE PLUS · COMING SOON'), findsOneWidget);
-            await tester.tap(find.text('Back to Growth Studio'));
+            if (action == 'monthly-focus') {
+              expect(find.text('Building Boundaries'), findsOneWidget);
+              expect(find.text('Understand the topic'), findsOneWidget);
+              await tester.scrollUntilVisible(
+                find.byKey(const ValueKey('monthly-focus-week-1')),
+                200,
+                scrollable: find.byType(Scrollable).last,
+              );
+              await tester.ensureVisible(
+                find.byKey(const ValueKey('monthly-focus-week-1')),
+              );
+              await tester.pumpAndSettle();
+              await tester.tap(find.byKey(const ValueKey('monthly-focus-week-1')));
+              await tester.pumpAndSettle();
+              expect(find.text('JOURNAL WITH THIS'), findsOneWidget);
+              await tester.pageBack();
+            } else {
+              expect(find.text('VILLAGE PLUS · COMING SOON'), findsOneWidget);
+              await tester.tap(find.text('Back to Growth Studio'));
+            }
             await tester.pumpAndSettle();
           }
           expect(destination, isNull);
