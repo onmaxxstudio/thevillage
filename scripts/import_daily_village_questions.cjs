@@ -8,7 +8,6 @@
  * Existing question documents are never overwritten.
  */
 const fs = require('node:fs');
-const admin = require('firebase-admin');
 const path = process.argv[2];
 if (!path) throw new Error('Provide the 365-question JSON bank path.');
 const input = JSON.parse(fs.readFileSync(path, 'utf8'));
@@ -17,15 +16,20 @@ if (!Array.isArray(questions) || questions.length !== 365) throw new Error('Expe
 const ids = new Set();
 for (const [index, q] of questions.entries()) {
   if (q.day !== index + 1 || typeof q.question !== 'string' || !q.question.trim() ||
-      !/^\\d{4}-\\d{2}-\\d{2}$/.test(q.suggestedDate || '')) {
+      !/^\d{4}-\d{2}-\d{2}$/.test(q.suggestedDate || '')) {
     throw new Error('Invalid question entry at index ' + index);
   }
   if (ids.has(q.suggestedDate)) throw new Error('Duplicate date ' + q.suggestedDate);
   ids.add(q.suggestedDate);
 }
-admin.initializeApp({ credential: admin.credential.applicationDefault(), projectId: 'the-village-d7af4' });
-const db = admin.firestore();
 (async () => {
+  if (process.env.APPLY !== '1') {
+    console.log('DRY RUN: ' + questions.length + ' questions validated; no writes.');
+    return;
+  }
+  const admin = require('firebase-admin');
+  admin.initializeApp({ credential: admin.credential.applicationDefault(), projectId: 'the-village-d7af4' });
+  const db = admin.firestore();
   let written = 0, skipped = 0;
   for (const q of questions) {
     // 00:00 America/New_York; DST-aware using Intl without extra dependencies.
