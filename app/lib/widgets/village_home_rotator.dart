@@ -17,6 +17,7 @@ class VillageHomeRotator extends StatefulWidget {
 
 class _VillageHomeRotatorState extends State<VillageHomeRotator> {
   Timer? _timer;
+  double _dragDistance = 0;
   bool _question = true;
   static const forest = Color(0xFF073C24);
   static const gold = Color(0xFFE8C575);
@@ -39,7 +40,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
   void _restart() {
     _timer?.cancel();
     if (!widget.isPlusMember) {
-      _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _timer = Timer.periodic(const Duration(seconds: 15), (_) {
         if (mounted) setState(() => _question = !_question);
       });
     }
@@ -78,7 +79,28 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
     // so the Stack's original banner cannot dictate a shorter layout.
     final questionNeedsRoom = showQuestion &&
         MediaQuery.sizeOf(context).width < 800;
-    return SizedBox(
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onHorizontalDragStart: widget.isPlusMember
+          ? null
+          : (_) => _dragDistance = 0,
+      onHorizontalDragUpdate: widget.isPlusMember
+          ? null
+          : (details) => _dragDistance += details.primaryDelta ?? 0,
+      onHorizontalDragEnd: widget.isPlusMember
+          ? null
+          : (details) {
+              final velocity = details.primaryVelocity ?? 0;
+              final direction = _dragDistance.abs() >= 35
+                  ? _dragDistance
+                  : (velocity.abs() >= 250 ? velocity : 0);
+              // A left swipe advances to Plus; a right swipe returns
+              // to today's question. A short touch keeps the banner tap.
+              if (direction < 0 && _question) _switch();
+              if (direction > 0 && !_question) _switch();
+              _dragDistance = 0;
+            },
+      child: SizedBox(
       height: questionNeedsRoom ? 220 : null,
       child: Stack(children: [
       // Existing banner defines height and is never visually altered.
@@ -281,6 +303,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
           ),
         ),
     ]),
+    ),
     );
   }
 }
