@@ -126,17 +126,15 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     )),
                     Positioned(
                       left: 0, top: 0, bottom: 0,
-                      width: phoneWidth ? bounds.maxWidth * .16 : 150,
-                      child: const VillagePlusPhoto(),
-                    ),
-                    Positioned(
-                      left: 0, top: 0, bottom: 0,
-                      width: phoneWidth ? bounds.maxWidth * .24 : 190,
-                      child: const DecoratedBox(decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [
-                          Color(0x0007351F), Color(0xFF103B25),
-                        ]),
-                      )),
+                      width: phoneWidth ? bounds.maxWidth * .36 : 260,
+                      child: ShaderMask(
+                        blendMode: BlendMode.dstIn,
+                        shaderCallback: (rect) => const LinearGradient(
+                          colors: [Colors.white, Colors.white, Colors.transparent],
+                          stops: [0, .35, 1],
+                        ).createShader(rect),
+                        child: const VillagePlusPhoto(),
+                      ),
                     ),
                     Positioned(
                       right: 0, bottom: 0, left: 0,
