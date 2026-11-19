@@ -58,6 +58,7 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
   final _entries = List.generate(4, (_) => TextEditingController());
   final _completed = <int>{};
   final _saving = <int>{};
+  int? _savedWeek;
   int _selectedWeek = 0;
   bool _loading = true;
   bool _authorized = false;
@@ -121,7 +122,7 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
       setState(() => _error = 'Sign in to save your private reflections.');
       return;
     }
-    setState(() { _saving.add(week); _error = null; });
+    setState(() { _saving.add(week); _savedWeek = null; _error = null; });
     try {
       final nextCompleted = {..._completed};
       if (markComplete) nextCompleted.add(week);
@@ -131,7 +132,10 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
         'completedWeeks': nextCompleted.toList()..sort(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      if (mounted) setState(() => _completed..clear()..addAll(nextCompleted));
+      if (mounted) setState(() {
+        _completed..clear()..addAll(nextCompleted);
+        _savedWeek = week;
+      });
     } catch (_) {
       if (mounted) setState(() => _error = 'Could not save. Check your connection and try again.');
     } finally {
@@ -277,14 +281,16 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
                 filled: true, fillColor: cream,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)))),
             const SizedBox(height: 12),
+            if (_savedWeek == _selectedWeek + 1)
+              const Text('Saved to your private journal.', style: TextStyle(color: green)),
             Wrap(spacing: 10, runSpacing: 8, children: [
               FilledButton.icon(
-                onPressed: _saving.contains(_selectedWeek + 1) || _loading
+                onPressed: _saving.isNotEmpty || _loading
                   ? null : () => _save(_selectedWeek + 1),
                 icon: const Icon(Icons.save_outlined),
                 label: const Text('Save Reflection')),
               OutlinedButton.icon(
-                onPressed: _saving.contains(_selectedWeek + 1) || _loading
+                onPressed: _saving.isNotEmpty || _loading
                   ? null : () => _save(_selectedWeek + 1, markComplete: true),
                 icon: const Icon(Icons.check_circle_outline),
                 label: Text(_completed.contains(_selectedWeek + 1)
