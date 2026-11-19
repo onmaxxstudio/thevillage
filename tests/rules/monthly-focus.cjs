@@ -29,7 +29,7 @@ const {doc, setDoc, getDoc, getDocs, collection, serverTimestamp} = require('fir
     await assertFails(setDoc(ref, {...entry, journal1: 'x'.repeat(20001)}));
     await assertFails(setDoc(ref, {...entry, public: true}));
     await assertFails(setDoc(ref, {...entry, completedWeeks: [5]}));
-    await assertFails(setDoc(doc(member, 'users/member/monthlyFocus/2026-10'), entry));
+    await assertFails(setDoc(doc(member, 'users/member/monthlyFocus/invalid-month'), entry));
     await assertSucceeds(setDoc(ref, {journal2: 'More reflection', updatedAt: serverTimestamp()}, {merge: true}));
     if ((await getDoc(doc(secondDevice, path))).data().journal1 !== entry.journal1)
       throw Error('Saving a second week erased the first');
