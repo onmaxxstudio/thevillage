@@ -345,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen>
                         !(data!['publishAt'] as Timestamp)
                             .toDate().isAfter(DateTime.now());
                     return Text(
-                      published ? (data['question'] as String? ?? '') :
+                      published ? (data?['question'] as String? ?? '') :
                           'One question. Many perspectives. One village.',
                       style: const TextStyle(color: ink, fontSize: 12),
                       maxLines: 3, overflow: TextOverflow.ellipsis,
