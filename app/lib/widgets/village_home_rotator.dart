@@ -79,7 +79,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
     final questionNeedsRoom = showQuestion &&
         MediaQuery.sizeOf(context).width < 600;
     return SizedBox(
-      height: questionNeedsRoom ? 210 : null,
+      height: questionNeedsRoom ? 220 : null,
       child: Stack(children: [
       // Existing banner defines height and is never visually altered.
       Opacity(
@@ -130,7 +130,8 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        compact ? 100 : 126, 12, compact ? 14 : 20, 30),
+                        compact ? 100 : 126, 12, compact ? 14 : 20,
+                        compact ? 48 : 30),
                       child: Row(children: [
                         Expanded(
                           flex: 7,
