@@ -77,7 +77,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
     // Give the question an explicit height rather than a minimum constraint,
     // so the Stack's original banner cannot dictate a shorter layout.
     final questionNeedsRoom = showQuestion &&
-        MediaQuery.sizeOf(context).width < 600;
+        MediaQuery.sizeOf(context).width < 800;
     return SizedBox(
       height: questionNeedsRoom ? 220 : null,
       child: Stack(children: [
@@ -100,7 +100,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                   builder: (_) => DailyVillageQuestionScreen(dateKey: date),
                 )),
                 child: LayoutBuilder(builder: (context, bounds) {
-                  final compact = bounds.maxWidth < 470;
+                  final compact = bounds.maxWidth < 760;
                   return Stack(children: [
                     const Positioned.fill(child: DecoratedBox(
                       decoration: BoxDecoration(gradient: LinearGradient(
