@@ -73,12 +73,13 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
   Widget build(BuildContext context) {
     final showQuestion = widget.isPlusMember || _question;
     final date = DailyVillageQuestionService.dateKey(_easternNow());
-    // The question needs more vertical space than the promotional artwork on
-    // narrow screens; otherwise its CTA covers the last line of the prompt.
+    // The original promotion is shorter than a complete question and CTA.
+    // Give the question an explicit height rather than a minimum constraint,
+    // so the Stack's original banner cannot dictate a shorter layout.
     final questionNeedsRoom = showQuestion &&
         MediaQuery.sizeOf(context).width < 600;
-    return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: questionNeedsRoom ? 158 : 0),
+    return SizedBox(
+      height: questionNeedsRoom ? 210 : null,
       child: Stack(children: [
       // Existing banner defines height and is never visually altered.
       Opacity(
@@ -129,7 +130,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        compact ? 54 : 126, 5, compact ? 9 : 20, 16),
+                        compact ? 54 : 126, 12, compact ? 9 : 20, 26),
                       child: Row(children: [
                         Expanded(
                           flex: compact ? 8 : 7,
@@ -159,7 +160,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                     fontWeight: FontWeight.bold)),
                               ),
                               const SizedBox(height: 2),
-                              Flexible(child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                              StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                                 stream: DailyVillageQuestionService().watchQuestion(date),
                                 builder: (context, snapshot) {
                                   final data = snapshot.data?.data();
@@ -169,14 +170,14 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   return Text(
                                     published && question != null && question.trim().isNotEmpty
                                         ? question : 'Come with a question. Leave with a perspective.',
-                                    maxLines: compact ? 5 : 3,
+                                    maxLines: compact ? 6 : 4,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(color: Colors.white,
                                       fontSize: compact ? 12 : 16, height: 1.2),
                                   );
                                 },
-                              )),
-                              const SizedBox(height: 6),
+                              ),
+                              const SizedBox(height: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 5),
