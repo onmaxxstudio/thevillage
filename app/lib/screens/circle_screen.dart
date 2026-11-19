@@ -16,6 +16,8 @@ import '../widgets/home_overview_layout.dart';
 import '../widgets/browser_layout_width.dart';
 import 'avatar_builder_screen.dart';
 import 'private_messages_screen.dart';
+import 'daily_village_question_screen.dart';
+import '../services/daily_village_question_service.dart';
 
 class CircleScreen extends StatefulWidget {
   const CircleScreen({super.key});
@@ -1370,6 +1372,50 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   bool get _compactPhone =>
       (phoneBrowserWidth() ?? MediaQuery.sizeOf(context).width) < 600;
 
+  int _easternUtcOffsetHours(DateTime utc) {
+    int sunday(int year, int month, int nth) {
+      final first = DateTime.utc(year, month, 1);
+      return 1 + (7 - first.weekday) % 7 + (nth - 1) * 7;
+    }
+    final start = DateTime.utc(utc.year, 3, sunday(utc.year, 3, 2), 7);
+    final end = DateTime.utc(utc.year, 11, sunday(utc.year, 11, 1), 6);
+    return !utc.isBefore(start) && utc.isBefore(end) ? 4 : 5;
+  }
+
+  Widget _questionTab() => Padding(
+    padding: const EdgeInsets.only(top: 14, bottom: 8),
+    child: Material(
+      color: paleSage,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () {
+          final utc = DateTime.now().toUtc();
+          final eastern = utc.subtract(Duration(hours: _easternUtcOffsetHours(utc)));
+          Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => DailyVillageQuestionScreen(
+              dateKey: DailyVillageQuestionService.dateKey(eastern))));
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+          child: Row(children: [
+            const Icon(Icons.forum_outlined, color: sage),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Daily Village Question', style: GoogleFonts.playfairDisplay(
+                  color: sage, fontSize: 19, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 3),
+                const Text('One question. Many perspectives. One village.',
+                  style: TextStyle(color: ink, fontSize: 12)),
+              ])),
+            const Icon(Icons.chevron_right, color: sage),
+          ]),
+        ),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1402,6 +1448,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _circleOrbit(),
+        _questionTab(),
         const SizedBox(height: 8),
         if (incomingRequests.isNotEmpty || _requestLoadFailed) ...[
           _incomingRequestsCard(),
@@ -1457,6 +1504,7 @@ class _CircleScreenState extends State<CircleScreen> with SingleTickerProviderSt
   Widget _activeCircleLayout() {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       _circleOrbit(),
+      _questionTab(),
       const SizedBox(height: 22),
       if (_compactPhone) _compactStatusLauncher() else _combinedCheckInCard(),
       SizedBox(height: _compactPhone ? 20 : 14),
