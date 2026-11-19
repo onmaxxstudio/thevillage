@@ -73,7 +73,13 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
   Widget build(BuildContext context) {
     final showQuestion = widget.isPlusMember || _question;
     final date = DailyVillageQuestionService.dateKey(_easternNow());
-    return Stack(children: [
+    // The question needs more vertical space than the promotional artwork on
+    // narrow screens; otherwise its CTA covers the last line of the prompt.
+    final questionNeedsRoom = showQuestion &&
+        MediaQuery.sizeOf(context).width < 600;
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: questionNeedsRoom ? 158 : 0),
+      child: Stack(children: [
       // Existing banner defines height and is never visually altered.
       Opacity(
         opacity: showQuestion ? 0 : 1,
@@ -163,10 +169,10 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   return Text(
                                     published && question != null && question.trim().isNotEmpty
                                         ? question : 'Come with a question. Leave with a perspective.',
-                                    maxLines: compact ? 3 : 2,
+                                    maxLines: compact ? 5 : 3,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(color: Colors.white,
-                                      fontSize: compact ? 11 : 16, height: 1.1),
+                                      fontSize: compact ? 12 : 16, height: 1.2),
                                   );
                                 },
                               )),
@@ -272,7 +278,8 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
             ),
           ),
         ),
-    ]);
+    ]),
+    );
   }
 }
 
