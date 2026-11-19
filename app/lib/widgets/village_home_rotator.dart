@@ -130,10 +130,10 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        compact ? 54 : 126, 12, compact ? 9 : 20, 26),
+                        compact ? 100 : 126, 12, compact ? 14 : 20, 30),
                       child: Row(children: [
                         Expanded(
-                          flex: compact ? 8 : 7,
+                          flex: 7,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +156,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   style: TextStyle(
                                     fontFamily: 'VillagePlusDisplay',
                                     color: Colors.white,
-                                    fontSize: compact ? 20 : 34,
+                                    fontSize: compact ? 25 : 34,
                                     fontWeight: FontWeight.bold)),
                               ),
                               const SizedBox(height: 2),
@@ -170,10 +170,10 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   return Text(
                                     published && question != null && question.trim().isNotEmpty
                                         ? question : 'Come with a question. Leave with a perspective.',
-                                    maxLines: compact ? 6 : 4,
+                                    maxLines: compact ? 4 : 4,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(color: Colors.white,
-                                      fontSize: compact ? 12 : 16, height: 1.2),
+                                      fontSize: compact ? 14 : 16, height: 1.2),
                                   );
                                 },
                               ),
@@ -191,7 +191,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                     children: [
                                       Text('Share Your Perspective',
                                         style: TextStyle(color: forest,
-                                          fontSize: compact ? 10 : 13,
+                                          fontSize: compact ? 12 : 13,
                                           fontWeight: FontWeight.bold)),
                                       const SizedBox(width: 5),
                                       const Icon(Icons.arrow_forward,
@@ -203,14 +203,14 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                             ],
                           ),
                         ),
-                        Container(
+                        if (!compact) Container(
                           width: 1, height: bounds.maxHeight * .55,
                           margin: EdgeInsets.symmetric(
                             horizontal: compact ? 7 : 20),
                           color: gold.withValues(alpha: .8),
                         ),
-                        Expanded(
-                          flex: compact ? 2 : 3,
+                        if (!compact) Expanded(
+                          flex: 3,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
