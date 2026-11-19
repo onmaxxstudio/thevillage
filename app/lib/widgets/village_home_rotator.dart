@@ -123,12 +123,12 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        compact ? 54 : 126, 7, compact ? 12 : 20, 20),
+                        compact ? 54 : 126, 5, compact ? 9 : 20, 16),
                       child: Row(children: [
                         Expanded(
-                          flex: 7,
+                          flex: compact ? 8 : 7,
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
@@ -149,10 +149,10 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   style: TextStyle(
                                     fontFamily: 'VillagePlusDisplay',
                                     color: Colors.white,
-                                    fontSize: compact ? 25 : 34,
+                                    fontSize: compact ? 20 : 34,
                                     fontWeight: FontWeight.bold)),
                               ),
-                              const SizedBox(height: 3),
+                              const SizedBox(height: 2),
                               Flexible(child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                                 stream: DailyVillageQuestionService().watchQuestion(date),
                                 builder: (context, snapshot) {
@@ -163,14 +163,14 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   return Text(
                                     published && question != null && question.trim().isNotEmpty
                                         ? question : 'Come with a question. Leave with a perspective.',
-                                    maxLines: 2,
+                                    maxLines: compact ? 3 : 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(color: Colors.white,
-                                      fontSize: compact ? 11.5 : 16, height: 1.12),
+                                      fontSize: compact ? 11 : 16, height: 1.1),
                                   );
                                 },
                               )),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 5),
@@ -199,11 +199,11 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                         Container(
                           width: 1, height: bounds.maxHeight * .55,
                           margin: EdgeInsets.symmetric(
-                            horizontal: compact ? 9 : 20),
+                            horizontal: compact ? 7 : 20),
                           color: gold.withValues(alpha: .8),
                         ),
                         Expanded(
-                          flex: 3,
+                          flex: compact ? 2 : 3,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -215,7 +215,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                 maxLines: 4,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(color: Colors.white,
-                                  fontSize: compact ? 10 : 14, height: 1.25)),
+                                  fontSize: compact ? 9 : 14, height: 1.2)),
                             ],
                           ),
                         ),
