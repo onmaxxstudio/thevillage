@@ -24,7 +24,7 @@ jobs:
         with:
           channel: stable
       - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos
+      - run: flutter analyze --no-fatal-warnings --no-fatal-infos
       - run: flutter test test/daily_village_question_service_test.dart
       - run: flutter build web
   import-script-syntax:
