@@ -17,6 +17,8 @@ void main() {
       expect(find.text('Building Boundaries'), findsOneWidget);
       final week4 = find.byKey(const ValueKey('monthly-focus-week-4'));
       await tester.scrollUntilVisible(week4, 250, scrollable: find.byType(Scrollable).last);
+      await tester.ensureVisible(week4);
+      await tester.pumpAndSettle();
       await tester.tap(week4);
       await tester.pumpAndSettle();
       expect(find.text('Week 4: Build a gentler rhythm'), findsOneWidget);
