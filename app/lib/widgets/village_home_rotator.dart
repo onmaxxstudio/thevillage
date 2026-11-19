@@ -100,7 +100,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                   builder: (_) => DailyVillageQuestionScreen(dateKey: date),
                 )),
                 child: LayoutBuilder(builder: (context, bounds) {
-                  final compact = bounds.maxWidth < 760;
+                  final compact = bounds.maxWidth < 470;
                   return Stack(children: [
                     const Positioned.fill(child: DecoratedBox(
                       decoration: BoxDecoration(gradient: LinearGradient(
@@ -130,42 +130,37 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        compact ? 100 : 126, 12, compact ? 14 : 20,
-                        compact ? 48 : 30),
+                        compact ? 54 : 126, 12, compact ? 9 : 20,
+                        questionNeedsRoom ? 44 : 26),
                       child: Row(children: [
                         Expanded(
-                          flex: 7,
+                          flex: compact ? 8 : 7,
                           child: Column(
-                            mainAxisAlignment: compact
-                                ? MainAxisAlignment.start
-                                : MainAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 7, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: gold,
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: const Text('TODAY’S',
-                                    style: TextStyle(color: forest, fontSize: 9,
-                                      fontWeight: FontWeight.w800)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: gold,
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                                const SizedBox(width: 7),
-                                Expanded(child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: Text('Village Question',
-                                    style: TextStyle(
-                                      fontFamily: 'VillagePlusDisplay',
-                                      color: Colors.white,
-                                      fontSize: compact ? 20 : 34,
-                                      fontWeight: FontWeight.bold)),
-                                )),
-                              ]),
-                              const SizedBox(height: 8),
+                                child: const Text('TODAY’S',
+                                  style: TextStyle(color: forest, fontSize: 10,
+                                    fontWeight: FontWeight.w800)),
+                              ),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text('Village Question',
+                                  style: TextStyle(
+                                    fontFamily: 'VillagePlusDisplay',
+                                    color: Colors.white,
+                                    fontSize: compact ? 20 : 34,
+                                    fontWeight: FontWeight.bold)),
+                              ),
+                              const SizedBox(height: 2),
                               StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                                 stream: DailyVillageQuestionService().watchQuestion(date),
                                 builder: (context, snapshot) {
@@ -176,10 +171,10 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   return Text(
                                     published && question != null && question.trim().isNotEmpty
                                         ? question : 'Come with a question. Leave with a perspective.',
-                                    maxLines: compact ? 4 : 4,
+                                    maxLines: compact ? 6 : 4,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(color: Colors.white,
-                                      fontSize: compact ? 14 : 16, height: 1.2),
+                                      fontSize: compact ? 12 : 16, height: 1.2),
                                   );
                                 },
                               ),
@@ -197,7 +192,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                     children: [
                                       Text('Share Your Perspective',
                                         style: TextStyle(color: forest,
-                                          fontSize: compact ? 12 : 13,
+                                          fontSize: compact ? 10 : 13,
                                           fontWeight: FontWeight.bold)),
                                       const SizedBox(width: 5),
                                       const Icon(Icons.arrow_forward,
@@ -209,14 +204,14 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                             ],
                           ),
                         ),
-                        if (!compact) Container(
+                        Container(
                           width: 1, height: bounds.maxHeight * .55,
                           margin: EdgeInsets.symmetric(
                             horizontal: compact ? 7 : 20),
                           color: gold.withValues(alpha: .8),
                         ),
-                        if (!compact) Expanded(
-                          flex: 3,
+                        Expanded(
+                          flex: compact ? 2 : 3,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
