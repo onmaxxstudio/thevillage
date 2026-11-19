@@ -136,31 +136,36 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                         Expanded(
                           flex: 7,
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment: compact
+                                ? MainAxisAlignment.start
+                                : MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 9, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: gold,
-                                  borderRadius: BorderRadius.circular(16),
+                              Row(children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: gold,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Text('TODAY’S',
+                                    style: TextStyle(color: forest, fontSize: 9,
+                                      fontWeight: FontWeight.w800)),
                                 ),
-                                child: const Text('TODAY’S',
-                                  style: TextStyle(color: forest, fontSize: 10,
-                                    fontWeight: FontWeight.w800)),
-                              ),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerLeft,
-                                child: Text('Village Question',
-                                  style: TextStyle(
-                                    fontFamily: 'VillagePlusDisplay',
-                                    color: Colors.white,
-                                    fontSize: compact ? 25 : 34,
-                                    fontWeight: FontWeight.bold)),
-                              ),
-                              const SizedBox(height: 2),
+                                const SizedBox(width: 7),
+                                Expanded(child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text('Village Question',
+                                    style: TextStyle(
+                                      fontFamily: 'VillagePlusDisplay',
+                                      color: Colors.white,
+                                      fontSize: compact ? 20 : 34,
+                                      fontWeight: FontWeight.bold)),
+                                )),
+                              ]),
+                              const SizedBox(height: 8),
                               StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                                 stream: DailyVillageQuestionService().watchQuestion(date),
                                 builder: (context, snapshot) {
