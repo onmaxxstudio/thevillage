@@ -74,11 +74,6 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
   Widget build(BuildContext context) {
     final showQuestion = widget.isPlusMember || _question;
     final date = DailyVillageQuestionService.dateKey(_easternNow());
-    // The original promotion is shorter than a complete question and CTA.
-    // Give the question an explicit height rather than a minimum constraint,
-    // so the Stack's original banner cannot dictate a shorter layout.
-    final questionNeedsRoom = showQuestion &&
-        MediaQuery.sizeOf(context).width < 800;
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onHorizontalDragStart: widget.isPlusMember
@@ -101,7 +96,6 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
               _dragDistance = 0;
             },
       child: SizedBox(
-      height: questionNeedsRoom ? 220 : null,
       child: Stack(children: [
       // Existing banner defines height and is never visually altered.
       Opacity(
@@ -152,8 +146,8 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        compact ? 54 : 126, 12, compact ? 9 : 20,
-                        questionNeedsRoom ? 44 : 26),
+                        compact ? 54 : 126, compact ? 8 : 12,
+                        compact ? 12 : 20, compact ? 20 : 26),
                       child: Row(children: [
                         Expanded(
                           flex: compact ? 8 : 7,
@@ -193,17 +187,17 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   return Text(
                                     published && question != null && question.trim().isNotEmpty
                                         ? question : 'Come with a question. Leave with a perspective.',
-                                    maxLines: compact ? 6 : 4,
+                                    maxLines: compact ? 4 : 4,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(color: Colors.white,
                                       fontSize: compact ? 12 : 16, height: 1.2),
                                   );
                                 },
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: compact ? 4 : 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: compact ? 3 : 5),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFFFF8E9),
                                   borderRadius: BorderRadius.circular(24),
@@ -226,14 +220,14 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                             ],
                           ),
                         ),
-                        Container(
+                        if (!compact) Container(
                           width: 1, height: bounds.maxHeight * .55,
                           margin: EdgeInsets.symmetric(
                             horizontal: compact ? 7 : 20),
                           color: gold.withValues(alpha: .8),
                         ),
-                        Expanded(
-                          flex: compact ? 2 : 3,
+                        if (!compact) Expanded(
+                          flex: 3,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
