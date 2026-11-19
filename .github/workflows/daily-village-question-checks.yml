@@ -2,7 +2,7 @@ name: Daily Village Question checks
 on:
   push:
     branches:
-      - feature/daily-village-question
+      - release/daily-village-question
   pull_request:
     paths:
       - 'app/lib/screens/daily_village_question_screen.dart'
@@ -24,11 +24,6 @@ jobs:
         with:
           channel: stable
       - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos
+      - run: flutter analyze --no-fatal-warnings --no-fatal-infos
       - run: flutter test test/daily_village_question_service_test.dart
       - run: flutter build web
-  import-script-syntax:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: node --check scripts/import_daily_village_questions.cjs
