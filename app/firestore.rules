@@ -174,12 +174,14 @@ service cloud.firestore {
     match /users/{uid}/monthlyFocus/{monthId} {
       allow get, list: if isSelf(uid) && request.auth.token.villagePlus == true;
       allow create, update: if isSelf(uid) && request.auth.token.villagePlus == true &&
-        monthId == '2026-11' &&
+        monthId.matches('^[0-9]{4}-(0[1-9]|1[0-2])$') &&
         request.resource.data.keys().hasOnly([
           'topic', 'journal1', 'journal2', 'journal3', 'journal4',
           'completedWeeks', 'updatedAt'
         ]) &&
-        request.resource.data.topic == 'Building Boundaries' &&
+        request.resource.data.topic is string &&
+        request.resource.data.topic.size() >= 3 &&
+        request.resource.data.topic.size() <= 120 &&
         request.resource.data.completedWeeks is list &&
         request.resource.data.completedWeeks.size() <= 4 &&
         request.resource.data.completedWeeks.hasOnly([1, 2, 3, 4]) &&
