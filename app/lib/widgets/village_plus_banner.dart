@@ -150,18 +150,15 @@ class _BannerArtwork extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  const VillagePlusPhoto(),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0x0007351F),
-                          Color(0x0007351F),
-                          Color(0xFF103B25),
-                        ],
-                        stops: [0, .65, 1],
-                      ),
-                    ),
+                  // Let the photograph dissolve into the banner's own
+                  // gradient, including at the right edge on narrow screens.
+                  ShaderMask(
+                    blendMode: BlendMode.dstIn,
+                    shaderCallback: (rect) => const LinearGradient(
+                      colors: [Colors.white, Colors.white, Colors.transparent],
+                      stops: [0, .35, 1],
+                    ).createShader(rect),
+                    child: const VillagePlusPhoto(),
                   ),
                 ],
               ),
