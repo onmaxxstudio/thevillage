@@ -20,7 +20,7 @@ jobs:
         working-directory: tests/rules
         run: npm install --no-save firebase-tools @firebase/rules-unit-testing firebase
       - name: Test support uniqueness and authorization
-        run: tests/rules/node_modules/.bin/firebase emulators:exec --only firestore --project demo-village --config support-rules.firebase.json "node tests/rules/support.cjs && node tests/rules/circle-chat.cjs"
+        run: tests/rules/node_modules/.bin/firebase emulators:exec --only firestore --project demo-village --config support-rules.firebase.json "node tests/rules/support.cjs && node tests/rules/circle-chat.cjs && node tests/rules/monthly-focus.cjs"
       - name: Show emulator diagnostics on failure
         if: failure()
         run: tail -n 180 firestore-debug.log

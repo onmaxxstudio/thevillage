@@ -71,20 +71,7 @@ void main() {
             await tester.tap(button);
             await tester.pumpAndSettle();
             if (action == 'monthly-focus') {
-              expect(find.text('Building Boundaries'), findsOneWidget);
-              expect(find.text('Understand the topic'), findsOneWidget);
-              await tester.scrollUntilVisible(
-                find.byKey(const ValueKey('monthly-focus-week-1')),
-                200,
-                scrollable: find.byType(Scrollable).last,
-              );
-              await tester.ensureVisible(
-                find.byKey(const ValueKey('monthly-focus-week-1')),
-              );
-              await tester.pumpAndSettle();
-              await tester.tap(find.byKey(const ValueKey('monthly-focus-week-1')));
-              await tester.pumpAndSettle();
-              expect(find.text('JOURNAL WITH THIS'), findsOneWidget);
+              expect(find.text('Monthly Focus is available to Village Plus members.'), findsOneWidget);
               await tester.pageBack();
             } else {
               expect(find.text('VILLAGE PLUS · COMING SOON'), findsOneWidget);
