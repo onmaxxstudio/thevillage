@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class MonthlyFocusScreen extends StatefulWidget {
-  const MonthlyFocusScreen({super.key});
+  const MonthlyFocusScreen({super.key, this.membershipVerifier});
+
+  final Future<bool> Function()? membershipVerifier;
 
   @override
   State<MonthlyFocusScreen> createState() => _MonthlyFocusScreenState();
@@ -79,10 +81,12 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
 
   Future<void> _checkAccess() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user = widget.membershipVerifier == null ? FirebaseAuth.instance.currentUser : null;
       final token = await user?.getIdTokenResult(true);
       if (!mounted) return;
-      final authorized = token?.claims?['villagePlus'] == true;
+      final authorized = widget.membershipVerifier != null
+          ? await widget.membershipVerifier!()
+          : token?.claims?['villagePlus'] == true;
       setState(() { _authorized = authorized; _checkingAccess = false; });
       if (authorized) await _load();
     } catch (_) {
