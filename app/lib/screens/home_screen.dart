@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -311,20 +312,17 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildDailyVillageQuestionCard() {
+    final utc = DateTime.now().toUtc();
+    final eastern = utc.subtract(Duration(hours: _easternUtcOffsetHours(utc)));
+    final date = DailyVillageQuestionService.dateKey(eastern);
     return Card(
       color: paleSage,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: () {
-          final now = DateTime.now();
-          final eastern = now.toUtc().subtract(
-            Duration(hours: _easternUtcOffsetHours(now.toUtc())),
-          );
           Navigator.of(context).push(MaterialPageRoute<void>(
-            builder: (_) => DailyVillageQuestionScreen(
-              dateKey: DailyVillageQuestionService.dateKey(eastern),
-            ),
+            builder: (_) => DailyVillageQuestionScreen(dateKey: date),
           ));
         },
         child: Padding(
@@ -338,8 +336,22 @@ class _HomeScreenState extends State<HomeScreen>
                 Text('Today’s Village Question',
                     style: TextStyle(color: sage, fontWeight: FontWeight.w700)),
                 SizedBox(height: 4),
-                Text('One question. Many perspectives. One village.',
-                    style: TextStyle(color: ink, fontSize: 12)),
+                StreamBuilder(
+                  stream: DailyVillageQuestionService().watchQuestion(date),
+                  builder: (context, snapshot) {
+                    final data = snapshot.data?.data();
+                    final published = data?['status'] == 'published' &&
+                        data?['publishAt'] is Timestamp &&
+                        !(data!['publishAt'] as Timestamp)
+                            .toDate().isAfter(DateTime.now());
+                    return Text(
+                      published ? (data['question'] as String? ?? '') :
+                          'One question. Many perspectives. One village.',
+                      style: const TextStyle(color: ink, fontSize: 12),
+                      maxLines: 3, overflow: TextOverflow.ellipsis,
+                    );
+                  },
+                ),
               ],
             )),
             const Icon(Icons.chevron_right, color: sage),
