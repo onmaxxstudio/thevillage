@@ -27,3 +27,14 @@ jobs:
       - run: flutter analyze --no-fatal-warnings --no-fatal-infos
       - run: flutter test test/daily_village_question_service_test.dart
       - run: flutter build web
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile Firestore rules in emulator
+        run: |
+          npm install --prefix /tmp/village-rules --no-save firebase-tools
+          /tmp/village-rules/node_modules/.bin/firebase emulators:exec --only firestore --project demo-village --config firebase.json "node -e 'console.log(\"rules loaded\")'"
