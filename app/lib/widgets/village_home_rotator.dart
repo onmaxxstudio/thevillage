@@ -116,8 +116,8 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                   builder: (_) => DailyVillageQuestionScreen(dateKey: date),
                 )),
                 child: LayoutBuilder(builder: (context, bounds) {
-                  final compact = bounds.maxWidth < 800;
-                  final narrow = bounds.maxWidth < 470;
+                  final compact = bounds.maxWidth < 470;
+                  final phoneWidth = bounds.maxWidth < 800;
                   return Stack(children: [
                     const Positioned.fill(child: DecoratedBox(
                       decoration: BoxDecoration(gradient: LinearGradient(
@@ -126,12 +126,12 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     )),
                     Positioned(
                       left: 0, top: 0, bottom: 0,
-                      width: compact ? bounds.maxWidth * .16 : 150,
+                      width: phoneWidth ? bounds.maxWidth * .16 : 150,
                       child: const VillagePlusPhoto(),
                     ),
                     Positioned(
                       left: 0, top: 0, bottom: 0,
-                      width: compact ? bounds.maxWidth * .24 : 190,
+                      width: phoneWidth ? bounds.maxWidth * .24 : 190,
                       child: const DecoratedBox(decoration: BoxDecoration(
                         gradient: LinearGradient(colors: [
                           Color(0x0007351F), Color(0xFF103B25),
@@ -147,8 +147,8 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        compact ? bounds.maxWidth * .18 : 126, compact ? 8 : 12,
-                        compact ? 12 : 20, compact ? 20 : 26),
+                        phoneWidth ? bounds.maxWidth * .18 : 126, 8,
+                        phoneWidth ? 12 : 20, 26),
                       child: Row(children: [
                         Expanded(
                           flex: compact ? 8 : 7,
@@ -156,27 +156,30 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 9, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: gold,
-                                  borderRadius: BorderRadius.circular(16),
+                              Row(children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 9, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: gold,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Text('TODAY’S',
+                                    style: TextStyle(color: forest, fontSize: 10,
+                                      fontWeight: FontWeight.w800)),
                                 ),
-                                child: const Text('TODAY’S',
-                                  style: TextStyle(color: forest, fontSize: 10,
-                                    fontWeight: FontWeight.w800)),
-                              ),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerLeft,
-                                child: Text('Village Question',
-                                  style: TextStyle(
-                                    fontFamily: 'VillagePlusDisplay',
-                                    color: Colors.white,
-                                    fontSize: compact ? (narrow ? 20 : 28) : 34,
-                                    fontWeight: FontWeight.bold)),
-                              ),
+                                const SizedBox(width: 8),
+                                Expanded(child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text('Village Question',
+                                    style: TextStyle(
+                                      fontFamily: 'VillagePlusDisplay',
+                                      color: Colors.white,
+                                      fontSize: compact ? 20 : (phoneWidth ? 28 : 34),
+                                      fontWeight: FontWeight.bold)),
+                                )),
+                              ]),
                               const SizedBox(height: 2),
                               StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                                 stream: DailyVillageQuestionService().watchQuestion(date),
@@ -188,17 +191,17 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                   return Text(
                                     published && question != null && question.trim().isNotEmpty
                                         ? question : 'Come with a question. Leave with a perspective.',
-                                    maxLines: compact ? (narrow ? 4 : 3) : 4,
+                                    maxLines: compact ? 4 : (phoneWidth ? 3 : 4),
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(color: Colors.white,
-                                      fontSize: compact ? (narrow ? 12 : 14) : 16, height: 1.2),
+                                      fontSize: compact ? 12 : (phoneWidth ? 14 : 16), height: 1.2),
                                   );
                                 },
                               ),
-                              SizedBox(height: compact ? 4 : 8),
+                              const SizedBox(height: 4),
                               Container(
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: compact ? 3 : 5),
+                                  horizontal: 10, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFFFF8E9),
                                   borderRadius: BorderRadius.circular(24),
@@ -209,7 +212,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                                     children: [
                                       Text('Share Your Perspective',
                                         style: TextStyle(color: forest,
-                                          fontSize: compact ? (narrow ? 10 : 12) : 13,
+                                          fontSize: compact ? 10 : (phoneWidth ? 12 : 13),
                                           fontWeight: FontWeight.bold)),
                                       const SizedBox(width: 5),
                                       const Icon(Icons.arrow_forward,
@@ -235,7 +238,7 @@ class _VillageHomeRotatorState extends State<VillageHomeRotator> {
                               const Icon(Icons.groups_rounded,
                                 color: gold, size: 34),
                               const SizedBox(height: 7),
-                              Text('Come with a question. Leave with a perspective.',
+                              Text('Come with a thought. Leave with a perspective.',
                                 textAlign: TextAlign.center,
                                 maxLines: 4,
                                 overflow: TextOverflow.ellipsis,
