@@ -20,6 +20,8 @@ class VillagePlusPhoto extends StatelessWidget {
           ..height = '100%'
           ..objectFit = 'cover'
           ..objectPosition = 'left center'
+          ..maskImage = 'linear-gradient(to right, black 35%, transparent 100%)'
+          ..webkitMaskImage = 'linear-gradient(to right, black 35%, transparent 100%)'
           ..pointerEvents = 'none';
       },
     ),
@@ -36,5 +38,7 @@ extension type _BannerStyle(JSObject _) implements JSObject {
   external set height(String value);
   external set objectFit(String value);
   external set objectPosition(String value);
+  external set maskImage(String value);
+  external set webkitMaskImage(String value);
   external set pointerEvents(String value);
 }
