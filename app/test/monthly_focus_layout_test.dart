@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('Nonmember preview shows lessons without journal writes', (tester) async {
+  testWidgets('Nonmember preview accepts temporary typing without saving', (tester) async {
     await tester.pumpWidget(MaterialApp(home: MonthlyFocusScreen(
       membershipVerifier: () async => false,
     )));
@@ -18,7 +18,10 @@ void main() {
     );
     expect(find.text('Save Reflection'), findsNothing);
     expect(find.text('Mark Week Complete'), findsNothing);
-    expect(tester.widget<TextField>(find.byType(TextField)).readOnly, isTrue);
+    expect(tester.widget<TextField>(find.byType(TextField)).readOnly, isFalse);
+    await tester.enterText(find.byType(TextField), 'A boundary I want to practice');
+    expect(find.text('A boundary I want to practice'), findsOneWidget);
+    expect(find.textContaining('this draft will disappear'), findsOneWidget);
   });
   for (final width in [320.0, 390.0, 768.0, 1280.0]) {
     testWidgets('Monthly Focus fits at $width and keeps every week accessible', (tester) async {
