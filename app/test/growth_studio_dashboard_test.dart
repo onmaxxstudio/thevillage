@@ -70,8 +70,10 @@ void main() {
             await tester.ensureVisible(button);
             await tester.tap(button);
             await tester.pumpAndSettle();
-            if (action == 'monthly-focus') {
-              expect(find.text('Monthly Focus is available to Village Plus members.'), findsOneWidget);
+            if (action == 'monthly-focus' || action == 'monthly-challenge') {
+              expect(find.text(action == 'monthly-focus'
+                  ? 'Monthly Focus is available to Village Plus members.'
+                  : 'Monthly Challenge is for Village Plus members.'), findsOneWidget);
               await tester.pageBack();
             } else {
               expect(find.text('VILLAGE PLUS · COMING SOON'), findsOneWidget);
