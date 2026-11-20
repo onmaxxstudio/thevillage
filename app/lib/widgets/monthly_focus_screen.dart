@@ -189,8 +189,8 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
     child: Stack(children: [
       Positioned.fill(child: Row(children: [
         if (wide) const Expanded(child: SizedBox()),
-        Expanded(flex: wide ? 1 : 2, child: Image.asset('assets/images/monthly_focus_reference.jpeg',
-          fit: BoxFit.none, alignment: Alignment.topRight)),
+        Expanded(flex: wide ? 1 : 2, child: Image.asset('assets/images/monthly_focus_hero.jpg',
+          fit: BoxFit.cover, alignment: Alignment.center)),
       ])),
       Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(
         begin: wide ? Alignment.centerLeft : Alignment.bottomCenter,
