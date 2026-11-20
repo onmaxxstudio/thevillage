@@ -182,7 +182,8 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
   ]));
 
   Widget _hero(bool wide) => Container(
-    height: wide ? 260 : 365,
+    height: wide ? 340 : MediaQuery.sizeOf(context).width <= 350 ? 640
+      : MediaQuery.sizeOf(context).width <= 420 ? 520 : 430,
     decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(22)),
     clipBehavior: Clip.antiAlias,
     child: Stack(children: [
