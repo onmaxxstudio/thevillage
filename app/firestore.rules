@@ -193,6 +193,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Each day's reflection and completion belong to one paid member only.
+    match /users/{uid}/monthlyChallenges/{challengeId}/days/{dayId} {
+      allow get, list: if isSelf(uid) && request.auth.token.villagePlus == true;
+      allow create, update: if isSelf(uid) && request.auth.token.villagePlus == true &&
+        challengeId == '2026-11' && dayId.matches('^(0[1-9]|[12][0-9]|30)$') &&
+        request.resource.data.keys().hasOnly(['journal', 'completed', 'updatedAt']) &&
+        request.resource.data.keys().hasAll(['journal', 'completed', 'updatedAt']) &&
+        request.resource.data.journal is string && request.resource.data.journal.size() <= 20000 &&
+        request.resource.data.completed is bool && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+
     // Resource bookmarks are private to the signed-in member on every device.
     match /users/{uid}/saved_resources/{resourceId} {
       allow get, list, delete: if isSelf(uid);
