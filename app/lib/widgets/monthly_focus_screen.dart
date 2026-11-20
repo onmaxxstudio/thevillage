@@ -189,8 +189,8 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
     child: Stack(children: [
       Positioned.fill(child: Row(children: [
         if (wide) const Expanded(child: SizedBox()),
-        Expanded(flex: wide ? 1 : 2, child: Image.asset('assets/images/monthly_focus_reference.jpeg',
-          fit: BoxFit.none, alignment: Alignment.topRight)),
+        Expanded(flex: wide ? 1 : 2, child: Image.asset('assets/images/monthly_focus_hero.jpg',
+          fit: BoxFit.cover, alignment: Alignment.center)),
       ])),
       Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(
         begin: wide ? Alignment.centerLeft : Alignment.bottomCenter,
@@ -237,7 +237,9 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
   Widget _progressCard() {
     final progress = _completed.length / 4;
     return _panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _heading('Your Monthly Progress', size: 25),
+      const Text('Your Monthly Progress', style: TextStyle(
+        fontFamily: 'VillagePlusDisplay', fontSize: 25,
+        fontWeight: FontWeight.bold, color: cream)),
       const SizedBox(height: 16),
       Row(children: [
         SizedBox(width: 112, height: 112, child: Stack(alignment: Alignment.center, children: [
