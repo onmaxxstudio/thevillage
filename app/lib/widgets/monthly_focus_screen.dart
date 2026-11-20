@@ -300,9 +300,13 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
     const SizedBox(height: 14),
     TextField(key: ValueKey('monthly-focus-journal-${_selectedWeek + 1}'),
       controller: _entries[_selectedWeek], maxLength: 1000, minLines: 4, maxLines: 6,
-      readOnly: !_authorized,
-      decoration: InputDecoration(hintText: _authorized ? 'Write your thoughts here...' : 'Your private journal opens with Village Plus.',
+      decoration: InputDecoration(hintText: 'Write your thoughts here...',
         filled: true, fillColor: cream, border: OutlineInputBorder(borderRadius: BorderRadius.circular(13)))),
+    if (!_authorized) const Padding(
+      padding: EdgeInsets.only(bottom: 8),
+      child: Text('Preview entry · You can write here, but this draft will disappear when you leave. Join Village Plus to save private reflections.',
+        style: TextStyle(color: ink, fontSize: 12)),
+    ),
     if (_savedWeek == _selectedWeek + 1)
       const Text('Saved to your private journal.', style: TextStyle(color: green)),
     if (_authorized) Align(alignment: Alignment.centerRight, child: Wrap(spacing: 8, runSpacing: 7, children: [
