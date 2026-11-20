@@ -85,6 +85,10 @@ jobs:
         working-directory: app
         run: flutter test test/monthly_focus_layout_test.dart
 
+      - name: Test Monthly Challenge
+        working-directory: app
+        run: flutter test test/monthly_challenge_test.dart
+
       - name: Analyze Flutter app
         working-directory: app
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
