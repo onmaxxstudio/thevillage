@@ -62,6 +62,7 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
   int _selectedWeek = 0;
   bool _loading = true;
   bool _authorized = false;
+  bool _preview = false;
   bool _checkingAccess = true;
   String? _error;
 
@@ -171,7 +172,7 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
   @override
   Widget build(BuildContext context) {
     if (_checkingAccess) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (!_authorized) return Scaffold(
+    if (!_authorized && !_preview) return Scaffold(
       backgroundColor: cream,
       appBar: AppBar(title: const Text('Monthly Focus'), backgroundColor: cream),
       body: Center(child: Padding(padding: const EdgeInsets.all(24),
@@ -180,6 +181,8 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
           if (_error != null) Text(_error!),
           TextButton(onPressed: () { setState(() => _checkingAccess = true); _checkAccess(); },
             child: const Text('Check membership again')),
+          TextButton(onPressed: () => setState(() { _preview = true; _loading = false; _error = null; }),
+            child: const Text('Preview Monthly Focus')),
         ]))));
     final current = weeks[_selectedWeek];
     final progress = _completed.length / 4;
@@ -190,6 +193,13 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
       body: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 860),
         child: ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 40), children: [
+          if (_preview && !_authorized) Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: _panel(child: const Text(
+              'Preview only · Explore all four weeks. Private journal saving and progress are available with Village Plus.',
+              style: TextStyle(color: green, height: 1.4),
+            )),
+          ),
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -277,13 +287,14 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
             const SizedBox(height: 12),
             TextField(key: ValueKey('monthly-focus-journal-${_selectedWeek + 1}'),
               controller: _entries[_selectedWeek], minLines: 4, maxLines: 8,
+              readOnly: !_authorized,
               decoration: InputDecoration(hintText: 'Write your thoughts here...',
                 filled: true, fillColor: cream,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)))),
             const SizedBox(height: 12),
             if (_savedWeek == _selectedWeek + 1)
               const Text('Saved to your private journal.', style: TextStyle(color: green)),
-            Wrap(spacing: 10, runSpacing: 8, children: [
+            if (_authorized) Wrap(spacing: 10, runSpacing: 8, children: [
               FilledButton.icon(
                 onPressed: _saving.isNotEmpty || _loading
                   ? null : () => _save(_selectedWeek + 1),
