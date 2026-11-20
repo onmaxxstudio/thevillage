@@ -3,6 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('Nonmember preview shows lessons without journal writes', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: MonthlyFocusScreen(
+      membershipVerifier: () async => false,
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('Building Boundaries'), findsNothing);
+    await tester.tap(find.text('Preview Monthly Focus'));
+    await tester.pumpAndSettle();
+    expect(find.text('Building Boundaries'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('monthly-focus-journal-1')), 250,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Save Reflection'), findsNothing);
+    expect(find.text('Mark Week Complete'), findsNothing);
+    expect(tester.widget<TextField>(find.byType(TextField)).readOnly, isTrue);
+  });
   for (final width in [320.0, 390.0, 768.0, 1280.0]) {
     testWidgets('Monthly Focus fits at $width and keeps every week accessible', (tester) async {
       tester.view.physicalSize = Size(width, 900);
