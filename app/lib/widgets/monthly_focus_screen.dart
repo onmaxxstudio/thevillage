@@ -237,7 +237,9 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
   Widget _progressCard() {
     final progress = _completed.length / 4;
     return _panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _heading('Your Monthly Progress', size: 25),
+      const Text('Your Monthly Progress', style: TextStyle(
+        fontFamily: 'VillagePlusDisplay', fontSize: 25,
+        fontWeight: FontWeight.bold, color: cream)),
       const SizedBox(height: 16),
       Row(children: [
         SizedBox(width: 112, height: 112, child: Stack(alignment: Alignment.center, children: [
