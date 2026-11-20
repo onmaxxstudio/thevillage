@@ -181,36 +181,31 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
     Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(color: ink, fontSize: 13)),
   ]));
 
+  Widget _heroCopy(bool wide) => Padding(
+    padding: const EdgeInsets.all(26),
+    child: Column(mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('VILLAGE PLUS  •  MONTHLY FOCUS', style: TextStyle(color: ink,
+        fontWeight: FontWeight.w600, letterSpacing: 1.1, fontSize: 13)),
+      const SizedBox(height: 8),
+      _heading('Building Boundaries', size: wide ? 42 : 34),
+      Container(margin: const EdgeInsets.symmetric(vertical: 9), width: 130, height: 4,
+        decoration: BoxDecoration(color: gold, borderRadius: BorderRadius.circular(8))),
+      const Text('A month of clarity, courage, and consistency. Learn to set, speak, and maintain healthy boundaries that protect your energy and keep you connected to what matters.',
+        style: TextStyle(color: ink, height: 1.45, fontSize: 15)),
+    ]),
+  );
+
   Widget _hero(bool wide) => Container(
-    height: wide ? 340 : MediaQuery.sizeOf(context).width <= 350 ? 640
-      : MediaQuery.sizeOf(context).width <= 420 ? 520 : 430,
     decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(22)),
     clipBehavior: Clip.antiAlias,
-    child: Stack(children: [
-      Positioned.fill(child: Row(children: [
-        if (wide) const Expanded(child: SizedBox()),
-        Expanded(flex: wide ? 1 : 2, child: Image.asset('assets/images/monthly_focus_hero.jpg',
-          fit: BoxFit.cover, alignment: Alignment.center)),
-      ])),
-      Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(
-        begin: wide ? Alignment.centerLeft : Alignment.bottomCenter,
-        end: wide ? Alignment.centerRight : Alignment.topCenter,
-        stops: wide ? const [0.32, 0.68, 1] : const [0.12, 0.68, 1],
-        colors: [cream, cream.withValues(alpha: wide ? 0.94 : 0.98), cream.withValues(alpha: 0)])))),
-      Padding(padding: const EdgeInsets.all(26), child: Align(
-        alignment: wide ? Alignment.centerLeft : Alignment.bottomLeft,
-        child: ConstrainedBox(constraints: BoxConstraints(maxWidth: wide ? 560 : double.infinity),
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('VILLAGE PLUS  •  MONTHLY FOCUS', style: TextStyle(color: ink,
-              fontWeight: FontWeight.w600, letterSpacing: 1.1, fontSize: 13)),
-            const SizedBox(height: 8),
-            _heading('Building Boundaries', size: wide ? 48 : 37),
-            Container(margin: const EdgeInsets.symmetric(vertical: 9), width: 130, height: 4,
-              decoration: BoxDecoration(color: gold, borderRadius: BorderRadius.circular(8))),
-            const Text('A month of clarity, courage, and consistency. Learn to set, speak, and maintain healthy boundaries that protect your energy and keep you connected to what matters.',
-              style: TextStyle(color: ink, height: 1.45, fontSize: 15)),
-          ]))),
-      ),
+    child: wide ? Row(children: [
+      Expanded(child: _heroCopy(true)),
+      Expanded(child: Image.asset('assets/images/monthly_focus_hero.jpg',
+        height: 340, fit: BoxFit.cover)),
+    ]) : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Image.asset('assets/images/monthly_focus_hero.jpg', height: 190, fit: BoxFit.cover),
+      _heroCopy(false),
     ]),
   );
 
