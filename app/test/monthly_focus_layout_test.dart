@@ -22,6 +22,14 @@ void main() {
     await tester.enterText(find.byType(TextField), 'A boundary I want to practice');
     expect(find.text('A boundary I want to practice'), findsOneWidget);
     expect(find.textContaining('this draft will disappear'), findsOneWidget);
+    final practice = find.byType(CheckboxListTile).first;
+    await tester.scrollUntilVisible(practice, 250,
+      scrollable: find.byType(Scrollable).last);
+    expect(tester.widget<CheckboxListTile>(practice).value, isFalse);
+    await tester.tap(practice);
+    await tester.pumpAndSettle();
+    expect(tester.widget<CheckboxListTile>(practice).value, isTrue);
+    expect(find.textContaining('Preview checks are temporary'), findsOneWidget);
   });
   for (final width in [320.0, 390.0, 768.0, 1280.0]) {
     testWidgets('Monthly Focus fits at $width and keeps every week accessible', (tester) async {
