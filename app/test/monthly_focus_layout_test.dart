@@ -4,6 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('Nonmember preview accepts temporary typing without saving', (tester) async {
+    tester.view.physicalSize = const Size(800, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(MaterialApp(home: MonthlyFocusScreen(
       membershipVerifier: () async => false,
     )));
