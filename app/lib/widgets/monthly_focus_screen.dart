@@ -331,11 +331,13 @@ class _MonthlyFocusScreenState extends State<MonthlyFocusScreen> {
     ].indexed) CheckboxListTile(
       dense: true, contentPadding: EdgeInsets.zero,
       value: _practiceChecked.contains(index),
-      onChanged: _authorized ? (v) => setState(() { if (v == true) { _practiceChecked.add(index); } else { _practiceChecked.remove(index); } }) : null,
+      onChanged: (v) => setState(() { if (v == true) { _practiceChecked.add(index); } else { _practiceChecked.remove(index); } }),
       title: Text(label, style: const TextStyle(color: ink, fontSize: 13)),
       controlAffinity: ListTileControlAffinity.leading,
       activeColor: green,
     ),
+    if (!_authorized) const Text('Preview checks are temporary and reset when you leave this page or change weeks.',
+      style: TextStyle(fontSize: 12, color: ink)),
     if (_authorized) const Text('Use Mark Week Complete to save your weekly progress.',
       style: TextStyle(fontSize: 12, color: ink)),
   ]));
