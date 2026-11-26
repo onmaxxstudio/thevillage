@@ -25,6 +25,8 @@ void main() {
     final practice = find.byType(CheckboxListTile).first;
     await tester.scrollUntilVisible(practice, 250,
       scrollable: find.byType(Scrollable).last);
+    await tester.ensureVisible(practice);
+    await tester.pumpAndSettle();
     expect(tester.widget<CheckboxListTile>(practice).value, isFalse);
     await tester.tap(practice);
     await tester.pumpAndSettle();
