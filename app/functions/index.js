@@ -160,3 +160,29 @@ exports.scheduledMonthlyGatheringReminders = onSchedule({schedule:'every 15 minu
     }
   }
 });
+
+exports.getGatheringRecording = onCall({region:'us-east1'},async(request)=>{
+  if (!request.auth) throw new HttpsError('unauthenticated','Sign in first.');
+  const eventId=request.data?.eventId;
+  if (typeof eventId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(eventId))
+    throw new HttpsError('invalid-argument','Invalid event.');
+  const event=await db.collection('admin_events').doc(eventId).get();
+  if (!event.exists || event.get('kind') !== 'monthly_gathering' || event.get('published') !== true || event.get('recordingAvailable') !== true)
+    throw new HttpsError('not-found','Recording unavailable.');
+  const registration=await event.ref.collection('registrations').doc(request.auth.uid).get();
+  if (!registration.exists) throw new HttpsError('permission-denied','Reserve a spot first.');
+  if (event.get('access') === 'plus') {
+    const membership=await db.collection('village_plus_memberships').doc(request.auth.uid).get();
+    const data=membership.data();
+    if (!data || data.villagePlus !== true || !['active','trialing'].includes(data.status) ||
+      !data.currentPeriodEnd || data.currentPeriodEnd.toMillis() <= Date.now())
+      throw new HttpsError('permission-denied','An active Village Plus membership is required.');
+  } else if (event.get('access') !== 'free') throw new HttpsError('permission-denied','Invalid event access.');
+  const details=await event.ref.collection('private').doc('details').get();
+  const path=details.get('recordingPath');
+  if (typeof path !== 'string' || !path.startsWith(`monthly_recordings/${eventId}/`) || path.includes('..'))
+    throw new HttpsError('not-found','Recording unavailable.');
+  const [url]=await admin.storage().bucket().file(path).getSignedUrl({version:'v4',action:'read',expires:Date.now()+60000,
+    responseDisposition:'attachment; filename="monthly-gathering.mp4"'});
+  return {url};
+});

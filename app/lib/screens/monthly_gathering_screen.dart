@@ -2,12 +2,11 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'village_plus_screen.dart';
 import '../widgets/monthly_focus_screen.dart';
-import '../services/recording_download_stub.dart' if (dart.library.html) '../services/recording_download_web.dart';
 
 /// Public event metadata lives in admin_events; links and recordings are in
 /// admin_events/{id}/private/details and protected by Firebase rules.
@@ -66,13 +65,13 @@ class _MonthlyGatheringScreenState extends State<MonthlyGatheringScreen> {
       await _open(url);
     } catch (_) { _message('The event could not be joined. Check your membership and try again.'); }
   }
-  Future<void> _recording(String path) async {
+  Future<void> _recording(String eventId) async {
     try {
-      // Never use a permanent Firebase download URL for a private recording.
-      final bytes = await FirebaseStorage.instance.ref(path).getData(50 * 1024 * 1024);
-      if (bytes == null) throw StateError('Empty recording');
-      await saveRecording(bytes, 'monthly-gathering.mp4');
-      _message('Recording download started.');
+      final response = await FirebaseFunctions.instanceFor(region: 'us-east1')
+          .httpsCallable('getGatheringRecording').call<Map<String, dynamic>>({'eventId':eventId});
+      final url = response.data['url']?.toString() ?? '';
+      if (url.isEmpty) throw StateError('Missing recording');
+      await _open(url);
     } catch (_) { _message('Recording is unavailable or your access has ended.'); }
   }
 
@@ -154,10 +153,8 @@ class _MonthlyGatheringScreenState extends State<MonthlyGatheringScreen> {
                               trailing: const Icon(Icons.chevron_right),
                               onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => MonthlyGatheringScreen(eventId: past.id))))]);
                         }),
-                      if (registered && eligible && data['recordingAvailable'] == true) FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(future: FirebaseFirestore.instance.collection('admin_events').doc(id).collection('private').doc('details').get(), builder: (context, private) {
-                        final path = private.data?.data()?['recordingPath']?.toString() ?? '';
-                        return path.isEmpty ? const SizedBox.shrink() : TextButton(onPressed: () => _recording(path), child: const Text('Get recording'));
-                      }),
+                      if (registered && eligible && data['recordingAvailable'] == true)
+                        TextButton(onPressed: () => _recording(id), child: const Text('Get recording')),
                       if (data['recordingAvailable'] != true) const Text('Recordings will appear here when available.'),
                     ],
                   )));

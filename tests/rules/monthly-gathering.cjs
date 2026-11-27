@@ -10,6 +10,7 @@ const {doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, Timestamp
     await env.withSecurityRulesDisabled(async c => {
       const db = c.firestore();
       await setDoc(doc(db,'admins/owner'),{active:true});
+      await setDoc(doc(db,'admin_events/draft'),{kind:'monthly_gathering',title:'Draft',published:false,status:'draft',access:'plus'});
       await setDoc(doc(db,'admin_events/gathering'),{kind:'monthly_gathering',title:'Letting Go & Starting Fresh',published:true,status:'scheduled',access:'plus',startsAt:future});
       await setDoc(doc(db,'admin_events/gathering/private/details'),{meetingUrl:'https://meeting.invalid/private',recordingPath:'monthly_recordings/gathering/a.mp4'});
       await setDoc(doc(db,'village_plus_memberships/paid'),{villagePlus:true,status:'active',currentPeriodEnd:future});
@@ -24,6 +25,8 @@ const {doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, Timestamp
     const eventPath='admin_events/gathering';
     const privatePath=eventPath+'/private/details';
     const reg=(db,uid)=>doc(db,eventPath+'/registrations/'+uid);
+    await assertFails(getDoc(doc(free,'admin_events/draft')));
+    await assertSucceeds(getDoc(doc(owner,'admin_events/draft')));
     for (const db of [free,paid,expired,canceled]) await assertSucceeds(getDoc(doc(db,eventPath)));
     for (const db of [free,paid,expired,canceled]) await assertFails(getDoc(doc(db,privatePath)));
     await assertFails(setDoc(reg(free,'free'),{uid:'free',createdAt:serverTimestamp()}));
