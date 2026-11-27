@@ -7,6 +7,10 @@ service firebase.storage {
         firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid)) &&
         firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data.active == true;
     }
+    match /monthly_recordings/{eventId}/{fileName} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && request.resource.size < 50 * 1024 * 1024 && request.resource.contentType == 'video/mp4';
+    }
 
     match /profile_photos/{uid}/{fileName} {
       allow read: if signedIn();

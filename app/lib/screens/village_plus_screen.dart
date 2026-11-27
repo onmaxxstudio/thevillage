@@ -1,7 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class VillagePlusScreen extends StatelessWidget {
+class VillagePlusScreen extends StatefulWidget {
   const VillagePlusScreen({super.key});
+
+  @override
+  State<VillagePlusScreen> createState() => _VillagePlusScreenState();
+}
+
+class _VillagePlusScreenState extends State<VillagePlusScreen> {
+  static const enrollmentEnabled = bool.fromEnvironment('VILLAGE_PLUS_PAYMENTS_ENABLED');
+  bool openingCheckout = false;
+
+  Future<void> _join() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign in before joining Village Plus.')));
+      return;
+    }
+    setState(() => openingCheckout = true);
+    try {
+      final response = await FirebaseFunctions.instanceFor(region: 'us-east1')
+          .httpsCallable('createVillagePlusCheckout').call<Map<String, dynamic>>();
+      final url = Uri.tryParse(response.data['url']?.toString() ?? '');
+      if (url == null || url.scheme != 'https' || !await launchUrl(url, mode: LaunchMode.externalApplication))
+        throw StateError('Checkout unavailable');
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Membership checkout is unavailable. Please try again later.')));
+    } finally { if (mounted) setState(() => openingCheckout = false); }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +117,7 @@ class VillagePlusScreen extends StatelessWidget {
               // Enrollment stays disabled until server-verified subscriptions exist.
               FilledButton(
                 key: const ValueKey('join-village-plus'),
-                onPressed: null,
+                onPressed: enrollmentEnabled && !openingCheckout ? _join : null,
                 style: FilledButton.styleFrom(
                   disabledBackgroundColor: const Color(0xFFD9DCCF),
                   disabledForegroundColor: green,
@@ -97,7 +125,7 @@ class VillagePlusScreen extends StatelessWidget {
                 child: const Text('Join Village Plus'),
               ),
               const SizedBox(height: 12),
-              const Text('Membership enrollment is coming soon. Payments are not yet available.',
+              if (!enrollmentEnabled) const Text('Membership enrollment is coming soon. Payments are not yet available.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: green, height: 1.5)),
             ],
