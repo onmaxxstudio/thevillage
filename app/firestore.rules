@@ -16,6 +16,14 @@ service cloud.firestore {
         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
     }
 
+    function activeVillagePlus() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/village_plus_memberships/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/village_plus_memberships/$(request.auth.uid)).data.status in ['active', 'trialing'] &&
+        get(/databases/$(database)/documents/village_plus_memberships/$(request.auth.uid)).data.villagePlus == true &&
+        get(/databases/$(database)/documents/village_plus_memberships/$(request.auth.uid)).data.currentPeriodEnd > request.time;
+    }
+
     function validUsername(value) {
       return value is string &&
         value.size() >= 3 &&
@@ -109,6 +117,30 @@ service cloud.firestore {
       allow get, list: if signedIn() &&
         (isAdmin() || resource.data.published == true);
       allow create, update, delete: if isAdmin();
+
+      match /private/details {
+        allow get: if isAdmin() ||
+          (signedIn() &&
+           get(/databases/$(database)/documents/admin_events/$(itemId)).data.published == true &&
+           exists(/databases/$(database)/documents/admin_events/$(itemId)/registrations/$(request.auth.uid)) &&
+           (get(/databases/$(database)/documents/admin_events/$(itemId)).data.access == 'free' || activeVillagePlus()));
+        allow list: if false;
+        allow write: if isAdmin();
+      }
+
+      match /registrations/{uid} {
+        allow get: if isAdmin() || isSelf(uid);
+        allow list: if isAdmin();
+        allow create: if isSelf(uid) &&
+          get(/databases/$(database)/documents/admin_events/$(itemId)).data.published == true &&
+          get(/databases/$(database)/documents/admin_events/$(itemId)).data.status == 'scheduled' &&
+          get(/databases/$(database)/documents/admin_events/$(itemId)).data.startsAt > request.time &&
+          (get(/databases/$(database)/documents/admin_events/$(itemId)).data.access == 'free' || activeVillagePlus()) &&
+          request.resource.data.keys().hasOnly(['uid', 'createdAt']) &&
+          request.resource.data.uid == uid && request.resource.data.createdAt == request.time;
+        allow delete: if isSelf(uid) || isAdmin();
+        allow update: if false;
+      }
     }
 
     match /users/{uid} {

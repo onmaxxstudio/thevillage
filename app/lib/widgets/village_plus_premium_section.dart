@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'monthly_focus_screen.dart';
 import 'monthly_challenge_screen.dart';
+import '../screens/monthly_gathering_screen.dart';
 
 /// Premium-only experiences are distinct from the free tools below this panel.
 /// Buttons show previews until enrollment and the event schedule are available.
@@ -30,7 +31,7 @@ class VillagePlusPremiumSection extends StatelessWidget {
           0,
           Icons.groups_outlined,
           'Monthly Event',
-          'Finding Your Balance\nNov 25 • Live + replay',
+          'Connect. Learn. Grow together.',
           'View Event',
         ),
         _experience(
@@ -204,7 +205,9 @@ class VillagePlusPremiumSection extends StatelessWidget {
         ? Navigator.of(context).push(MaterialPageRoute<void>(
             builder: (_) => const MonthlyFocusScreen(),
           ))
-        : _preview(context, experience),
+        : Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => const MonthlyGatheringScreen(),
+          )),
     style: FilledButton.styleFrom(
       backgroundColor: gold,
       foregroundColor: const Color(0xFF082A1A),

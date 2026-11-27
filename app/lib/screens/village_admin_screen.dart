@@ -6,6 +6,7 @@ import '../services/admin_content_service.dart';
 import 'community_hub_feature_admin_screen.dart';
 import 'admin_moderation_screen.dart';
 import 'village_census_admin_screen.dart';
+import 'monthly_gathering_admin_screen.dart';
 
 class VillageAdminScreen extends StatefulWidget {
   const VillageAdminScreen({super.key});
@@ -79,6 +80,11 @@ class _VillageAdminScreenState extends State<VillageAdminScreen> {
                   label: const Text('Moderate Posts & Review Reports'),
                 ),
               ),
+              const SizedBox(height: 10),
+              SizedBox(width: double.infinity, child: FilledButton.icon(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const MonthlyGatheringAdminScreen())),
+                icon: const Icon(Icons.event_outlined), label: const Text('Manage Monthly Gathering'),
+              )),
               const SizedBox(height: 10),
               SizedBox(width: double.infinity, child: FilledButton.icon(
                 style: FilledButton.styleFrom(backgroundColor: sage, padding: const EdgeInsets.symmetric(vertical: 14)),

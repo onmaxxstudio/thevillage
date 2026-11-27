@@ -9,6 +9,7 @@ import '../services/village_post_service.dart';
 import 'ask_village_screen.dart';
 import 'community_detail_screen.dart';
 import 'find_help_screen.dart';
+import 'monthly_gathering_screen.dart';
 import 'village_feed_screen.dart';
 
 enum _CommunityTab { mine, browse, create }
@@ -35,6 +36,7 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
   late final PageController featurePager;
 
   int selected = 0;
+  String eventFilter = 'All Events';
   _CommunityTab communityTab = _CommunityTab.browse;
   int featuredIndex = 1;
   String query = '';
@@ -1533,8 +1535,10 @@ class _CommunityHubLiveScreenState extends State<CommunityHubLiveScreen> {
     return StreamBuilder<List<ManagedContentItem>>(
       stream: admin.watchPublished(type),
       builder: (context, snapshot) {
-        final items = snapshot.data ?? const <ManagedContentItem>[];
-        return ListView(padding: const EdgeInsets.fromLTRB(20, 14, 20, 32), children: [Text(title, style: GoogleFonts.playfairDisplay(fontSize: 27, fontWeight: FontWeight.w700, color: ink)), const SizedBox(height: 14), if (items.isEmpty) Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)), child: const Text('More Village content is coming soon.')), for (final item in items) Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: line)), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(icon, color: sage), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item.text('title', item.text('name', 'Village')), style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w800, color: ink)), const SizedBox(height: 4), Text(item.text('description', item.text('body', '')), maxLines: 5, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter(fontSize: 12.5, height: 1.4))]))]))]);
+        final allItems = snapshot.data ?? const <ManagedContentItem>[];
+        final items = type != 'events' ? allItems : allItems.where((item) =>
+          eventFilter == 'All Events' || (eventFilter == 'Free Events' ? item.data['access'] != 'plus' : item.data['access'] == 'plus')).toList();
+        return ListView(padding: const EdgeInsets.fromLTRB(20, 14, 20, 32), children: [Text(title, style: GoogleFonts.playfairDisplay(fontSize: 27, fontWeight: FontWeight.w700, color: ink)), const SizedBox(height: 14), if(type == 'events') Wrap(spacing: 6, children: [for(final label in ['All Events', 'Free Events', 'Village Plus Events']) ChoiceChip(label: Text(label), selected: eventFilter == label, onSelected: (_) => setState(() => eventFilter = label))]), if (items.isEmpty) Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)), child: const Text('More Village content is coming soon.')), for (final item in items) InkWell(onTap: type == 'events' && item.data['kind'] == 'monthly_gathering' ? () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => MonthlyGatheringScreen(eventId: item.id))) : null, child: Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: line)), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(icon, color: sage), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [if (item.data['access'] == 'plus') const Text('VILLAGE PLUS EXCLUSIVE', style: TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.bold)), Text(item.text('title', item.text('name', 'Village')), style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w800, color: ink)), const SizedBox(height: 4), Text(item.text('description', item.text('body', '')), maxLines: 5, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter(fontSize: 12.5, height: 1.4))]))]))) ]);
       },
     );
   }
