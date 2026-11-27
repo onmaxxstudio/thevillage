@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'village_plus_screen.dart';
 import '../widgets/monthly_focus_screen.dart';
+import '../services/recording_download_stub.dart' if (dart.library.html) '../services/recording_download_web.dart';
 
 /// Public event metadata lives in admin_events; links and recordings are in
 /// admin_events/{id}/private/details and protected by Firebase rules.
@@ -61,7 +62,8 @@ class _MonthlyGatheringScreenState extends State<MonthlyGatheringScreen> {
       // Never use a permanent Firebase download URL for a private recording.
       final bytes = await FirebaseStorage.instance.ref(path).getData(50 * 1024 * 1024);
       if (bytes == null) throw StateError('Empty recording');
-      _message('Recording downloaded (${(bytes.length / 1048576).toStringAsFixed(1)} MB).');
+      await saveRecording(bytes, 'monthly-gathering.mp4');
+      _message('Recording download started.');
     } catch (_) { _message('Recording is unavailable or your access has ended.'); }
   }
 

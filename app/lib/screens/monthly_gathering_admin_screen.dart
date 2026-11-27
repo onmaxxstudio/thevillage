@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:image_picker/image_picker.dart';
 
 class MonthlyGatheringAdminScreen extends StatefulWidget {
@@ -47,6 +48,15 @@ class _MonthlyGatheringAdminScreenState extends State<MonthlyGatheringAdminScree
     } catch (_) { _notice('Upload failed.'); }
   }
   void _notice(String value) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value))); }
+  Future<void> _sendReminder() async {
+    if (eventId == null) return;
+    try {
+      final result = await FirebaseFunctions.instanceFor(region: 'us-east1')
+          .httpsCallable('sendMonthlyGatheringReminder')
+          .call<Map<String, dynamic>>({'eventId':eventId, 'label': canceled ? 'canceled' : 'rescheduled'});
+      _notice('Reminder sent to ${result.data['delivered']} registered members.');
+    } catch (_) { _notice('Could not send reminders. Check the deployed reminder function.'); }
+  }
   Future<void> _save() async {
     if (title.text.trim().isEmpty || description.text.trim().isEmpty) { _notice('Add a title and description.'); return; }
     if (published && (startsAt == null || meeting.text.trim().isEmpty)) { _notice('Confirm the date, time, and meeting link before publishing.'); return; }
@@ -90,6 +100,7 @@ class _MonthlyGatheringAdminScreenState extends State<MonthlyGatheringAdminScree
         SwitchListTile(title: const Text('Canceled'), value: canceled, onChanged: (value) => setState(() => canceled = value)),
         SwitchListTile(title: const Text('Publish'), subtitle: const Text('Requires confirmed date, time, and meeting link.'), value: published, onChanged: (value) => setState(() => published = value)),
         FilledButton(onPressed: saving ? null : _save, child: const Text('Save Event')),
+        if (eventId != null) TextButton(onPressed: _sendReminder, child: Text(canceled ? 'Notify members of cancellation' : 'Notify members of new event details')),
         if (eventId != null) StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(stream: FirebaseFirestore.instance.collection('admin_events').doc(eventId).collection('registrations').snapshots(), builder: (context, registrations) => Text('Reservations: ${registrations.data?.docs.length ?? 0}')),
       ]);
     }),
