@@ -1,6 +1,6 @@
 const {readFileSync} = require('node:fs');
 const {initializeTestEnvironment, assertSucceeds, assertFails} = require('@firebase/rules-unit-testing');
-const {doc, getDoc, setDoc, deleteDoc, collection, getDocs, Timestamp, serverTimestamp} = require('firebase/firestore');
+const {doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, Timestamp, serverTimestamp} = require('firebase/firestore');
 
 (async () => {
   const env = await initializeTestEnvironment({projectId:'demo-village',firestore:{rules:readFileSync('app/firestore.rules','utf8')}});
@@ -33,11 +33,19 @@ const {doc, getDoc, setDoc, deleteDoc, collection, getDocs, Timestamp, serverTim
     await assertSucceeds(setDoc(reg(paid,'paid'),{uid:'paid',createdAt:serverTimestamp()}));
     await assertFails(setDoc(reg(paid,'paid'),{uid:'paid',createdAt:serverTimestamp()}));
     await assertSucceeds(getDoc(doc(paid,privatePath)));
+    await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),'village_plus_memberships/paid'),{status:'canceled',villagePlus:false},{merge:true}));
+    await assertFails(getDoc(doc(paid,privatePath)));
+    await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),'village_plus_memberships/paid'),{status:'active',villagePlus:true},{merge:true}));
     await assertFails(getDocs(collection(paid,eventPath+'/registrations')));
     await assertSucceeds(getDocs(collection(owner,eventPath+'/registrations')));
+    await assertFails(updateDoc(reg(paid,'paid'),{joinedAt:serverTimestamp()}));
+    await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),eventPath),{startsAt:Timestamp.fromDate(new Date(Date.now()-300000))},{merge:true}));
+    await assertSucceeds(updateDoc(reg(paid,'paid'),{joinedAt:serverTimestamp()}));
+    await assertFails(updateDoc(reg(free,'paid'),{joinedAt:serverTimestamp()}));
     await assertSucceeds(deleteDoc(reg(paid,'paid')));
     await assertFails(getDoc(doc(paid,privatePath)));
     await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),'admin_events/gathering'),{access:'free'},{merge:true}));
+    await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),eventPath),{startsAt:future},{merge:true}));
     await assertSucceeds(setDoc(reg(free,'free'),{uid:'free',createdAt:serverTimestamp()}));
     await assertSucceeds(getDoc(doc(free,privatePath)));
     await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),'admin_events/gathering'),{status:'canceled'},{merge:true}));

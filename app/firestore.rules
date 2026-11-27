@@ -139,7 +139,13 @@ service cloud.firestore {
           request.resource.data.keys().hasOnly(['uid', 'createdAt']) &&
           request.resource.data.uid == uid && request.resource.data.createdAt == request.time;
         allow delete: if isSelf(uid) || isAdmin();
-        allow update: if false;
+        allow update: if isSelf(uid) &&
+          resource.data.uid == uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['joinedAt']) &&
+          request.resource.data.joinedAt == request.time &&
+          get(/databases/$(database)/documents/admin_events/$(itemId)).data.startsAt <= request.time &&
+          get(/databases/$(database)/documents/admin_events/$(itemId)).data.startsAt + duration.value(180, 'm') > request.time &&
+          (get(/databases/$(database)/documents/admin_events/$(itemId)).data.access == 'free' || activeVillagePlus());
       }
     }
 

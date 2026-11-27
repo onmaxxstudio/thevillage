@@ -57,6 +57,15 @@ class _MonthlyGatheringScreenState extends State<MonthlyGatheringScreen> {
     final uri = Uri.tryParse(url);
     if (uri == null || uri.scheme != 'https' || !await launchUrl(uri, mode: LaunchMode.externalApplication)) _message('This link is unavailable.');
   }
+  Future<void> _join(String eventId, String url) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    try {
+      await FirebaseFirestore.instance.collection('admin_events').doc(eventId)
+          .collection('registrations').doc(uid).update({'joinedAt': FieldValue.serverTimestamp()});
+      await _open(url);
+    } catch (_) { _message('The event could not be joined. Check your membership and try again.'); }
+  }
   Future<void> _recording(String path) async {
     try {
       // Never use a permanent Firebase download URL for a private recording.
@@ -123,12 +132,28 @@ class _MonthlyGatheringScreenState extends State<MonthlyGatheringScreen> {
                       }, child: const Text('Add to Calendar')),
                       if (registered && live && eligible) FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(future: FirebaseFirestore.instance.collection('admin_events').doc(id).collection('private').doc('details').get(), builder: (context, private) {
                         final link = private.data?.data()?['meetingUrl']?.toString() ?? '';
-                        return link.isEmpty ? const SizedBox.shrink() : FilledButton(onPressed: () => _open(link), child: const Text('Join Live Event'));
+                        return link.isEmpty ? const SizedBox.shrink() : FilledButton(onPressed: () => _join(id, link), child: const Text('Join Live Event'));
                       }),
                       const SizedBox(height: 22), const Text('What to Expect', style: TextStyle(fontSize: 20, color: green, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8), Text(data['whatToExpect']?.toString() ?? 'A guided conversation, reflection, and practical takeaways.'),
                       TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const MonthlyFocusScreen())), child: const Text('Explore Monthly Focus')),
                       const SizedBox(height: 18), const Text('Previous Gatherings', style: TextStyle(fontSize: 20, color: green, fontWeight: FontWeight.bold)),
+                      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: FirebaseFirestore.instance.collection('admin_events').where('published', isEqualTo: true).snapshots(),
+                        builder: (context, history) {
+                          final previous = history.data?.docs.where((doc) {
+                            final item = doc.data();
+                            final date = item['startsAt'];
+                            return item['kind'] == 'monthly_gathering' && doc.id != id &&
+                                date is Timestamp && date.toDate().isBefore(now);
+                          }).toList() ?? [];
+                          previous.sort((a, b) => (b.data()['startsAt'] as Timestamp).compareTo(a.data()['startsAt'] as Timestamp));
+                          return Column(children: [for (final past in previous)
+                            ListTile(title: Text(past.data()['title']?.toString() ?? 'Gathering'),
+                              subtitle: Text(MaterialLocalizations.of(context).formatFullDate((past.data()['startsAt'] as Timestamp).toDate().toLocal())),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => MonthlyGatheringScreen(eventId: past.id))))]);
+                        }),
                       if (registered && eligible && data['recordingAvailable'] == true) FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(future: FirebaseFirestore.instance.collection('admin_events').doc(id).collection('private').doc('details').get(), builder: (context, private) {
                         final path = private.data?.data()?['recordingPath']?.toString() ?? '';
                         return path.isEmpty ? const SizedBox.shrink() : TextButton(onPressed: () => _recording(path), child: const Text('Get recording'));

@@ -101,7 +101,15 @@ class _MonthlyGatheringAdminScreenState extends State<MonthlyGatheringAdminScree
         SwitchListTile(title: const Text('Publish'), subtitle: const Text('Requires confirmed date, time, and meeting link.'), value: published, onChanged: (value) => setState(() => published = value)),
         FilledButton(onPressed: saving ? null : _save, child: const Text('Save Event')),
         if (eventId != null) TextButton(onPressed: _sendReminder, child: Text(canceled ? 'Notify members of cancellation' : 'Notify members of new event details')),
-        if (eventId != null) StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(stream: FirebaseFirestore.instance.collection('admin_events').doc(eventId).collection('registrations').snapshots(), builder: (context, registrations) => Text('Reservations: ${registrations.data?.docs.length ?? 0}')),
+        if (eventId != null) StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(stream: FirebaseFirestore.instance.collection('admin_events').doc(eventId).collection('registrations').snapshots(), builder: (context, registrations) {
+          final members = registrations.data?.docs ?? [];
+          final joined = members.where((doc) => doc.data()['joinedAt'] != null).length;
+          return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Reservations: ${members.length} • Join clicks: $joined'),
+            for (final member in members) ListTile(dense: true, title: Text(member.id),
+              subtitle: Text(member.data()['joinedAt'] == null ? 'Reserved' : 'Opened live event')),
+          ]);
+        }),
       ]);
     }),
   );
