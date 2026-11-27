@@ -111,7 +111,11 @@ class _MonthlyGatheringScreenState extends State<MonthlyGatheringScreen> {
                   final live = start != null && now.isAfter(start) && now.isBefore(start.add(Duration(minutes: duration)));
                   return Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 760), child: ListView(
                     padding: const EdgeInsets.all(20), children: [
-                      if ((data['imageUrl'] ?? '').toString().isNotEmpty) ClipRRect(borderRadius: BorderRadius.circular(18), child: Image.network(data['imageUrl'].toString(), height: 220, fit: BoxFit.cover)),
+                      ClipRRect(borderRadius: BorderRadius.circular(18), child: SizedBox(height: 220, width: double.infinity,
+                        child: (data['imageUrl'] ?? '').toString().isNotEmpty
+                          ? Image.network(data['imageUrl'].toString(), fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const _GatheringCover())
+                          : const _GatheringCover())),
                       const SizedBox(height: 16),
                       Text(plus ? 'VILLAGE PLUS EXCLUSIVE' : 'FREE VILLAGE EVENT', style: const TextStyle(color: gold, fontWeight: FontWeight.bold, letterSpacing: 1.4)),
                       const SizedBox(height: 10), Text('The Monthly Gathering', style: TextStyle(color: green, fontSize: 28, fontFamily: 'VillagePlusDisplay')),
@@ -165,5 +169,22 @@ class _MonthlyGatheringScreenState extends State<MonthlyGatheringScreen> {
         );
       },
     ),
+  );
+}
+
+class _GatheringCover extends StatelessWidget {
+  const _GatheringCover();
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF00492B), Color(0xFF002916)])),
+    child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Icon(Icons.groups_2_outlined, color: Color(0xFFE6C579), size: 48),
+      SizedBox(height: 12),
+      Text('THE MONTHLY GATHERING', textAlign: TextAlign.center,
+        style: TextStyle(color: Color(0xFFE6C579), fontWeight: FontWeight.bold, letterSpacing: 2)),
+      SizedBox(height: 8),
+      Text('Connect. Learn. Grow together.', textAlign: TextAlign.center,
+        style: TextStyle(color: Color(0xFFFFFAF1), fontSize: 16)),
+    ]),
   );
 }

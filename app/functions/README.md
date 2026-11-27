@@ -12,3 +12,17 @@ No payment endpoints have been deployed by this commit. Never commit Stripe keys
 8. For native iOS/Android apps, review Apple/Google digital-subscription in-app purchase rules before exposing this web checkout inside store-distributed apps.
 
 The membership UI remains disabled until the backend, security rules and test payment flow are verified.
+
+## Production release gate
+
+Production remains disabled unless `VILLAGE_PLUS_PRODUCTION_ENABLED=true` is
+configured on the-village-d7af4, with live Stripe secrets stored in Firebase
+Secret Manager, `VILLAGE_PLUS_PRICE_ID=price_1UcxxEBo8z3y7mFz8xWCycSi`, and
+`VILLAGE_PLUS_RETURN_URL=https://askthevillage.app`. The separate live Stripe
+webhook must send subscription created/updated/deleted events to the deployed
+production endpoint. Do not enable the Flutter build flag
+`VILLAGE_PLUS_PAYMENTS_ENABLED=true` until webhooks, cancellation, expiry,
+checkout, portal and Firestore entitlements have passed with test-mode accounts
+in an isolated Firebase project, and live endpoint smoke tests are complete.
+Deploy event functions and Firestore/Storage rules only after their emulator
+checks pass. Do not put live Stripe keys into GitHub or the app bundle.
