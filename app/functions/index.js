@@ -3,6 +3,7 @@ const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https')
 const { defineSecret, defineString } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const Stripe = require('stripe');
+const {hasExistingVillagePlusSubscription} = require('./subscription_guard');
 admin.initializeApp();
 const db = admin.firestore();
 const stripeSecret = defineSecret('STRIPE_SECRET_KEY');
@@ -40,10 +41,17 @@ exports.createVillagePlusCheckout = onCall({region:'us-east1',secrets:[stripeSec
     throw new HttpsError('failed-precondition','The configured sandbox price must be $4.99 per month.');
   let customerId=current.exists ? current.get('stripeCustomerId') : null;
   if(!customerId){
-    const customer=await stripe.customers.create({email:user.email,metadata:{firebaseUid:uid}});
+    const customer=await stripe.customers.create(
+      {email:user.email,metadata:{firebaseUid:uid}},
+      {idempotencyKey:'village-plus-customer-'+uid});
     customerId=customer.id;
     await ref.set({stripeCustomerId:customerId,updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
   }
+  // A canceled checkout can leave a valid Stripe subscription behind before
+  // its webhook updates Firestore. Consult Stripe before opening another one.
+  const subscriptions=await stripe.subscriptions.list({customer:customerId,status:'all',limit:100});
+  if(hasExistingVillagePlusSubscription(subscriptions.data,priceId.value()))
+    throw new HttpsError('already-exists','A Village Plus subscription already exists. Manage it through billing.');
   const session=await stripe.checkout.sessions.create({
     mode:'subscription',customer:customerId,
     line_items:[{price:priceId.value(),quantity:1}],
@@ -62,6 +70,9 @@ exports.createVillagePlusPortal = onCall({region:'us-east1',secrets:[stripeSecre
   const snap=await db.collection('village_plus_memberships').doc(request.auth.uid).get();
   const customerId=snap.get('stripeCustomerId');
   if(!customerId) throw new HttpsError('failed-precondition','No billing account found.');
+  const customer=await stripeClient().customers.retrieve(customerId);
+  if(customer.deleted || customer.metadata?.firebaseUid!==request.auth.uid)
+    throw new HttpsError('permission-denied','Billing account ownership could not be verified.');
   const portal=await stripeClient().billingPortal.sessions.create({customer:customerId,return_url:returnUrl()});
   return {url:portal.url};
 });
