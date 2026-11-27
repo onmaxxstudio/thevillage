@@ -25,6 +25,9 @@ const {doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, Timestamp
     const eventPath='admin_events/gathering';
     const privatePath=eventPath+'/private/details';
     const reg=(db,uid)=>doc(db,eventPath+'/registrations/'+uid);
+    await assertSucceeds(getDoc(doc(paid,'village_plus_memberships/paid')));
+    await assertFails(getDoc(doc(free,'village_plus_memberships/paid')));
+    await assertFails(setDoc(doc(free,'village_plus_memberships/free'),{villagePlus:true,status:'active',currentPeriodEnd:future}));
     await assertFails(getDoc(doc(free,'admin_events/draft')));
     await assertSucceeds(getDoc(doc(owner,'admin_events/draft')));
     for (const db of [free,paid,expired,canceled]) await assertSucceeds(getDoc(doc(db,eventPath)));
