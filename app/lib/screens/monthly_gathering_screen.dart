@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -65,7 +66,9 @@ class _MonthlyGatheringScreenState extends State<MonthlyGatheringScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => Firebase.apps.isEmpty
+      ? Scaffold(appBar: AppBar(title: const Text('The Monthly Gathering')), body: const Center(child: Text('The next Monthly Gathering has not been announced.')))
+      : Scaffold(
     backgroundColor: cream,
     appBar: AppBar(title: const Text('The Monthly Gathering'), backgroundColor: cream, foregroundColor: green),
     body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(

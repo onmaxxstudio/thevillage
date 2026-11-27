@@ -76,8 +76,9 @@ void main() {
                   : 'Monthly Challenge is for Village Plus members.'), findsOneWidget);
               await tester.pageBack();
             } else {
-              expect(find.text('VILLAGE PLUS · COMING SOON'), findsOneWidget);
-              await tester.tap(find.text('Back to Growth Studio'));
+              expect(find.text('The Monthly Gathering'), findsOneWidget);
+              expect(find.text('The next Monthly Gathering has not been announced.'), findsOneWidget);
+              await tester.pageBack();
             }
             await tester.pumpAndSettle();
           }
